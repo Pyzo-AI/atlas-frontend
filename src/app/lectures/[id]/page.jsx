@@ -7,6 +7,7 @@ import { useGetAllVideoQuery } from "@/store/api/questionsApi";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsPlaying } from "@/store/features/videoSlice";
 import { usePathname, useParams } from "next/navigation";
+import BreadCrumb from "@/components/common/BreadCrumb";
 
 const Home = () => {
   const params = useParams();
@@ -70,7 +71,8 @@ const Home = () => {
   return (
     <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-[#F9F9F9] overflow-x-hidden">
       <div className="layout-container flex h-full grow flex-col">
-        <div className="flex flex-1 px-6 py-5 overflow-hidden">
+        <div className=" px-6 py-5 overflow-hidden">
+        {/* <BreadCrumb title={data?.title || data?.name || "RBI Clean Note Policy"} /> */}
           <div className="flex w-full h-full min-w-0 bg-white py-4 px-5">
             <PPTSection
               videos={videos}
@@ -80,7 +82,7 @@ const Home = () => {
               isVideoPlaying={pptSyncState.isPlaying}
               videoDuration={videoState.duration}
               width="70%"
-              title={data?.title || data?.name}
+              title={data?.title || data?.name || "RBI Clean Note Policy"}
             />
             <VideoPanel
               ref={videoPanelRef}
