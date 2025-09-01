@@ -153,7 +153,7 @@ const FloatingChatbot = ({ onPauseVideo, videos = [], presentationId }) => {
         };
 
         recognitionRef.current.onerror = (event) => {
-          console.error("Speech recognition error:", event.error);
+          console.log("Speech recognition error:", event.error);
           setIsListening(false);
 
           // Handle specific error cases
@@ -242,7 +242,7 @@ const FloatingChatbot = ({ onPauseVideo, videos = [], presentationId }) => {
         recognitionRef.current.stop();
         setIsListening(false);
       } catch (error) {
-        console.error("Error stopping speech recognition on submit:", error);
+        console.log("Error stopping speech recognition on submit:", error);
         setIsListening(false);
       }
     }
@@ -271,25 +271,44 @@ const FloatingChatbot = ({ onPauseVideo, videos = [], presentationId }) => {
       }));
 
     try {
-      const response = await submitQuestion({
-        presentationId,
-        question: userQuestion,
-        conversation: mappedConversation,
-        knowledge_source_ids: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-      }).unwrap();
-
-      if (response?.primary_jump_target !== undefined) {
-        dispatch(setAnswerPptIndex(response.primary_jump_target));
-      }
-
-      setConversation((prev) => [
-        ...prev,
-        {
-          type: "answer",
-          content: response?.answer || "No answer received",
-          audioLink: response?.audio_url || "",
+      const response = await fetch(`https://cf.be.trainboost.esmagico.com/api/qa/${presentationId}?stream_audio=true`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
         },
-      ]);
+        body: JSON.stringify({
+          question: userQuestion,
+          conversation: mappedConversation,
+          knowledge_source_ids: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        }),
+      });
+
+      if (response.ok) {
+        // Get answer text from response header
+        const answerText = response.headers.get('x-answer') || 'No answer received';
+            console.log([...response.headers.entries()], "test");      
+        // Get primary jump target if available
+        const jumpTarget = response.headers.get('x-jump-target');
+        if (jumpTarget !== null && jumpTarget !== undefined) {
+          dispatch(setAnswerPptIndex(parseInt(jumpTarget)));
+        }
+
+        // Create audio blob from response stream
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        setConversation((prev) => [
+          ...prev,
+          {
+            type: "answer",
+            content: answerText,
+            audioLink: audioUrl,
+          },
+        ]);
+      } else {
+        throw new Error('Failed to get response');
+      }
     } catch (error) {
       console.log("Error submitting question:", error);
       setConversation((prev) => [
@@ -314,7 +333,7 @@ const FloatingChatbot = ({ onPauseVideo, videos = [], presentationId }) => {
       try {
         recognitionRef.current.stop();
       } catch (error) {
-        console.error("Error stopping speech recognition:", error);
+        console.log("Error stopping speech recognition:", error);
       }
       setIsListening(false);
     } else {
@@ -335,7 +354,7 @@ const FloatingChatbot = ({ onPauseVideo, videos = [], presentationId }) => {
               recognitionRef.current.start();
               setIsListening(true);
             } catch (error) {
-              console.error(
+              console.log(
                 "Error starting speech recognition after stop:",
                 error
               );
@@ -347,7 +366,7 @@ const FloatingChatbot = ({ onPauseVideo, videos = [], presentationId }) => {
           setIsListening(true);
         }
       } catch (error) {
-        console.error("Error starting speech recognition:", error);
+        console.log("Error starting speech recognition:", error);
         setIsListening(false);
 
         // If it fails because it's already started, try to stop and restart
@@ -359,12 +378,12 @@ const FloatingChatbot = ({ onPauseVideo, videos = [], presentationId }) => {
                 recognitionRef.current.start();
                 setIsListening(true);
               } catch (retryError) {
-                console.error("Error on retry:", retryError);
+                console.log("Error on retry:", retryError);
                 setIsListening(false);
               }
             }, 100);
           } catch (stopError) {
-            console.error("Error stopping recognition:", stopError);
+            console.log("Error stopping recognition:", stopError);
             setIsListening(false);
           }
         }
@@ -527,7 +546,7 @@ const FloatingChatbot = ({ onPauseVideo, videos = [], presentationId }) => {
                           recognitionRef.current.stop();
                           setIsListening(false);
                         } catch (error) {
-                          console.error(
+                          console.log(
                             "Error stopping speech recognition on Enter:",
                             error
                           );

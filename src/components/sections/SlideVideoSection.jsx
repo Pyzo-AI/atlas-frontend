@@ -141,7 +141,7 @@ const SlideVideoSection = ({
             preloadSlideVideoRef.current.src = "";
             setPreloadedSlideIndex(-1);
           } catch (error) {
-            console.error(
+            console.log(
               "Error using preloaded slide video, falling back to normal load:",
               error
             );

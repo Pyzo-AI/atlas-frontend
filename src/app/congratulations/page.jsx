@@ -16,9 +16,9 @@ export default function CongratulationsPage() {
   // }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-2xl w-full bg-white rounded-2xl overflow-hidden mt-[-200px]">
-        <div className="p-8 text-center ">
+    <div className="min-h-screen flex items-center justify-center bg-[#F9F9F9]">
+      <div className="max-w-2xl w-full bg-white rounded-xl border border-[#E5E7EB] overflow-hidden mt-[-200px]">
+        <div className="p-8 text-center">
           <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg 
               className="w-14 h-14 text-green-600" 
@@ -36,16 +36,16 @@ export default function CongratulationsPage() {
             </svg>
           </div>
           
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          <h1 className="text-[32px] font-lato font-bold text-[#1A1C29] mb-4">
             Congratulations! 🎉
           </h1>
           
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-[18px] font-lato font-medium text-[#667085] mb-8">
             Thank you for training with TrainBoost!
           </p>
           
-          <div className="bg-blue-50 p-4 rounded-lg mb-8">
-            <p className="text-blue-700">
+          <div className="bg-[#F3EDFF] border border-[#744FFF] p-4 rounded-[8px] mb-8">
+            <p className="text-[16px] font-lato font-medium text-[#744FFF]">
               You&apos;ve successfully completed the training and passed the assessment with flying colors!
             </p>
           </div>

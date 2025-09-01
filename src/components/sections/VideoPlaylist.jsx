@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentVideoIndex } from "@/store/features/videoSlice";
 
@@ -7,6 +7,7 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
   const { currentVideoIndex } = useSelector((state) => state.video);
   const scrollContainerRef = useRef(null);
   const videoItemRefs = useRef([]);
+  const [showFade, setShowFade] = useState(false);
 
   const formatDuration = (duration) => {
     if (!duration) return "0:00";
@@ -15,30 +16,55 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  // Check if fade should be shown based on scroll position
+  const checkScrollPosition = () => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 10; // 10px threshold
+      setShowFade(!isScrolledToEnd);
+    }
+  };
+
   // Auto-scroll to current video when currentVideoIndex changes
   useEffect(() => {
     if (videoItemRefs.current[currentVideoIndex] && scrollContainerRef.current) {
       const currentVideoElement = videoItemRefs.current[currentVideoIndex];
       const container = scrollContainerRef.current;
-      
+
       // Get the position of the current video item relative to the container
       const containerRect = container.getBoundingClientRect();
       const itemRect = currentVideoElement.getBoundingClientRect();
-      
-      // Check if the item is outside the visible area
-      const isAboveView = itemRect.top < containerRect.top;
-      const isBelowView = itemRect.bottom > containerRect.bottom;
-      
-      if (isAboveView || isBelowView) {
-        // Scroll the current video into view
-        currentVideoElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'nearest'
+      const containerScrollLeft = container.scrollLeft;
+      const itemOffsetLeft = currentVideoElement.offsetLeft;
+
+      // Calculate if the item is out of view
+      const isOutOfViewLeft = itemRect.left < containerRect.left;
+      const isOutOfViewRight = itemRect.right > containerRect.right;
+
+      // Calculate scroll position to center the item
+      if (isOutOfViewLeft || isOutOfViewRight) {
+        const scrollTo = itemOffsetLeft - (container.clientWidth / 2) + (itemRect.width / 2);
+        container.scrollTo({
+          left: scrollTo,
+          behavior: 'smooth'
         });
       }
     }
   }, [currentVideoIndex]);
+
+  // Check scroll position on mount and when videos change
+  useEffect(() => {
+    checkScrollPosition();
+  }, [videos]);
+
+  // Add scroll event listener to update fade visibility
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollPosition);
+      return () => container.removeEventListener('scroll', checkScrollPosition);
+    }
+  }, []);
 
   const handleVideoSelect = (index) => {
     if (onVideoSelect) {
@@ -54,88 +80,60 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
 
   if (loading) {
     return (
-      <div className="mt-4 p-4 bg-white rounded-xl border border-gray-200">
-        <div className="h-6 w-1/3 bg-gray-200 rounded mb-4 animate-pulse"></div>
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-center p-3 animate-pulse">
-              <div className="w-16 h-12 bg-gray-100 rounded mr-3"></div>
-              <div className="flex-1">
-                <div className="h-4 bg-gray-100 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-50 rounded w-1/2"></div>
+      <div className="mt-3 bg-white rounded-xl border border-[#E5E7EB]">
+        <div className="px-5 py-4">
+          <div className="flex overflow-x-auto gap-2 pb-2 pt-1 pr-1">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="flex-shrink-0 w-[119px] h-[68px] bg-white border border-[#E5E7EB] rounded-lg animate-pulse"
+              >
+                <div className="p-2 flex flex-col gap-1.5">
+                  <div className="h-7 bg-gray-200 rounded w-full"></div>
+                  <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mt-4 p-4 bg-white rounded-xl border border-gray-200">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">Training Videos</h3>
-        <span className="text-sm text-gray-500">
-          {videos.length} video{videos.length !== 1 ? "s" : ""}
-        </span>
-      </div>
-
+    <div className="w-full rounded-xl relative">
       <div 
-        ref={scrollContainerRef}
-        className="space-y-2 max-h-[calc(100vh-465px)] overflow-y-auto"
+        ref={scrollContainerRef} 
+        className="overflow-x-auto overflow-y-visible"
+        style={{ scrollBehavior: 'smooth' }}
       >
-        {videos.map((video, index) => (
-          <div
-            key={index}
-            ref={(el) => (videoItemRefs.current[index] = el)}
-            onClick={() => handleVideoSelect(index)}
-            className={`flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-              currentVideoIndex === index
-                ? "bg-blue-50 border-2 border-blue-200"
-                : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
-            }`}
-          >
-            {/* Video Thumbnail */}
-            <div className="relative w-16 h-12 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-              <img
-                src="https://cdn-api.epic.dev.esmagico.in/trainboost/slides/thumb.png"
-                alt={`Video ${index + 1} thumbnail`}
-                className="w-full h-full object-cover"
-              />
-              {/* Play indicator for current video */}
-              {/* {currentVideoIndex === index && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
-                    <div className="w-0 h-0 border-l-[6px] border-l-white border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent ml-0.5"></div>
-                  </div>
+        <div className="flex gap-2 pb-1.5 pt-5 overflow-y-visible">
+          {videos.map((video, index) => (
+            <div
+              key={index}
+              ref={(el) => (videoItemRefs.current[index] = el)}
+              onClick={() => handleVideoSelect(index)}
+              className={`relative flex-shrink-0 w-[119px] h-[68px] rounded-lg cursor-pointer transition-all duration-200 overflow-visible scroll-ml-4 ${
+                currentVideoIndex === index
+                  ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
+                  : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
+              }`}
+            >
+              {/* Video Info Container - using padding instead of absolute positioning */}
+              <div className="p-2 flex flex-col gap-1.5">
+                <h4 className="font-lato font-medium text-[12px] leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2">
+                  {video.title || "Untitled Video"}
+                </h4>
+                <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
+                  {formatDuration(video.duration) || "0:00"}
                 </div>
-              )} */}
-              {/* Video number overlay */}
-              <div className="absolute top-1 left-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
-                {index + 1}
               </div>
-            </div>
 
-            {/* Video Info */}
-            <div className="ml-3 flex-1 min-w-0">
-              <h4 className="font-medium text-gray-800 truncate">
-                {video.title || `Training Video ${index + 1}`}
-              </h4>
-              <div className="flex items-center justify-between mt-1">
-                <p className="text-sm text-gray-500 truncate">
-                  {video.ti || `Part ${index + 1} of the training series`}
-                </p>
-              </div>
-            </div>
-
-            {/* Status indicator */}
-            <div className="ml-2 flex-shrink-0">
-              {currentVideoIndex === index ? (
-                <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
-              ) : currentVideoIndex > index ? (
-                <div className="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center">
+              {/* Status indicator - keeping absolute position as requested */}
+              {currentVideoIndex > index && (
+                <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-50 overflow-visible">
                   <svg
-                    className="w-3 h-3 text-green-600"
+                    className="w-[9.6px] h-[9.6px] text-white"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -146,13 +144,15 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
                     />
                   </svg>
                 </div>
-              ) : (
-                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
               )}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
+      {/* Conditional fade effect - only show when there are more videos to scroll to */}
+      {showFade && (
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-white pointer-events-none"></div>
+      )}
     </div>
   );
 };

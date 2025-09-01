@@ -85,7 +85,7 @@ const QuestionPanel = ({ onPauseVideo, videos = [] }) => {
 
         // Handle speech recognition errors
         recognitionRef.current.onerror = (event) => {
-          console.error("Speech recognition error:", event.error);
+          console.log("Speech recognition error:", event.error);
           setIsListening(false);
 
           // Show user-friendly error message
@@ -214,7 +214,7 @@ const QuestionPanel = ({ onPauseVideo, videos = [] }) => {
         recognitionRef.current.start();
         setIsListening(true);
       } catch (error) {
-        console.error("Error starting speech recognition:", error);
+        console.log("Error starting speech recognition:", error);
         setIsListening(false);
       }
     }

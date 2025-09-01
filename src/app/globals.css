@@ -44,3 +44,21 @@ body {
 .animate-shimmer {
   animation: shimmer 2s infinite;
 }
+
+/* Google Meet style wave animation */
+@keyframes wave {
+  0% {
+    width: 64px;
+    height: 64px;
+    opacity: 0.7;
+  }
+  100% {
+    width: 120px;
+    height: 120px;
+    opacity: 0;
+  }
+}
+
+.animate-wave {
+  animation: wave 1.5s infinite;
+}

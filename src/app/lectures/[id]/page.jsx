@@ -71,7 +71,7 @@ const Home = () => {
     <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-[#F9F9F9] overflow-x-hidden">
       <div className="layout-container flex h-full grow flex-col">
         <div className="flex flex-1 px-6 py-5 overflow-hidden">
-          <div className="flex w-full h-full min-w-0 bg-white py-3 px-4">
+          <div className="flex w-full h-full min-w-0 bg-white py-4 px-5">
             <PPTSection
               videos={videos}
               loading={isLoading}
@@ -89,17 +89,18 @@ const Home = () => {
               onPauseVideo={handlePauseVideo}
               onPauseAnswerAudio={handlePauseAnswerAudio}
               width="30%"
+              presentationId={presentationId}
             />
           </div>
         </div>
       </div>
 
       {/* Floating Chatbot */}
-      <FloatingChatbot 
+      {/* <FloatingChatbot 
         onPauseVideo={handlePauseVideo} 
         videos={videos} 
         presentationId={presentationId}
-      />
+      /> */}
     </div>
   );
 };

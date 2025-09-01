@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import trainBoostLogo from "@/assets/svg/train-boost-logo.svg";
+import { decodeJWT } from "@/utils/jwt";
+import userIcon from "@/assets/svg/user.svg"; 
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -15,7 +17,23 @@ const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState({ name: '', email: '' });
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Get user info from JWT token
+  useEffect(() => {
+    const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || '{}');
+    if (tokens.access_token) {
+      const decoded = decodeJWT(tokens.access_token);
+      if (decoded) {
+        setUserInfo({
+          name: decoded.name || decoded.preferred_username || 'User',
+          email: decoded.email || ''
+        });
+      }
+    }
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -31,10 +49,30 @@ const Header = () => {
     };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("isTrainBoostLogin");
-    setIsDropdownOpen(false);
-    router.push("/login");
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    // try {
+    //   const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || '{}');
+    //   if (tokens.refresh_token) {
+    //     const response = await fetch('https://xstk67r5-3001.inc1.devtunnels.ms/auth/logout', {
+    //       method: 'POST',
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //       },
+    //       body: JSON.stringify({ refresh_token: tokens.refresh_token }),
+    //     });
+        
+    //     if (response.ok) {
+          localStorage.removeItem("trainboost_tokens");
+          setIsDropdownOpen(false);
+          router.push("/login");
+    //     }
+    //   }
+    // } catch (error) {
+    //   console.log('Logout API error:', error);
+    // } finally {
+    //   setIsLoggingOut(false);
+    // }
   };
 
   return (
@@ -78,27 +116,32 @@ const Header = () => {
           </div>
         </button> */}
         <div className="relative" ref={dropdownRef}>
-          <div
-            className="cursor-pointer bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-            style={{
-              backgroundImage:
-                'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCoas-lXwDX4d4qNenf8RAE564_vHHluoFPLisNc_kwvYD7xMl-pNNo4MTJL-GTUDaWsqojiG4bD1LS3277ib4KfQtWNIQ28UkdRewiUVpN9_pg-7QYHkPVzm35zdD8hoi_RW5Ghduj0Nzmj3qbfmrfpRoFrN7h7u8b781iwebQrdXvkBAXPRUeRVoPXX9Ps07w3iq0DE4UJ36zTxJYUkz4pkl8ysGHYFYMcD7qxPfz-1Ku4nONswXHUGNTSHdka2sv29asDFpYzvU")',
-            }}
+          <img
+            className="cursor-pointer w-10 h-10 rounded-full"
+            src={userIcon.src}
+            alt="User"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           />
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-1 z-50">
               <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
-                <div className="font-medium">Admin User</div>
-                <div className="text-gray-500 truncate">
-                  admin@trainboost.com
+                <div className="font-medium">{userInfo.name}</div>
+                <div className="text-gray-500 break-all">
+                  {userInfo.email}
                 </div>
               </div>
               <button
                 onClick={handleLogout}
-                className="cursor-pointer w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                disabled={isLoggingOut}
+                className="cursor-pointer w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Sign out
+                {isLoggingOut && (
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+                {isLoggingOut ? 'Signing out...' : 'Sign out'}
               </button>
             </div>
           )}

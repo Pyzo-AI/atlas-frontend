@@ -1,28 +1,24 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
-// Get environment variables with fallbacks
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://cf.be.trainboost.esmagico.com/api";
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithReauthAndRetry } from './baseQuery';
 
 export const questionsApi = createApi({
   reducerPath: 'questionsApi',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: API_BASE_URL,
-    prepareHeaders: (headers) => {
-      // Add any auth headers here if needed
-      // headers.set('Authorization', `Bearer ${token}`);
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauthAndRetry,
   tagTypes: ['Question'],
   endpoints: (builder) => ({
     // Get quiz data
     getQuiz: builder.query({
-      query: (presentationId) => `presentations/presentations/${presentationId}/quiz`,
+      query: (presentationId) => `presentations/${presentationId}/quiz`,
       providesTags: ['Question'],
     }),
 
     getAllVideo: builder.query({
-      query: (presentationId) => `presentations/presentations/${presentationId}/slides`,
+      query: (presentationId) => `presentations/${presentationId}/slides`,
+      providesTags: ['Question'],
+    }),
+
+    getPresentations: builder.query({
+      query: () => 'presentations/',
       providesTags: ['Question'],
     }),
     
@@ -44,4 +40,5 @@ export const {
   useGetQuizQuery,
   useSubmitQuestionMutation,
   useGetAllVideoQuery,
+  useGetPresentationsQuery,
 } = questionsApi;
