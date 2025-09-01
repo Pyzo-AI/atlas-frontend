@@ -80,6 +80,7 @@ const Home = () => {
               isVideoPlaying={pptSyncState.isPlaying}
               videoDuration={videoState.duration}
               width="70%"
+              title={data?.title || data?.name}
             />
             <VideoPanel
               ref={videoPanelRef}

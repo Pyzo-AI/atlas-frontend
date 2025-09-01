@@ -12,17 +12,20 @@ const PPTSection = ({
   isVideoPlaying = false,
   videoDuration = 0,
   onVideoSelect,
+  title,
 }) => {
   if (loading) {
     return (
-      <div className="flex flex-col h-[calc(100vh-120px)] pr-5 border-r border-[#E5E7EB] flex-shrink-0" style={{ width }}>
+      <div
+        className="flex flex-col h-[calc(100vh-120px)] pr-5 border-r border-[#E5E7EB] flex-shrink-0"
+        style={{ width }}
+      >
         {/* Video Section Skeleton */}
         <div
           className="bg-white rounded-xl border border-[#E5E7EB] min-h-[400px] relative animate-pulse"
           style={{ height }}
         >
-          <div className="w-full h-full bg-gray-200 rounded-xl flex items-center justify-center">
-          </div>
+          <div className="w-full h-full bg-gray-200 rounded-xl flex items-center justify-center"></div>
         </div>
 
         {/* Title and Author Skeleton */}
@@ -73,7 +76,7 @@ const PPTSection = ({
       </div>
       <div className="mt-3 flex justify-between items-center pr-1">
         <p className="font-bold text-[20px] leading-[100%] tracking-[0.02em] font-lato">
-          Corporate Finance
+          {title || "Untitled"}
         </p>
 
         <p className="font-semibold text-[14px] leading-[100%] tracking-[0.02em] font-lato">

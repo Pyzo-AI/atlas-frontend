@@ -1,9 +1,7 @@
 import { decodeJWT } from "./jwt";
 
 // Get the refresh token URL from environment or fallback
-const REFRESH_TOKEN_URL = process.env.NEXT_PUBLIC_LOGIN_BASE_URL
-  ? `${process.env.NEXT_PUBLIC_LOGIN_BASE_URL}/auth/refresh-token`
-  : "https://xstk67r5-3001.inc1.devtunnels.ms/auth/refresh-token";
+const REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_LOGIN_BASE_URL}/auth/refresh-token`;
 
 export const refreshAccessToken = async () => {
   try {
@@ -37,10 +35,16 @@ export const refreshAccessToken = async () => {
 
       return data.access_token;
     } else {
-      throw new Error("Failed to refresh token");
+      // Refresh token is expired or invalid - logout user
+      logout();
     }
   } catch (error) {
-    // Don't clear tokens or redirect - just throw the error
+    // If it's a network error, don't logout
+    if (error.message === "Refresh token expired") {
+      throw error;
+    }
+    // For other errors (network issues), logout as well
+    logout();
     throw error;
   }
 };
@@ -63,8 +67,8 @@ export const getValidAccessToken = async () => {
   try {
     return await refreshAccessToken();
   } catch (error) {
-    // If refresh fails, return the expired token anyway
-    return tokens.access_token;
+    // If refresh fails, user has been logged out
+    return null;
   }
 };
 
