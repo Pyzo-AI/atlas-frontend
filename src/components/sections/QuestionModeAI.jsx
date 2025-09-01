@@ -118,7 +118,7 @@ const QuestionModeAI = forwardRef(
                 </div>
                 {/* Professor thinking text */}
                 <p className="text-white/90 text-xs font-light animate-pulse">
-                  Professor is thinking...
+                  Thinking...
                 </p>
               </div>
             ) : (
