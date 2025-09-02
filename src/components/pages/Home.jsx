@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useGetPresentationsQuery } from "../../store/api/questionsApi";
 import chat_star from "../../assets/svg/chat_star.svg";
+import { getUserDetailsFromToken } from "@/store/utils/token";
 // Course data matching Figma design
 const dummyPresentations = [
   {
@@ -157,6 +158,7 @@ const Home = () => {
   const handlePresentationClick = (presentationId) => {
     router.push(`/lectures/${presentationId}`);
   };
+  const userDetails = getUserDetailsFromToken();
 
   if (error) {
     return (
@@ -239,7 +241,7 @@ const Home = () => {
           <Image className="w-[48px] h-[48px] bg-[#F1F2F4] rounded-[60px]" src={chat_star} alt="User icon"/>
           <div className="flex flex-col justify-center items-start gap-[4px] min-w-[120px] h-[38px]">
             <span className="font-lato font-semibold text-[17px] leading-[20px] text-white">
-            Hello, Giri Prathap!
+            Hello, {userDetails?.name}
             </span>
             <span className="font-lato font-normal text-[12px] leading-[14px] text-white opacity-70">
             Browse your courses and get instant answers to your questions with our AI guide.

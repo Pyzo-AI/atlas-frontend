@@ -40,10 +40,10 @@ export const baseQueryWithReauthAndRetry = async (args, api, extraOptions) => {
         // Retry the original request with new token
         result = await baseQueryWithReauth(args, api, extraOptions);
       }
-      // If no valid token, just return the 401 error - don't logout
+      // If no valid token, user has been logged out automatically
     } catch (error) {
       console.error('Token refresh failed during retry:', error);
-      // Don't logout, just return the original error
+      // User has been logged out automatically in getValidAccessToken
     }
   }
   
