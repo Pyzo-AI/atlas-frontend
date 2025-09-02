@@ -5,7 +5,7 @@ export const getTokens = () => {
   return {};
 };
 
-export const getUsernameFromToken = () => {
+export const getUserDetailsFromToken = () => {
   try {
     const tokens = getTokens();
     if (!tokens.access_token) return null;
@@ -19,7 +19,7 @@ export const getUsernameFromToken = () => {
     const payload = JSON.parse(window.atob(base64));
     
     // Return the username from the token payload
-    return payload?.preferred_username || null;
+    return payload;
   } catch (error) {
     console.error('Error decoding token:', error);
     return null;

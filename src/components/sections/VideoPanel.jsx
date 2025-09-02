@@ -422,9 +422,10 @@ const VideoPanel = forwardRef(
           // Optional: Preload poster/thumbnail
           if (videos[nextVideoIndex]?.thumbnail) {
             const img = new Image();
-            // img.src = videos[nextVideoIndex].thumbnail;
-            img.src =
-              "https://cdn-api.epic.dev.esmagico.in/trainboost/slides/thumb.png";
+            img.src = videos[nextVideoIndex].thumbnail;
+            // console.log("Preloading thumbnail:", videos[nextVideoIndex]?.thumbnail);
+            // img.src =
+            //   "https://cdn-api.epic.dev.esmagico.in/trainboost/slides/thumb.png";
           }
         }
       }
@@ -703,16 +704,14 @@ const VideoPanel = forwardRef(
                   }
                 }}
                 onClick={togglePlayPause}
-                // poster={videos?.[currentVideoIndex]?.thumbnail}
-                poster={
-                  "https://cdn-api.epic.dev.esmagico.in/trainboost/slides/thumb.png"
-                }
+                poster={videos?.[currentVideoIndex]?.thumbnail}
                 autoPlay={autoPlayEnabled}
                 controls={true}
                 controlsList="nodownload"
                 disablePictureInPicture
               />
             </div>
+            {console.log(videos?.[currentVideoIndex]?.thumbnail , "thumnail")}
             {/* Time display below video */}
             <div className="px-1 flex justify-between mt-2 text-[12px] leading-4 tracking-normal font-normal text-center text-gray-600 font-lato">
               <span>

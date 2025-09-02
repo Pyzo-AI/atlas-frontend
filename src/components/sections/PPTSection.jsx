@@ -13,6 +13,7 @@ const PPTSection = ({
   videoDuration = 0,
   onVideoSelect,
   title,
+  author
 }) => {
   if (loading) {
     return (
@@ -80,7 +81,7 @@ const PPTSection = ({
         </p>
 
         <p className="font-semibold text-[14px] leading-[100%] tracking-[0.02em] font-lato">
-          <span className="text-[#00000080]">By:</span> Bhagwan Chowdhry
+          <span className="text-[#00000080]">By:</span> {author || "Unknown"}
         </p>
       </div>
 

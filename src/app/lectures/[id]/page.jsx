@@ -83,6 +83,7 @@ const Home = () => {
               videoDuration={videoState.duration}
               width="70%"
               title={data?.title || data?.name || "RBI Clean Note Policy"}
+              author={data?.author || "Unknown"}
             />
             <VideoPanel
               ref={videoPanelRef}

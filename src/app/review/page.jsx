@@ -4,13 +4,18 @@ import unrated_start from '@/assets/svg/unrated_start.svg';
 import rated_start from '@/assets/svg/rated_start.svg';
 import ratingIMG from '@/assets/svg/rating.svg';
 import Image from 'next/image';
-import { getTokens, getUsernameFromToken } from '@/store/utils/token';
+import { getTokens, getUserDetailsFromToken } from '@/store/utils/token';
+import RatingSuccessModal from '@/components/ui/RatingSuccessModal';
+import { useRouter } from 'next/navigation';
+
 
 export default function Review() {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [hoveredStar, setHoveredStar] = useState(0);
-  const token = getTokens().access_token;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const router = useRouter();
 
   const handleStarClick = (starIndex) => {
     setRating(starIndex);
@@ -30,17 +35,53 @@ export default function Review() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const username = getUsernameFromToken();
-    let data = {
-      rating,
-      review,
-      userName: username || 'anonymous', // Fallback to 'anonymous' if username not found
-    };
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const userDetails = getUserDetailsFromToken();
+      console.log("User details:", userDetails);
+      
+      const data = {
+        rating,
+        review,
+        userName: userDetails?.preferred_username || 'anonymous',
+        email: userDetails?.email || 'anonymous',
+        userId: userDetails?.sub || 'anonymous',
+        name: userDetails?.name || 'anonymous',
+      };
 
-    console.log('Submitting review data:', data);
+      console.log('Submitting review data:', data);
 
+      const response = await fetch("https://script.google.com/macros/s/AKfycbzUGRNuOp354NXdP-G__5oEWJWBMypNxA3axzEZPOAYgtDwOr3PTLGcsMiwZpFnofqpFQ/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+    //   const result = await response.json();
+    //   console.log('Success:', result);
+      
+      // Show success modal
+      setShowSuccessModal(true);
+      
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      // TODO: Add error notification to the user
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowSuccessModal(false);
+    // Reset form after successful submission
+    setRating(0);
+    setReview('');
+    router.push('/');
   };
 
   const isSubmitDisabled = rating === 0;
@@ -103,14 +144,22 @@ export default function Review() {
           <div className="relative group">
             <button
               onClick={handleSubmit}
-              disabled={isSubmitDisabled}
-              className={`px-16 py-2 rounded-full font-medium text-base transition-colors ${
-                isSubmitDisabled
+              disabled={isSubmitDisabled || isSubmitting}
+              className={`px-16 py-2 rounded-full font-medium text-base transition-colors flex items-center justify-center min-w-[120px] ${
+                isSubmitDisabled || isSubmitting
                   ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
                   : 'bg-[#744FFF] text-white hover:bg-[#5F3FCC] cursor-pointer'
               }`}
             >
-              Submit
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Submitting...
+                </>
+              ) : 'Submit'}
             </button>
             {isSubmitDisabled && (
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
@@ -121,6 +170,12 @@ export default function Review() {
           </div>
         </div>
       </div>
+
+      {/* Success Modal */}
+      <RatingSuccessModal 
+        isOpen={showSuccessModal} 
+        onClose={handleCloseModal} 
+      />
     </div>
   );
 }

@@ -28,8 +28,14 @@ function ResultContent() {
   };
 
   const handleRestartTraining = () => {
-    router.push(`/`);
+    const presentationId = searchParams.get("id");
+    if (!presentationId) return;
+    router.push(`/lectures/${presentationId}`);
     dispatch(setCurrentVideoIndex(0));
+  }
+
+  const navigateToReview = () => {
+    router.push(`/review`);
   }
 
   if (score === null) return null;
@@ -153,7 +159,7 @@ function ResultContent() {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
               <Button
-                onClick={handleRestartTraining}
+                onClick={isPerfectScore ? navigateToReview : handleRestartTraining}
                 variant={"primary"}
                 className={`px-6 py-3 rounded-[8px] font-lato font-medium text-[14px] ${
                   isPerfectScore
