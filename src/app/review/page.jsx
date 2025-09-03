@@ -89,7 +89,12 @@ export default function Review() {
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
-      <BreadCrumb title="Review" />
+       <BreadCrumb
+             paths={[
+               { path: "/", label: "All Courses" },
+               { path: "", label: "Review" },
+             ]}
+           />
       {/* Main Rating Card */}
       <div className="flex justify-center pt-12">
         <div className="w-144 bg-white border border-gray-200 rounded-2xl px-10 py-[30px] flex flex-col items-center gap-5">

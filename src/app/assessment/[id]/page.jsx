@@ -133,7 +133,16 @@ export default function AssessmentPage() {
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
-      <BreadCrumb title="Assessment" />
+       <BreadCrumb
+          paths={[
+            { path: "/", label: "All Courses" },
+            {
+              path: `/lectures/${presentationId}`,
+              label: "Lectures",
+            },
+            { path: "", label: "Assessment" },
+          ]}
+        />
       <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
         <div className="p-8">
           <h1 className="text-[24px] font-lato font-bold mb-8 text-center text-[#1A1C29]">
