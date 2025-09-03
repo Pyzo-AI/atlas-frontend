@@ -4,6 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useGetQuizQuery } from "@/store/api/questionsApi";
 import Button from "@/components/common/Button";
+import BreadCrumb from "@/components/common/BreadCrumb";
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -30,7 +31,8 @@ export default function AssessmentPage() {
   // Show loading state while fetching data
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F9F9F9] py-8 px-10">
+      <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
+        <BreadCrumb title="Assessment" />
         <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
           <div className="p-8">
             <div className="animate-pulse">
@@ -130,7 +132,17 @@ export default function AssessmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] py-8 px-10">
+    <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
+       <BreadCrumb
+          paths={[
+            { path: "/", label: "All Courses" },
+            {
+              path: `/lectures/${presentationId}`,
+              label: "Lectures",
+            },
+            { path: "", label: "Assessment" },
+          ]}
+        />
       <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
         <div className="p-8">
           <h1 className="text-[24px] font-lato font-bold mb-8 text-center text-[#1A1C29]">
