@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import unrated_start from '@/assets/svg/unrated_start.svg';
 import rated_start from '@/assets/svg/rated_start.svg';
+import half_rated_star from '@/assets/svg/half_rated_star.svg';
 import ratingIMG from '@/assets/svg/rating.svg';
 import Image from 'next/image';
 import { getTokens, getUserDetailsFromToken } from '@/store/utils/token';
@@ -21,12 +22,12 @@ export default function Review({params}) {
   const presentationId = resolvedParams.id;
   console.log("Presentation ID:", presentationId);
 
-  const handleStarClick = (starIndex) => {
-    setRating(starIndex);
+  const handleStarClick = (starIndex, isHalf = false) => {
+    setRating(isHalf ? starIndex - 0.5 : starIndex);
   };
 
-  const handleStarHover = (starIndex) => {
-    setHoveredStar(starIndex);
+  const handleStarHover = (starIndex, isHalf = false) => {
+    setHoveredStar(isHalf ? starIndex - 0.5 : starIndex);
   };
 
   const handleStarLeave = () => {
@@ -116,22 +117,45 @@ export default function Review({params}) {
             <div className="flex flex-col items-center gap-6 w-full">
               {/* Star Rating */}
               <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    className="w-8 h-8 rounded focus:outline-none transition-colors cursor-pointer"
-                    onClick={() => handleStarClick(star)}
-                    onMouseEnter={() => handleStarHover(star)}
-                    onMouseLeave={handleStarLeave}
-                  >
-                    <Image 
-                      src={star <= (hoveredStar || rating) ? rated_start : unrated_start} 
-                      alt={star <= (hoveredStar || rating) ? "Rated star" : "Unrated star"} 
-                      width={32} 
-                      height={32}
-                    />
-                  </button>
-                ))}
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const currentRating = hoveredStar || rating;
+                  const isFullStar = star <= currentRating;
+                  const isHalfStar = star - 0.5 === currentRating;
+                  
+                  let starSrc = unrated_start;
+                  if (isFullStar) {
+                    starSrc = rated_start;
+                  } else if (isHalfStar) {
+                    starSrc = half_rated_star;
+                  }
+                  
+                  return (
+                    <div key={star} className="relative w-8 h-8">
+                      <Image 
+                        src={starSrc} 
+                        alt={isFullStar ? "Rated star" : isHalfStar ? "Half rated star" : "Unrated star"} 
+                        width={32} 
+                        height={32}
+                      />
+                      
+                      {/* Left half click area */}
+                      <button
+                        className="absolute left-0 top-0 w-1/2 h-full focus:outline-none cursor-pointer z-10"
+                        onClick={() => handleStarClick(star, true)}
+                        onMouseEnter={() => handleStarHover(star, true)}
+                        onMouseLeave={handleStarLeave}
+                      />
+                      
+                      {/* Right half click area */}
+                      <button
+                        className="absolute right-0 top-0 w-1/2 h-full focus:outline-none cursor-pointer z-10"
+                        onClick={() => handleStarClick(star, false)}
+                        onMouseEnter={() => handleStarHover(star, false)}
+                        onMouseLeave={handleStarLeave}
+                      />
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Review Text Area */}
