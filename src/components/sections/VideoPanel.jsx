@@ -543,7 +543,7 @@ const VideoPanel = forwardRef(
                     const presentationId = currentPath.split("/lectures/")[1];
                     router.push(`/assessment/${presentationId}`);
                   }}
-                  className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
                 >
                   Go to Assessment Now
                 </button>

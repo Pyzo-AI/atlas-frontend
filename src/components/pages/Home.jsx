@@ -113,7 +113,7 @@ const PresentationCard = ({ presentation, onClick }) => {
 
   return (
     <div
-      className="flex flex-col items-start p-[12px_12px_16px] gap-[10px] w-full min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] cursor-pointer"
+      className="flex flex-col items-start p-[12px_12px_16px] gap-[10px] w-full min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)] transition-shadow duration-300"
       onClick={onClick}
     >
       <div className="flex flex-col items-start gap-[12px] w-full flex-1">
@@ -123,7 +123,8 @@ const PresentationCard = ({ presentation, onClick }) => {
             src={presentation?.image}
             alt={presentation?.title}
             fill
-            className="object-cover transition-transform duration-300 hover:scale-110"
+            // className="object-cover transition-transform duration-300 hover:scale-110"
+             className="object-cover "
           />
         </div>
 
