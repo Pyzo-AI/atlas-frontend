@@ -15,7 +15,7 @@ import React, {
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import { useConversation } from '@elevenlabs/react';
+import { useConversation } from "@elevenlabs/react";
 import AILearningAssistant from "./AILearningAssistant";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
@@ -60,28 +60,45 @@ const VideoPanel = forwardRef(
       (state) => state.video
     );
     const [showChat, setShowChat] = useState(false);
+    const [conversationHistory, setConversationHistory] = useState([]);
     // ElevenLabs Conversational AI
     const conversation = useConversation({
       apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
       onConnect: () => {
-        console.log('Connected to ElevenLabs');
-        setConversationState(prev => ({ ...prev, isConnected: true }));
+        console.log("Connected to ElevenLabs");
+        setConversationState((prev) => ({ ...prev, isConnected: true }));
       },
       onDisconnect: () => {
-        console.log('Disconnected from ElevenLabs');
-        setConversationState(prev => ({ ...prev, isConnected: false, isAudioPlaying: false }));
+        console.log("Disconnected from ElevenLabs");
+        setConversationState((prev) => ({
+          ...prev,
+          isConnected: false,
+          isAudioPlaying: false,
+        }));
       },
       onMessage: (message) => {
-        console.log('Message:', message);
-        if (message.type === 'agent_response_audio_start') {
-          setConversationState(prev => ({ ...prev, isAudioPlaying: true, isLoading: false }));
-        } else if (message.type === 'agent_response_audio_end') {
-          setConversationState(prev => ({ ...prev, isAudioPlaying: false }));
+        console.log("Message:", message);
+        if (message.source === "user") {
+          const content = message.message;
+          if (content.trim() === "") return;
+          setConversationHistory((prev) => [
+            ...prev,
+            { type: "question", content },
+          ]);
+        } else {
+          setConversationHistory((prev) => [
+            ...prev,
+            { type: "answer", content: message.message },
+          ]);
         }
       },
       onError: (error) => {
-        console.error('ElevenLabs Error:', error);
-        setConversationState(prev => ({ ...prev, isLoading: false, isAudioPlaying: false }));
+        console.error("ElevenLabs Error:", error);
+        setConversationState((prev) => ({
+          ...prev,
+          isLoading: false,
+          isAudioPlaying: false,
+        }));
       },
     });
 
@@ -90,24 +107,28 @@ const VideoPanel = forwardRef(
         if (onPauseVideo) {
           onPauseVideo();
         }
-        
-        setConversationState(prev => ({ ...prev, isLoading: true }));
+
+        setConversationState((prev) => ({ ...prev, isLoading: true }));
         await navigator.mediaDevices.getUserMedia({ audio: true });
         await conversation.startSession({
-          agentId: 'agent_4701k47tsjjff7crz1caj7dd9htv',
+          agentId: "agent_4701k47tsjjff7crz1caj7dd9htv",
         });
       } catch (error) {
-        console.error('Failed to start conversation:', error);
-        setConversationState(prev => ({ ...prev, isLoading: false }));
+        console.error("Failed to start conversation:", error);
+        setConversationState((prev) => ({ ...prev, isLoading: false }));
       }
     };
 
     const stopConversation = async () => {
       try {
         await conversation.endSession();
-        setConversationState(prev => ({ ...prev, isConnected: false, isAudioPlaying: false }));
+        setConversationState((prev) => ({
+          ...prev,
+          isConnected: false,
+          isAudioPlaying: false,
+        }));
       } catch (error) {
-        console.error('Failed to stop conversation:', error);
+        console.error("Failed to stop conversation:", error);
       }
     };
     const [showRedirectPopup, setShowRedirectPopup] = useState(false);
@@ -494,7 +515,7 @@ const VideoPanel = forwardRef(
           </div>
         )}
         {!isQuestionMode && !showChat ? (
-          <div 
+          <div
             className="cursor-pointer p-3 pb-2 bg-white rounded-xl border border-[#E5E7EB]"
             onClick={togglePlayPause}
           >
@@ -617,7 +638,7 @@ const VideoPanel = forwardRef(
                 disablePictureInPicture
               />
             </div>
-            {console.log(videos?.[currentVideoIndex]?.thumbnail , "thumnail")}
+            {console.log(videos?.[currentVideoIndex]?.thumbnail, "thumnail")}
             {/* Time display below video */}
             <div className="px-1 flex justify-between mt-2 text-[12px] leading-4 tracking-normal font-normal text-center text-gray-600 font-lato">
               <span>
@@ -639,7 +660,7 @@ const VideoPanel = forwardRef(
         {showChat ? (
           <ChatUI
             onClose={() => setShowChat(false)}
-            conversation={[]}
+            conversation={conversationHistory}
           />
         ) : isQuestionMode ? (
           <QuestionModeUser
