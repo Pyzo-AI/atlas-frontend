@@ -28,14 +28,14 @@ const AILearningAssistant = ({showChat, setShowChat = ()=>{}}) => {
       {/* Inner Frame */}
       <div className="w-full h-full bg-[#E0DDFF] rounded-xl p-3 flex flex-col">
         {/* Top Section with Chat Icon */}
-        {/* <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-4">
           <button 
             onClick={handleMessageClick}
             className="cursor-pointer w-[30px] h-[30px] bg-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
           >
             <Image className="w-full h-full" src={message} alt="message" />
           </button>
-        </div> */}
+        </div>
 
         {/* Main Content Container - Centered vertically in remaining space */}
         <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4">

@@ -15,12 +15,8 @@ import React, {
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import { useGetAllVideoQuery } from "@/store/api/questionsApi";
-import { toast } from "react-toastify";
-import VideoPlaylist from "./VideoPlaylist";
+import { useConversation } from '@elevenlabs/react';
 import AILearningAssistant from "./AILearningAssistant";
-import QuestionModeUI from "./QuestionModeAI";
-import QuestionModeAssistant from "./QuestionModeUser";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
 import ChatUI from "./ChatUI";
@@ -38,13 +34,11 @@ const VideoPanel = forwardRef(
     },
     ref
   ) => {
-    const [qaState, setQaState] = useState({
+    const [conversationState, setConversationState] = useState({
       isLoading: false,
-      answer: "",
-      audioLink: "",
+      isConnected: false,
       isAudioPlaying: false,
     });
-    const [conversation, setConversation] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
     const [lastVideoSrc, setLastVideoSrc] = useState("");
@@ -66,109 +60,64 @@ const VideoPanel = forwardRef(
       (state) => state.video
     );
     const [showChat, setShowChat] = useState(false);
-    const questionModeAIRef = useRef(null);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const handleQuestionSubmit = async (userQuestion) => {
-      console.log(userQuestion, "userQuestion");
-      if (!userQuestion) return;
-
-      if (onPauseVideo) {
-        onPauseVideo();
-      }
-
-      setQaState((prev) => ({
-        ...prev,
-        isLoading: true,
-        answer: "",
-        audioLink: "",
-      }));
-
-      // Add user question to conversation
-      setConversation((prev) => [
-        ...prev,
-        { type: "question", content: userQuestion },
-      ]);
-
-      try {
-        // Map conversation for API - convert internal format to API format and get latest 10
-        const mappedConversation = conversation
-          .slice(-10) // Get only the latest 10 conversations
-          .map((item) => ({
-            type: item.type === "question" ? "user" : "AI",
-            content: item.content,
-          }));
-
-        const response = await fetch(
-          `${API_BASE_URL}/qa/${presentationId}?stream_audio=true`,
-          {
-            method: "POST",
-            headers: {
-              Accept: "audio/mpeg",
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              question: userQuestion,
-              conversation: mappedConversation,
-              // knowledge_source_ids: [1],
-              config: { use_external_knowledge: false },
-            }),
-          }
-        );
-
-        if (response.ok) {
-          const answerText =
-            response.headers.get("x-answer") || "No answer received";
-
-          const jumpTarget = response.headers.get("x-jump-target");
-          if (jumpTarget !== null && jumpTarget !== undefined) {
-            dispatch(setAnswerPptIndex(parseInt(jumpTarget)));
-          }
-
-          const audioBlob = await response.blob();
-          const audioUrl = URL.createObjectURL(audioBlob);
-
-          setQaState((prev) => ({
-            ...prev,
-            answer: answerText,
-            audioLink: audioUrl,
-          }));
-
-          // Add AI answer to conversation
-          setConversation((prev) => [
-            ...prev,
-            { type: "answer", content: answerText || "No text answer found" },
-          ]);
-        } else {
-          throw new Error("Failed to get response");
+    // ElevenLabs Conversational AI
+    const conversation = useConversation({
+      apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
+      onConnect: () => {
+        console.log('Connected to ElevenLabs');
+        setConversationState(prev => ({ ...prev, isConnected: true }));
+      },
+      onDisconnect: () => {
+        console.log('Disconnected from ElevenLabs');
+        setConversationState(prev => ({ ...prev, isConnected: false, isAudioPlaying: false }));
+      },
+      onMessage: (message) => {
+        console.log('Message:', message);
+        if (message.type === 'agent_response_audio_start') {
+          setConversationState(prev => ({ ...prev, isAudioPlaying: true, isLoading: false }));
+        } else if (message.type === 'agent_response_audio_end') {
+          setConversationState(prev => ({ ...prev, isAudioPlaying: false }));
         }
-      } catch (error) {
-        console.log("Error submitting question:", error);
-        toast.error("Failed to get audio response. Please try again.");
-        setQaState((prev) => ({
-          ...prev,
-          answer: "Failed to load answer. Please try again.",
-        }));
+      },
+      onError: (error) => {
+        console.error('ElevenLabs Error:', error);
+        setConversationState(prev => ({ ...prev, isLoading: false, isAudioPlaying: false }));
+      },
+    });
 
-        // Add error to conversation
-        setConversation((prev) => [
-          ...prev,
-          {
-            type: "error",
-            content: "Failed to load answer. Please try again.",
-          },
-        ]);
-      } finally {
-        setQaState((prev) => ({ ...prev, isLoading: false }));
+    const startConversation = async () => {
+      try {
+        if (onPauseVideo) {
+          onPauseVideo();
+        }
+        
+        setConversationState(prev => ({ ...prev, isLoading: true }));
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        await conversation.startSession({
+          agentId: 'agent_4701k47tsjjff7crz1caj7dd9htv',
+        });
+      } catch (error) {
+        console.error('Failed to start conversation:', error);
+        setConversationState(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    const stopConversation = async () => {
+      try {
+        await conversation.endSession();
+        setConversationState(prev => ({ ...prev, isConnected: false, isAudioPlaying: false }));
+      } catch (error) {
+        console.error('Failed to stop conversation:', error);
       }
     };
     const [showRedirectPopup, setShowRedirectPopup] = useState(false);
     const [countdown, setCountdown] = useState(10);
     const [preloadedVideoIndex, setPreloadedVideoIndex] = useState(-1);
 
-    // Function to stop answer audio
+    // Function to stop conversation
     const stopAnswerAudio = () => {
-      if (questionModeAIRef.current) {
-        questionModeAIRef.current.stopAudio();
+      if (conversationState.isConnected) {
+        stopConversation();
       }
     };
 
@@ -406,17 +355,10 @@ const VideoPanel = forwardRef(
       }
     }, [isPlaying, currentVideoIndex, dispatch]);
 
-    // Reset error state when exiting question mode
+    // Reset conversation state when exiting question mode
     useEffect(() => {
-      if (!isQuestionMode) {
-        setQaState((prev) => ({
-          ...prev,
-          isLoading: false,
-          answer: "",
-          audioLink: "",
-          isAudioPlaying: false,
-        }));
-        setConversation([]);
+      if (!isQuestionMode && conversationState.isConnected) {
+        stopConversation();
       }
     }, [isQuestionMode]);
 
@@ -689,29 +631,26 @@ const VideoPanel = forwardRef(
         ) : null}
         {isQuestionMode && (
           <QuestionModeAI
-            ref={questionModeAIRef}
-            isLoading={qaState.isLoading}
-            answer={qaState.answer}
-            audioLink={qaState.audioLink}
-            isAudioPlaying={qaState.isAudioPlaying}
-            onAudioStateChange={(isPlaying) =>
-              setQaState((prev) => ({ ...prev, isAudioPlaying: isPlaying }))
-            }
+            isLoading={conversationState.isLoading}
+            isAudioPlaying={conversationState.isAudioPlaying}
+            isConnected={conversationState.isConnected}
           />
         )}
         {showChat ? (
           <ChatUI
             onClose={() => setShowChat(false)}
-            conversation={conversation}
+            conversation={[]}
           />
         ) : isQuestionMode ? (
           <QuestionModeUser
             onPauseVideo={pauseVideo}
-            onQuestionSubmit={handleQuestionSubmit}
+            onStartConversation={startConversation}
+            onStopConversation={stopConversation}
             setShowChat={setShowChat}
             onPauseAnswerAudio={stopAnswerAudio}
-            isAudioPlaying={qaState.isAudioPlaying}
-            isAudioLoading={qaState.isLoading}
+            isAudioPlaying={conversationState.isAudioPlaying}
+            isAudioLoading={conversationState.isLoading}
+            isConnected={conversationState.isConnected}
           />
         ) : (
           <AILearningAssistant setShowChat={setShowChat} showChat={showChat} />

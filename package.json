@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@elevenlabs/react": "^0.6.1",
     "@reduxjs/toolkit": "^2.8.2",
     "lottie-react": "^2.4.1",
     "next": "15.3.5",
