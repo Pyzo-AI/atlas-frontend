@@ -35,7 +35,7 @@ function ResultContent() {
   };
 
   const navigateToReview = () => {
-    router.push(`/review`);
+    router.push(`/review/${presentationId}`);
   };
 
   if (score === null) return null;

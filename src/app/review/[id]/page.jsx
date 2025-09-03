@@ -6,17 +6,20 @@ import ratingIMG from '@/assets/svg/rating.svg';
 import Image from 'next/image';
 import { getTokens, getUserDetailsFromToken } from '@/store/utils/token';
 import RatingSuccessModal from '@/components/ui/RatingSuccessModal';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import BreadCrumb from '@/components/common/BreadCrumb';
 
 
-export default function Review() {
+export default function Review({params}) {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [hoveredStar, setHoveredStar] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const router = useRouter();
+  const resolvedParams = React.use(params);
+  const presentationId = resolvedParams.id;
+  console.log("Presentation ID:", presentationId);
 
   const handleStarClick = (starIndex) => {
     setRating(starIndex);
@@ -49,15 +52,16 @@ export default function Review() {
       const data = {
         rating,
         review,
+        presentationId,
+        name: userDetails?.name || 'anonymous',
         userName: userDetails?.preferred_username || 'anonymous',
         email: userDetails?.email || 'anonymous',
         userId: userDetails?.sub || 'anonymous',
-        name: userDetails?.name || 'anonymous',
       };
 
       console.log('Submitting review data:', data);
 
-      const response = await fetch("https://script.google.com/macros/s/AKfycbzUGRNuOp354NXdP-G__5oEWJWBMypNxA3axzEZPOAYgtDwOr3PTLGcsMiwZpFnofqpFQ/exec", {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbwOMSbXPGz1vAXtp2eGWgtP-O4WNpnqI0cUi1PfEQqM9_bAK9TL3gxKCQnJtVoEO7THOA/exec", {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "application/json" },
