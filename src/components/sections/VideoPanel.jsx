@@ -152,7 +152,7 @@ const VideoPanel = forwardRef(
             body: JSON.stringify({
               question: userQuestion,
               conversation: mappedConversation,
-              knowledge_source_ids: [1],
+              // knowledge_source_ids: [1],
               config: { use_external_knowledge: false },
             }),
           }
@@ -595,7 +595,10 @@ const VideoPanel = forwardRef(
           </div>
         )}
         {!isQuestionMode && !showChat ? (
-          <div className="p-3 pb-2 bg-white rounded-xl border border-[#E5E7EB]">
+          <div 
+            className="cursor-pointer p-3 pb-2 bg-white rounded-xl border border-[#E5E7EB]"
+            onClick={togglePlayPause}
+          >
             <div className="relative w-full pt-[56.25%] bg-black rounded-lg overflow-hidden">
               {" "}
               {/* 16:9 Aspect Ratio */}
@@ -638,6 +641,10 @@ const VideoPanel = forwardRef(
                   console.log("Trainer video can play");
                   // Apply persistent settings when video can play
                   applyVideoSettings(e.target);
+                }}
+                onClick={(e) => {
+                  // Prevent event bubbling to avoid double-triggering the parent's onClick
+                  e.stopPropagation();
                 }}
                 onPlay={() => {
                   setIsPlaying(true);
@@ -703,7 +710,7 @@ const VideoPanel = forwardRef(
                     }));
                   }
                 }}
-                onClick={togglePlayPause}
+                // onClick={togglePlayPause}
                 poster={videos?.[currentVideoIndex]?.thumbnail}
                 autoPlay={autoPlayEnabled}
                 controls={true}

@@ -72,7 +72,7 @@ const Home = () => {
     <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-[#F9F9F9] overflow-x-hidden">
       <div className="layout-container flex h-full grow flex-col">
         <div className=" px-6 py-5 overflow-hidden">
-        {/* <BreadCrumb title={data?.title || data?.name || "RBI Clean Note Policy"} /> */}
+        {/* <BreadCrumb title={data?.presentation_name || "Untitled Presentation"} /> */}
           <div className="flex w-full h-full min-w-0 bg-white py-4 px-5">
             <PPTSection
               videos={videos}
@@ -82,7 +82,7 @@ const Home = () => {
               isVideoPlaying={pptSyncState.isPlaying}
               videoDuration={videoState.duration}
               width="70%"
-              title={data?.title || data?.name || "RBI Clean Note Policy"}
+              title={data?.presentation_name || "Untitled Presentation"}
               author={data?.author || "Unknown"}
             />
             <VideoPanel

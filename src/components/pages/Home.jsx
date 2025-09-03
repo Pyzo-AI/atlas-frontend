@@ -154,7 +154,9 @@ const Home = () => {
     data: presentations = [],
     isLoading: loading,
     error,
-  } = useGetPresentationsQuery();
+  } = useGetPresentationsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
   const handlePresentationClick = (presentationId) => {
     router.push(`/lectures/${presentationId}`);
   };
