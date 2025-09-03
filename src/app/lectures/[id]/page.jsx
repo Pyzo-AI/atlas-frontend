@@ -97,7 +97,7 @@ const Home = () => {
               videoDuration={videoState.duration}
               width="70%"
               title={data?.presentation_name || "Untitled Presentation"}
-              author={data?.author || "Unknown"}
+               author={data?.presentation_author || "Unknown"}
             />
             <VideoPanel
               ref={videoPanelRef}
