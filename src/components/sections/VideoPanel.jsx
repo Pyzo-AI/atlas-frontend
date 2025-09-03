@@ -39,6 +39,7 @@ const VideoPanel = forwardRef(
       isConnected: false,
       isAudioPlaying: false,
     });
+    const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
     const [lastVideoSrc, setLastVideoSrc] = useState("");
@@ -67,6 +68,14 @@ const VideoPanel = forwardRef(
       onConnect: () => {
         console.log("Connected to ElevenLabs");
         setConversationState((prev) => ({ ...prev, isConnected: true }));
+      },
+      onModeChange: (mode) => {
+        console.log("Mode changed:", mode);
+        if (mode.mode === "listening") {
+          setIsListening(true);
+        } else {
+          setIsListening(false);
+        }
       },
       onDisconnect: () => {
         console.log("Disconnected from ElevenLabs");
@@ -652,8 +661,8 @@ const VideoPanel = forwardRef(
         ) : null}
         {isQuestionMode && (
           <QuestionModeAI
-            isLoading={conversationState.isLoading}
-            isAudioPlaying={conversationState.isAudioPlaying}
+            isLoading={!conversationState.isConnected}
+            isAudioPlaying={conversation.isSpeaking}
             isConnected={conversationState.isConnected}
           />
         )}
@@ -670,7 +679,7 @@ const VideoPanel = forwardRef(
             setShowChat={setShowChat}
             onPauseAnswerAudio={stopAnswerAudio}
             isAudioPlaying={conversationState.isAudioPlaying}
-            isAudioLoading={conversationState.isLoading}
+            isAudioLoading={isListening}
             isConnected={conversationState.isConnected}
           />
         ) : (

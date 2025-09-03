@@ -65,7 +65,7 @@ const QuestionModeUser = ({ onPauseVideo, onStartConversation, onStopConversatio
         <div className="flex flex-col items-center gap-[30px] max-w-[275px]">
           {/* Avatar/Tap to Speak */}
           <div className="w-[120px] h-[120px] flex items-center justify-center cursor-pointer" onClick={handleTapToSpeak}>
-            {isConnected || isAudioLoading ? (
+            {isAudioLoading ? (
               <Lottie
                 animationData={userWaveAnimation}
                 style={{ width: 120, height: 120 }}
