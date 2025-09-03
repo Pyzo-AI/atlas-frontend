@@ -5,6 +5,7 @@ import { setCurrentVideoIndex } from "@/store/features/videoSlice";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { useDispatch } from "react-redux";
+import BreadCrumb from "@/components/common/BreadCrumb";
 
 // Separate component for the result content
 function ResultContent() {
@@ -41,8 +42,10 @@ function ResultContent() {
   if (score === null) return null;
 
   return (
-    <div className="min-h-[calc(100vh-70px)] flex items-center justify-center bg-[#F9F9F9] p-4">
-      <div className="max-w-xl w-full bg-white rounded-xl border border-[#E5E7EB] overflow-hidden mt-[-120px]">
+    <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
+      <BreadCrumb title="Result" />
+      <div className="flex justify-center pt-12">
+        <div className="max-w-xl w-full bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
         <div className="p-8">
           {/* Score Circle */}
           <div className="relative w-32 h-32 mx-auto mb-8">
@@ -184,14 +187,17 @@ function ResultContent() {
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
 // Loading component
 function ResultLoading() {
   return (
-    <div className="min-h-[calc(100vh-70px)] flex items-center justify-center bg-[#F9F9F9] p-4">
-      <div className="max-w-xl w-full bg-white rounded-xl border border-[#E5E7EB] overflow-hidden mt-[-120px]">
+    <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
+      <BreadCrumb title="Result" />
+      <div className="flex justify-center pt-12">
+        <div className="max-w-xl w-full bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
         <div className="p-8">
           {/* Score Circle Skeleton */}
           <div className="relative w-32 h-32 mx-auto mb-8">
@@ -223,6 +229,7 @@ function ResultLoading() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

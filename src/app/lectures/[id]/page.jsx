@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setIsPlaying } from "@/store/features/videoSlice";
 import { usePathname, useParams } from "next/navigation";
 import BreadCrumb from "@/components/common/BreadCrumb";
+import PageSkeleton from "@/components/common/PageSkeleton";
 
 const Home = () => {
   const params = useParams();
@@ -68,12 +69,16 @@ const Home = () => {
     });
   };
 
+  if (isLoading) {
+    return <PageSkeleton />;
+  }
+
   return (
     <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-[#F9F9F9] overflow-x-hidden">
       <div className="layout-container flex h-full grow flex-col">
         <div className=" px-6 py-5 overflow-hidden">
-        {/* <BreadCrumb title={data?.presentation_name || "Untitled Presentation"} /> */}
-          <div className="flex w-full h-full min-w-0 bg-white py-4 px-5">
+        <BreadCrumb title={data?.presentation_name || "Untitled Presentation"} />
+          <div className="flex w-full h-[calc(100%-36px)] min-w-0 bg-white py-4 px-5">
             <PPTSection
               videos={videos}
               loading={isLoading}
