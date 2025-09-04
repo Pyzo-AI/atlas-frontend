@@ -39,6 +39,7 @@ const VideoPanel = forwardRef(
       isConnected: false,
       isAudioPlaying: false,
     });
+    console.log(conversationState, "conversationState");
     const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
@@ -64,7 +65,7 @@ const VideoPanel = forwardRef(
     const [conversationHistory, setConversationHistory] = useState([]);
     // ElevenLabs Conversational AI
     const conversation = useConversation({
-      apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
+      // apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
       onConnect: () => {
         console.log("Connected to ElevenLabs");
         setConversationState((prev) => ({ ...prev, isConnected: true }));
@@ -670,6 +671,9 @@ const VideoPanel = forwardRef(
           <ChatUI
             onClose={() => setShowChat(false)}
             conversation={conversationHistory}
+            onStartConversation={startConversation}
+            onStopConversation={stopConversation}
+            isConnected={conversationState.isConnected}
           />
         ) : isQuestionMode ? (
           <QuestionModeUser
@@ -683,7 +687,12 @@ const VideoPanel = forwardRef(
             isConnected={conversationState.isConnected}
           />
         ) : (
-          <AILearningAssistant setShowChat={setShowChat} showChat={showChat} />
+          <AILearningAssistant
+            setShowChat={setShowChat}
+            showChat={showChat}
+            onStartConversation={startConversation}
+            onStopConversation={stopConversation}
+          />
         )}
       </div>
     );

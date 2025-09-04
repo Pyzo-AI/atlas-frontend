@@ -43,10 +43,10 @@ const QuestionModeUser = ({ onPauseVideo, onStartConversation, onStopConversatio
 
   const handleBackToSession = () => {
     // Stop conversation if active
-    if (isConnected && onStopConversation) {
-      onStopConversation();
-    }
-    
+    // if (isConnected && onStopConversation) {
+    //   onStopConversation();
+    // }
+    onStopConversation();
     // Clear state
     dispatch(setQuestion(""));
     dispatch(setIsQuestionMode(false));
@@ -64,7 +64,7 @@ const QuestionModeUser = ({ onPauseVideo, onStartConversation, onStopConversatio
         {/* Center Content */}
         <div className="flex flex-col items-center gap-[30px] max-w-[275px]">
           {/* Avatar/Tap to Speak */}
-          <div className="w-[120px] h-[120px] flex items-center justify-center cursor-pointer" onClick={handleTapToSpeak}>
+          <div className="w-[120px] h-[120px] flex items-center justify-center" >
             {isAudioLoading ? (
               <Lottie
                 animationData={userWaveAnimation}
