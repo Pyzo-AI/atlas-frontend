@@ -80,17 +80,6 @@ const QuestionModeUser = ({ onPauseVideo, onStartConversation, onStopConversatio
               />
             )}
           </div>
-
-          {/* Question/Answer Text */}
-          {isConnected ? (
-            <p className="font-lato font-normal text-sm leading-[18px] text-center text-[#1A1C29]">
-              {isAudioLoading ? "Starting conversation..." : "Listening... Tap to stop"}
-            </p>
-          ) : (
-            <p className="font-lato font-normal text-sm leading-[18px] text-center text-[#1A1C29]">
-              {"Tap to start conversation"}
-            </p>
-          )}
         </div>
       </div>
 

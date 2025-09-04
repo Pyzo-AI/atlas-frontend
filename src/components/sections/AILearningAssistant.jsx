@@ -67,13 +67,13 @@ const AILearningAssistant = ({
           {/* Start Q&A Button */}
           <button
             onClick={handleStartQA}
-            className="cursor-pointer flex items-center justify-center gap-2.5 px-3 py-2 w-[136px] h-9 rounded-full text-white font-lato font-semibold text-sm leading-4 transition-all duration-200 hover:opacity-90"
+            className="cursor-pointer flex items-center justify-center gap-1 px-3 py-2 h-9 rounded-full text-white font-lato font-semibold text-sm leading-4 transition-all duration-200 hover:opacity-90"
             style={{
               background: "linear-gradient(180deg, #685EDD 0%, #DA8BFF 100%)",
             }}
           >
             <Image className="w-5 h-5" src={microphone} alt="Microphone" />
-            <span>Start Q&A</span>
+            <span>Interaction Mode</span>
           </button>
         </div>
       </div>
