@@ -22,6 +22,7 @@ import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
 import ChatUI from "./ChatUI";
 
+
 const VideoPanel = forwardRef(
   (
     {
@@ -65,8 +66,15 @@ const VideoPanel = forwardRef(
     const { currentVideoIndex, isQuestionMode } = useSelector(
       (state) => state.video
     );
+    const isQuestionModeRef = useRef(isQuestionMode);
     const [showChat, setShowChat] = useState(false);
     const [conversationHistory, setConversationHistory] = useState([]);
+    
+    // Keep ref updated with current isQuestionMode value
+    useEffect(() => {
+      isQuestionModeRef.current = isQuestionMode;
+    }, [isQuestionMode]);
+  
     // ElevenLabs Conversational AI
     const conversation = useConversation({
       // apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
@@ -84,6 +92,9 @@ const VideoPanel = forwardRef(
       },
       onDisconnect: () => {
         console.log("Disconnected from ElevenLabs");
+        if(isQuestionModeRef.current){
+           dispatch(setIsQuestionMode(false));
+        }
         setConversationState((prev) => ({
           ...prev,
           isConnected: false,
