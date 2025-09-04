@@ -5,6 +5,7 @@ import {
   setIsVideoPlaying,
   syncPptToVideoPanel,
   setAnswerPptIndex,
+  setIsQuestionMode,
 } from "@/store/features/videoSlice";
 import React, {
   useState,
@@ -39,7 +40,10 @@ const VideoPanel = forwardRef(
       isConnected: false,
       isAudioPlaying: false,
     });
-    console.log(conversationState, "conversationState");
+    const [
+      isJumpedOnChatFromInteractionMode,
+      setIsJumpedOnChatFromInteractionMode,
+    ] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
@@ -403,11 +407,6 @@ const VideoPanel = forwardRef(
       };
     }, []);
 
-    // // Show skeleton while loading
-    // if (loading || !videos) {
-    //   return <VideoSkeleton width={width} />;
-    // }
-
     // Handle video end
     const handleVideoEnd = () => {
       if (currentVideoIndex < videos?.length - 1) {
@@ -471,19 +470,14 @@ const VideoPanel = forwardRef(
       }
     };
 
-    const handleProgressBarClick = (e) => {
-      if (!videoRef.current) return;
-
-      const progressBar = e.currentTarget;
-      const clickPosition =
-        e.clientX - progressBar.getBoundingClientRect().left;
-      const progressBarWidth = progressBar.clientWidth;
-      const seekTime = (clickPosition / progressBarWidth) * duration;
-
-      videoRef.current.currentTime = seekTime;
-      setCurrentTime(seekTime);
+    const handleCloseChatUI = () => {
+      if (isJumpedOnChatFromInteractionMode) {
+        dispatch(setIsQuestionMode(true));
+        setIsJumpedOnChatFromInteractionMode(false);
+        startConversation();
+      }
+      setShowChat(false);
     };
-
     return (
       <div
         className="flex flex-col h-full relative gap-4 flex-shrink-0 pl-4"
@@ -648,7 +642,6 @@ const VideoPanel = forwardRef(
                 disablePictureInPicture
               />
             </div>
-            {console.log(videos?.[currentVideoIndex]?.thumbnail, "thumnail")}
             {/* Time display below video */}
             <div className="px-1 flex justify-between mt-2 text-[12px] leading-4 tracking-normal font-normal text-center text-gray-600 font-lato">
               <span>
@@ -669,11 +662,15 @@ const VideoPanel = forwardRef(
         )}
         {showChat ? (
           <ChatUI
-            onClose={() => setShowChat(false)}
+            onClose={handleCloseChatUI}
             conversation={conversationHistory}
             onStartConversation={startConversation}
             onStopConversation={stopConversation}
             isConnected={conversationState.isConnected}
+            setShowChat={setShowChat}
+              setIsJumpedOnChatFromInteractionMode={
+              setIsJumpedOnChatFromInteractionMode
+            }
           />
         ) : isQuestionMode ? (
           <QuestionModeUser
@@ -685,6 +682,9 @@ const VideoPanel = forwardRef(
             isAudioPlaying={conversationState.isAudioPlaying}
             isAudioLoading={isListening}
             isConnected={conversationState.isConnected}
+            setIsJumpedOnChatFromInteractionMode={
+              setIsJumpedOnChatFromInteractionMode
+            }
           />
         ) : (
           <AILearningAssistant

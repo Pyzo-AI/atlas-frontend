@@ -7,7 +7,15 @@ import ai_answer_icon from "@/assets/svg/ai_answer_icon.svg";
 import close_icon from "@/assets/svg/close.svg";
 import Image from "next/image";
 
-const ChatUI = ({ onClose, conversation = [] , onStartConversation, onStopConversation,isConnected }) => {
+const ChatUI = ({
+  onClose,
+  conversation = [],
+  onStartConversation,
+  onStopConversation,
+  isConnected,
+  setShowChat,
+  setIsJumpedOnChatFromInteractionMode
+}) => {
   const dispatch = useDispatch();
 
   const handleInteractionMode = () => {
@@ -17,14 +25,19 @@ const ChatUI = ({ onClose, conversation = [] , onStartConversation, onStopConver
   };
 
   const handleContinueLesson = () => {
-    onClose();
+    dispatch(setIsQuestionMode(false));
+    setShowChat(false);
+    setIsJumpedOnChatFromInteractionMode(false);
     if (isConnected && onStopConversation) {
       onStopConversation();
     }
   };
 
   return (
-    <div className="relative w-full bg-white" style={{ height: 'calc(100vh - 165px)' }}>
+    <div
+      className="relative w-full bg-white"
+      style={{ height: "calc(100vh - 165px)" }}
+    >
       {/* Chat Container */}
       <div className="w-full h-full border border-[#E5E7EB] rounded-xl flex flex-col">
         {/* Header */}
@@ -41,10 +54,15 @@ const ChatUI = ({ onClose, conversation = [] , onStartConversation, onStopConver
         </div>
 
         {/* Messages Container */}
-        <div className="px-3 py-4 overflow-y-auto" style={{ height: 'calc(100% - 100px)' }}>
+        <div
+          className="px-3 py-4 overflow-y-auto"
+          style={{ height: "calc(100% - 100px)" }}
+        >
           {conversation.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-500">
-              <p className="font-lato font-normal text-sm">No conversation history yet. Start asking questions!</p>
+              <p className="font-lato font-normal text-sm">
+                No conversation history yet. Start asking questions!
+              </p>
             </div>
           ) : (
             <div className="space-y-6">

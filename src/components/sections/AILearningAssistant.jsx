@@ -26,21 +26,19 @@ const AILearningAssistant = ({
   };
 
   return (
-    <div className="flex flex-col items-start p-3 gap-2.5 w-full flex-1 border border-[#E5E7EB] rounded-xl bg-white">
+    <div className="flex flex-col items-start p-3 gap-2.5 w-full flex-1 border border-[#E5E7EB] rounded-xl bg-white overflow-hidden">
       {/* Inner Frame */}
-      <div className="w-full h-full bg-[#E0DDFF] rounded-xl p-3 flex flex-col">
-        {/* Top Section with Chat Icon */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={handleMessageClick}
-            className="cursor-pointer w-[30px] h-[30px] bg-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
-          >
-            <Image className="w-full h-full" src={message} alt="message" />
-          </button>
-        </div>
+      <div className="w-full h-full bg-[#E0DDFF] rounded-xl p-3 flex flex-col min-h-0 overflow-hidden relative">
+        {/* Chat Icon - Positioned absolutely */}
+        <button
+          onClick={handleMessageClick}
+          className="absolute top-3 right-3 cursor-pointer w-[30px] h-[30px] bg-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
+        >
+          <Image className="w-full h-full" src={message} alt="message" />
+        </button>
 
         {/* Main Content Container - Centered vertically in remaining space */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4">
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 min-h-0 overflow-hidden">
           {/* Icon and Text Section */}
           <div className="flex flex-col items-center gap-4 w-full max-w-[275px]">
             {/* Icon Container */}
