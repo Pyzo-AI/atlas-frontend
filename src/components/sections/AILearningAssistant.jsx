@@ -6,39 +6,39 @@ import chat_star from "../../assets/svg/chat_star.svg";
 import microphone from "../../assets/svg/microphone.svg";
 import Image from "next/image";
 
-
-const AILearningAssistant = ({showChat, setShowChat = ()=>{}}) => {
-  const {isQuestionMode} = useSelector((state) => state.video);
+const AILearningAssistant = ({
+  showChat,
+  setShowChat = () => {},
+  onStartConversation = () => {},
+  onStopConversation = () => {},
+}) => {
+  const { isQuestionMode } = useSelector((state) => state.video);
   const dispatch = useDispatch();
 
   const handleStartQA = () => {
     dispatch(setIsQuestionMode(true));
+    onStartConversation();
   };
 
   const handleMessageClick = () => {
     setShowChat(true);
+    onStopConversation();
   };
 
-
-
-
-
   return (
-    <div className="flex flex-col items-start p-3 gap-2.5 w-full flex-1 border border-[#E5E7EB] rounded-xl bg-white">
+    <div className="flex flex-col items-start p-3 gap-2.5 w-full flex-1 border border-[#E5E7EB] rounded-xl bg-white overflow-hidden">
       {/* Inner Frame */}
-      <div className="w-full h-full bg-[#E0DDFF] rounded-xl p-3 flex flex-col">
-        {/* Top Section with Chat Icon */}
-        {/* <div className="flex justify-end mb-4">
-          <button 
-            onClick={handleMessageClick}
-            className="cursor-pointer w-[30px] h-[30px] bg-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
-          >
-            <Image className="w-full h-full" src={message} alt="message" />
-          </button>
-        </div> */}
+      <div className="w-full h-full bg-[#E0DDFF] rounded-xl p-3 flex flex-col min-h-0 overflow-hidden relative">
+        {/* Chat Icon - Positioned absolutely */}
+        <button
+          onClick={handleMessageClick}
+          className="absolute top-3 right-3 cursor-pointer w-[30px] h-[30px] bg-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
+        >
+          <Image className="w-full h-full" src={message} alt="message" />
+        </button>
 
         {/* Main Content Container - Centered vertically in remaining space */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4">
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 min-h-0 overflow-hidden">
           {/* Icon and Text Section */}
           <div className="flex flex-col items-center gap-4 w-full max-w-[275px]">
             {/* Icon Container */}
@@ -65,13 +65,13 @@ const AILearningAssistant = ({showChat, setShowChat = ()=>{}}) => {
           {/* Start Q&A Button */}
           <button
             onClick={handleStartQA}
-            className="cursor-pointer flex items-center justify-center gap-2.5 px-3 py-2 w-[136px] h-9 rounded-full text-white font-lato font-semibold text-sm leading-4 transition-all duration-200 hover:opacity-90"
+            className="cursor-pointer flex items-center justify-center gap-1 px-3 py-2 h-9 rounded-full text-white font-lato font-semibold text-sm leading-4 transition-all duration-200 hover:opacity-90"
             style={{
               background: "linear-gradient(180deg, #685EDD 0%, #DA8BFF 100%)",
             }}
           >
             <Image className="w-5 h-5" src={microphone} alt="Microphone" />
-            <span>Start Q&A</span>
+            <span>Interaction Mode</span>
           </button>
         </div>
       </div>

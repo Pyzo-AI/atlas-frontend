@@ -5,6 +5,7 @@ import {
   setIsVideoPlaying,
   syncPptToVideoPanel,
   setAnswerPptIndex,
+  setIsQuestionMode,
 } from "@/store/features/videoSlice";
 import React, {
   useState,
@@ -15,15 +16,54 @@ import React, {
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import { useGetAllVideoQuery } from "@/store/api/questionsApi";
-import { toast } from "react-toastify";
-import VideoPlaylist from "./VideoPlaylist";
+import { useConversation } from "@elevenlabs/react";
+import { CONVERSATION_CONFIG, cleanExpiredMessages } from '@/config/conversationConfig';
 import AILearningAssistant from "./AILearningAssistant";
-import QuestionModeUI from "./QuestionModeAI";
-import QuestionModeAssistant from "./QuestionModeUser";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
 import ChatUI from "./ChatUI";
+
+// Conversation history management for VideoPanel
+const {
+  STORAGE_KEY: CONVERSATION_STORAGE_KEY,
+  MAX_HISTORY_MESSAGES,
+  MAX_MESSAGE_AGE_DAYS,
+  MAX_CONTEXT_MESSAGES
+} = CONVERSATION_CONFIG;
+
+const getStoredConversationHistory = () => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(CONVERSATION_STORAGE_KEY);
+    if (!stored) return [];
+
+    const history = JSON.parse(stored);
+    // Clean expired messages if age limit is set
+    const cleanedHistory = cleanExpiredMessages(history, MAX_MESSAGE_AGE_DAYS);
+
+    // If we cleaned any messages, update storage
+    if (cleanedHistory.length !== history.length) {
+      saveConversationHistory(cleanedHistory);
+    }
+
+    return cleanedHistory;
+  } catch (error) {
+    console.error('Error loading conversation history:', error);
+    return [];
+  }
+};
+
+const saveConversationHistory = (history) => {
+  if (typeof window === 'undefined') return;
+  try {
+    // Keep only the most recent messages to prevent localStorage bloat
+    const trimmedHistory = history.slice(-MAX_HISTORY_MESSAGES);
+    localStorage.setItem(CONVERSATION_STORAGE_KEY, JSON.stringify(trimmedHistory));
+  } catch (error) {
+    console.error('Error saving conversation history:', error);
+  }
+};
+
 
 const VideoPanel = forwardRef(
   (
@@ -38,13 +78,16 @@ const VideoPanel = forwardRef(
     },
     ref
   ) => {
-    const [qaState, setQaState] = useState({
+    const [conversationState, setConversationState] = useState({
       isLoading: false,
-      answer: "",
-      audioLink: "",
+      isConnected: false,
       isAudioPlaying: false,
     });
-    const [conversation, setConversation] = useState([]);
+    const [
+      isJumpedOnChatFromInteractionMode,
+      setIsJumpedOnChatFromInteractionMode,
+    ] = useState(false);
+    const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
     const [lastVideoSrc, setLastVideoSrc] = useState("");
@@ -65,110 +108,220 @@ const VideoPanel = forwardRef(
     const { currentVideoIndex, isQuestionMode } = useSelector(
       (state) => state.video
     );
+    const isQuestionModeRef = useRef(isQuestionMode);
     const [showChat, setShowChat] = useState(false);
-    const questionModeAIRef = useRef(null);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const handleQuestionSubmit = async (userQuestion) => {
-      console.log(userQuestion, "userQuestion");
-      if (!userQuestion) return;
+    const [conversationHistory, setConversationHistory] = useState([]);
+    const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
+    const [contextSent, setContextSent] = useState(false);
 
-      if (onPauseVideo) {
-        onPauseVideo();
-      }
+    // Keep ref updated with current isQuestionMode value
+    useEffect(() => {
+      isQuestionModeRef.current = isQuestionMode;
+    }, [isQuestionMode]);
 
-      setQaState((prev) => ({
-        ...prev,
-        isLoading: true,
-        answer: "",
-        audioLink: "",
-      }));
+    // Load conversation history on component mount
+    useEffect(() => {
+      const storedHistory = getStoredConversationHistory();
+      setPersistentConversationHistory(storedHistory);
+    }, []);
 
-      // Add user question to conversation
-      setConversation((prev) => [
-        ...prev,
-        { type: "question", content: userQuestion },
-      ]);
+    // Generate context summary from conversation history
+    const generateContextSummary = () => {
+      if (persistentConversationHistory.length === 0) return '';
 
-      try {
-        // Map conversation for API - convert internal format to API format and get latest 10
-        const mappedConversation = conversation
-          .slice(-10) // Get only the latest 10 conversations
-          .map((item) => ({
-            type: item.type === "question" ? "user" : "AI",
-            content: item.content,
-          }));
+      // Get the last N meaningful messages for context (configurable)
+      const recentMessages = persistentConversationHistory
+        .filter(msg => msg.message && msg.message.trim() && !msg.message.includes('audioData'))
+        .slice(-MAX_CONTEXT_MESSAGES)
+        .map(msg => {
+          const source = msg.source === 'user' ? 'User' : 'AI';
+          return `${source}: ${msg.message}`;
+        })
+        .join('\n');
 
-        const response = await fetch(
-          `${API_BASE_URL}/qa/${presentationId}?stream_audio=true`,
-          {
-            method: "POST",
-            headers: {
-              Accept: "audio/mpeg",
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              question: userQuestion,
-              conversation: mappedConversation,
-              // knowledge_source_ids: [1],
-              config: { use_external_knowledge: false },
-            }),
+      return recentMessages ? `Previous conversation context:\n${recentMessages}\n\nPlease continue our conversation naturally based on this context.` : '';
+    };
+
+    // ElevenLabs Conversational AI
+    const conversation = useConversation({
+      // apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
+      connectionDelay: {
+        android: 3000,
+        ios: 1000,
+        default: 1000,
+      },
+      useWakeLock: false, // Disable wake lock to prevent connection issues
+
+      onConnect: () => {
+        console.log("Connected to ElevenLabs");
+        setConversationState((prev) => ({ ...prev, isConnected: true }));
+
+        // Send context immediately when connected
+        setTimeout(() => {
+          try {
+            const contextSummary = generateContextSummary();
+            if (contextSummary && !contextSent) {
+              try {
+                conversation.sendContextualUpdate(
+                  `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
+                );
+                setContextSent(true);
+              } catch (error) {
+                console.error('Error sending context:', error);
+              }
+            }
+          } catch (error) {
+            console.error('Could not send context on connect:', error.message);
           }
-        );
+        }, 2000);
+      },
+      onModeChange: (mode) => {
+        console.log("Mode changed:", mode);
+        if (mode.mode === "listening") {
+          setIsListening(true);
+        } else {
+          setIsListening(false);
+        }
+      },
+      onDisconnect: () => {
+        console.log("Disconnected from ElevenLabs");
+        if (isQuestionModeRef.current) {
+          dispatch(setIsQuestionMode(false));
+        }
+        setConversationState((prev) => ({
+          ...prev,
+          isConnected: false,
+          isAudioPlaying: false,
+        }));
+      },
+      onMessage: (message) => {
 
-        if (response.ok) {
-          const answerText =
-            response.headers.get("x-answer") || "No answer received";
-
-          const jumpTarget = response.headers.get("x-jump-target");
-          if (jumpTarget !== null && jumpTarget !== undefined) {
-            dispatch(setAnswerPptIndex(parseInt(jumpTarget)));
-          }
-
-          const audioBlob = await response.blob();
-          const audioUrl = URL.createObjectURL(audioBlob);
-
-          setQaState((prev) => ({
+        // Store in current session history (for ChatUI)
+        if (message.source === "user") {
+          const content = message.message;
+          if (content.trim() === "") return;
+          setConversationHistory((prev) => [
             ...prev,
-            answer: answerText,
-            audioLink: audioUrl,
-          }));
-
-          // Add AI answer to conversation
-          setConversation((prev) => [
-            ...prev,
-            { type: "answer", content: answerText || "No text answer found" },
+            { type: "question", content },
           ]);
         } else {
-          throw new Error("Failed to get response");
+          setConversationHistory((prev) => [
+            ...prev,
+            { type: "answer", content: message.message },
+          ]);
         }
-      } catch (error) {
-        console.log("Error submitting question:", error);
-        toast.error("Failed to get audio response. Please try again.");
-        setQaState((prev) => ({
-          ...prev,
-          answer: "Failed to load answer. Please try again.",
-        }));
 
-        // Add error to conversation
-        setConversation((prev) => [
+        // Send context after AI's first message (only if not already sent)
+        if (message.source === "ai" && !contextSent) {
+          setContextSent(true);
+
+          // Wait a moment for the AI to finish speaking, then send context as backup
+          setTimeout(() => {
+            try {
+              const contextSummary = generateContextSummary();
+              if (contextSummary) {
+                try {
+                  conversation.sendContextualUpdate(
+                    `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
+                  );
+                } catch (error) {
+                  console.error('Error sending backup context:', error);
+                }
+              }
+            } catch (error) {
+              console.error('Could not send backup context:', error.message);
+            }
+          }, 2000);
+        }
+
+        // Store in persistent history (for context continuity)
+        if (message.message && message.message.trim() && !message.message.includes('audioData')) {
+          const newMessage = {
+            id: Date.now() + Math.random(),
+            timestamp: new Date().toISOString(),
+            source: message.source,
+            message: message.message,
+            type: message.type || 'text'
+          };
+
+          setPersistentConversationHistory(prev => {
+            const updated = [...prev, newMessage];
+            saveConversationHistory(updated);
+            return updated;
+          });
+        }
+      },
+      onError: (error) => {
+        console.error("ElevenLabs Error:", error);
+        setConversationState((prev) => ({
           ...prev,
-          {
-            type: "error",
-            content: "Failed to load answer. Please try again.",
-          },
-        ]);
-      } finally {
-        setQaState((prev) => ({ ...prev, isLoading: false }));
+          isLoading: false,
+          isAudioPlaying: false,
+        }));
+      },
+    });
+
+    const startConversation = async () => {
+      try {
+        if (onPauseVideo) {
+          onPauseVideo();
+        }
+
+        // Reset context sent flag for new conversation
+        setContextSent(false);
+
+        setConversationState((prev) => ({ ...prev, isLoading: true }));
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        await conversation.startSession({
+          agentId: "agent_4701k47tsjjff7crz1caj7dd9htv",
+          userId: `trainboost_user_1`, // Unique user ID for this session
+        });
+
+        // Send context immediately after connection is established
+        setTimeout(() => {
+          try {
+            const contextSummary = generateContextSummary();
+            if (contextSummary) {
+              try {
+                conversation.sendContextualUpdate(
+                  `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
+                );
+                setContextSent(true);
+              } catch (error) {
+                console.error('Error sending initial context:', error);
+              }
+            }
+          } catch (error) {
+            console.error('Could not send initial context:', error.message);
+          }
+        }, 1500);
+
+      } catch (error) {
+        console.error("Failed to start conversation:", error);
+        setConversationState((prev) => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    const stopConversation = async () => {
+      try {
+        await conversation.endSession();
+        setConversationState((prev) => ({
+          ...prev,
+          isConnected: false,
+          isAudioPlaying: false,
+        }));
+      } catch (error) {
+        console.error("Failed to stop conversation:", error);
       }
     };
     const [showRedirectPopup, setShowRedirectPopup] = useState(false);
     const [countdown, setCountdown] = useState(10);
     const [preloadedVideoIndex, setPreloadedVideoIndex] = useState(-1);
 
-    // Function to stop answer audio
+    // Function to stop conversation
     const stopAnswerAudio = () => {
-      if (questionModeAIRef.current) {
-        questionModeAIRef.current.stopAudio();
+      if (conversationState.isConnected) {
+        stopConversation();
       }
     };
 
@@ -406,17 +559,10 @@ const VideoPanel = forwardRef(
       }
     }, [isPlaying, currentVideoIndex, dispatch]);
 
-    // Reset error state when exiting question mode
+    // Reset conversation state when exiting question mode
     useEffect(() => {
-      if (!isQuestionMode) {
-        setQaState((prev) => ({
-          ...prev,
-          isLoading: false,
-          answer: "",
-          audioLink: "",
-          isAudioPlaying: false,
-        }));
-        setConversation([]);
+      if (!isQuestionMode && conversationState.isConnected) {
+        stopConversation();
       }
     }, [isQuestionMode]);
 
@@ -429,11 +575,6 @@ const VideoPanel = forwardRef(
         }
       };
     }, []);
-
-    // // Show skeleton while loading
-    // if (loading || !videos) {
-    //   return <VideoSkeleton width={width} />;
-    // }
 
     // Handle video end
     const handleVideoEnd = () => {
@@ -498,19 +639,14 @@ const VideoPanel = forwardRef(
       }
     };
 
-    const handleProgressBarClick = (e) => {
-      if (!videoRef.current) return;
-
-      const progressBar = e.currentTarget;
-      const clickPosition =
-        e.clientX - progressBar.getBoundingClientRect().left;
-      const progressBarWidth = progressBar.clientWidth;
-      const seekTime = (clickPosition / progressBarWidth) * duration;
-
-      videoRef.current.currentTime = seekTime;
-      setCurrentTime(seekTime);
+    const handleCloseChatUI = () => {
+      if (isJumpedOnChatFromInteractionMode) {
+        dispatch(setIsQuestionMode(true));
+        setIsJumpedOnChatFromInteractionMode(false);
+        startConversation();
+      }
+      setShowChat(false);
     };
-
     return (
       <div
         className="flex flex-col h-full relative gap-4 flex-shrink-0 pl-4"
@@ -552,7 +688,7 @@ const VideoPanel = forwardRef(
           </div>
         )}
         {!isQuestionMode && !showChat ? (
-          <div 
+          <div
             className="cursor-pointer p-3 pb-2 bg-white rounded-xl border border-[#E5E7EB]"
             onClick={togglePlayPause}
           >
@@ -675,7 +811,6 @@ const VideoPanel = forwardRef(
                 disablePictureInPicture
               />
             </div>
-            {console.log(videos?.[currentVideoIndex]?.thumbnail , "thumnail")}
             {/* Time display below video */}
             <div className="px-1 flex justify-between mt-2 text-[12px] leading-4 tracking-normal font-normal text-center text-gray-600 font-lato">
               <span>
@@ -689,32 +824,44 @@ const VideoPanel = forwardRef(
         ) : null}
         {isQuestionMode && (
           <QuestionModeAI
-            ref={questionModeAIRef}
-            isLoading={qaState.isLoading}
-            answer={qaState.answer}
-            audioLink={qaState.audioLink}
-            isAudioPlaying={qaState.isAudioPlaying}
-            onAudioStateChange={(isPlaying) =>
-              setQaState((prev) => ({ ...prev, isAudioPlaying: isPlaying }))
-            }
+            isLoading={!conversationState.isConnected}
+            isAudioPlaying={conversation.isSpeaking}
+            isConnected={conversationState.isConnected}
           />
         )}
         {showChat ? (
           <ChatUI
-            onClose={() => setShowChat(false)}
-            conversation={conversation}
+            onClose={handleCloseChatUI}
+            conversation={conversationHistory}
+            onStartConversation={startConversation}
+            onStopConversation={stopConversation}
+            isConnected={conversationState.isConnected}
+            setShowChat={setShowChat}
+            setIsJumpedOnChatFromInteractionMode={
+              setIsJumpedOnChatFromInteractionMode
+            }
           />
         ) : isQuestionMode ? (
           <QuestionModeUser
             onPauseVideo={pauseVideo}
-            onQuestionSubmit={handleQuestionSubmit}
+            onStartConversation={startConversation}
+            onStopConversation={stopConversation}
             setShowChat={setShowChat}
             onPauseAnswerAudio={stopAnswerAudio}
-            isAudioPlaying={qaState.isAudioPlaying}
-            isAudioLoading={qaState.isLoading}
+            isAudioPlaying={conversationState.isAudioPlaying}
+            isAudioLoading={isListening}
+            isConnected={conversationState.isConnected}
+            setIsJumpedOnChatFromInteractionMode={
+              setIsJumpedOnChatFromInteractionMode
+            }
           />
         ) : (
-          <AILearningAssistant setShowChat={setShowChat} showChat={showChat} />
+          <AILearningAssistant
+            setShowChat={setShowChat}
+            showChat={showChat}
+            onStartConversation={startConversation}
+            onStopConversation={stopConversation}
+          />
         )}
       </div>
     );

@@ -10,51 +10,12 @@ import Image from "next/image";
 
 const QuestionModeAI = forwardRef(
   (
-    { answer, audioLink, isAudioPlaying, onAudioStateChange, isLoading },
+    { isAudioPlaying, isLoading, isConnected },
     ref
   ) => {
-    const audioRef = useRef(null);
-
-    useEffect(() => {
-      if (audioLink && audioRef.current) {
-        audioRef.current.src = audioLink;
-        audioRef.current.play().catch((error) => {
-          console.log("Audio playback failed:", error);
-          toast.error("Audio playback failed. Please try again.");
-        });
-      }
-    }, [audioLink]);
-
-    const handleAudioPlay = () => {
-      if (onAudioStateChange) {
-        onAudioStateChange(true);
-      }
-    };
-
-    const handleAudioPause = () => {
-      if (onAudioStateChange) {
-        onAudioStateChange(false);
-      }
-    };
-
-    const handleAudioEnded = () => {
-      if (onAudioStateChange) {
-        onAudioStateChange(false);
-      }
-    };
-
-    const stopAudio = () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        if (onAudioStateChange) {
-          onAudioStateChange(false);
-        }
-      }
-    };
-
+    // ElevenLabs handles audio automatically
     useImperativeHandle(ref, () => ({
-      stopAudio,
+      // No manual audio control needed
     }));
 
     return (
@@ -118,32 +79,22 @@ const QuestionModeAI = forwardRef(
                 </div>
                 {/* Professor thinking text */}
                 <p className="text-white/90 text-xs font-light animate-pulse">
-                  Thinking...
+                  Connecting...
                 </p>
               </div>
+            ) : isConnected ? (
+              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white">
+                {isAudioPlaying ? "Speaking..." : "Listening..."}
+              </p>
             ) : (
-              !answer && (
-                <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white">
-                  {
-                    "Ask me anything about the presentation, and I'll help with the answers."
-                  }
-                </p>
-              )
+              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white">
+                {"Ask me anything about the presentation, and I'll help with the answers."}
+              </p>
             )}
           </div>
         </div>
 
-        {/* Hidden Audio Element */}
-        {audioLink && (
-          <audio
-            ref={audioRef}
-            onPlay={handleAudioPlay}
-            onPause={handleAudioPause}
-            onEnded={handleAudioEnded}
-            // onError={() => toast.error('Audio failed to load. Please try again.')}
-            style={{ display: "none" }}
-          />
-        )}
+        {/* ElevenLabs handles audio automatically */}
       </div>
     );
   }

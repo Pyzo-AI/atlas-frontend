@@ -7,24 +7,41 @@ import ai_answer_icon from "@/assets/svg/ai_answer_icon.svg";
 import close_icon from "@/assets/svg/close.svg";
 import Image from "next/image";
 
-const ChatUI = ({ onClose, conversation = [] }) => {
+const ChatUI = ({
+  onClose,
+  conversation = [],
+  onStartConversation,
+  onStopConversation,
+  isConnected,
+  setShowChat,
+  setIsJumpedOnChatFromInteractionMode
+}) => {
   const dispatch = useDispatch();
 
   const handleInteractionMode = () => {
     dispatch(setIsQuestionMode(true));
     onClose();
+    onStartConversation();
   };
 
   const handleContinueLesson = () => {
-    onClose();
+    dispatch(setIsQuestionMode(false));
+    setShowChat(false);
+    setIsJumpedOnChatFromInteractionMode(false);
+    if (isConnected && onStopConversation) {
+      onStopConversation();
+    }
   };
 
   return (
-    <div className="flex flex-col items-center gap-2.5 w-full h-screen bg-white">
+    <div
+      className="relative w-full bg-white"
+      style={{ height: "calc(100vh - 165px)" }}
+    >
       {/* Chat Container */}
-      <div className="w-full border border-[#E5E7EB] rounded-xl flex-1 self-stretch">
+      <div className="w-full h-full border border-[#E5E7EB] rounded-xl flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-center px-3 py-3 pb-2 border-b border-[#E5E7EB]">
+        <div className="flex justify-between items-center px-3 py-3 pb-2 border-b border-[#E5E7EB] flex-shrink-0">
           <h2 className="font-lato font-bold text-base leading-[19px] tracking-[0.02em] text-[#1A1C29]">
             Interaction History
           </h2>
@@ -37,10 +54,15 @@ const ChatUI = ({ onClose, conversation = [] }) => {
         </div>
 
         {/* Messages Container */}
-        <div className="flex-1 px-3 py-4 overflow-y-auto">
+        <div
+          className="px-3 py-4 overflow-y-auto"
+          style={{ height: "calc(100% - 100px)" }}
+        >
           {conversation.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-500">
-              <p className="font-lato font-normal text-sm">No conversation history yet. Start asking questions!</p>
+              <p className="font-lato font-normal text-sm">
+                No conversation history yet. Start asking questions!
+              </p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -88,7 +110,7 @@ const ChatUI = ({ onClose, conversation = [] }) => {
       </div>
 
       {/* Bottom Actions Container */}
-      <div className="flex justify-center items-center gap-2 w-full bg-white rounded-[62px] px-3 py-0.5">
+      <div className="absolute bottom-2 left-0 right-0 flex justify-center items-center gap-2 w-full bg-white rounded-[62px] px-3 py-0.5">
         {/* Interaction Mode Button */}
         <button
           onClick={handleInteractionMode}
