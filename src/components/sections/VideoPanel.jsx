@@ -17,10 +17,52 @@ import React, {
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useConversation } from "@elevenlabs/react";
+import { CONVERSATION_CONFIG, cleanExpiredMessages } from '@/config/conversationConfig';
 import AILearningAssistant from "./AILearningAssistant";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
 import ChatUI from "./ChatUI";
+
+// Conversation history management for VideoPanel
+const {
+  STORAGE_KEY: CONVERSATION_STORAGE_KEY,
+  MAX_HISTORY_MESSAGES,
+  MAX_MESSAGE_AGE_DAYS,
+  MAX_CONTEXT_MESSAGES
+} = CONVERSATION_CONFIG;
+
+const getStoredConversationHistory = () => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(CONVERSATION_STORAGE_KEY);
+    if (!stored) return [];
+
+    const history = JSON.parse(stored);
+    // Clean expired messages if age limit is set
+    const cleanedHistory = cleanExpiredMessages(history, MAX_MESSAGE_AGE_DAYS);
+
+    // If we cleaned any messages, update storage
+    if (cleanedHistory.length !== history.length) {
+      saveConversationHistory(cleanedHistory);
+    }
+
+    return cleanedHistory;
+  } catch (error) {
+    console.error('Error loading conversation history:', error);
+    return [];
+  }
+};
+
+const saveConversationHistory = (history) => {
+  if (typeof window === 'undefined') return;
+  try {
+    // Keep only the most recent messages to prevent localStorage bloat
+    const trimmedHistory = history.slice(-MAX_HISTORY_MESSAGES);
+    localStorage.setItem(CONVERSATION_STORAGE_KEY, JSON.stringify(trimmedHistory));
+  } catch (error) {
+    console.error('Error saving conversation history:', error);
+  }
+};
 
 
 const VideoPanel = forwardRef(
@@ -69,18 +111,69 @@ const VideoPanel = forwardRef(
     const isQuestionModeRef = useRef(isQuestionMode);
     const [showChat, setShowChat] = useState(false);
     const [conversationHistory, setConversationHistory] = useState([]);
-    
+    const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
+    const [contextSent, setContextSent] = useState(false);
+
     // Keep ref updated with current isQuestionMode value
     useEffect(() => {
       isQuestionModeRef.current = isQuestionMode;
     }, [isQuestionMode]);
-  
+
+    // Load conversation history on component mount
+    useEffect(() => {
+      const storedHistory = getStoredConversationHistory();
+      setPersistentConversationHistory(storedHistory);
+    }, []);
+
+    // Generate context summary from conversation history
+    const generateContextSummary = () => {
+      if (persistentConversationHistory.length === 0) return '';
+
+      // Get the last N meaningful messages for context (configurable)
+      const recentMessages = persistentConversationHistory
+        .filter(msg => msg.message && msg.message.trim() && !msg.message.includes('audioData'))
+        .slice(-MAX_CONTEXT_MESSAGES)
+        .map(msg => {
+          const source = msg.source === 'user' ? 'User' : 'AI';
+          return `${source}: ${msg.message}`;
+        })
+        .join('\n');
+
+      return recentMessages ? `Previous conversation context:\n${recentMessages}\n\nPlease continue our conversation naturally based on this context.` : '';
+    };
+
     // ElevenLabs Conversational AI
     const conversation = useConversation({
       // apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
+      connectionDelay: {
+        android: 3000,
+        ios: 1000,
+        default: 1000,
+      },
+      useWakeLock: false, // Disable wake lock to prevent connection issues
+
       onConnect: () => {
         console.log("Connected to ElevenLabs");
         setConversationState((prev) => ({ ...prev, isConnected: true }));
+
+        // Send context immediately when connected
+        setTimeout(() => {
+          try {
+            const contextSummary = generateContextSummary();
+            if (contextSummary && !contextSent) {
+              try {
+                conversation.sendContextualUpdate(
+                  `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
+                );
+                setContextSent(true);
+              } catch (error) {
+                console.error('Error sending context:', error);
+              }
+            }
+          } catch (error) {
+            console.error('Could not send context on connect:', error.message);
+          }
+        }, 2000);
       },
       onModeChange: (mode) => {
         console.log("Mode changed:", mode);
@@ -92,8 +185,8 @@ const VideoPanel = forwardRef(
       },
       onDisconnect: () => {
         console.log("Disconnected from ElevenLabs");
-        if(isQuestionModeRef.current){
-           dispatch(setIsQuestionMode(false));
+        if (isQuestionModeRef.current) {
+          dispatch(setIsQuestionMode(false));
         }
         setConversationState((prev) => ({
           ...prev,
@@ -102,7 +195,8 @@ const VideoPanel = forwardRef(
         }));
       },
       onMessage: (message) => {
-        console.log("Message:", message);
+
+        // Store in current session history (for ChatUI)
         if (message.source === "user") {
           const content = message.message;
           if (content.trim() === "") return;
@@ -115,6 +209,46 @@ const VideoPanel = forwardRef(
             ...prev,
             { type: "answer", content: message.message },
           ]);
+        }
+
+        // Send context after AI's first message (only if not already sent)
+        if (message.source === "ai" && !contextSent) {
+          setContextSent(true);
+
+          // Wait a moment for the AI to finish speaking, then send context as backup
+          setTimeout(() => {
+            try {
+              const contextSummary = generateContextSummary();
+              if (contextSummary) {
+                try {
+                  conversation.sendContextualUpdate(
+                    `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
+                  );
+                } catch (error) {
+                  console.error('Error sending backup context:', error);
+                }
+              }
+            } catch (error) {
+              console.error('Could not send backup context:', error.message);
+            }
+          }, 2000);
+        }
+
+        // Store in persistent history (for context continuity)
+        if (message.message && message.message.trim() && !message.message.includes('audioData')) {
+          const newMessage = {
+            id: Date.now() + Math.random(),
+            timestamp: new Date().toISOString(),
+            source: message.source,
+            message: message.message,
+            type: message.type || 'text'
+          };
+
+          setPersistentConversationHistory(prev => {
+            const updated = [...prev, newMessage];
+            saveConversationHistory(updated);
+            return updated;
+          });
         }
       },
       onError: (error) => {
@@ -133,11 +267,35 @@ const VideoPanel = forwardRef(
           onPauseVideo();
         }
 
+        // Reset context sent flag for new conversation
+        setContextSent(false);
+
         setConversationState((prev) => ({ ...prev, isLoading: true }));
         await navigator.mediaDevices.getUserMedia({ audio: true });
         await conversation.startSession({
           agentId: "agent_4701k47tsjjff7crz1caj7dd9htv",
+          userId: `trainboost_user_1`, // Unique user ID for this session
         });
+
+        // Send context immediately after connection is established
+        setTimeout(() => {
+          try {
+            const contextSummary = generateContextSummary();
+            if (contextSummary) {
+              try {
+                conversation.sendContextualUpdate(
+                  `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
+                );
+                setContextSent(true);
+              } catch (error) {
+                console.error('Error sending initial context:', error);
+              }
+            }
+          } catch (error) {
+            console.error('Could not send initial context:', error.message);
+          }
+        }, 1500);
+
       } catch (error) {
         console.error("Failed to start conversation:", error);
         setConversationState((prev) => ({ ...prev, isLoading: false }));
@@ -679,7 +837,7 @@ const VideoPanel = forwardRef(
             onStopConversation={stopConversation}
             isConnected={conversationState.isConnected}
             setShowChat={setShowChat}
-              setIsJumpedOnChatFromInteractionMode={
+            setIsJumpedOnChatFromInteractionMode={
               setIsJumpedOnChatFromInteractionMode
             }
           />
