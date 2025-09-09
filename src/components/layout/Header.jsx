@@ -64,6 +64,8 @@ const Header = () => {
         
     //     if (response.ok) {
           localStorage.removeItem("trainboost_tokens");
+          // Clear conversation history on logout
+          localStorage.removeItem("trainboost_conversation_history");
           setIsDropdownOpen(false);
           router.push("/login");
     //     }
