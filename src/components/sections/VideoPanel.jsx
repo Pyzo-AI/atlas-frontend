@@ -22,6 +22,7 @@ import AILearningAssistant from "./AILearningAssistant";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
 import ChatUI from "./ChatUI";
+import { getUserDetailsFromToken } from "@/store/utils/token";
 
 // Conversation history management for VideoPanel
 const {
@@ -113,7 +114,6 @@ const VideoPanel = forwardRef(
     const [conversationHistory, setConversationHistory] = useState([]);
     const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
     const [contextSent, setContextSent] = useState(false);
-
     // Keep ref updated with current isQuestionMode value
     useEffect(() => {
       isQuestionModeRef.current = isQuestionMode;
@@ -273,8 +273,8 @@ const VideoPanel = forwardRef(
         setConversationState((prev) => ({ ...prev, isLoading: true }));
         await navigator.mediaDevices.getUserMedia({ audio: true });
         await conversation.startSession({
-          agentId: "agent_4701k47tsjjff7crz1caj7dd9htv",
-          userId: `trainboost_user_1`, // Unique user ID for this session
+          agentId: process.env.NEXT_PUBLIC_ELEVEN_LABS_AGENT_ID,
+          userId:getUserDetailsFromToken()?.email,
         });
 
         // Send context immediately after connection is established
