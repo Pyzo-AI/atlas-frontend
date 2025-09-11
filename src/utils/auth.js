@@ -1,4 +1,5 @@
 import { decodeJWT } from "./jwt";
+import { trackLogout } from "./authTracking";
 
 // Get the refresh token URL from environment or fallback
 const REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_LOGIN_BASE_URL}/auth/refresh-token`;
@@ -85,6 +86,19 @@ export const isTokenExpired = (token) => {
 
 // Logout utility
 export const logout = () => {
+  // Get user ID for tracking before clearing tokens
+  const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
+  let userId = null;
+  if (tokens.access_token) {
+    const decoded = decodeJWT(tokens.access_token);
+    userId = decoded?.sub;
+  }
+  
+  // Track session end event
+  if (userId) {
+    trackLogout(userId);
+  }
+  
   localStorage.removeItem("trainboost_tokens");
   window.location.href = "/login";
 };

@@ -2,10 +2,9 @@ import { posthog } from '@/utils/posthog'
 
 export const trackLogout = (userId) => {
   if (typeof window !== 'undefined') {
-    posthog.capture('user_logout', {
+    posthog.capture('session_end', {
       user_id: userId,
       timestamp: new Date().toISOString(),
-      session_duration: 'calculated_by_posthog'
     })
     
     // Reset PostHog user identification
