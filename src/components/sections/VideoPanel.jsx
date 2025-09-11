@@ -815,6 +815,24 @@ const VideoPanel = forwardRef(
                     onPauseAnswerAudio();
                   }
 
+                  // Track video play event
+                  const userDetails = getUserDetailsFromToken();
+                  const currentVideo = videos?.[currentVideoIndex];
+                  if (currentVideo) {
+                    // const watchedPercentage =
+                    //   duration > 0
+                    //     ? Math.round((currentTime / duration) * 100)
+                    //     : 0;
+
+                    capture("video_play", {
+                      user_id: userDetails?.sub,
+                      module_id: presentationId,
+                      video_id: currentVideo.id || currentVideoIndex,
+                      timestamp: new Date().toISOString(),
+                      // engagement_percentage: watchedPercentage,
+                    });
+                  }
+
                   // Notify parent about play state change
                   if (onVideoStateChange) {
                     onVideoStateChange({
@@ -828,6 +846,18 @@ const VideoPanel = forwardRef(
                 onPause={() => {
                   setIsPlaying(false);
                   dispatch(setIsVideoPlaying(false));
+
+                  // Track video pause event
+                  const userDetails = getUserDetailsFromToken();
+                  const currentVideo = videos?.[currentVideoIndex];
+                  if (currentVideo) {
+                    capture("video_pause", {
+                      user_id: userDetails?.sub,
+                      video_id: currentVideo.id || currentVideoIndex,
+                      current_time: currentTime,
+                    });
+                  }
+
                   // Notify parent about pause state change
                   if (onVideoStateChange) {
                     onVideoStateChange({
