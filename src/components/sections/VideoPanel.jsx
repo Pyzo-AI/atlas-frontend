@@ -101,6 +101,8 @@ const VideoPanel = forwardRef(
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
+    // Slide view tracking
+    const [slideViewStartTime, setSlideViewStartTime] = useState("");
     // Persistent video settings
     const [videoSettings, setVideoSettings] = useState({
       muted: false,
@@ -623,6 +625,19 @@ const VideoPanel = forwardRef(
 
     // Handle video end
     const handleVideoEnd = () => {
+      // Track video completion event
+      const userDetails = getUserDetailsFromToken();
+      const currentVideo = videos?.[currentVideoIndex];
+      console.log(currentVideo, "currentVideo")
+      if (currentVideo) {
+        capture("video_complete", {
+          user_id: userDetails?.sub,
+          video_id: currentVideo.slide,
+          watch_duration: currentTime,
+          replays: null,
+        });
+      }
+
       if (currentVideoIndex < videos?.length - 1) {
         const nextVideoIndex = currentVideoIndex + 1;
         const nextVideo = videos[nextVideoIndex];
@@ -827,7 +842,7 @@ const VideoPanel = forwardRef(
                     capture("video_play", {
                       user_id: userDetails?.sub,
                       module_id: presentationId,
-                      video_id: currentVideo.id || currentVideoIndex,
+                      video_id: currentVideo.slide,
                       timestamp: new Date().toISOString(),
                       // engagement_percentage: watchedPercentage,
                     });
@@ -853,8 +868,9 @@ const VideoPanel = forwardRef(
                   if (currentVideo) {
                     capture("video_pause", {
                       user_id: userDetails?.sub,
-                      video_id: currentVideo.id || currentVideoIndex,
+                      video_id: currentVideo.slide,
                       current_time: currentTime,
+                      timestamp: new Date().toISOString(),
                     });
                   }
 
