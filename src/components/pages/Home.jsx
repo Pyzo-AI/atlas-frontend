@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useGetPresentationsQuery } from "../../store/api/questionsApi";
 import chat_star from "../../assets/svg/chat_star.svg";
 import { getUserDetailsFromToken } from "@/store/utils/token";
+import { usePostHog } from "@/hooks/usePostHog";
 // Course data matching Figma design
 const dummyPresentations = [
   {
@@ -124,7 +125,7 @@ const PresentationCard = ({ presentation, onClick }) => {
             alt={presentation?.title}
             fill
             // className="object-cover transition-transform duration-300 hover:scale-110"
-             className="object-cover "
+            className="object-cover "
           />
         </div>
 
@@ -151,6 +152,7 @@ const PresentationCard = ({ presentation, onClick }) => {
 const Home = () => {
   const router = useRouter();
   const [filter, setFilter] = useState("all");
+  const { capture } = usePostHog();
   const {
     data: presentations = [],
     isLoading: loading,
@@ -158,9 +160,27 @@ const Home = () => {
   } = useGetPresentationsQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
+
   const handlePresentationClick = (presentationId) => {
+    const userDetails = getUserDetailsFromToken();
+    const selectedPresentation = presentations?.data?.find(
+      (p) => p.presentation_id === presentationId
+    );
+
+    // Track module start event
+    capture("module_start", {
+      user_id:
+        userDetails?.sub,
+      module_id: presentationId,
+      // module_title: selectedPresentation?.title,
+      // module_author: selectedPresentation?.author,
+      // module_status: selectedPresentation?.status,
+      timestamp: new Date().toISOString(),
+    });
+
     router.push(`/lectures/${presentationId}`);
   };
+
   const userDetails = getUserDetailsFromToken();
 
   if (error) {
@@ -241,13 +261,18 @@ const Home = () => {
         {/* User Profile */}
         <div className="flex items-center gap-[12px] px-[40px] py-8">
           {/* <div className="w-[48px] h-[48px] bg-[#F1F2F4] rounded-[60px]"></div> */}
-          <Image className="w-[48px] h-[48px] bg-[#F1F2F4] rounded-[60px]" src={chat_star} alt="User icon"/>
+          <Image
+            className="w-[48px] h-[48px] bg-[#F1F2F4] rounded-[60px]"
+            src={chat_star}
+            alt="User icon"
+          />
           <div className="flex flex-col justify-center items-start gap-[4px] min-w-[120px] h-[38px]">
             <span className="font-lato font-semibold text-[17px] leading-[20px] text-white">
-            Hello, {userDetails?.name}
+              Hello, {userDetails?.name}
             </span>
             <span className="font-lato font-normal text-[12px] leading-[14px] text-white opacity-70">
-            Browse your courses and get instant answers to your questions with our AI guide.
+              Browse your courses and get instant answers to your questions with
+              our AI guide.
             </span>
           </div>
         </div>

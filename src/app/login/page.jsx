@@ -54,16 +54,15 @@ const LoginPage = () => {
         
         // Track successful login event
         capture('user_login', {
-          user_id: userDetails?.sub || userDetails?.user_id || email,
+          user_id: userDetails?.sub,
           timestamp: new Date().toISOString(),
           device: navigator.userAgent,
           location: window.location.hostname,
-          login_method: 'email_password'
         });
 
         // Identify user in PostHog
         if (userDetails) {
-          identify(userDetails.sub || userDetails.user_id || email, {
+          identify(userDetails.sub, {
             email: email,
             username: userDetails.username || userDetails.preferred_username,
             name: userDetails.name,
