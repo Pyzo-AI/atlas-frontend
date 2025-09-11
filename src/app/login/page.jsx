@@ -5,6 +5,8 @@ import Button from "@/components/common/Button";
 import { toast } from "react-toastify";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import trainBoostLogo from "@/assets/svg/train-boost-logo.svg";
+import { usePostHog } from "@/hooks/usePostHog";
+import { getUserDetailsFromToken } from "@/store/utils/token";
 
 
 const LoginPage = () => {
@@ -14,6 +16,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const loginBaseUrl = process.env.NEXT_PUBLIC_LOGIN_BASE_URL;
+  const { capture, identify } = usePostHog();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -46,6 +49,30 @@ const LoginPage = () => {
           refresh_token: data.refresh_token
         }));
 
+        // Get user details from token for PostHog tracking
+        const userDetails = getUserDetailsFromToken();
+        
+        // Track successful login event
+        capture('user_login', {
+          user_id: userDetails?.sub || userDetails?.user_id || email,
+          timestamp: new Date().toISOString(),
+          device: navigator.userAgent,
+          location: window.location.hostname,
+          login_method: 'email_password'
+        });
+
+        // Identify user in PostHog
+        if (userDetails) {
+          identify(userDetails.sub || userDetails.user_id || email, {
+            email: email,
+            username: userDetails.username || userDetails.preferred_username,
+            name: userDetails.name,
+            first_login: userDetails.iat ? new Date(userDetails.iat * 1000).toISOString() : undefined,
+            roles: userDetails.roles || userDetails.groups,
+            last_login: new Date().toISOString()
+          });
+        }
+
         toast.success("Login successful! Welcome to Train Boost", {
           position: "top-right",
           autoClose: 2000,
@@ -53,12 +80,28 @@ const LoginPage = () => {
 
         router.push("/");
       } else {
+        // Track failed login attempt
+        capture('login_failed', {
+          email: email,
+          timestamp: new Date().toISOString(),
+          error_type: 'invalid_credentials',
+          status_code: response.status
+        });
+
         toast.error("Invalid email or password. Please check your credentials.", {
           position: "top-right",
           autoClose: 3000,
         });
       }
     } catch (error) {
+      // Track login error
+      capture('login_error', {
+        email: email,
+        timestamp: new Date().toISOString(),
+        error_type: 'network_error',
+        error_message: error.message
+      });
+
       toast.error("Login failed. Please try again.", {
         position: "top-right",
         autoClose: 3000,

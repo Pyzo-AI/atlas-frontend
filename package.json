@@ -13,6 +13,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "lottie-react": "^2.4.1",
     "next": "15.3.5",
+    "posthog-js": "^1.262.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",

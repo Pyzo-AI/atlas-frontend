@@ -3,6 +3,7 @@ import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ReduxProvider } from "@/providers/ReduxProvider";
 import ElevenLabsProviderWrapper from "@/providers/ElevenLabsProvider";
+import PostHogProvider from "@/providers/PostHogProvider";
 import PrivateRoute from "@/components/auth/PrivateRoute";
 import Header from "@/components/layout/Header";
 import { ToastContainer } from "react-toastify";
@@ -28,27 +29,29 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ReduxProvider>
-          <ElevenLabsProviderWrapper>
-            <PrivateRoute>
-              <div className="min-h-screen pt-[52px]">
-                {children}
-              </div>
-            </PrivateRoute>
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="light"
-            />
-          </ElevenLabsProviderWrapper>
-        </ReduxProvider>
+        <PostHogProvider>
+          <ReduxProvider>
+            <ElevenLabsProviderWrapper>
+              <PrivateRoute>
+                <div className="min-h-screen pt-[52px]">
+                  {children}
+                </div>
+              </PrivateRoute>
+              <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+              />
+            </ElevenLabsProviderWrapper>
+          </ReduxProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

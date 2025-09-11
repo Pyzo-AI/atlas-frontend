@@ -2,13 +2,15 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
-import { getTokens } from "@/store/utils/token";
+import { getTokens, getUserDetailsFromToken } from "@/store/utils/token";
+import { usePostHog } from "@/hooks/usePostHog";
 
 const PrivateRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   // const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const { identify } = usePostHog();
 
   useEffect(() => {
     // Skip auth check for login page
@@ -22,6 +24,17 @@ const PrivateRoute = ({ children }) => {
     // Simple check: if access token exists, user is authenticated
     if (tokens.access_token) {
       setIsAuthenticated(true);
+      
+      // Identify user in PostHog for existing sessions
+      const userDetails = getUserDetailsFromToken();
+      if (userDetails) {
+        identify(userDetails.sub || userDetails.user_id, {
+          username: userDetails.username || userDetails.preferred_username,
+          name: userDetails.name,
+          roles: userDetails.roles || userDetails.groups,
+          session_start: new Date().toISOString()
+        });
+      }
     } else {
       router.push("/login");
     }
