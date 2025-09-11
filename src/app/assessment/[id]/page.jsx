@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { useGetQuizQuery } from "@/store/api/questionsApi";
 import Button from "@/components/common/Button";
 import BreadCrumb from "@/components/common/BreadCrumb";
+import { usePostHog } from "@/hooks/usePostHog";
+import { getUserDetailsFromToken } from "@/store/utils/token";
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -14,6 +16,7 @@ export default function AssessmentPage() {
   const [answers, setAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const { capture } = usePostHog();
 
   useEffect(() => {
     if (isSubmitted) {
@@ -127,22 +130,34 @@ export default function AssessmentPage() {
 
   const handleSubmit = () => {
     const finalScore = calculateScore();
+    const userDetails = getUserDetailsFromToken();
+    const completionTime = new Date().toISOString();
+
+    // Track module completion event
+    capture("module_complete", {
+      user_id: userDetails?.sub,
+      module_id: presentationId,
+      completion_time: completionTime,
+      score: finalScore,
+      // total_questions: quizData?.questions?.length,
+    });
+
     setScore(finalScore);
     setIsSubmitted(true);
   };
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
-       <BreadCrumb
-          paths={[
-            { path: "/", label: "All Courses" },
-            {
-              path: `/lectures/${presentationId}`,
-              label: "Lectures",
-            },
-            { path: "", label: "Assessment" },
-          ]}
-        />
+      <BreadCrumb
+        paths={[
+          { path: "/", label: "All Courses" },
+          {
+            path: `/lectures/${presentationId}`,
+            label: "Lectures",
+          },
+          { path: "", label: "Assessment" },
+        ]}
+      />
       <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
         <div className="p-8">
           <h1 className="text-[24px] font-lato font-bold mb-8 text-center text-[#1A1C29]">
