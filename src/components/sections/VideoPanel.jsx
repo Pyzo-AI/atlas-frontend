@@ -17,23 +17,27 @@ import React, {
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useConversation } from "@elevenlabs/react";
-import { CONVERSATION_CONFIG, cleanExpiredMessages } from '@/config/conversationConfig';
+import {
+  CONVERSATION_CONFIG,
+  cleanExpiredMessages,
+} from "@/config/conversationConfig";
 import AILearningAssistant from "./AILearningAssistant";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
 import ChatUI from "./ChatUI";
 import { getUserDetailsFromToken } from "@/store/utils/token";
+import { usePostHog } from "@/hooks/usePostHog";
 
 // Conversation history management for VideoPanel
 const {
   STORAGE_KEY: CONVERSATION_STORAGE_KEY,
   MAX_HISTORY_MESSAGES,
   MAX_MESSAGE_AGE_DAYS,
-  MAX_CONTEXT_MESSAGES
+  MAX_CONTEXT_MESSAGES,
 } = CONVERSATION_CONFIG;
 
 const getStoredConversationHistory = () => {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
     const stored = localStorage.getItem(CONVERSATION_STORAGE_KEY);
     if (!stored) return [];
@@ -49,22 +53,24 @@ const getStoredConversationHistory = () => {
 
     return cleanedHistory;
   } catch (error) {
-    console.error('Error loading conversation history:', error);
+    console.error("Error loading conversation history:", error);
     return [];
   }
 };
 
 const saveConversationHistory = (history) => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
     // Keep only the most recent messages to prevent localStorage bloat
     const trimmedHistory = history.slice(-MAX_HISTORY_MESSAGES);
-    localStorage.setItem(CONVERSATION_STORAGE_KEY, JSON.stringify(trimmedHistory));
+    localStorage.setItem(
+      CONVERSATION_STORAGE_KEY,
+      JSON.stringify(trimmedHistory)
+    );
   } catch (error) {
-    console.error('Error saving conversation history:', error);
+    console.error("Error saving conversation history:", error);
   }
 };
-
 
 const VideoPanel = forwardRef(
   (
@@ -109,10 +115,12 @@ const VideoPanel = forwardRef(
     const { currentVideoIndex, isQuestionMode } = useSelector(
       (state) => state.video
     );
+    const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
     const [showChat, setShowChat] = useState(false);
     const [conversationHistory, setConversationHistory] = useState([]);
-    const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
+    const [persistentConversationHistory, setPersistentConversationHistory] =
+      useState([]);
     const [contextSent, setContextSent] = useState(false);
     // Keep ref updated with current isQuestionMode value
     useEffect(() => {
@@ -127,19 +135,26 @@ const VideoPanel = forwardRef(
 
     // Generate context summary from conversation history
     const generateContextSummary = () => {
-      if (persistentConversationHistory.length === 0) return '';
+      if (persistentConversationHistory.length === 0) return "";
 
       // Get the last N meaningful messages for context (configurable)
       const recentMessages = persistentConversationHistory
-        .filter(msg => msg.message && msg.message.trim() && !msg.message.includes('audioData'))
+        .filter(
+          (msg) =>
+            msg.message &&
+            msg.message.trim() &&
+            !msg.message.includes("audioData")
+        )
         .slice(-MAX_CONTEXT_MESSAGES)
-        .map(msg => {
-          const source = msg.source === 'user' ? 'User' : 'AI';
+        .map((msg) => {
+          const source = msg.source === "user" ? "User" : "AI";
           return `${source}: ${msg.message}`;
         })
-        .join('\n');
+        .join("\n");
 
-      return recentMessages ? `Previous conversation context:\n${recentMessages}\n\nPlease continue our conversation naturally based on this context.` : '';
+      return recentMessages
+        ? `Previous conversation context:\n${recentMessages}\n\nPlease continue our conversation naturally based on this context.`
+        : "";
     };
 
     // ElevenLabs Conversational AI
@@ -167,11 +182,11 @@ const VideoPanel = forwardRef(
                 );
                 setContextSent(true);
               } catch (error) {
-                console.error('Error sending context:', error);
+                console.error("Error sending context:", error);
               }
             }
           } catch (error) {
-            console.error('Could not send context on connect:', error.message);
+            console.error("Could not send context on connect:", error.message);
           }
         }, 2000);
       },
@@ -195,7 +210,6 @@ const VideoPanel = forwardRef(
         }));
       },
       onMessage: (message) => {
-
         // Store in current session history (for ChatUI)
         if (message.source === "user") {
           const content = message.message;
@@ -225,26 +239,30 @@ const VideoPanel = forwardRef(
                     `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
                   );
                 } catch (error) {
-                  console.error('Error sending backup context:', error);
+                  console.error("Error sending backup context:", error);
                 }
               }
             } catch (error) {
-              console.error('Could not send backup context:', error.message);
+              console.error("Could not send backup context:", error.message);
             }
           }, 2000);
         }
 
         // Store in persistent history (for context continuity)
-        if (message.message && message.message.trim() && !message.message.includes('audioData')) {
+        if (
+          message.message &&
+          message.message.trim() &&
+          !message.message.includes("audioData")
+        ) {
           const newMessage = {
             id: Date.now() + Math.random(),
             timestamp: new Date().toISOString(),
             source: message.source,
             message: message.message,
-            type: message.type || 'text'
+            type: message.type || "text",
           };
 
-          setPersistentConversationHistory(prev => {
+          setPersistentConversationHistory((prev) => {
             const updated = [...prev, newMessage];
             saveConversationHistory(updated);
             return updated;
@@ -274,7 +292,7 @@ const VideoPanel = forwardRef(
         await navigator.mediaDevices.getUserMedia({ audio: true });
         await conversation.startSession({
           agentId: process.env.NEXT_PUBLIC_ELEVEN_LABS_AGENT_ID,
-          userId:getUserDetailsFromToken()?.email,
+          userId: getUserDetailsFromToken()?.email,
         });
 
         // Send context immediately after connection is established
@@ -288,14 +306,13 @@ const VideoPanel = forwardRef(
                 );
                 setContextSent(true);
               } catch (error) {
-                console.error('Error sending initial context:', error);
+                console.error("Error sending initial context:", error);
               }
             }
           } catch (error) {
-            console.error('Could not send initial context:', error.message);
+            console.error("Could not send initial context:", error.message);
           }
         }, 1500);
-
       } catch (error) {
         console.error("Failed to start conversation:", error);
         setConversationState((prev) => ({ ...prev, isLoading: false }));
@@ -354,9 +371,21 @@ const VideoPanel = forwardRef(
       if (videoRef.current && videos?.length > 0 && !hasInitialized) {
         console.log("Initializing video player...");
 
-        // Update slide when video initializes
+        // Update slide when video invideos[currentVideoIndex].slideitializes
         if (videos?.[currentVideoIndex]?.slide) {
           dispatch(setCurrentSlide(videos[currentVideoIndex].slide));
+
+          // Track initial slide view event
+          const userDetails = getUserDetailsFromToken();
+          const currentTime = new Date().toISOString();
+
+          capture("slide_view", {
+            user_id: userDetails?.sub,
+            module_id: presentationId,
+            slide_id: videos[currentVideoIndex].slide,
+            slide_title: videos[currentVideoIndex].title,
+            timestamp: currentTime,
+          });
         }
 
         setHasInitialized(true);
@@ -442,6 +471,22 @@ const VideoPanel = forwardRef(
           // Update slide when video changes
           if (currentVideo?.slide) {
             dispatch(setCurrentSlide(currentVideo.slide));
+
+            // Track slide view event
+            const userDetails = getUserDetailsFromToken();
+            const currentTime = new Date().toISOString();
+
+            // Track slide view event
+            capture("slide_view", {
+              user_id: userDetails?.sub,
+              module_id: presentationId,
+              slide_id: currentVideo.slide,
+              slide_title: currentVideo.title,
+              timestamp: currentTime,
+            });
+
+            // Set new slide view start time
+            setSlideViewStartTime(currentTime);
           }
 
           // Notify parent about video index change
@@ -579,9 +624,28 @@ const VideoPanel = forwardRef(
     // Handle video end
     const handleVideoEnd = () => {
       if (currentVideoIndex < videos?.length - 1) {
+        const nextVideoIndex = currentVideoIndex + 1;
+        const nextVideo = videos[nextVideoIndex];
+        console.log(nextVideo, "nextVideo");
         setAutoPlayEnabled(true); // Enable autoplay for next video
-        dispatch(setCurrentVideoIndex(currentVideoIndex + 1));
-        dispatch(setCurrentSlide(videos[currentVideoIndex + 1]?.slide));
+        dispatch(setCurrentVideoIndex(nextVideoIndex));
+        dispatch(setCurrentSlide(nextVideo?.slide));
+
+        // Track slide view for auto-advanced video
+        if (nextVideo?.slide) {
+          const userDetails = getUserDetailsFromToken();
+          const currentTime = new Date().toISOString();
+
+          capture("slide_view", {
+            user_id: userDetails?.sub,
+            module_id: presentationId,
+            slide_id: nextVideo.slide,
+            slide_title: nextVideo.title,
+            timestamp: currentTime,
+          });
+
+          setSlideViewStartTime(currentTime);
+        }
       } else {
         setShowRedirectPopup(true);
         setAutoPlayEnabled(false);

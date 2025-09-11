@@ -1,13 +1,21 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentVideoIndex } from "@/store/features/videoSlice";
+import { usePostHog } from "@/hooks/usePostHog";
+import { getUserDetailsFromToken } from "@/store/utils/token";
 
-const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
+const VideoPlaylist = ({
+  videos = [],
+  loading = false,
+  onVideoSelect,
+  presentationId,
+}) => {
   const dispatch = useDispatch();
   const { currentVideoIndex } = useSelector((state) => state.video);
   const scrollContainerRef = useRef(null);
   const videoItemRefs = useRef([]);
   const [showFade, setShowFade] = useState(false);
+  const { capture } = usePostHog();
 
   const formatDuration = (duration) => {
     if (!duration) return "0:00";
@@ -20,14 +28,19 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
   const checkScrollPosition = () => {
     if (scrollContainerRef.current) {
       const container = scrollContainerRef.current;
-      const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 10; // 10px threshold
+      const isScrolledToEnd =
+        container.scrollLeft + container.clientWidth >=
+        container.scrollWidth - 10; // 10px threshold
       setShowFade(!isScrolledToEnd);
     }
   };
 
   // Auto-scroll to current video when currentVideoIndex changes
   useEffect(() => {
-    if (videoItemRefs.current[currentVideoIndex] && scrollContainerRef.current) {
+    if (
+      videoItemRefs.current[currentVideoIndex] &&
+      scrollContainerRef.current
+    ) {
       const currentVideoElement = videoItemRefs.current[currentVideoIndex];
       const container = scrollContainerRef.current;
 
@@ -43,10 +56,11 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
 
       // Calculate scroll position to center the item
       if (isOutOfViewLeft || isOutOfViewRight) {
-        const scrollTo = itemOffsetLeft - (container.clientWidth / 2) + (itemRect.width / 2);
+        const scrollTo =
+          itemOffsetLeft - container.clientWidth / 2 + itemRect.width / 2;
         container.scrollTo({
           left: scrollTo,
-          behavior: 'smooth'
+          behavior: "smooth",
         });
       }
     }
@@ -61,12 +75,26 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (container) {
-      container.addEventListener('scroll', checkScrollPosition);
-      return () => container.removeEventListener('scroll', checkScrollPosition);
+      container.addEventListener("scroll", checkScrollPosition);
+      return () => container.removeEventListener("scroll", checkScrollPosition);
     }
   }, []);
 
   const handleVideoSelect = (index) => {
+    if (index !== currentVideoIndex) {
+      // Track slide view when manually selecting from playlist
+      const selectedVideo = videos[index];
+      const userDetails = getUserDetailsFromToken();
+
+      capture("slide_view", {
+        user_id: userDetails?.sub,
+        module_id: presentationId,
+        slide_id: selectedVideo?.slide,
+        slide_title: selectedVideo?.title,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     if (onVideoSelect) {
       // Use the callback from VideoPanel if provided
       onVideoSelect(index);
@@ -102,10 +130,10 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
 
   return (
     <div className="w-full rounded-xl relative">
-      <div 
-        ref={scrollContainerRef} 
+      <div
+        ref={scrollContainerRef}
         className="overflow-x-auto overflow-y-visible"
-        style={{ scrollBehavior: 'smooth' }}
+        style={{ scrollBehavior: "smooth" }}
       >
         <div className="flex gap-2 pb-1.5 pt-5 overflow-y-visible">
           {videos.map((video, index) => (
