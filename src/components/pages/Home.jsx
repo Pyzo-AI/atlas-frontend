@@ -114,7 +114,7 @@ const PresentationCard = ({ presentation, onClick }) => {
 
   return (
     <div
-      className="flex flex-col items-start p-[12px_12px_16px] gap-[10px] w-full min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)] transition-shadow duration-300"
+      className="flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)] transition-shadow duration-300"
       onClick={onClick}
     >
       <div className="flex flex-col items-start gap-[12px] w-full flex-1">
@@ -130,15 +130,15 @@ const PresentationCard = ({ presentation, onClick }) => {
         </div>
 
         {/* Content */}
-        <div className="flex flex-col items-start gap-[8px] w-full">
-          <div className="flex items-center gap-[8px] w-full">
-            <h3 className="font-lato font-semibold text-[16px] leading-[19px] text-[#1D1F2C] flex-grow">
+        <div className="flex flex-col items-start gap-2 sm:gap-[8px] w-full">
+          <div className="flex items-center gap-2 sm:gap-[8px] w-full">
+            <h3 className="font-lato font-semibold text-sm sm:text-[16px] leading-tight sm:leading-[19px] text-[#1D1F2C] flex-grow">
               {presentation?.title || "Unknown Title"}
             </h3>
           </div>
 
-          <div className="flex justify-between items-start gap-[8px] w-full">
-            <span className="font-lato font-normal text-[12px] leading-[14px] text-[#585858]">
+          <div className="flex justify-between items-start gap-2 sm:gap-[8px] w-full">
+            <span className="font-lato font-normal text-xs sm:text-[12px] leading-tight sm:leading-[14px] text-[#585858]">
               {presentation?.author || "Unknown Author"}
             </span>
             {/* {getStatusBadge()} */}
@@ -202,9 +202,9 @@ const Home = () => {
         {/* Purple Header Section Skeleton */}
         <div className="w-full h-[112px] bg-gray-300 relative mt-1">
           {/* User Profile Skeleton */}
-          <div className="absolute flex items-center gap-[12px] w-[150px] h-[48px] left-[40px] top-[32px]">
-            <div className="w-[48px] h-[48px] bg-gray-400 rounded-[60px]"></div>
-            <div className="flex flex-col justify-center items-start gap-[4px] w-[90px] h-[38px]">
+          <div className="absolute flex items-center gap-3 sm:gap-[12px] w-[150px] h-[48px] left-4 sm:left-[40px] top-[32px]">
+            <div className="w-10 h-10 sm:w-[48px] sm:h-[48px] bg-gray-400 rounded-[60px]"></div>
+            <div className="flex flex-col justify-center items-start gap-1 sm:gap-[4px] w-[90px] h-[38px]">
               <div className="w-[70px] h-[12px] bg-gray-400 rounded"></div>
               <div className="w-[60px] h-[17px] bg-gray-400 rounded"></div>
             </div>
@@ -212,7 +212,7 @@ const Home = () => {
         </div>
 
         {/* Course Section Skeleton */}
-        <div className="flex flex-col items-start gap-[16px] w-full px-[40px] py-[20px]">
+        <div className="flex flex-col items-start gap-4 sm:gap-[16px] w-full px-4 sm:px-[40px] py-4 sm:py-[20px]">
           {/* Header with tabs skeleton */}
           <div className="flex justify-between items-center gap-[16px] w-full h-[30px]">
             <div className="w-[140px] h-[19px] bg-gray-300 rounded"></div>
@@ -220,21 +220,21 @@ const Home = () => {
           </div>
 
           {/* Course Grid Skeleton */}
-          <div className="flex flex-col items-start gap-[12px] w-full h-[459px]">
-            <div className="grid grid-cols-4 gap-[12px] w-full">
+          <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-[12px] w-full">
               {[...Array(8)].map((_, index) => (
                 <div
                   key={index}
-                  className="flex flex-col items-start p-[12px_12px_16px] gap-[10px] w-full min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px]"
+                  className="flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px]"
                 >
-                  <div className="flex flex-col items-start gap-[12px] w-full flex-1">
+                  <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full flex-1">
                     {/* Thumbnail skeleton */}
                     <div className="w-full flex-1 bg-gray-200 rounded-[8px]"></div>
 
                     {/* Content skeleton */}
-                    <div className="flex flex-col items-start gap-[8px] w-full">
+                    <div className="flex flex-col items-start gap-2 sm:gap-[8px] w-full">
                       <div className="w-full h-[19px] bg-gray-200 rounded"></div>
-                      <div className="flex justify-between items-start gap-[8px] w-full">
+                      <div className="flex justify-between items-start gap-2 sm:gap-[8px] w-full">
                         <div className="w-[100px] h-[14px] bg-gray-200 rounded"></div>
                         <div className="w-[80px] h-[17px] bg-gray-200 rounded-[10px]"></div>
                       </div>
@@ -257,20 +257,19 @@ const Home = () => {
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9]">
       {/* Purple Header Section */}
-      <div className="w-full h-[112px] bg-[#744FFF] relative mt-1">
+      <div className="w-full h-auto min-h-[112px] bg-[#744FFF] relative mt-1">
         {/* User Profile */}
-        <div className="flex items-center gap-[12px] px-[40px] py-8">
-          {/* <div className="w-[48px] h-[48px] bg-[#F1F2F4] rounded-[60px]"></div> */}
+        <div className="flex items-center gap-3 sm:gap-[12px] px-4 sm:px-[40px] py-6 sm:py-8">
           <Image
-            className="w-[48px] h-[48px] bg-[#F1F2F4] rounded-[60px]"
+            className="w-10 h-10 sm:w-[48px] sm:h-[48px] bg-[#F1F2F4] rounded-[60px] flex-shrink-0"
             src={chat_star}
             alt="User icon"
           />
-          <div className="flex flex-col justify-center items-start gap-[4px] min-w-[120px] h-[38px]">
-            <span className="font-lato font-semibold text-[17px] leading-[20px] text-white">
+          <div className="flex flex-col justify-center items-start gap-1 sm:gap-[4px] min-w-0 flex-1">
+            <span className="font-lato font-semibold text-base sm:text-[17px] leading-tight sm:leading-[20px] text-white truncate">
               Hello, {userDetails?.name}
             </span>
-            <span className="font-lato font-normal text-[12px] leading-[14px] text-white opacity-70">
+            <span className="font-lato font-normal text-xs sm:text-[12px] leading-tight sm:leading-[14px] text-white opacity-70">
               Browse your courses and get instant answers to your questions with
               our AI guide.
             </span>
@@ -278,18 +277,18 @@ const Home = () => {
         </div>
 
         {/* Learning Overview - Hidden by default as per Figma */}
-        <div className="absolute flex flex-col items-start gap-[12px] w-full h-[138px] px-[40px] top-[104px] invisible">
-          <h3 className="w-full h-[17px] font-lato font-semibold text-[14px] leading-[17px] text-white">
+        <div className="absolute flex flex-col items-start gap-3 sm:gap-[12px] w-full h-[138px] px-4 sm:px-[40px] top-[104px] invisible">
+          <h3 className="w-full h-[17px] font-lato font-semibold text-sm sm:text-[14px] leading-[17px] text-white">
             Learning Overview
           </h3>
         </div>
       </div>
 
       {/* Course Section */}
-      <div className="flex flex-col items-start gap-[16px] w-full px-[40px] py-[20px]">
+      <div className="flex flex-col items-start gap-4 sm:gap-[16px] w-full px-4 sm:px-[40px] py-4 sm:py-[20px]">
         {/* Header with tabs */}
-        <div className="flex justify-between items-center gap-[16px] w-full h-[30px]">
-          <h2 className="font-lato font-bold text-[16px] leading-[19px] text-[#1A1C29]">
+        <div className="flex justify-between items-center gap-4 sm:gap-[16px] w-full">
+          <h2 className="font-lato font-bold text-base sm:text-[16px] leading-tight sm:leading-[19px] text-[#1A1C29]">
             Available Courses
           </h2>
 
@@ -341,8 +340,8 @@ const Home = () => {
         </div>
 
         {/* Course Grid */}
-        <div className="flex flex-col items-start gap-[12px] w-full h-[459px]">
-          <div className="grid grid-cols-4 gap-[12px] w-full">
+        <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-[12px] w-full">
             {presentations?.data
               .filter(
                 (p) =>
