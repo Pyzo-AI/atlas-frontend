@@ -1,27 +1,28 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import "react-toastify/dist/ReactToastify.css";
-import { ReduxProvider } from "@/providers/ReduxProvider";
-import ElevenLabsProviderWrapper from "@/providers/ElevenLabsProvider";
-import PostHogProvider from "@/providers/PostHogProvider";
-import PrivateRoute from "@/components/auth/PrivateRoute";
-import Header from "@/components/layout/Header";
-import { ToastContainer } from "react-toastify";
+import { Geist, Geist_Mono } from 'next/font/google'
+import './globals.css'
+import 'react-toastify/dist/ReactToastify.css'
+import { ReduxProvider } from '@/providers/ReduxProvider'
+import ElevenLabsProviderWrapper from '@/providers/ElevenLabsProvider'
+import PostHogProvider from '@/providers/PostHogProvider'
+import PrivateRoute from '@/components/auth/PrivateRoute'
+import Header from '@/components/layout/Header'
+import ResponsiveContainer from '@/components/layout/ResponsiveContainer'
+import { ToastContainer } from 'react-toastify'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 export const metadata = {
-  title: "TrainBoost",
-  description: "Training Using AI",
-};
+  title: 'TrainBoost',
+  description: 'Training Using AI',
+}
 
 export default function RootLayout({ children }) {
   return (
@@ -33,9 +34,7 @@ export default function RootLayout({ children }) {
           <ReduxProvider>
             <ElevenLabsProviderWrapper>
               <PrivateRoute>
-                <div className="min-h-screen pt-[52px]">
-                  {children}
-                </div>
+                <ResponsiveContainer>{children}</ResponsiveContainer>
               </PrivateRoute>
               <ToastContainer
                 position="top-right"
@@ -54,5 +53,5 @@ export default function RootLayout({ children }) {
         </PostHogProvider>
       </body>
     </html>
-  );
+  )
 }

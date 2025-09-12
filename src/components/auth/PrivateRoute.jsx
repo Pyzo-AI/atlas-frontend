@@ -1,46 +1,50 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import Header from "@/components/layout/Header";
-import { getTokens, getUserDetailsFromToken } from "@/store/utils/token";
-import { usePostHog } from "@/hooks/usePostHog";
+'use client'
+import { useEffect, useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import Header from '@/components/layout/Header'
+import { getTokens, getUserDetailsFromToken } from '@/store/utils/token'
+import { usePostHog } from '@/hooks/usePostHog'
+import { usePortraitMode } from '@/hooks/usePortraitMode'
+import { useDeviceType } from '@/hooks/useDeviceType'
 
 const PrivateRoute = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   // const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
-  const pathname = usePathname();
-  const { identify } = usePostHog();
+  const router = useRouter()
+  const pathname = usePathname()
+  const { identify } = usePostHog()
+  const isPortrait = usePortraitMode()
+  const { isDesktop, isMobile, isTablet } = useDeviceType()
 
   useEffect(() => {
     // Skip auth check for login page
-    if (pathname === "/login") {
+    if (pathname === '/login') {
       // setIsLoading(false);
-      return;
+      return
     }
 
-    const tokens = getTokens();
+    const tokens = getTokens()
 
     // Simple check: if access token exists, user is authenticated
     if (tokens.access_token) {
-      setIsAuthenticated(true);
-      
+      setIsAuthenticated(true)
+
       // Identify user in PostHog for existing sessions
-      const userDetails = getUserDetailsFromToken();
+      const userDetails = getUserDetailsFromToken()
       if (userDetails) {
         identify(userDetails.sub || userDetails.user_id, {
           username: userDetails.username || userDetails.preferred_username,
           name: userDetails.name,
           roles: userDetails.roles || userDetails.groups,
-          session_start: new Date().toISOString()
-        });
+          session_start: new Date().toISOString(),
+        })
       }
     } else {
-      router.push("/login");
+      router.push('/login')
     }
 
     // setIsLoading(false);
-  }, [pathname, router]);
+  }, [pathname, router])
 
   // Show loading state while checking authentication
   // if (isLoading) {
@@ -52,22 +56,22 @@ const PrivateRoute = ({ children }) => {
   // }
 
   // For login page, render without header
-  if (pathname === "/login") {
-    return children;
+  if (pathname === '/login') {
+    return children
   }
 
   // For other pages, render with header if authenticated
   if (isAuthenticated) {
     return (
       <>
-        <Header />
+        {(isDesktop || (!isDesktop && isPortrait)) && <Header />}
         {children}
       </>
-    );
+    )
   }
 
   // Return null while redirecting to login
-  return null;
-};
+  return null
+}
 
-export default PrivateRoute;
+export default PrivateRoute
