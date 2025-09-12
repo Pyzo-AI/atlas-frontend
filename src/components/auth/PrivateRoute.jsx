@@ -64,7 +64,9 @@ const PrivateRoute = ({ children }) => {
   if (isAuthenticated) {
     return (
       <>
-        {(isDesktop || (!isDesktop && isPortrait)) && <Header />}
+        {((!isDesktop && !pathname.includes('/lectures/')) ||
+          isDesktop ||
+          (!isDesktop && isPortrait)) && <Header />}
         {children}
       </>
     )
