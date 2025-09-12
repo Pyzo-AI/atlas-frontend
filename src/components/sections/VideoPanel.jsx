@@ -216,6 +216,16 @@ const VideoPanel = forwardRef(
         if (message.source === "user") {
           const content = message.message;
           if (content.trim() === "") return;
+
+          // Track QnA interaction when user asks a question
+          const userDetails = getUserDetailsFromToken();
+          capture("qna_interaction", {
+            user_id: userDetails?.sub,
+            module_id: presentationId,
+            question_text: content,
+            timestamp: new Date().toISOString(),
+          });
+
           setConversationHistory((prev) => [
             ...prev,
             { type: "question", content },
