@@ -93,6 +93,17 @@ const VideoPlaylist = ({
         slide_title: selectedVideo?.title,
         timestamp: new Date().toISOString(),
       });
+
+      // Track trainer video skip only when jumping forward to a later video
+      if (index > currentVideoIndex) {
+        const currentVideo = videos[currentVideoIndex];
+        const targetVideo = videos[index];
+        capture("trainer_video_skip", {
+          user_id: userDetails?.sub,
+          video_id: currentVideo?.slide, // Video being skipped FROM
+          target_video_id: targetVideo?.slide, // Video being jumped TO
+        });
+      }
     }
 
     if (onVideoSelect) {
