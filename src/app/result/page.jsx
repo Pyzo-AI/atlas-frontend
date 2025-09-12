@@ -14,7 +14,7 @@ function ResultContent() {
   const [score, setScore] = useState(null);
   const dispatch = useDispatch();
   const presentationId = searchParams.get("id");
-
+  const passingScore = process.env.NEXT_PUBLIC_ASSESSMENT_PASSING_SCORE || 100;
   useEffect(() => {
     const scoreParam = searchParams.get("score");
     if (scoreParam) {
@@ -22,7 +22,7 @@ function ResultContent() {
     }
   }, [searchParams]);
 
-  const isPerfectScore = score === 100;
+  const isPerfectScore = score === passingScore;
 
   const handleRetry = () => {
     router.push(`/assessment/${presentationId}`);

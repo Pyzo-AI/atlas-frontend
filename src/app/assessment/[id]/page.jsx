@@ -16,6 +16,7 @@ export default function AssessmentPage() {
   const [answers, setAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const [assessmentStartTime, setAssessmentStartTime] = useState(null);
   const { capture } = usePostHog();
 
   useEffect(() => {
@@ -30,6 +31,21 @@ export default function AssessmentPage() {
     isLoading,
     isError,
   } = useGetQuizQuery(presentationId);
+
+  // Track assessment start when quiz data is loaded
+  useEffect(() => {
+    if (quizData && !assessmentStartTime) {
+      const startTime = new Date().toISOString();
+      setAssessmentStartTime(startTime);
+
+      const userDetails = getUserDetailsFromToken();
+      capture("assessment_start", {
+        user_id: userDetails?.sub,
+        module_id: presentationId,
+        assessment_id: quizData.quiz_id || presentationId,
+      });
+    }
+  }, [quizData, assessmentStartTime, presentationId, capture]);
 
   // Show loading state while fetching data
   if (isLoading) {
@@ -132,6 +148,26 @@ export default function AssessmentPage() {
     const finalScore = calculateScore();
     const userDetails = getUserDetailsFromToken();
     const completionTime = new Date().toISOString();
+
+    // Calculate time taken in seconds
+    const timeTaken = assessmentStartTime
+      ? Math.round(
+          (new Date(completionTime) - new Date(assessmentStartTime)) / 1000
+        )
+      : 0;
+
+    // Determine pass/fail (assuming 60% is passing)
+    const passingScore = process.env.NEXT_PUBLIC_ASSESSMENT_PASSING_SCORE || 100;
+    const passFail = finalScore >= passingScore ? "pass" : "fail";
+
+    // Track assessment submission event
+    capture("assessment_submit", {
+      user_id: userDetails?.sub,
+      assessment_id: quizData?.quiz_id || presentationId,
+      score: finalScore,
+      pass_fail: passFail,
+      time_taken: timeTaken,
+    });
 
     // Track module completion event
     capture("module_complete", {
