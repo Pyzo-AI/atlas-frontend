@@ -5,10 +5,11 @@ import rated_start from '@/assets/svg/rated_start.svg';
 import half_rated_star from '@/assets/svg/half_rated_star.svg';
 import ratingIMG from '@/assets/svg/rating.svg';
 import Image from 'next/image';
-import { getTokens, getUserDetailsFromToken } from '@/store/utils/token';
+import { getUserDetailsFromToken } from '@/store/utils/token';
 import RatingSuccessModal from '@/components/ui/RatingSuccessModal';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import BreadCrumb from '@/components/common/BreadCrumb';
+import { usePostHog } from '@/hooks/usePostHog';
 
 
 export default function Review({params}) {
@@ -20,6 +21,8 @@ export default function Review({params}) {
   const router = useRouter();
   const resolvedParams = React.use(params);
   const presentationId = resolvedParams.id;
+  const { capture } = usePostHog();
+  const userDetails = getUserDetailsFromToken(); 
   console.log("Presentation ID:", presentationId);
 
   const handleStarClick = (starIndex, isHalf = false) => {
@@ -47,9 +50,7 @@ export default function Review({params}) {
     setIsSubmitting(true);
     
     try {
-      const userDetails = getUserDetailsFromToken();
-      console.log("User details:", userDetails);
-      
+    
       const data = {
         rating,
         review,
@@ -60,7 +61,6 @@ export default function Review({params}) {
         userId: userDetails?.sub || 'anonymous',
       };
 
-      console.log('Submitting review data:', data);
 
       const response = await fetch("https://script.google.com/macros/s/AKfycbwOMSbXPGz1vAXtp2eGWgtP-O4WNpnqI0cUi1PfEQqM9_bAK9TL3gxKCQnJtVoEO7THOA/exec", {
         method: "POST",
@@ -68,12 +68,13 @@ export default function Review({params}) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       });
-    //   const result = await response.json();
-    //   console.log('Success:', result);
-      
-      // Show success modal
       setShowSuccessModal(true);
-      
+     
+      capture("qna_feedback", {
+        user_id: userDetails?.sub,
+        module_id: presentationId,
+        feedback:review
+      });
     } catch (error) {
       console.error('Error submitting review:', error);
       // TODO: Add error notification to the user
