@@ -201,9 +201,15 @@ const VideoPanel = forwardRef(
         }
       },
       onDisconnect: () => {
-        console.log("Disconnected from ElevenLabs");
+        const userDetails = getUserDetailsFromToken();
+        const currentVideo = videos[currentVideoIndex];
         if (isQuestionModeRef.current) {
           dispatch(setIsQuestionMode(false));
+          capture("slide_redirect", {
+            user_id: userDetails?.sub,
+            module_id: presentationId,
+            slide_id:currentVideo?.slide
+          });
         }
         setConversationState((prev) => ({
           ...prev,
