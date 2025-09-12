@@ -125,7 +125,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center bg-[#FEFBFF] overflow-hidden mt-[-52px]">
+    <div className="relative min-h-screen w-full flex items-center justify-center bg-[#FEFBFF] overflow-hidden mt-[-52px] px-4 sm:px-6">
       {/* Background blur effects */}
       <div
         className="absolute w-[819px] h-[819px] left-[-318px] top-[221px] bg-[rgba(158,59,213,0.7)] rounded-full"
@@ -137,8 +137,8 @@ const LoginPage = () => {
       />
 
       {/* Main login card */}
-      <div className="relative z-10 w-[441px] bg-white rounded-[13px] shadow-[0px_4px_104px_rgba(0,0,0,0.07)] p-[30px_30px_40px_30px]">
-        <div className="flex flex-col items-center gap-12">
+      <div className="relative z-10 w-full max-w-[441px] bg-white rounded-[13px] shadow-[0px_4px_104px_rgba(0,0,0,0.07)] p-6 sm:p-[30px_30px_40px_30px]">
+        <div className="flex flex-col items-center gap-8 sm:gap-12">
           {/* Header section */}
           <div className="flex flex-col items-center gap-1">
             {/* Logo and brand */}
@@ -156,19 +156,19 @@ const LoginPage = () => {
             </div>
 
             {/* Main heading */}
-            <h1 className="text-[24px] font-lato font-bold leading-[29px] tracking-[0.02em] text-[#1A1C29] text-center">
+            <h1 className="text-xl sm:text-[24px] font-lato font-bold leading-tight sm:leading-[29px] tracking-[0.02em] text-[#1A1C29] text-center">
               Sign in to your account
             </h1>
           </div>
 
           {/* Form section */}
-          <div className="w-full flex flex-col gap-6">
+          <div className="w-full flex flex-col gap-4 sm:gap-6">
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               {/* Email field */}
               <div className="flex flex-col gap-[11px]">
                 <label
                   htmlFor="email"
-                  className="text-[16px] font-lato font-semibold leading-[19px] text-[#1A1C29]"
+                  className="text-sm sm:text-[16px] font-lato font-semibold leading-tight sm:leading-[19px] text-[#1A1C29]"
                 >
                   Email
                 </label>
@@ -178,7 +178,7 @@ const LoginPage = () => {
                   // type="email"
                   autoComplete="email"
                   required
-                  className="w-full h-[44px] bg-white border border-[#E5E7EB] rounded-[11px] px-3 py-[9px] text-[14px] font-lato font-normal leading-[17px] text-black placeholder:text-[rgba(0,0,0,0.5)] focus:outline-none focus:border-[#4A47C8] transition-colors"
+                  className="w-full h-11 sm:h-[44px] bg-white border border-[#E5E7EB] rounded-[11px] px-3 py-2 sm:py-[9px] text-sm sm:text-[14px] font-lato font-normal leading-tight sm:leading-[17px] text-black placeholder:text-[rgba(0,0,0,0.5)] focus:outline-none focus:border-[#4A47C8] transition-colors"
                   placeholder="abc@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -189,7 +189,7 @@ const LoginPage = () => {
               <div className="flex flex-col gap-[11px]">
                 <label
                   htmlFor="password"
-                  className="text-[16px] font-lato font-semibold leading-[19px] text-[#1A1C29]"
+                  className="text-sm sm:text-[16px] font-lato font-semibold leading-tight sm:leading-[19px] text-[#1A1C29]"
                 >
                   Password
                 </label>
@@ -200,7 +200,7 @@ const LoginPage = () => {
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
-                    className="w-full h-[44px] bg-white border border-[#E5E7EB] rounded-[11px] px-3 py-[9px] pr-12 text-[14px] font-lato font-normal leading-[17px] text-black placeholder:text-[rgba(0,0,0,0.5)] focus:outline-none focus:border-[#4A47C8] transition-colors"
+                    className="w-full h-11 sm:h-[44px] bg-white border border-[#E5E7EB] rounded-[11px] px-3 py-2 sm:py-[9px] pr-12 text-sm sm:text-[14px] font-lato font-normal leading-tight sm:leading-[17px] text-black placeholder:text-[rgba(0,0,0,0.5)] focus:outline-none focus:border-[#4A47C8] transition-colors"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -229,7 +229,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="cursor-pointer w-full h-[44px] bg-gradient-to-b from-[#685EDD] to-[#DA8BFF] rounded-[11px] flex items-center justify-center px-3 py-[9px] disabled:opacity-70"
+                className="cursor-pointer w-full h-11 sm:h-[44px] bg-gradient-to-b from-[#685EDD] to-[#DA8BFF] rounded-[11px] flex items-center justify-center px-3 py-2 sm:py-[9px] disabled:opacity-70"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-3">
@@ -253,12 +253,12 @@ const LoginPage = () => {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    <span className="text-[16px] font-lato font-semibold leading-[19px] text-white">
+                    <span className="text-sm sm:text-[16px] font-lato font-semibold leading-tight sm:leading-[19px] text-white">
                       Signing in...
                     </span>
                   </div>
                 ) : (
-                  <span className="text-[16px] font-lato font-semibold leading-[19px] text-white">
+                  <span className="text-sm sm:text-[16px] font-lato font-semibold leading-tight sm:leading-[19px] text-white">
                     Sign In
                   </span>
                 )}
