@@ -175,11 +175,11 @@ const VideoPanel = forwardRef(
     // ElevenLabs Conversational AI
     const conversation = useConversation({
       // apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
-      connectionDelay: {
-        android: 3000,
-        ios: 1000,
-        default: 1000,
-      },
+      // connectionDelay: {
+      //   android: 3000,
+      //   ios: 1000,
+      //   default: 1000,
+      // },
       useWakeLock: false, // Disable wake lock to prevent connection issues
 
       onConnect: () => {
