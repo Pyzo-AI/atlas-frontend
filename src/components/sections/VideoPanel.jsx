@@ -82,6 +82,8 @@ const VideoPanel = forwardRef(
       onPauseAnswerAudio,
       presentationId,
       width = "30%",
+      isMobileView = false,
+      isPhoneView = false,
     },
     ref
   ) => {
@@ -742,6 +744,416 @@ const VideoPanel = forwardRef(
       }
       setShowChat(false);
     };
+    // Phone view - optimized for 30% width with very compact layout
+    if (isMobileView && isPhoneView) {
+      return (
+        <div className="flex flex-col h-full gap-1">
+          {/* Redirect Popup */}
+          {showRedirectPopup && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+                <h3 className="text-xl font-semibold mb-4">Training Complete!</h3>
+                <p className="mb-6">
+                  Redirecting to Assessment in {countdown} seconds...
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{ width: `${(10 - countdown) * 10}%` }}
+                  ></div>
+                </div>
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    onClick={handleClosePopup}
+                    className="cursor-pointer px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      const currentPath = window.location.pathname;
+                      const presentationId = currentPath.split("/lectures/")[1];
+                      router.push(`/assessment/${presentationId}`);
+                    }}
+                    className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
+                  >
+                    Go to Assessment Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Video Section - Very compact for phones */}
+          {!isQuestionMode && !showChat ? (
+            <div
+              className="cursor-pointer p-1 bg-white rounded border border-[#E5E7EB] flex-shrink-0"
+              onClick={togglePlayPause}
+            >
+              <div className="relative w-full pt-[25%] h-32 bg-black rounded overflow-hidden">
+                {/* Very small aspect ratio for phones */}
+                <video
+                  key={`trainer-video-${currentVideoIndex}`}
+                  ref={videoRef}
+                  src={videos?.[currentVideoIndex]?.trainer_video}
+                  className="absolute top-0 left-0 w-full h-full object-cover"
+                  onEnded={handleVideoEnd}
+                  onTimeUpdate={(e) => {
+                    const time = e.target.currentTime;
+                    setCurrentTime(time);
+                    dispatch(setCurrentVideoTime(time));
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime: time,
+                        isPlaying: !e.target.paused,
+                        currentVideoIndex,
+                        duration: e.target.duration || duration,
+                      });
+                    }
+                  }}
+                  onLoadedMetadata={(e) => {
+                    const newDuration = e.target.duration;
+                    setDuration(newDuration);
+                    applyVideoSettings(e.target);
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying,
+                        currentVideoIndex,
+                        duration: newDuration,
+                      });
+                    }
+                  }}
+                  onCanPlay={(e) => {
+                    applyVideoSettings(e.target);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onPlay={() => {
+                    setIsPlaying(true);
+                    dispatch(setIsVideoPlaying(true));
+                    dispatch(setAnswerPptIndex(null));
+                    if (onPauseAnswerAudio) {
+                      onPauseAnswerAudio();
+                    }
+                    const userDetails = getUserDetailsFromToken();
+                    const currentVideo = videos?.[currentVideoIndex];
+                    if (currentVideo) {
+                      capture("video_play", {
+                        user_id: userDetails?.sub,
+                        module_id: presentationId,
+                        video_id: currentVideo.slide,
+                        timestamp: new Date().toISOString(),
+                      });
+                    }
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying: true,
+                        currentVideoIndex,
+                        duration,
+                      });
+                    }
+                  }}
+                  onPause={() => {
+                    setIsPlaying(false);
+                    dispatch(setIsVideoPlaying(false));
+                    const userDetails = getUserDetailsFromToken();
+                    const currentVideo = videos?.[currentVideoIndex];
+                    if (currentVideo) {
+                      capture("video_pause", {
+                        user_id: userDetails?.sub,
+                        video_id: currentVideo.slide,
+                        current_time: currentTime,
+                        timestamp: new Date().toISOString(),
+                      });
+                    }
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying: false,
+                        currentVideoIndex,
+                        duration,
+                      });
+                    }
+                  }}
+                  poster={videos?.[currentVideoIndex]?.thumbnail}
+                  autoPlay={autoPlayEnabled}
+                  controls={true}
+                  controlsList="nodownload"
+                  disablePictureInPicture
+                />
+              </div>
+              {/* Time display - very small for phones */}
+              <div className="px-1 flex justify-between mt-1 text-[8px] leading-3 tracking-normal font-normal text-center text-gray-600 font-lato">
+                <span>
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </span>
+                <span>
+                  {currentVideoIndex + 1}/{videos?.length}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          {/* AI Learning Assistant - Compact for phones */}
+          {!isQuestionMode && !showChat && (
+            <div className="flex-1 min-h-0">
+              <AILearningAssistant
+                setShowChat={setShowChat}
+                showChat={showChat}
+                onStartConversation={startConversation}
+                onStopConversation={stopConversation}
+                isMobileView={true}
+              />
+            </div>
+          )}
+
+          {/* Question Mode - Compact */}
+          {isQuestionMode && (
+            <QuestionModeAI
+              isLoading={!conversationState.isConnected}
+              isAudioPlaying={conversation.isSpeaking}
+              isConnected={conversationState.isConnected}
+            />
+          )}
+
+          {/* Chat UI - Compact */}
+          {showChat && (
+            <ChatUI
+              onClose={handleCloseChatUI}
+              conversation={conversationHistory}
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+              isConnected={conversationState.isConnected}
+              setShowChat={setShowChat}
+              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+            />
+          )}
+
+          {/* Question Mode User - Compact */}
+          {isQuestionMode && !showChat && (
+            <QuestionModeUser
+              onPauseVideo={pauseVideo}
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+              setShowChat={setShowChat}
+              onPauseAnswerAudio={stopAnswerAudio}
+              isAudioPlaying={conversationState.isAudioPlaying}
+              isAudioLoading={isListening}
+              isConnected={conversationState.isConnected}
+              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+              isMobile={true}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // Tablet view - optimize video size to show AI Learning Assistant
+    if (isMobileView) {
+      return (
+        <div className="flex flex-col h-full gap-3">
+          {/* Redirect Popup */}
+          {showRedirectPopup && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+                <h3 className="text-xl font-semibold mb-4">Training Complete!</h3>
+                <p className="mb-6">
+                  Redirecting to Assessment in {countdown} seconds...
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{ width: `${(10 - countdown) * 10}%` }}
+                  ></div>
+                </div>
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    onClick={handleClosePopup}
+                    className="cursor-pointer px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      const currentPath = window.location.pathname;
+                      const presentationId = currentPath.split("/lectures/")[1];
+                      router.push(`/assessment/${presentationId}`);
+                    }}
+                    className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
+                  >
+                    Go to Assessment Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Video Section - Smaller height to fit AI Assistant */}
+          {!isQuestionMode && !showChat ? (
+            <div
+              className="cursor-pointer p-2 pb-1 bg-white rounded-lg border border-[#E5E7EB]"
+              onClick={togglePlayPause}
+            >
+              <div className="relative w-full pt-[40%] h-50 bg-black rounded-lg overflow-hidden">
+                {/* Reduced aspect ratio for mobile */}
+                <video
+                  key={`trainer-video-${currentVideoIndex}`}
+                  ref={videoRef}
+                  src={videos?.[currentVideoIndex]?.trainer_video}
+                  className="absolute top-0 left-0 w-full h-full object-cover"
+                  onEnded={handleVideoEnd}
+                  onTimeUpdate={(e) => {
+                    const time = e.target.currentTime;
+                    setCurrentTime(time);
+                    dispatch(setCurrentVideoTime(time));
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime: time,
+                        isPlaying: !e.target.paused,
+                        currentVideoIndex,
+                        duration: e.target.duration || duration,
+                      });
+                    }
+                  }}
+                  onLoadedMetadata={(e) => {
+                    const newDuration = e.target.duration;
+                    setDuration(newDuration);
+                    applyVideoSettings(e.target);
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying,
+                        currentVideoIndex,
+                        duration: newDuration,
+                      });
+                    }
+                  }}
+                  onCanPlay={(e) => {
+                    applyVideoSettings(e.target);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onPlay={() => {
+                    setIsPlaying(true);
+                    dispatch(setIsVideoPlaying(true));
+                    dispatch(setAnswerPptIndex(null));
+                    if (onPauseAnswerAudio) {
+                      onPauseAnswerAudio();
+                    }
+                    const userDetails = getUserDetailsFromToken();
+                    const currentVideo = videos?.[currentVideoIndex];
+                    if (currentVideo) {
+                      capture("video_play", {
+                        user_id: userDetails?.sub,
+                        module_id: presentationId,
+                        video_id: currentVideo.slide,
+                        timestamp: new Date().toISOString(),
+                      });
+                    }
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying: true,
+                        currentVideoIndex,
+                        duration,
+                      });
+                    }
+                  }}
+                  onPause={() => {
+                    setIsPlaying(false);
+                    dispatch(setIsVideoPlaying(false));
+                    const userDetails = getUserDetailsFromToken();
+                    const currentVideo = videos?.[currentVideoIndex];
+                    if (currentVideo) {
+                      capture("video_pause", {
+                        user_id: userDetails?.sub,
+                        video_id: currentVideo.slide,
+                        current_time: currentTime,
+                        timestamp: new Date().toISOString(),
+                      });
+                    }
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying: false,
+                        currentVideoIndex,
+                        duration,
+                      });
+                    }
+                  }}
+                  poster={videos?.[currentVideoIndex]?.thumbnail}
+                  autoPlay={autoPlayEnabled}
+                  controls={true}
+                  controlsList="nodownload"
+                  disablePictureInPicture
+                />
+              </div>
+              {/* Time display below video - smaller text */}
+              <div className="px-1 flex justify-between mt-1 text-[10px] leading-4 tracking-normal font-normal text-center text-gray-600 font-lato">
+                <span>
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </span>
+                <span>
+                  {currentVideoIndex + 1}/{videos?.length}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          {/* AI Learning Assistant - Always visible in mobile */}
+          {!isQuestionMode && !showChat && (
+            <AILearningAssistant
+              setShowChat={setShowChat}
+              showChat={showChat}
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+            />
+          )}
+
+          {/* Question Mode */}
+          {isQuestionMode && (
+            <QuestionModeAI
+              isLoading={!conversationState.isConnected}
+              isAudioPlaying={conversation.isSpeaking}
+              isConnected={conversationState.isConnected}
+            />
+          )}
+
+          {/* Chat UI */}
+          {showChat && (
+            <ChatUI
+              onClose={handleCloseChatUI}
+              conversation={conversationHistory}
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+              isConnected={conversationState.isConnected}
+              setShowChat={setShowChat}
+              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+            />
+          )}
+
+          {/* Question Mode User */}
+          {isQuestionMode && !showChat && (
+            <QuestionModeUser
+              onPauseVideo={pauseVideo}
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+              setShowChat={setShowChat}
+              onPauseAnswerAudio={stopAnswerAudio}
+              isAudioPlaying={conversationState.isAudioPlaying}
+              isAudioLoading={isListening}
+              isConnected={conversationState.isConnected}
+              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+            />
+          )}
+        </div>
+      );
+    }
+
     return (
       <div
         className="flex flex-col h-full relative gap-4 flex-shrink-0 pl-4"

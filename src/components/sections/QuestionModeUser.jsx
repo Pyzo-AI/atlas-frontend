@@ -22,6 +22,7 @@ const QuestionModeUser = ({
   isAudioLoading,
   isConnected,
   setIsJumpedOnChatFromInteractionMode,
+  isMobile = false,
 }) => {
   const dispatch = useDispatch();
   const { question } = useSelector((state) => state.video);
@@ -79,7 +80,7 @@ const QuestionModeUser = ({
         {/* Center Content */}
         <div className="flex flex-col items-center gap-[30px] max-w-[275px]">
           {/* Avatar/Tap to Speak */}
-          <div className="w-[120px] h-[120px] flex items-center justify-center">
+          <div className={`w-[120px] ${isMobile ? 'h-[20px]' : 'h-[120px]'} flex items-center justify-center`}>
             {isAudioLoading ? (
               <Lottie
                 animationData={userWaveAnimation}

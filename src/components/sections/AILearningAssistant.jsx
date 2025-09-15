@@ -11,6 +11,7 @@ const AILearningAssistant = ({
   setShowChat = () => {},
   onStartConversation = () => {},
   onStopConversation = () => {},
+  isMobileView = false,
 }) => {
   const { isQuestionMode } = useSelector((state) => state.video);
   const dispatch = useDispatch();
@@ -26,7 +27,7 @@ const AILearningAssistant = ({
   };
 
   return (
-    <div className="flex flex-col items-start p-3 gap-2.5 w-full flex-1 border border-[#E5E7EB] rounded-xl bg-white overflow-hidden">
+    <div className="flex flex-col items-start p-3 gap-2.5 w-full h-full flex-1 border border-[#E5E7EB] rounded-xl bg-white overflow-hidden">
       {/* Inner Frame */}
       <div className="w-full h-full bg-[#E0DDFF] rounded-xl p-3 flex flex-col min-h-0 overflow-hidden relative">
         {/* Chat Icon - Positioned absolutely */}
@@ -42,16 +43,22 @@ const AILearningAssistant = ({
           {/* Icon and Text Section */}
           <div className="flex flex-col items-center gap-4 w-full max-w-[275px]">
             {/* Icon Container */}
-            <div className="w-[72px] h-[72px] bg-white rounded-full flex items-center justify-center">
+        {!isMobileView ?    <div className="w-[72px] h-[72px] bg-white rounded-full flex items-center justify-center">
+              <Image
+                className="w-full h-full"
+                src={chat_star}
+                alt="chat_star"
+              />
+            </div> :  <div className="w-[48px] h-[48px] bg-white rounded-full flex items-center justify-center">
               <Image
                 className="w-full h-full"
                 src={chat_star}
                 alt="chat_star"
               />
             </div>
-
+}
             {/* Text Content */}
-            <div className="flex flex-col items-center gap-2 w-full">
+          {!isMobileView &&  <div className="flex flex-col items-center gap-2 w-full">
               <h3 className="w-full text-center font-lato font-bold text-lg leading-5 text-[#1A1C29]">
                 AI Learning Assistant
               </h3>
@@ -59,7 +66,7 @@ const AILearningAssistant = ({
                 Get instant answers to your questions and personalized learning
                 support.
               </p>
-            </div>
+            </div>}
           </div>
 
           {/* Start Q&A Button */}

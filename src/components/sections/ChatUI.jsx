@@ -36,7 +36,7 @@ const ChatUI = ({
   return (
     <div
       className="relative w-full bg-white"
-      style={{ height: "calc(100vh - 165px)" }}
+      style={{ height: "calc(100vh )" }}
     >
       {/* Chat Container */}
       <div className="w-full h-full border border-[#E5E7EB] rounded-xl flex flex-col">
