@@ -9,6 +9,7 @@ const VideoPlaylist = ({
   loading = false,
   onVideoSelect,
   presentationId,
+  isMobile = false
 }) => {
   const dispatch = useDispatch();
   const { currentVideoIndex } = useSelector((state) => state.video);
@@ -141,7 +142,7 @@ const VideoPlaylist = ({
               key={index}
               ref={(el) => (videoItemRefs.current[index] = el)}
               onClick={() => handleVideoSelect(index)}
-              className={`relative flex-shrink-0 w-[119px] h-[68px] rounded-lg cursor-pointer transition-all duration-200 overflow-visible scroll-ml-4 ${
+              className={`relative flex-shrink-0  ${isMobile ? 'w-[150px] h-[45px]'  : 'w-[119px] h-[68px]'} rounded-lg cursor-pointer transition-all duration-200 overflow-visible scroll-ml-4 ${
                 currentVideoIndex === index
                   ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
                   : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
@@ -152,9 +153,9 @@ const VideoPlaylist = ({
                 <h4 className="font-lato font-medium text-[12px] leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2">
                   {video.title || "Untitled Video"}
                 </h4>
-                <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
+              {!isMobile &&  <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
                   {formatDuration(video.duration) || "0:00"}
-                </div>
+                </div>}
               </div>
 
               {/* Status indicator - keeping absolute position as requested */}

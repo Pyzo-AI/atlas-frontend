@@ -48,6 +48,7 @@ const PPTSection = ({
             videos={videos}
             loading={loading}
             onVideoSelect={onVideoSelect}
+            isMobile={true}
           />
         </div>
       </div>

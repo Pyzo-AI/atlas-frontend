@@ -39,9 +39,9 @@ const AILearningAssistant = ({
         </button>
 
         {/* Main Content Container - Centered vertically in remaining space */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 min-h-0 overflow-hidden">
+        <div className={`flex-1 flex flex-col items-center justify-center ${isMobileView ? 'gap-2': 'gap-6'} px-4 min-h-0 overflow-hidden`}>
           {/* Icon and Text Section */}
-          <div className="flex flex-col items-center gap-4 w-full max-w-[275px]">
+          <div className={`flex flex-col items-center ${isMobileView ? 'gap-2': 'gap-4'} w-full max-w-[275px]`}>
             {/* Icon Container */}
         {!isMobileView ?    <div className="w-[72px] h-[72px] bg-white rounded-full flex items-center justify-center">
               <Image
@@ -49,7 +49,7 @@ const AILearningAssistant = ({
                 src={chat_star}
                 alt="chat_star"
               />
-            </div> :  <div className="w-[48px] h-[48px] bg-white rounded-full flex items-center justify-center">
+            </div> :  <div className="w-[40px] h-[40px] bg-white rounded-full flex items-center justify-center">
               <Image
                 className="w-full h-full"
                 src={chat_star}
@@ -58,15 +58,15 @@ const AILearningAssistant = ({
             </div>
 }
             {/* Text Content */}
-          {!isMobileView &&  <div className="flex flex-col items-center gap-2 w-full">
-              <h3 className="w-full text-center font-lato font-bold text-lg leading-5 text-[#1A1C29]">
+         <div className="flex flex-col items-center gap-2 w-full">
+              <h3 className={`w-full text-center font-lato font-bold ${isMobileView ? 'text-sm' :'text-lg leading-5'}  text-[#1A1C29]`}>
                 AI Learning Assistant
               </h3>
-              <p className="w-full text-center font-lato font-normal text-xs leading-4 text-[#1A1C29]">
+              {!isMobileView &&    <p className="w-full text-center font-lato font-normal text-xs leading-4 text-[#1A1C29]">
                 Get instant answers to your questions and personalized learning
                 support.
-              </p>
-            </div>}
+              </p>}
+            </div>
           </div>
 
           {/* Start Q&A Button */}
@@ -78,7 +78,7 @@ const AILearningAssistant = ({
             }}
           >
             <Image className="w-5 h-5" src={microphone} alt="Microphone" />
-            <span>Interaction Mode</span>
+            <span className={`${isMobileView && 'text-sm'}`} >Interaction Mode</span>
           </button>
         </div>
       </div>
