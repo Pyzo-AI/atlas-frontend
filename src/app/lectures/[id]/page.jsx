@@ -82,7 +82,7 @@ const Home = () => {
               { path: "/", label: "All Courses" },
               {
                 path: "/lectures/123",
-                label: data.presentation_name || "Untitled Presentation",
+                label: data?.presentation_name || "Untitled Presentation",
               },
             ]}
           />
