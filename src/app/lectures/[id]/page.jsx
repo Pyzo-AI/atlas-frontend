@@ -134,7 +134,7 @@ const Home = () => {
     return (
       <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0 flex-col">
         {/* Breadcrumb Navigation - Compact for phones */}
-        <div className="px-2 py-2 bg-[#F9F9F9] flex-shrink-0">
+        <div className="px-2 pt-2 bg-[#F9F9F9] flex-shrink-0">
           <BreadCrumb
             paths={[
               { path: '/', label: 'All Course' },
