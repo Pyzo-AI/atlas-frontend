@@ -19,7 +19,7 @@ const QuestionModeAI = forwardRef(
     }));
 
     return (
-      <div className="p-3 pb-2 bg-white rounded-xl border border-[#E5E7EB]">
+      <div className="p-3 bg-white rounded-xl border border-[#E5E7EB]">
         <div
           className="w-full aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center"
           style={{
