@@ -59,7 +59,10 @@ const Home = () => {
 
   // Device detection for different layouts
   const isPhone = typeof window !== 'undefined' && window.innerWidth <= 956
-  const isTablet = typeof window !== 'undefined' && window.innerWidth > 956 && window.innerWidth <= 1024
+  const isTablet =
+    typeof window !== 'undefined' &&
+    window.innerWidth > 956 &&
+    window.innerWidth <= 1024
   const isMobileDevice = isPhone || isTablet
   const isLandscape = !isPortrait && isMobileDevice
 
@@ -140,7 +143,7 @@ const Home = () => {
               { path: '/', label: 'All Course' },
               {
                 path: '/lectures/123',
-                label: data?.presentation_name || 'Corporate Finance',
+                label: data?.presentation_name || 'Untitled Presentation',
               },
             ]}
           />
@@ -158,8 +161,8 @@ const Home = () => {
               isVideoPlaying={pptSyncState.isPlaying}
               videoDuration={videoState.duration}
               width="100%"
-              title={data?.presentation_name || "Corporate Finance"}
-              author={data?.presentation_author || "Giri Prathap"}
+              title={data?.presentation_name || 'Corporate Finance'}
+              author={data?.presentation_author || 'Giri Prathap'}
               isMobileView={true}
               isPhoneView={true}
             />
@@ -214,8 +217,8 @@ const Home = () => {
               isVideoPlaying={pptSyncState.isPlaying}
               videoDuration={videoState.duration}
               width="100%"
-              title={data?.presentation_name || "Corporate Finance"}
-              author={data?.presentation_author || "Giri Prathap"}
+              title={data?.presentation_name || 'Corporate Finance'}
+              author={data?.presentation_author || 'Giri Prathap'}
               isMobileView={true}
               isPhoneView={false}
             />

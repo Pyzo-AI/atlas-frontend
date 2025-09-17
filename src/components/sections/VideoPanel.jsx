@@ -103,6 +103,13 @@ const VideoPanel = forwardRef(
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
+    const [previousTime, setPreviousTime] = useState(0);
+    // Use a ref to reliably capture the previous time across event handlers
+    const previousTimeRef = useRef(0);
+    // Track whether a seek is in progress to avoid racing with onTimeUpdate
+    const isSeekingRef = useRef(false);
+    // Keep a short rolling buffer of recent timeupdate values to infer pre-seek time
+    const timeSamplesRef = useRef([]);
     // Slide view tracking
     const [slideViewStartTime, setSlideViewStartTime] = useState("");
     // Persistent video settings
@@ -161,14 +168,20 @@ const VideoPanel = forwardRef(
         : "";
     };
 
+    // Helper: round seconds to 1 decimal place
+    const formatSeconds = (sec) => {
+      if (typeof sec !== "number") return sec;
+      return Math.round(sec * 10) / 10;
+    };
+
     // ElevenLabs Conversational AI
     const conversation = useConversation({
       // apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
-      connectionDelay: {
-        android: 3000,
-        ios: 1000,
-        default: 1000,
-      },
+      // connectionDelay: {
+      //   android: 3000,
+      //   ios: 1000,
+      //   default: 1000,
+      // },
       useWakeLock: false, // Disable wake lock to prevent connection issues
 
       onConnect: () => {
@@ -210,7 +223,7 @@ const VideoPanel = forwardRef(
           capture("slide_redirect", {
             user_id: userDetails?.sub,
             module_id: presentationId,
-            slide_id:currentVideo?.slide
+            slide_id: currentVideo?.slide,
           });
         }
         setConversationState((prev) => ({
@@ -646,7 +659,7 @@ const VideoPanel = forwardRef(
       // Track video completion event
       const userDetails = getUserDetailsFromToken();
       const currentVideo = videos?.[currentVideoIndex];
-      console.log(currentVideo, "currentVideo")
+      console.log(currentVideo, "currentVideo");
       if (currentVideo) {
         capture("video_complete", {
           user_id: userDetails?.sub,
@@ -1210,6 +1223,21 @@ const VideoPanel = forwardRef(
                 onEnded={handleVideoEnd}
                 onTimeUpdate={(e) => {
                   const time = e.target.currentTime;
+                  // Save time samples for the last few updates (used to infer pre-seek time)
+                  try {
+                    const samples = timeSamplesRef.current;
+                    samples.push(time);
+                    if (samples.length > 6) samples.shift();
+                    timeSamplesRef.current = samples;
+                  } catch (err) {
+                    timeSamplesRef.current = [time];
+                  }
+
+                  // Only update previousTime when not in the middle of a user seek
+                  if (!isSeekingRef.current) {
+                    previousTimeRef.current = currentTime;
+                    setPreviousTime(currentTime);
+                  }
                   setCurrentTime(time);
                   dispatch(setCurrentVideoTime(time));
                   // Pass video state to parent for PPT synchronization
@@ -1221,6 +1249,13 @@ const VideoPanel = forwardRef(
                       duration: e.target.duration || duration,
                     });
                   }
+                }}
+                onSeeking={() => {
+                  // When user starts seeking, capture the current time as the "from" time
+                  isSeekingRef.current = true;
+                  previousTimeRef.current =
+                    videoRef.current?.currentTime || currentTime;
+                  setPreviousTime(previousTimeRef.current);
                 }}
                 onLoadedMetadata={(e) => {
                   const newDuration = e.target.duration;
@@ -1339,6 +1374,43 @@ const VideoPanel = forwardRef(
                       ...prev,
                       playbackRate: newRate,
                     }));
+                  }
+                }}
+                onSeeked={(e) => {
+                  const newTime = e.target.currentTime;
+                  // Mark seeking finished
+                  isSeekingRef.current = false;
+
+                  // Infer pre-seek time from the recent time samples buffer.
+                  // We look backwards for the most recent sample that differs from newTime by > threshold.
+                  const samples = timeSamplesRef.current || [];
+                  const THRESHOLD = 0.3; // seconds: treat tiny differences as not a seek
+                  let inferredFrom = previousTimeRef.current ?? previousTime;
+                  for (let i = samples.length - 1; i >= 0; i--) {
+                    const sample = samples[i];
+                    if (Math.abs(sample - newTime) > THRESHOLD) {
+                      inferredFrom = sample;
+                      break;
+                    }
+                  }
+
+                  const fromTime = inferredFrom;
+
+                  // Update previousTime state/ref to the new time after seek
+                  previousTimeRef.current = newTime;
+                  setPreviousTime(newTime);
+
+                  if (newTime > fromTime + 0.001) {
+                    const userDetails = getUserDetailsFromToken();
+                    const currentVideo = videos?.[currentVideoIndex];
+                    if (currentVideo) {
+                      capture("video_skip", {
+                        user_id: userDetails?.sub,
+                        video_id: currentVideo.slide,
+                        from_time: formatSeconds(fromTime),
+                        to_time: formatSeconds(newTime),
+                      });
+                    }
                   }
                 }}
                 // onClick={togglePlayPause}
