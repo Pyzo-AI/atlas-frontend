@@ -119,13 +119,12 @@ const PresentationCard = ({ presentation, onClick }) => {
       <div className="flex flex-col items-start gap-[12px] w-full flex-1">
         {/* Thumbnail */}
         <div className="w-full flex-1 bg-[#F3EDFF] rounded-[8px] overflow-hidden relative">
-          <Image
-            src={presentation?.image}
+        {presentation?.image && presentation.image.trim() !== "" && <Image
+            src={presentation.image}
             alt={presentation?.title}
             fill
-            // className="object-cover transition-transform duration-300 hover:scale-110"
-             className="object-cover "
-          />
+            className="object-cover"
+          />}
         </div>
 
         {/* Content */}
