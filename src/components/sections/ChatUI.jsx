@@ -71,8 +71,8 @@ const ChatUI = ({
                   {item.type === "question" ? (
                     /* User Message */
                     <div className="flex justify-end">
-                      <div className="max-w-[75%] bg-[rgba(26,26,26,0.07)] rounded-[10px_10px_0px_10px] px-2.5 py-2">
-                        <p className="font-lato font-normal text-[13px] leading-4 text-right text-[#1A1C29]">
+                      <div className="max-w-[75%] bg-[rgba(26,26,26,0.07)] rounded-[10px_10px_10px_0px] px-2.5 py-2">
+                        <p className="font-lato font-normal text-[13px] leading-4 text-left text-[#1A1C29]">
                           {item.content}
                         </p>
                       </div>
