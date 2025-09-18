@@ -147,7 +147,7 @@ const VideoPlaylist = ({
         className="overflow-x-auto overflow-y-visible"
         style={{ scrollBehavior: "smooth" }}
       >
-        <div className="flex gap-2 pb-1.5 pt-5 overflow-y-visible">
+        <div className="flex gap-2 pb-1.5 pt-2 lg:pt-5 overflow-y-visible">
           {videos.map((video, index) => (
             <div
               key={index}
