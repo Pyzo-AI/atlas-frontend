@@ -800,7 +800,7 @@ const VideoPanel = forwardRef(
           {/* Video Section - Very compact for phones */}
           {!isQuestionMode && !showChat ? (
             <div
-              className="cursor-pointer p-1 bg-white rounded border border-[#E5E7EB] flex-shrink-0"
+              className="cursor-pointer p-1 md:p-[6px] lg:p-3 bg-white rounded border border-[#E5E7EB] flex-shrink-0"
               onClick={togglePlayPause}
             >
               <div className="relative w-full pt-[25%] h-32 bg-black rounded overflow-hidden">
@@ -1429,7 +1429,7 @@ const VideoPanel = forwardRef(
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
               <span>
-              {videos[currentVideoIndex].slide}/{videos?.length}
+              {(videos?? [])?.[currentVideoIndex]?.slide}/{videos?.length}
               </span>
             </div>
           </div>
