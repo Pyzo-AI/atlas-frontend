@@ -10,6 +10,7 @@ import { usePathname, useParams } from 'next/navigation'
 import BreadCrumb from '@/components/common/BreadCrumb'
 import PageSkeleton from '@/components/common/PageSkeleton'
 import { usePortraitMode } from '@/hooks/usePortraitMode'
+import FullscreenController from '@/components/ui/FullscreenController'
 
 // Portrait Mode Rotation Prompt Component
 const RotationPrompt = () => {
@@ -135,112 +136,116 @@ const Home = () => {
   // Phone landscape layout - 70/30 split for optimal phone experience
   if (isLandscape && isPhone) {
     return (
-      <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0 flex-col">
-        {/* Breadcrumb Navigation - Compact for phones */}
-        <div className="px-2 pt-2 bg-[#F9F9F9] flex-shrink-0">
-          <BreadCrumb
-            paths={[
-              { path: '/', label: 'All Course' },
-              {
-                path: '/lectures/123',
-                label: data?.presentation_name || 'Untitled Presentation',
-              },
-            ]}
-          />
-        </div>
-
-        {/* Main Content Area - Phone optimized */}
-        <div className="flex flex-1 bg-white mx-2 mb-2 rounded-lg overflow-hidden">
-          {/* Left Side - Slides/PPT Section (70% width for phones) */}
-          <div className="w-[70%] overflow-hidden">
-            <PPTSection
-              videos={videos}
-              loading={isLoading}
-              currentVideoIndex={pptVideoIndex}
-              currentVideoTime={pptSyncState.currentTime}
-              isVideoPlaying={pptSyncState.isPlaying}
-              videoDuration={videoState.duration}
-              width="100%"
-              title={data?.presentation_name || 'Corporate Finance'}
-              author={data?.presentation_author || 'Giri Prathap'}
-              isMobileView={true}
-              isPhoneView={true}
+      <FullscreenController enableAutoFullscreen={true}>
+        <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0 flex-col">
+          {/* Breadcrumb Navigation - Compact for phones */}
+          <div className="px-2 pt-2 bg-[#F9F9F9] flex-shrink-0">
+            <BreadCrumb
+              paths={[
+                { path: '/', label: 'All Course' },
+                {
+                  path: '/lectures/123',
+                  label: data?.presentation_name || 'Untitled Presentation',
+                },
+              ]}
             />
           </div>
 
-          {/* Right Side - Video Panel (30% width for phones) */}
-          <div className="w-[30%] bg-[#F9F9F9] p-1 overflow-hidden">
-            <VideoPanel
-              ref={videoPanelRef}
-              videos={videos}
-              loading={isLoading}
-              onVideoStateChange={handleVideoStateChange}
-              onPauseVideo={handlePauseVideo}
-              onPauseAnswerAudio={handlePauseAnswerAudio}
-              width="100%"
-              presentationId={presentationId}
-              isMobileView={true}
-              isPhoneView={true}
-            />
+          {/* Main Content Area - Phone optimized */}
+          <div className="flex flex-1 bg-white mx-2 mb-2 rounded-lg overflow-hidden">
+            {/* Left Side - Slides/PPT Section (70% width for phones) */}
+            <div className="w-[70%] overflow-hidden">
+              <PPTSection
+                videos={videos}
+                loading={isLoading}
+                currentVideoIndex={pptVideoIndex}
+                currentVideoTime={pptSyncState.currentTime}
+                isVideoPlaying={pptSyncState.isPlaying}
+                videoDuration={videoState.duration}
+                width="100%"
+                title={data?.presentation_name || 'Corporate Finance'}
+                author={data?.presentation_author || 'Giri Prathap'}
+                isMobileView={true}
+                isPhoneView={true}
+              />
+            </div>
+
+            {/* Right Side - Video Panel (30% width for phones) */}
+            <div className="w-[30%] bg-[#F9F9F9] p-1 overflow-hidden">
+              <VideoPanel
+                ref={videoPanelRef}
+                videos={videos}
+                loading={isLoading}
+                onVideoStateChange={handleVideoStateChange}
+                onPauseVideo={handlePauseVideo}
+                onPauseAnswerAudio={handlePauseAnswerAudio}
+                width="100%"
+                presentationId={presentationId}
+                isMobileView={true}
+                isPhoneView={true}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </FullscreenController>
     )
   }
 
   // Tablet landscape layout - 60/40 split for tablets
   if (isLandscape && isTablet) {
     return (
-      <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0 flex-col">
-        {/* Breadcrumb Navigation */}
-        <div className="px-4 py-3 bg-[#F9F9F9]">
-          <BreadCrumb
-            paths={[
-              { path: '/', label: 'All Course' },
-              {
-                path: '/lectures/123',
-                label: data?.presentation_name || 'Corporate Finance',
-              },
-            ]}
-          />
-        </div>
-
-        {/* Main Content Area */}
-        <div className="flex flex-1 bg-white mx-4 mb-4 rounded-lg overflow-hidden">
-          {/* Left Side - Slides/PPT Section (60% width for tablets) */}
-          <div className="w-[60%] overflow-hidden">
-            <PPTSection
-              videos={videos}
-              loading={isLoading}
-              currentVideoIndex={pptVideoIndex}
-              currentVideoTime={pptSyncState.currentTime}
-              isVideoPlaying={pptSyncState.isPlaying}
-              videoDuration={videoState.duration}
-              width="100%"
-              title={data?.presentation_name || 'Corporate Finance'}
-              author={data?.presentation_author || 'Giri Prathap'}
-              isMobileView={true}
-              isPhoneView={false}
+      <FullscreenController enableAutoFullscreen={true}>
+        <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0 flex-col">
+          {/* Breadcrumb Navigation */}
+          <div className="px-4 py-3 bg-[#F9F9F9]">
+            <BreadCrumb
+              paths={[
+                { path: '/', label: 'All Course' },
+                {
+                  path: '/lectures/123',
+                  label: data?.presentation_name || 'Corporate Finance',
+                },
+              ]}
             />
           </div>
 
-          {/* Right Side - Video Panel (40% width for tablets) */}
-          <div className="w-[40%] bg-[#F9F9F9] p-3 overflow-hidden">
-            <VideoPanel
-              ref={videoPanelRef}
-              videos={videos}
-              loading={isLoading}
-              onVideoStateChange={handleVideoStateChange}
-              onPauseVideo={handlePauseVideo}
-              onPauseAnswerAudio={handlePauseAnswerAudio}
-              width="100%"
-              presentationId={presentationId}
-              isMobileView={true}
-              isPhoneView={false}
-            />
+          {/* Main Content Area */}
+          <div className="flex flex-1 bg-white mx-4 mb-4 rounded-lg overflow-hidden">
+            {/* Left Side - Slides/PPT Section (60% width for tablets) */}
+            <div className="w-[60%] overflow-hidden">
+              <PPTSection
+                videos={videos}
+                loading={isLoading}
+                currentVideoIndex={pptVideoIndex}
+                currentVideoTime={pptSyncState.currentTime}
+                isVideoPlaying={pptSyncState.isPlaying}
+                videoDuration={videoState.duration}
+                width="100%"
+                title={data?.presentation_name || 'Corporate Finance'}
+                author={data?.presentation_author || 'Giri Prathap'}
+                isMobileView={true}
+                isPhoneView={false}
+              />
+            </div>
+
+            {/* Right Side - Video Panel (40% width for tablets) */}
+            <div className="w-[40%] bg-[#F9F9F9] p-3 overflow-hidden">
+              <VideoPanel
+                ref={videoPanelRef}
+                videos={videos}
+                loading={isLoading}
+                onVideoStateChange={handleVideoStateChange}
+                onPauseVideo={handlePauseVideo}
+                onPauseAnswerAudio={handlePauseAnswerAudio}
+                width="100%"
+                presentationId={presentationId}
+                isMobileView={true}
+                isPhoneView={false}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </FullscreenController>
     )
   }
 
