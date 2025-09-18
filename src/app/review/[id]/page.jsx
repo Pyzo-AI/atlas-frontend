@@ -94,7 +94,7 @@ export default function Review({params}) {
   const isSubmitDisabled = rating === 0;
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
+    <div className="min-h-screen bg-[#F9F9F9] pt-3 sm:pt-5 pb-4 sm:pb-8 px-4 sm:px-10">
        <BreadCrumb
              paths={[
                { path: "/", label: "All Courses" },
@@ -102,22 +102,22 @@ export default function Review({params}) {
              ]}
            />
       {/* Main Rating Card */}
-      <div className="flex justify-center pt-12">
-        <div className="w-144 bg-white border border-gray-200 rounded-2xl px-10 py-[30px] flex flex-col items-center gap-5">
-          <div className="flex flex-col items-center gap-5 w-full">
+      <div className="flex justify-center pt-6 sm:pt-12">
+        <div className="w-full max-w-lg sm:max-w-xl lg:w-144 bg-white border border-gray-200 rounded-xl sm:rounded-2xl px-4 sm:px-10 py-6 sm:py-[30px] flex flex-col items-center gap-4 sm:gap-5">
+          <div className="flex flex-col items-center gap-4 sm:gap-5 w-full">
             {/* Header Section */}
-            <div className="flex flex-col items-center gap-5">
+            <div className="flex flex-col items-center gap-3 sm:gap-5">
               {/* Icon */}
-              <Image src={ratingIMG} alt="Rating" width={100} height={100} />
+              <Image src={ratingIMG} alt="Rating" width={80} height={80} className="sm:w-[100px] sm:h-[100px]" />
 
               {/* Title */}
-              <h2 className="text-2xl font-bold text-gray-900">How Was the Training?</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 text-center px-2">How Was the Training?</h2>
             </div>
 
             {/* Rating and Review Section */}
-            <div className="flex flex-col items-center gap-6 w-full">
+            <div className="flex flex-col items-center gap-4 sm:gap-6 w-full">
               {/* Star Rating */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 {[1, 2, 3, 4, 5].map((star) => {
                   const currentRating = hoveredStar || rating;
                   const isFullStar = star <= currentRating;
@@ -131,12 +131,13 @@ export default function Review({params}) {
                   }
                   
                   return (
-                    <div key={star} className="relative w-8 h-8">
+                    <div key={star} className="relative w-7 h-7 sm:w-8 sm:h-8">
                       <Image 
                         src={starSrc} 
                         alt={isFullStar ? "Rated star" : isHalfStar ? "Half rated star" : "Unrated star"} 
-                        width={32} 
-                        height={32}
+                        width={28} 
+                        height={28}
+                        className="sm:w-8 sm:h-8"
                       />
                       
                       {/* Left half click area */}
@@ -160,15 +161,15 @@ export default function Review({params}) {
               </div>
 
               {/* Review Text Area */}
-              <div className="w-full max-w-md px-7">
+              <div className="w-full max-w-md px-2 sm:px-7">
                 <div className="relative rounded-xl">
                   <textarea
                     value={review}
                     onChange={handleReviewChange}
                     placeholder="Write a review… (optional)"
-                    className="w-full h-24 p-3 text-sm resize-none border-0 rounded-xl outline outline-1 outline-[#E5E7EB] focus:outline-1 focus:outline-[#744FFF]"
+                    className="w-full h-20 sm:h-24 p-3 text-sm resize-none border-0 rounded-xl outline outline-1 outline-[#E5E7EB] focus:outline-1 focus:outline-[#744FFF]"
                   />
-                  <div className="absolute bottom-3 right-3 text-xs text-gray-400">
+                  <div className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 text-xs text-gray-400">
                     ({review.length}/250)
                   </div>
                 </div>
@@ -177,11 +178,11 @@ export default function Review({params}) {
           </div>
 
           {/* Submit Button with Tooltip */}
-          <div className="relative group">
+          <div className="relative group w-full sm:w-auto px-2 sm:px-0">
             <button
               onClick={handleSubmit}
               disabled={isSubmitDisabled || isSubmitting}
-              className={`px-16 py-2 rounded-full font-medium text-base transition-colors flex items-center justify-center min-w-[120px] ${
+              className={`w-full sm:w-auto px-8 sm:px-16 py-2.5 sm:py-2 rounded-full font-medium text-sm sm:text-base transition-colors flex items-center justify-center min-w-[120px] ${
                 isSubmitDisabled || isSubmitting
                   ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
                   : 'bg-[#744FFF] text-white hover:bg-[#5F3FCC] cursor-pointer'
@@ -193,12 +194,13 @@ export default function Review({params}) {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Submitting...
+                  <span className="hidden sm:inline">Submitting...</span>
+                  <span className="sm:hidden">Submitting...</span>
                 </>
               ) : 'Submit'}
             </button>
             {isSubmitDisabled && (
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20">
                 Rating is required
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-0 border-t-4 border-solid border-gray-800 border-t-gray-800"></div>
               </div>

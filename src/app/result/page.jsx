@@ -41,7 +41,7 @@ function ResultContent() {
   if (score === null) return null;
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
+    <div className="min-h-screen bg-[#F9F9F9] pt-3 sm:pt-5 pb-4 sm:pb-8 px-4 sm:px-10">
       <BreadCrumb
         paths={[
           { path: "/", label: "All Courses" },
@@ -52,11 +52,11 @@ function ResultContent() {
           { path: "", label: "Result" },
         ]}
       />
-      <div className="flex justify-center pt-12">
-        <div className="max-w-xl w-full bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
-          <div className="p-8">
+      <div className="flex justify-center pt-6 sm:pt-12">
+        <div className="max-w-xl w-full bg-white rounded-lg sm:rounded-xl border border-[#E5E7EB] overflow-hidden">
+          <div className="p-4 sm:p-8">
             {/* Score Circle */}
-            <div className="relative w-32 h-32 mx-auto mb-8">
+            <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-6 sm:mb-8">
               <svg className="w-full h-full" viewBox="0 0 36 36">
                 <path
                   d="M18 2.0845
@@ -94,13 +94,13 @@ function ResultContent() {
 
               {/* Status Icon */}
               <div
-                className={`absolute bottom-0 right-0 p-2 rounded-full ${
+                className={`absolute bottom-0 right-0 p-1.5 sm:p-2 rounded-full ${
                   isPerfectScore ? "bg-green-100" : "bg-[#F3EDFF]"
                 }`}
               >
                 {isPerfectScore ? (
                   <svg
-                    className="w-6 h-6 text-green-600"
+                    className="w-4 h-4 sm:w-6 sm:h-6 text-green-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -114,7 +114,7 @@ function ResultContent() {
                   </svg>
                 ) : (
                   <svg
-                    className="w-6 h-6 text-[#744FFF]"
+                    className="w-4 h-4 sm:w-6 sm:h-6 text-[#744FFF]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -131,27 +131,27 @@ function ResultContent() {
             </div>
 
             {/* Result Content */}
-            <div className="text-center space-y-6">
+            <div className="text-center space-y-4 sm:space-y-6">
               <h1
-                className={`text-[24px] font-lato font-bold ${
+                className={`text-xl sm:text-[24px] font-lato font-bold ${
                   isPerfectScore ? "text-green-600" : "text-[#744FFF]"
                 }`}
               >
                 {isPerfectScore ? "Congratulations! 🎉" : "Almost There!"}
               </h1>
 
-              <div className="space-y-2">
-                <p className="text-[16px] font-lato font-medium text-[#667085]">
+              <div className="space-y-3 sm:space-y-2">
+                <p className="text-sm sm:text-[16px] font-lato font-medium text-[#667085] leading-relaxed px-2 sm:px-0">
                   {isPerfectScore
                     ? "You've mastered the training with a perfect score! Your certificate awaits."
                     : "Keep going! Review and try again to achieve mastery."}
                 </p>
 
                 {!isPerfectScore && (
-                  <div className="inline-block bg-amber-50 border border-amber-200 rounded-[8px] px-4 py-2">
+                  <div className="inline-block bg-amber-50 border border-amber-200 rounded-[8px] px-3 sm:px-4 py-2 mx-2 sm:mx-0">
                     <div className="flex items-center gap-2">
                       <svg
-                        className="w-5 h-5 text-amber-500"
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -163,7 +163,7 @@ function ResultContent() {
                           d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      <p className="text-[14px] font-lato font-semibold text-amber-800">
+                      <p className="text-xs sm:text-[14px] font-lato font-semibold text-amber-800">
                         You need 100% to pass this assessment
                       </p>
                     </div>
@@ -172,13 +172,13 @@ function ResultContent() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-3 pt-3 sm:pt-4 px-2 sm:px-0">
                 <Button
                   onClick={
                     isPerfectScore ? navigateToReview : handleRestartTraining
                   }
                   variant={"primary"}
-                  className={`px-6 py-3 rounded-[8px] font-lato font-medium text-[14px] ${
+                  className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-[8px] font-lato font-medium text-sm sm:text-[14px] w-full sm:w-auto ${
                     isPerfectScore
                       ? "bg-green-600 hover:bg-green-700 text-white"
                       : "bg-[#744FFF] hover:bg-[#6B46E5] text-white"
@@ -191,7 +191,7 @@ function ResultContent() {
                   <Button
                     onClick={handleRetry}
                     variant="secondary"
-                    className="px-6 py-3 rounded-[8px] font-lato font-medium text-[14px] bg-white text-[#667085] hover:bg-gray-50 border border-[#E5E7EB]"
+                    className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-[8px] font-lato font-medium text-sm sm:text-[14px] bg-white text-[#667085] hover:bg-gray-50 border border-[#E5E7EB] w-full sm:w-auto"
                   >
                     Try Again
                   </Button>
@@ -208,37 +208,37 @@ function ResultContent() {
 // Loading component
 function ResultLoading() {
   return (
-    <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
+    <div className="min-h-screen bg-[#F9F9F9] pt-3 sm:pt-5 pb-4 sm:pb-8 px-4 sm:px-10">
       <BreadCrumb title="Result" />
-      <div className="flex justify-center pt-12">
-        <div className="max-w-xl w-full bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
-          <div className="p-8">
+      <div className="flex justify-center pt-6 sm:pt-12">
+        <div className="max-w-xl w-full bg-white rounded-lg sm:rounded-xl border border-[#E5E7EB] overflow-hidden">
+          <div className="p-4 sm:p-8">
             {/* Score Circle Skeleton */}
-            <div className="relative w-32 h-32 mx-auto mb-8">
+            <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-6 sm:mb-8">
               <div className="absolute inset-0 rounded-full bg-gray-200 animate-pulse"></div>
-              <div className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
+              <div className="absolute bottom-0 right-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 animate-pulse"></div>
             </div>
 
             {/* Result Content Skeleton */}
-            <div className="text-center space-y-6">
+            <div className="text-center space-y-4 sm:space-y-6">
               {/* Title Skeleton */}
-              <div className="h-8 w-48 bg-gray-200 rounded-lg mx-auto animate-pulse"></div>
+              <div className="h-6 sm:h-8 w-40 sm:w-48 bg-gray-200 rounded-lg mx-auto animate-pulse"></div>
 
               {/* Description Skeleton */}
-              <div className="space-y-2">
+              <div className="space-y-2 px-2 sm:px-0">
                 <div className="h-4 w-3/4 bg-gray-200 rounded mx-auto animate-pulse"></div>
                 <div className="h-4 w-2/3 bg-gray-200 rounded mx-auto animate-pulse"></div>
               </div>
 
               {/* Info Box Skeleton */}
-              <div className="inline-block bg-gray-100 rounded-[8px] px-4 py-2">
-                <div className="h-5 w-48 bg-gray-200 rounded animate-pulse"></div>
+              <div className="inline-block bg-gray-100 rounded-[8px] px-3 sm:px-4 py-2 mx-2 sm:mx-0">
+                <div className="h-4 sm:h-5 w-40 sm:w-48 bg-gray-200 rounded animate-pulse"></div>
               </div>
 
               {/* Button Skeleton */}
-              <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
-                <div className="h-10 w-32 bg-gray-200 rounded-[8px] animate-pulse"></div>
-                <div className="h-10 w-32 bg-gray-200 rounded-[8px] animate-pulse"></div>
+              <div className="flex flex-col sm:flex-row justify-center gap-3 pt-3 sm:pt-4 px-2 sm:px-0">
+                <div className="h-9 sm:h-10 w-full sm:w-32 bg-gray-200 rounded-[8px] animate-pulse"></div>
+                <div className="h-9 sm:h-10 w-full sm:w-32 bg-gray-200 rounded-[8px] animate-pulse"></div>
               </div>
             </div>
           </div>
