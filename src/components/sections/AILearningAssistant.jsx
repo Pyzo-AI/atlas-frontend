@@ -11,6 +11,7 @@ const AILearningAssistant = ({
   setShowChat = () => {},
   onStartConversation = () => {},
   onStopConversation = () => {},
+  agentId,
 }) => {
   const { isQuestionMode } = useSelector((state) => state.video);
   const dispatch = useDispatch();
@@ -63,16 +64,40 @@ const AILearningAssistant = ({
           </div>
 
           {/* Start Q&A Button */}
-          <button
-            onClick={handleStartQA}
-            className="cursor-pointer flex items-center justify-center gap-1 px-3 py-2 h-9 rounded-full text-white font-lato font-semibold text-sm leading-4 transition-all duration-200 hover:opacity-90"
-            style={{
-              background: "linear-gradient(180deg, #685EDD 0%, #DA8BFF 100%)",
-            }}
-          >
-            <Image className="w-5 h-5" src={microphone} alt="Microphone" />
-            <span>Interaction Mode</span>
-          </button>
+          <div className="relative group">
+            <button
+              onClick={handleStartQA}
+              disabled={!agentId}
+              className={`flex items-center justify-center gap-1 px-3 py-2 h-9 rounded-full font-lato font-semibold text-sm leading-4 transition-all duration-200 ${
+                agentId
+                  ? "text-white cursor-pointer hover:opacity-90"
+                  : "text-gray-400 cursor-not-allowed bg-gray-200"
+              }`}
+              style={
+                agentId
+                  ? {
+                      background:
+                        "linear-gradient(180deg, #685EDD 0%, #DA8BFF 100%)",
+                    }
+                  : {}
+              }
+              title={!agentId ? "Agent not available" : ""}
+            >
+              <Image
+                className="w-5 h-5"
+                src={microphone}
+                alt="Microphone"
+                style={!agentId ? { filter: "grayscale(100%)" } : {}}
+              />
+              <span>Interaction Mode</span>
+            </button>
+            {!agentId && (
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-700 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                Interaction Mode not available
+                <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-0 border-t-4 border-t-gray-700 border-l-transparent border-r-transparent"></div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
