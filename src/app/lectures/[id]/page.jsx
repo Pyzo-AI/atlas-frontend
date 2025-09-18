@@ -17,7 +17,7 @@ const Home = () => {
   const videos = data?.data?.filter(
     (video) => video?.trainer_video && video?.trainer_video?.trim() !== ""
   );
-  const pathname = usePathname();
+ 
   const videoPanelRef = useRef(null);
   const dispatch = useDispatch();
   const { pptVideoIndex } = useSelector((state) => state.video);
@@ -108,6 +108,7 @@ const Home = () => {
               onPauseAnswerAudio={handlePauseAnswerAudio}
               width="30%"
               presentationId={presentationId}
+              agentId={data?.presentation_agent_id}
             />
           </div>
         </div>

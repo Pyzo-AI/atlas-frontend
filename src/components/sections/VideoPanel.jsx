@@ -76,6 +76,7 @@ const VideoPanel = forwardRef(
       onPauseAnswerAudio,
       presentationId,
       width = "30%",
+      agentId
     },
     ref
   ) => {
@@ -273,7 +274,7 @@ const VideoPanel = forwardRef(
         setConversationState((prev) => ({ ...prev, isLoading: true }));
         await navigator.mediaDevices.getUserMedia({ audio: true });
         await conversation.startSession({
-          agentId: process.env.NEXT_PUBLIC_ELEVEN_LABS_AGENT_ID,
+          agentId: agentId,
           userId:getUserDetailsFromToken()?.email,
         });
 
@@ -817,7 +818,7 @@ const VideoPanel = forwardRef(
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
               <span>
-              {videos[currentVideoIndex].slide}/{videos?.length}
+              {videos[currentVideoIndex]?.slide}/{videos?.length}
               </span>
             </div>
           </div>
@@ -861,6 +862,7 @@ const VideoPanel = forwardRef(
             showChat={showChat}
             onStartConversation={startConversation}
             onStopConversation={stopConversation}
+            agentId={agentId}
           />
         )}
       </div>
