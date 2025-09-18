@@ -19,6 +19,8 @@ const ChatUI = ({
 }) => {
   const dispatch = useDispatch();
 
+
+
   const handleInteractionMode = () => {
     dispatch(setIsQuestionMode(true));
     onClose();
@@ -60,14 +62,14 @@ const ChatUI = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-4 lg:space-y-6">
               {conversation.map((item, index) => (
                 <div key={index}>
                   {item.type === "question" ? (
                     /* User Message */
                     <div className="flex justify-end">
                       <div className="max-w-[75%] bg-[rgba(26,26,26,0.07)] rounded-[10px_10px_10px_0px] px-2.5 py-2">
-                        <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 text-left text-[#1A1C29]">
+                        <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-[#1A1C29]">
                           {item.content}
                         </p>
                       </div>
@@ -75,11 +77,11 @@ const ChatUI = ({
                   ) : item.type === "answer" ? (
                     /* AI Message */
                     <div className="flex gap-2 items-start">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#685EDD] to-[#DA8BFF] flex items-center justify-center flex-shrink-0">
+                      <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-b from-[#685EDD] to-[#DA8BFF] flex items-center justify-center flex-shrink-0">
                         <Image src={ai_answer_icon} alt="AI Answer Icon" />
                       </div>
                       <div className="flex-1 max-w-[301px]">
-                        <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-[18px] text-[#1A1C29]">
+                        <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-[#1A1C29]">
                           {item.content || "No text answer found"}
                         </p>
                       </div>
@@ -87,11 +89,11 @@ const ChatUI = ({
                   ) : item.type === "error" ? (
                     /* Error Message */
                     <div className="flex gap-2 items-start">
-                      <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
+                      <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-xs">!</span>
                       </div>
                       <div className="flex-1 max-w-[301px]">
-                        <p className="font-lato font-normal text-[10px] lg:text-[13px] leading-[18px] text-red-600">
+                        <p className="font-lato font-normal text-[10px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-red-600">
                           {item.content}
                         </p>
                       </div>
@@ -128,12 +130,12 @@ const ChatUI = ({
             onClick={handleContinueLesson}
             className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-[#6E60DF] rounded-[73.75px]"
           >
-           
-              <Image
-                className="w-4 h-4 lg:w-5 lg:h-5"
-                src={back_to_session}
-                alt="back_to_session"
-              />
+
+            <Image
+              className="w-4 h-4 lg:w-5 lg:h-5"
+              src={back_to_session}
+              alt="back_to_session"
+            />
             <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
               Continue Lesson
             </span>

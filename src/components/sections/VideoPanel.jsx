@@ -1429,7 +1429,7 @@ const VideoPanel = forwardRef(
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
               <span>
-              {(videos?? [])?.[currentVideoIndex]?.slide}/{videos?.length}
+                {(videos ?? [])?.[currentVideoIndex]?.slide}/{videos?.length}
               </span>
             </div>
           </div>
