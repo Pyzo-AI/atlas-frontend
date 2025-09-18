@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { posthog } from '@/utils/posthog'
 
-export function PostHogPageView() {
+function PostHogPageView() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -26,7 +26,9 @@ export function PostHogPageView() {
 export default function PostHogProvider({ children }) {
   return (
     <>
-      <PostHogPageView />
+      <Suspense fallback={null}>
+        <PostHogPageView />
+      </Suspense>
       {children}
     </>
   )
