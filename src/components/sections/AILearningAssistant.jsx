@@ -78,7 +78,7 @@ const AILearningAssistant = ({
             }}
           >
             <Image className="w-5 h-5" src={microphone} alt="Microphone" />
-            <span className={`${isMobileView && 'text-[12px]'}`} >Interaction Mode</span>
+            <span className={`text-[8px] sm:text-[9px] md:text-xs`} >Interaction Mode</span>
           </button>
         </div>
       </div>

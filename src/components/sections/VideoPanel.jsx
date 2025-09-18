@@ -943,6 +943,7 @@ const VideoPanel = forwardRef(
               isConnected={conversationState.isConnected}
               setShowChat={setShowChat}
               setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+              isMobile={true}
             />
           )}
 
