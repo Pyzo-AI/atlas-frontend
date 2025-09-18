@@ -347,7 +347,7 @@ const VideoPanel = forwardRef(
           }
         }, 1500);
       } catch (error) {
-        console.error("Failed to start conversation:", error);
+        console.log("Failed to start conversation:", error);
         setConversationState((prev) => ({ ...prev, isLoading: false }));
       }
     };

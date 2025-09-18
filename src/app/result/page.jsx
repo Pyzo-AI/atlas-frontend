@@ -22,7 +22,7 @@ function ResultContent() {
     }
   }, [searchParams]);
 
-  const isPerfectScore = score === passingScore;
+  const isPerfectScore = score == passingScore;
 
   const handleRetry = () => {
     router.push(`/assessment/${presentationId}`);
@@ -93,41 +93,7 @@ function ResultContent() {
               </svg>
 
               {/* Status Icon */}
-              <div
-                className={`absolute bottom-0 right-0 p-1.5 sm:p-2 rounded-full ${
-                  isPerfectScore ? "bg-green-100" : "bg-[#F3EDFF]"
-                }`}
-              >
-                {isPerfectScore ? (
-                  <svg
-                    className="w-4 h-4 sm:w-6 sm:h-6 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-4 h-4 sm:w-6 sm:h-6 text-[#744FFF]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                )}
-              </div>
+          
             </div>
 
             {/* Result Content */}

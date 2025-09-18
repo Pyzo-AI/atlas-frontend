@@ -51,8 +51,8 @@ const QuestionModeAI = forwardRef(
                 <Image
                   src={chat_star} // Replace with your image path
                   alt="Profile picture"
-                  width={40}
-                  height={ 40}
+                  width={isMobile ?  40 : 64}
+                  height={isMobile ? 40 : 64}
                   className="rounded-full object-cover"
                 />
               </div>

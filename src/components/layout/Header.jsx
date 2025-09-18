@@ -8,7 +8,7 @@ import userIcon from "@/assets/svg/user.svg";
 import { trackLogout } from "@/utils/authTracking"; 
 
 const navigation = [
-  { name: "Home", href: "/" },
+  // { name: "Home", href: "/" },
   // { name: "Assessment", href: "/assessment" },
   // { name: 'Resources', href: '/' },
   // { name: 'Community', href: '/' },

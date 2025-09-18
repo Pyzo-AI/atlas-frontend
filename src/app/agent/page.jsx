@@ -192,7 +192,7 @@ export default function Conversation() {
         // user_id: 'YOUR_CUSTOMER_USER_ID', // optional
       });
     } catch (error) {
-      console.error('Failed to start conversation:', error);
+      console.log('Failed to start conversation:', error);
       setConnectionStatus('error');
     }
   }, [conversation]);
