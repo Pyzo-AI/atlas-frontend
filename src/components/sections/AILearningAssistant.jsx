@@ -29,7 +29,7 @@ const AILearningAssistant = ({
   return (
     <div className="flex flex-col items-start p-3 gap-2.5 w-full h-full flex-1 border border-[#E5E7EB] rounded-xl bg-white overflow-hidden">
       {/* Inner Frame */}
-      <div className="w-full h-full bg-[#E0DDFF] rounded-xl p-3 flex flex-col min-h-0 overflow-hidden relative">
+      <div className={`w-full h-full bg-[#E0DDFF] rounded-xl ${isMobileView ? 'p-1' : 'p-3'} flex flex-col min-h-0 overflow-hidden relative`}>
         {/* Chat Icon - Positioned absolutely */}
         <button
           onClick={handleMessageClick}
@@ -39,7 +39,7 @@ const AILearningAssistant = ({
         </button>
 
         {/* Main Content Container - Centered vertically in remaining space */}
-        <div className={`flex-1 flex flex-col items-center justify-center ${isMobileView ? 'gap-2': 'gap-6'} px-4 min-h-0 overflow-hidden`}>
+        <div className={`flex-1 flex flex-col items-center justify-center ${isMobileView ? 'gap-2 px-2': 'gap-6 px-4 '}  min-h-0 overflow-hidden`}>
           {/* Icon and Text Section */}
           <div className={`flex flex-col items-center ${isMobileView ? 'gap-2': 'gap-4'} w-full max-w-[275px]`}>
             {/* Icon Container */}
@@ -59,7 +59,7 @@ const AILearningAssistant = ({
 }
             {/* Text Content */}
          <div className="flex flex-col items-center gap-2 w-full">
-              <h3 className={`w-full text-center font-lato font-bold ${isMobileView ? 'text-sm' :'text-lg leading-5'}  text-[#1A1C29]`}>
+              <h3 className={`w-full text-center font-lato font-bold ${isMobileView ? 'text-[10px]' :'text-lg leading-5'}  text-[#1A1C29]`}>
                 AI Learning Assistant
               </h3>
               {!isMobileView &&    <p className="w-full text-center font-lato font-normal text-xs leading-4 text-[#1A1C29]">
@@ -72,13 +72,13 @@ const AILearningAssistant = ({
           {/* Start Q&A Button */}
           <button
             onClick={handleStartQA}
-            className="cursor-pointer flex items-center justify-center gap-1 px-3 py-2 h-9 rounded-full text-white font-lato font-semibold text-sm leading-4 transition-all duration-200 hover:opacity-90"
+            className={`cursor-pointer flex items-center justify-center gap-1 ${isMobileView ? 'px-2 py-2 h-6' :'px-3 py-2 h-9'} rounded-full text-white font-lato font-semibold text-sm leading-4 transition-all duration-200 hover:opacity-90`}
             style={{
               background: "linear-gradient(180deg, #685EDD 0%, #DA8BFF 100%)",
             }}
           >
             <Image className="w-5 h-5" src={microphone} alt="Microphone" />
-            <span className={`${isMobileView && 'text-sm'}`} >Interaction Mode</span>
+            <span className={`${isMobileView && 'text-[12px]'}`} >Interaction Mode</span>
           </button>
         </div>
       </div>

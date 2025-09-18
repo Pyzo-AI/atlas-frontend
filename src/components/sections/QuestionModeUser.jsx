@@ -120,7 +120,7 @@ const QuestionModeUser = ({
             src={back_to_session}
             alt="back_to_session"
           />
-          <span className="font-lato font-medium text-xs text-white">
+          <span className={`font-lato ${isMobile ? "text-[10px]" : 'font-medium text-xs'} text-white`}>
             Continue Lesson
           </span>
         </button>

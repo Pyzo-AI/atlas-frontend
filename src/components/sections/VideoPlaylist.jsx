@@ -161,7 +161,7 @@ const VideoPlaylist = ({
             >
               {/* Video Info Container - using padding instead of absolute positioning */}
               <div className="p-2 flex flex-col gap-1.5">
-                <h4 className="font-lato font-medium text-[12px] leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2">
+                <h4 className={`font-lato font-medium ${isMobile ? 'text-[9px] text-600' : 'text-[12px]' } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}>
                   {video.title || "Untitled Video"}
                 </h4>
               {!isMobile &&  <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">

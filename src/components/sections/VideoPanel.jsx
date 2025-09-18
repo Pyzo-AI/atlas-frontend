@@ -929,6 +929,7 @@ const VideoPanel = forwardRef(
               isLoading={!conversationState.isConnected}
               isAudioPlaying={conversation.isSpeaking}
               isConnected={conversationState.isConnected}
+              isMobile={true}
             />
           )}
 

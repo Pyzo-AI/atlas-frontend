@@ -10,14 +10,14 @@ import Image from "next/image";
 
 const QuestionModeAI = forwardRef(
   (
-    { isAudioPlaying, isLoading, isConnected },
+    { isAudioPlaying, isLoading, isConnected , isMobile=false},
     ref
   ) => {
+
     // ElevenLabs handles audio automatically
     useImperativeHandle(ref, () => ({
       // No manual audio control needed
     }));
-
     return (
       <div className="p-3 bg-white rounded-xl border border-[#E5E7EB]">
         <div
@@ -47,12 +47,12 @@ const QuestionModeAI = forwardRef(
               )}
 
               {/* Main Avatar */}
-              <div className="w-16 h-16 rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10">
+              <div className={`${isMobile ? 'w-10 h-10':'w-16 h-16'} rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10`}>
                 <Image
                   src={chat_star} // Replace with your image path
                   alt="Profile picture"
-                  width={64}
-                  height={64}
+                  width={40}
+                  height={ 40}
                   className="rounded-full object-cover"
                 />
               </div>
@@ -60,7 +60,7 @@ const QuestionModeAI = forwardRef(
 
             {/* Text Content */}
             {isLoading ? (
-              <div className="flex flex-col items-center space-y-3">
+              <div className={`flex flex-col items-center ${isMobile ? 'space-y-1' : 'space-y-3'}`}>
                 {/* Thinking Animation */}
                 <div className="relative">
                   <div className="flex items-center space-x-1">
