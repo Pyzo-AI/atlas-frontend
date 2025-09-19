@@ -4,13 +4,13 @@ import React, {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import { toast } from "react-toastify";
 import chat_star from "../../assets/svg/chat_star.svg";
 import Image from "next/image";
+import { getUserDetailsFromToken } from "@/store/utils/token";
 
 const QuestionModeAI = forwardRef(
   (
-    { isAudioPlaying, isLoading, isConnected },
+    { isAudioPlaying, isLoading, isConnected, isMobile = false, avatarUrl },
     ref
   ) => {
     // ElevenLabs handles audio automatically
@@ -18,8 +18,10 @@ const QuestionModeAI = forwardRef(
       // No manual audio control needed
     }));
 
+    const userName = getUserDetailsFromToken()?.name;
+
     return (
-      <div className="p-3 pb-2 bg-white rounded-xl border border-[#E5E7EB]">
+      <div className="p-1 md:p-3 bg-white rounded-xl border border-[#E5E7EB]">
         <div
           className="w-full aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center"
           style={{
@@ -47,29 +49,43 @@ const QuestionModeAI = forwardRef(
               )}
 
               {/* Main Avatar */}
-              <div className="w-16 h-16 rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10">
-                <Image
-                  src={chat_star} // Replace with your image path
-                  alt="Profile picture"
-                  width={64}
-                  height={64}
-                  className="rounded-full object-cover"
-                />
+              <div
+                className={`${
+                  isMobile ? "w-10 h-10" : "w-16 h-16"
+                } rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10`}
+              >
+                {avatarUrl ? (
+                  <Image
+                    src={avatarUrl}
+                    alt="Profile picture"
+                    width={isMobile ? 40 : 64}
+                    height={isMobile ? 40 : 64}
+                    className="rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="text-white text-xl font-semibold z-50">
+                    {userName?.charAt(0)?.toUpperCase() || "U"}
+                  </span>
+                )}
               </div>
             </div>
 
             {/* Text Content */}
             {isLoading ? (
-              <div className="flex flex-col items-center space-y-3">
+              <div
+                className={`flex flex-col items-center ${
+                  isMobile ? "space-y-1" : "space-y-3"
+                }`}
+              >
                 {/* Thinking Animation */}
                 <div className="relative">
                   <div className="flex items-center space-x-1">
                     <div className="w-2 h-2 bg-white/80 rounded-full animate-pulse"></div>
-                    <div 
+                    <div
                       className="w-2 h-2 bg-white/60 rounded-full animate-pulse"
                       style={{ animationDelay: "0.3s" }}
                     ></div>
-                    <div 
+                    <div
                       className="w-2 h-2 bg-white/40 rounded-full animate-pulse"
                       style={{ animationDelay: "0.6s" }}
                     ></div>
@@ -83,12 +99,14 @@ const QuestionModeAI = forwardRef(
                 </p>
               </div>
             ) : isConnected ? (
-              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white">
+              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block">
                 {isAudioPlaying ? "Speaking..." : "Listening..."}
               </p>
             ) : (
-              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white">
-                {"Ask me anything about the presentation, and I'll help with the answers."}
+              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block">
+                {
+                  "Ask me anything about the presentation, and I'll help with the answers."
+                }
               </p>
             )}
           </div>

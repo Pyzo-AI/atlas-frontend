@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import trainBoostLogo from "@/assets/svg/train-boost-logo.svg";
 import { decodeJWT } from "@/utils/jwt";
-import userIcon from "@/assets/svg/user.svg"; 
+import userIcon from "@/assets/svg/user.svg";
+import { trackLogout } from "@/utils/authTracking"; 
 
 const navigation = [
-  { name: "Home", href: "/" },
+  // { name: "Home", href: "/" },
   // { name: "Assessment", href: "/assessment" },
   // { name: 'Resources', href: '/' },
   // { name: 'Community', href: '/' },
@@ -51,8 +52,21 @@ const Header = () => {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
+    
+    // Get user ID for tracking before clearing tokens
+    const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || '{}');
+    let userId = null;
+    if (tokens.access_token) {
+      const decoded = decodeJWT(tokens.access_token);
+      userId = decoded?.sub;
+    }
+    
+    // Track session end event
+    if (userId) {
+      trackLogout(userId);
+    }
+    
     // try {
-    //   const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || '{}');
     //   if (tokens.refresh_token) {
     //     const response = await fetch('https://xstk67r5-3001.inc1.devtunnels.ms/auth/logout', {
     //       method: 'POST',
@@ -88,7 +102,7 @@ const Header = () => {
           alt="trainBoostLogo"
         />
         <h2 className="text-[16px] font-lato font-bold leading-[100%] tracking-[0.02em]">
-          Train Boost
+          Upskillr
         </h2>
       </div>
       <div className="flex flex-1 justify-end gap-10">

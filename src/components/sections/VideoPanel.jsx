@@ -17,22 +17,27 @@ import React, {
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useConversation } from "@elevenlabs/react";
-import { CONVERSATION_CONFIG, cleanExpiredMessages } from '@/config/conversationConfig';
+import {
+  CONVERSATION_CONFIG,
+  cleanExpiredMessages,
+} from "@/config/conversationConfig";
 import AILearningAssistant from "./AILearningAssistant";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
 import ChatUI from "./ChatUI";
+import { getUserDetailsFromToken } from "@/store/utils/token";
+import { usePostHog } from "@/hooks/usePostHog";
 
 // Conversation history management for VideoPanel
 const {
   STORAGE_KEY: CONVERSATION_STORAGE_KEY,
   MAX_HISTORY_MESSAGES,
   MAX_MESSAGE_AGE_DAYS,
-  MAX_CONTEXT_MESSAGES
+  MAX_CONTEXT_MESSAGES,
 } = CONVERSATION_CONFIG;
 
 const getStoredConversationHistory = () => {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
     const stored = localStorage.getItem(CONVERSATION_STORAGE_KEY);
     if (!stored) return [];
@@ -48,22 +53,24 @@ const getStoredConversationHistory = () => {
 
     return cleanedHistory;
   } catch (error) {
-    console.error('Error loading conversation history:', error);
+    console.error("Error loading conversation history:", error);
     return [];
   }
 };
 
 const saveConversationHistory = (history) => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
     // Keep only the most recent messages to prevent localStorage bloat
     const trimmedHistory = history.slice(-MAX_HISTORY_MESSAGES);
-    localStorage.setItem(CONVERSATION_STORAGE_KEY, JSON.stringify(trimmedHistory));
+    localStorage.setItem(
+      CONVERSATION_STORAGE_KEY,
+      JSON.stringify(trimmedHistory)
+    );
   } catch (error) {
-    console.error('Error saving conversation history:', error);
+    console.error("Error saving conversation history:", error);
   }
 };
-
 
 const VideoPanel = forwardRef(
   (
@@ -75,6 +82,10 @@ const VideoPanel = forwardRef(
       onPauseAnswerAudio,
       presentationId,
       width = "30%",
+      isMobileView = false,
+      isPhoneView = false,
+      agentId,
+      avatarUrl,
     },
     ref
   ) => {
@@ -94,6 +105,15 @@ const VideoPanel = forwardRef(
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
+    const [previousTime, setPreviousTime] = useState(0);
+    // Use a ref to reliably capture the previous time across event handlers
+    const previousTimeRef = useRef(0);
+    // Track whether a seek is in progress to avoid racing with onTimeUpdate
+    const isSeekingRef = useRef(false);
+    // Keep a short rolling buffer of recent timeupdate values to infer pre-seek time
+    const timeSamplesRef = useRef([]);
+    // Slide view tracking
+    const [slideViewStartTime, setSlideViewStartTime] = useState("");
     // Persistent video settings
     const [videoSettings, setVideoSettings] = useState({
       muted: false,
@@ -108,12 +128,13 @@ const VideoPanel = forwardRef(
     const { currentVideoIndex, isQuestionMode } = useSelector(
       (state) => state.video
     );
+    const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
     const [showChat, setShowChat] = useState(false);
     const [conversationHistory, setConversationHistory] = useState([]);
-    const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
+    const [persistentConversationHistory, setPersistentConversationHistory] =
+      useState([]);
     const [contextSent, setContextSent] = useState(false);
-
     // Keep ref updated with current isQuestionMode value
     useEffect(() => {
       isQuestionModeRef.current = isQuestionMode;
@@ -127,29 +148,42 @@ const VideoPanel = forwardRef(
 
     // Generate context summary from conversation history
     const generateContextSummary = () => {
-      if (persistentConversationHistory.length === 0) return '';
+      if (persistentConversationHistory.length === 0) return "";
 
       // Get the last N meaningful messages for context (configurable)
       const recentMessages = persistentConversationHistory
-        .filter(msg => msg.message && msg.message.trim() && !msg.message.includes('audioData'))
+        .filter(
+          (msg) =>
+            msg.message &&
+            msg.message.trim() &&
+            !msg.message.includes("audioData")
+        )
         .slice(-MAX_CONTEXT_MESSAGES)
-        .map(msg => {
-          const source = msg.source === 'user' ? 'User' : 'AI';
+        .map((msg) => {
+          const source = msg.source === "user" ? "User" : "AI";
           return `${source}: ${msg.message}`;
         })
-        .join('\n');
+        .join("\n");
 
-      return recentMessages ? `Previous conversation context:\n${recentMessages}\n\nPlease continue our conversation naturally based on this context.` : '';
+      return recentMessages
+        ? `Previous conversation context:\n${recentMessages}\n\nPlease continue our conversation naturally based on this context.`
+        : "";
+    };
+
+    // Helper: round seconds to 1 decimal place
+    const formatSeconds = (sec) => {
+      if (typeof sec !== "number") return sec;
+      return Math.round(sec * 10) / 10;
     };
 
     // ElevenLabs Conversational AI
     const conversation = useConversation({
       // apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
-      connectionDelay: {
-        android: 3000,
-        ios: 1000,
-        default: 1000,
-      },
+      // connectionDelay: {
+      //   android: 3000,
+      //   ios: 1000,
+      //   default: 1000,
+      // },
       useWakeLock: false, // Disable wake lock to prevent connection issues
 
       onConnect: () => {
@@ -167,11 +201,11 @@ const VideoPanel = forwardRef(
                 );
                 setContextSent(true);
               } catch (error) {
-                console.error('Error sending context:', error);
+                console.error("Error sending context:", error);
               }
             }
           } catch (error) {
-            console.error('Could not send context on connect:', error.message);
+            console.error("Could not send context on connect:", error.message);
           }
         }, 2000);
       },
@@ -184,9 +218,15 @@ const VideoPanel = forwardRef(
         }
       },
       onDisconnect: () => {
-        console.log("Disconnected from ElevenLabs");
+        const userDetails = getUserDetailsFromToken();
+        const currentVideo = videos[currentVideoIndex];
         if (isQuestionModeRef.current) {
           dispatch(setIsQuestionMode(false));
+          capture("slide_redirect", {
+            user_id: userDetails?.sub,
+            module_id: presentationId,
+            slide_id: currentVideo?.slide,
+          });
         }
         setConversationState((prev) => ({
           ...prev,
@@ -195,11 +235,20 @@ const VideoPanel = forwardRef(
         }));
       },
       onMessage: (message) => {
-
         // Store in current session history (for ChatUI)
         if (message.source === "user") {
           const content = message.message;
           if (content.trim() === "") return;
+
+          // Track QnA interaction when user asks a question
+          const userDetails = getUserDetailsFromToken();
+          capture("qna_interaction", {
+            user_id: userDetails?.sub,
+            module_id: presentationId,
+            question_text: content,
+            timestamp: new Date().toISOString(),
+          });
+
           setConversationHistory((prev) => [
             ...prev,
             { type: "question", content },
@@ -225,26 +274,30 @@ const VideoPanel = forwardRef(
                     `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
                   );
                 } catch (error) {
-                  console.error('Error sending backup context:', error);
+                  console.error("Error sending backup context:", error);
                 }
               }
             } catch (error) {
-              console.error('Could not send backup context:', error.message);
+              console.error("Could not send backup context:", error.message);
             }
           }, 2000);
         }
 
         // Store in persistent history (for context continuity)
-        if (message.message && message.message.trim() && !message.message.includes('audioData')) {
+        if (
+          message.message &&
+          message.message.trim() &&
+          !message.message.includes("audioData")
+        ) {
           const newMessage = {
             id: Date.now() + Math.random(),
             timestamp: new Date().toISOString(),
             source: message.source,
             message: message.message,
-            type: message.type || 'text'
+            type: message.type || "text",
           };
 
-          setPersistentConversationHistory(prev => {
+          setPersistentConversationHistory((prev) => {
             const updated = [...prev, newMessage];
             saveConversationHistory(updated);
             return updated;
@@ -273,8 +326,8 @@ const VideoPanel = forwardRef(
         setConversationState((prev) => ({ ...prev, isLoading: true }));
         await navigator.mediaDevices.getUserMedia({ audio: true });
         await conversation.startSession({
-          agentId: "agent_4701k47tsjjff7crz1caj7dd9htv",
-          userId: `trainboost_user_1`, // Unique user ID for this session
+          agentId: agentId,
+          userId: getUserDetailsFromToken()?.email,
         });
 
         // Send context immediately after connection is established
@@ -288,16 +341,15 @@ const VideoPanel = forwardRef(
                 );
                 setContextSent(true);
               } catch (error) {
-                console.error('Error sending initial context:', error);
+                console.error("Error sending initial context:", error);
               }
             }
           } catch (error) {
-            console.error('Could not send initial context:', error.message);
+            console.error("Could not send initial context:", error.message);
           }
         }, 1500);
-
       } catch (error) {
-        console.error("Failed to start conversation:", error);
+        console.log("Failed to start conversation:", error);
         setConversationState((prev) => ({ ...prev, isLoading: false }));
       }
     };
@@ -354,9 +406,21 @@ const VideoPanel = forwardRef(
       if (videoRef.current && videos?.length > 0 && !hasInitialized) {
         console.log("Initializing video player...");
 
-        // Update slide when video initializes
+        // Update slide when video invideos[currentVideoIndex].slideitializes
         if (videos?.[currentVideoIndex]?.slide) {
           dispatch(setCurrentSlide(videos[currentVideoIndex].slide));
+
+          // Track initial slide view event
+          const userDetails = getUserDetailsFromToken();
+          const currentTime = new Date().toISOString();
+
+          capture("slide_view", {
+            user_id: userDetails?.sub,
+            module_id: presentationId,
+            slide_id: videos[currentVideoIndex].slide,
+            slide_title: videos[currentVideoIndex].title,
+            timestamp: currentTime,
+          });
         }
 
         setHasInitialized(true);
@@ -442,6 +506,22 @@ const VideoPanel = forwardRef(
           // Update slide when video changes
           if (currentVideo?.slide) {
             dispatch(setCurrentSlide(currentVideo.slide));
+
+            // Track slide view event
+            const userDetails = getUserDetailsFromToken();
+            const currentTime = new Date().toISOString();
+
+            // Track slide view event
+            capture("slide_view", {
+              user_id: userDetails?.sub,
+              module_id: presentationId,
+              slide_id: currentVideo.slide,
+              slide_title: currentVideo.title,
+              timestamp: currentTime,
+            });
+
+            // Set new slide view start time
+            setSlideViewStartTime(currentTime);
           }
 
           // Notify parent about video index change
@@ -578,10 +658,42 @@ const VideoPanel = forwardRef(
 
     // Handle video end
     const handleVideoEnd = () => {
+      // Track video completion event
+      const userDetails = getUserDetailsFromToken();
+      const currentVideo = videos?.[currentVideoIndex];
+      console.log(currentVideo, "currentVideo");
+      if (currentVideo) {
+        capture("video_complete", {
+          user_id: userDetails?.sub,
+          video_id: currentVideo.slide,
+          watch_duration: currentTime,
+          replays: null,
+        });
+      }
+
       if (currentVideoIndex < videos?.length - 1) {
+        const nextVideoIndex = currentVideoIndex + 1;
+        const nextVideo = videos[nextVideoIndex];
+        console.log(nextVideo, "nextVideo");
         setAutoPlayEnabled(true); // Enable autoplay for next video
-        dispatch(setCurrentVideoIndex(currentVideoIndex + 1));
-        dispatch(setCurrentSlide(videos[currentVideoIndex + 1]?.slide));
+        dispatch(setCurrentVideoIndex(nextVideoIndex));
+        dispatch(setCurrentSlide(nextVideo?.slide));
+
+        // Track slide view for auto-advanced video
+        if (nextVideo?.slide) {
+          const userDetails = getUserDetailsFromToken();
+          const currentTime = new Date().toISOString();
+
+          capture("slide_view", {
+            user_id: userDetails?.sub,
+            module_id: presentationId,
+            slide_id: nextVideo.slide,
+            slide_title: nextVideo.title,
+            timestamp: currentTime,
+          });
+
+          setSlideViewStartTime(currentTime);
+        }
       } else {
         setShowRedirectPopup(true);
         setAutoPlayEnabled(false);
@@ -647,6 +759,432 @@ const VideoPanel = forwardRef(
       }
       setShowChat(false);
     };
+    // Phone view - optimized for 30% width with very compact layout
+    if (isMobileView && isPhoneView) {
+      return (
+        <div className="flex flex-col h-full gap-1">
+          {/* Redirect Popup */}
+          {showRedirectPopup && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+                <h3 className="text-xl font-semibold mb-4">
+                  Training Complete!
+                </h3>
+                <p className="mb-6">
+                  Redirecting to Assessment in {countdown} seconds...
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{ width: `${(10 - countdown) * 10}%` }}
+                  ></div>
+                </div>
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    onClick={handleClosePopup}
+                    className="cursor-pointer px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      const currentPath = window.location.pathname;
+                      const presentationId = currentPath.split("/lectures/")[1];
+                      router.push(`/assessment/${presentationId}`);
+                    }}
+                    className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
+                  >
+                    Go to Assessment Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Video Section - Very compact for phones */}
+          {!isQuestionMode && !showChat ? (
+            <div
+              className="cursor-pointer p-1 md:p-[6px] lg:p-3 bg-white rounded border border-[#E5E7EB] flex-shrink-0"
+              onClick={togglePlayPause}
+            >
+              <div className="relative w-full pt-[25%] h-32 bg-black rounded overflow-hidden">
+                {/* Very small aspect ratio for phones */}
+                <video
+                  key={`trainer-video-${currentVideoIndex}`}
+                  ref={videoRef}
+                  src={videos?.[currentVideoIndex]?.trainer_video}
+                  className="absolute top-0 left-0 w-full h-full object-cover"
+                  onEnded={handleVideoEnd}
+                  onTimeUpdate={(e) => {
+                    const time = e.target.currentTime;
+                    setCurrentTime(time);
+                    dispatch(setCurrentVideoTime(time));
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime: time,
+                        isPlaying: !e.target.paused,
+                        currentVideoIndex,
+                        duration: e.target.duration || duration,
+                      });
+                    }
+                  }}
+                  onLoadedMetadata={(e) => {
+                    const newDuration = e.target.duration;
+                    setDuration(newDuration);
+                    applyVideoSettings(e.target);
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying,
+                        currentVideoIndex,
+                        duration: newDuration,
+                      });
+                    }
+                  }}
+                  onCanPlay={(e) => {
+                    applyVideoSettings(e.target);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onPlay={() => {
+                    setIsPlaying(true);
+                    dispatch(setIsVideoPlaying(true));
+                    dispatch(setAnswerPptIndex(null));
+                    if (onPauseAnswerAudio) {
+                      onPauseAnswerAudio();
+                    }
+                    const userDetails = getUserDetailsFromToken();
+                    const currentVideo = videos?.[currentVideoIndex];
+                    if (currentVideo) {
+                      capture("video_play", {
+                        user_id: userDetails?.sub,
+                        module_id: presentationId,
+                        video_id: currentVideo.slide,
+                        timestamp: new Date().toISOString(),
+                      });
+                    }
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying: true,
+                        currentVideoIndex,
+                        duration,
+                      });
+                    }
+                  }}
+                  onPause={() => {
+                    setIsPlaying(false);
+                    dispatch(setIsVideoPlaying(false));
+                    const userDetails = getUserDetailsFromToken();
+                    const currentVideo = videos?.[currentVideoIndex];
+                    if (currentVideo) {
+                      capture("video_pause", {
+                        user_id: userDetails?.sub,
+                        video_id: currentVideo.slide,
+                        current_time: currentTime,
+                        timestamp: new Date().toISOString(),
+                      });
+                    }
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying: false,
+                        currentVideoIndex,
+                        duration,
+                      });
+                    }
+                  }}
+                  poster={videos?.[currentVideoIndex]?.thumbnail}
+                  autoPlay={autoPlayEnabled}
+                  controls={true}
+                  controlsList="nodownload"
+                  disablePictureInPicture
+                />
+              </div>
+              {/* Time display - very small for phones */}
+              <div className="px-1 flex justify-between mt-1 text-[8px] leading-3 tracking-normal font-normal text-center text-gray-600 font-lato">
+                <span>
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </span>
+                <span>
+                  {currentVideoIndex + 1}/{videos?.length}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          {/* AI Learning Assistant - Compact for phones */}
+          {!isQuestionMode && !showChat && (
+            <div className="flex-1 min-h-0">
+              <AILearningAssistant
+                setShowChat={setShowChat}
+                showChat={showChat}
+                onStartConversation={startConversation}
+                onStopConversation={stopConversation}
+                isMobileView={true}
+                agentId={agentId}
+              />
+            </div>
+          )}
+
+          {/* Question Mode - Compact */}
+          {isQuestionMode && (
+            <QuestionModeAI
+              isLoading={!conversationState.isConnected}
+              isAudioPlaying={conversation.isSpeaking}
+              isConnected={conversationState.isConnected}
+              isMobile={true}
+            />
+          )}
+
+          {/* Chat UI - Compact */}
+          {showChat && (
+            <ChatUI
+              onClose={handleCloseChatUI}
+              conversation={conversationHistory}
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+              isConnected={conversationState.isConnected}
+              setShowChat={setShowChat}
+              setIsJumpedOnChatFromInteractionMode={
+                setIsJumpedOnChatFromInteractionMode
+              }
+              isMobile={true}
+            />
+          )}
+
+          {/* Question Mode User - Compact */}
+          {isQuestionMode && !showChat && (
+            <QuestionModeUser
+              onPauseVideo={pauseVideo}
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+              setShowChat={setShowChat}
+              onPauseAnswerAudio={stopAnswerAudio}
+              isAudioPlaying={conversationState.isAudioPlaying}
+              isAudioLoading={isListening}
+              isConnected={conversationState.isConnected}
+              setIsJumpedOnChatFromInteractionMode={
+                setIsJumpedOnChatFromInteractionMode
+              }
+              isMobile={true}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // Tablet view - optimize video size to show AI Learning Assistant
+    if (isMobileView) {
+      return (
+        <div className="flex flex-col h-full gap-3">
+          {/* Redirect Popup */}
+          {showRedirectPopup && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+                <h3 className="text-xl font-semibold mb-4">
+                  Training Complete!
+                </h3>
+                <p className="mb-6">
+                  Redirecting to Assessment in {countdown} seconds...
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{ width: `${(10 - countdown) * 10}%` }}
+                  ></div>
+                </div>
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    onClick={handleClosePopup}
+                    className="cursor-pointer px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      const currentPath = window.location.pathname;
+                      const presentationId = currentPath.split("/lectures/")[1];
+                      router.push(`/assessment/${presentationId}`);
+                    }}
+                    className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
+                  >
+                    Go to Assessment Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Video Section - Smaller height to fit AI Assistant */}
+          {!isQuestionMode && !showChat ? (
+            <div
+              className="cursor-pointer p-2 pb-1 bg-white rounded-lg border border-[#E5E7EB]"
+              onClick={togglePlayPause}
+            >
+              <div className="relative w-full pt-[40%] h-50 bg-black rounded-lg overflow-hidden">
+                {/* Reduced aspect ratio for mobile */}
+                <video
+                  key={`trainer-video-${currentVideoIndex}`}
+                  ref={videoRef}
+                  src={videos?.[currentVideoIndex]?.trainer_video}
+                  className="absolute top-0 left-0 w-full h-full object-cover"
+                  onEnded={handleVideoEnd}
+                  onTimeUpdate={(e) => {
+                    const time = e.target.currentTime;
+                    setCurrentTime(time);
+                    dispatch(setCurrentVideoTime(time));
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime: time,
+                        isPlaying: !e.target.paused,
+                        currentVideoIndex,
+                        duration: e.target.duration || duration,
+                      });
+                    }
+                  }}
+                  onLoadedMetadata={(e) => {
+                    const newDuration = e.target.duration;
+                    setDuration(newDuration);
+                    applyVideoSettings(e.target);
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying,
+                        currentVideoIndex,
+                        duration: newDuration,
+                      });
+                    }
+                  }}
+                  onCanPlay={(e) => {
+                    applyVideoSettings(e.target);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onPlay={() => {
+                    setIsPlaying(true);
+                    dispatch(setIsVideoPlaying(true));
+                    dispatch(setAnswerPptIndex(null));
+                    if (onPauseAnswerAudio) {
+                      onPauseAnswerAudio();
+                    }
+                    const userDetails = getUserDetailsFromToken();
+                    const currentVideo = videos?.[currentVideoIndex];
+                    if (currentVideo) {
+                      capture("video_play", {
+                        user_id: userDetails?.sub,
+                        module_id: presentationId,
+                        video_id: currentVideo.slide,
+                        timestamp: new Date().toISOString(),
+                      });
+                    }
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying: true,
+                        currentVideoIndex,
+                        duration,
+                      });
+                    }
+                  }}
+                  onPause={() => {
+                    setIsPlaying(false);
+                    dispatch(setIsVideoPlaying(false));
+                    const userDetails = getUserDetailsFromToken();
+                    const currentVideo = videos?.[currentVideoIndex];
+                    if (currentVideo) {
+                      capture("video_pause", {
+                        user_id: userDetails?.sub,
+                        video_id: currentVideo.slide,
+                        current_time: currentTime,
+                        timestamp: new Date().toISOString(),
+                      });
+                    }
+                    if (onVideoStateChange) {
+                      onVideoStateChange({
+                        currentTime,
+                        isPlaying: false,
+                        currentVideoIndex,
+                        duration,
+                      });
+                    }
+                  }}
+                  poster={videos?.[currentVideoIndex]?.thumbnail}
+                  autoPlay={autoPlayEnabled}
+                  controls={true}
+                  controlsList="nodownload"
+                  disablePictureInPicture
+                />
+              </div>
+              {/* Time display below video - smaller text */}
+              <div className="px-1 flex justify-between mt-1 text-[10px] leading-4 tracking-normal font-normal text-center text-gray-600 font-lato">
+                <span>
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </span>
+                <span>
+                  {currentVideoIndex + 1}/{videos?.length}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          {/* AI Learning Assistant - Always visible in mobile */}
+          {!isQuestionMode && !showChat && (
+            <AILearningAssistant
+              setShowChat={setShowChat}
+              showChat={showChat}
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+              agentId={agentId}
+            />
+          )}
+
+          {/* Question Mode */}
+          {isQuestionMode && (
+            <QuestionModeAI
+              isLoading={!conversationState.isConnected}
+              isAudioPlaying={conversation.isSpeaking}
+              isConnected={conversationState.isConnected}
+            />
+          )}
+
+          {/* Chat UI */}
+          {showChat && (
+            <ChatUI
+              onClose={handleCloseChatUI}
+              conversation={conversationHistory}
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+              isConnected={conversationState.isConnected}
+              setShowChat={setShowChat}
+              setIsJumpedOnChatFromInteractionMode={
+                setIsJumpedOnChatFromInteractionMode
+              }
+            />
+          )}
+
+          {/* Question Mode User */}
+          {isQuestionMode && !showChat && (
+            <QuestionModeUser
+              onPauseVideo={pauseVideo}
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+              setShowChat={setShowChat}
+              onPauseAnswerAudio={stopAnswerAudio}
+              isAudioPlaying={conversationState.isAudioPlaying}
+              isAudioLoading={isListening}
+              isConnected={conversationState.isConnected}
+              setIsJumpedOnChatFromInteractionMode={
+                setIsJumpedOnChatFromInteractionMode
+              }
+            />
+          )}
+        </div>
+      );
+    }
+
     return (
       <div
         className="flex flex-col h-full relative gap-4 flex-shrink-0 pl-4"
@@ -703,6 +1241,21 @@ const VideoPanel = forwardRef(
                 onEnded={handleVideoEnd}
                 onTimeUpdate={(e) => {
                   const time = e.target.currentTime;
+                  // Save time samples for the last few updates (used to infer pre-seek time)
+                  try {
+                    const samples = timeSamplesRef.current;
+                    samples.push(time);
+                    if (samples.length > 6) samples.shift();
+                    timeSamplesRef.current = samples;
+                  } catch (err) {
+                    timeSamplesRef.current = [time];
+                  }
+
+                  // Only update previousTime when not in the middle of a user seek
+                  if (!isSeekingRef.current) {
+                    previousTimeRef.current = currentTime;
+                    setPreviousTime(currentTime);
+                  }
                   setCurrentTime(time);
                   dispatch(setCurrentVideoTime(time));
                   // Pass video state to parent for PPT synchronization
@@ -714,6 +1267,13 @@ const VideoPanel = forwardRef(
                       duration: e.target.duration || duration,
                     });
                   }
+                }}
+                onSeeking={() => {
+                  // When user starts seeking, capture the current time as the "from" time
+                  isSeekingRef.current = true;
+                  previousTimeRef.current =
+                    videoRef.current?.currentTime || currentTime;
+                  setPreviousTime(previousTimeRef.current);
                 }}
                 onLoadedMetadata={(e) => {
                   const newDuration = e.target.duration;
@@ -751,6 +1311,24 @@ const VideoPanel = forwardRef(
                     onPauseAnswerAudio();
                   }
 
+                  // Track video play event
+                  const userDetails = getUserDetailsFromToken();
+                  const currentVideo = videos?.[currentVideoIndex];
+                  if (currentVideo) {
+                    // const watchedPercentage =
+                    //   duration > 0
+                    //     ? Math.round((currentTime / duration) * 100)
+                    //     : 0;
+
+                    capture("video_play", {
+                      user_id: userDetails?.sub,
+                      module_id: presentationId,
+                      video_id: currentVideo.slide,
+                      timestamp: new Date().toISOString(),
+                      // engagement_percentage: watchedPercentage,
+                    });
+                  }
+
                   // Notify parent about play state change
                   if (onVideoStateChange) {
                     onVideoStateChange({
@@ -764,6 +1342,19 @@ const VideoPanel = forwardRef(
                 onPause={() => {
                   setIsPlaying(false);
                   dispatch(setIsVideoPlaying(false));
+
+                  // Track video pause event
+                  const userDetails = getUserDetailsFromToken();
+                  const currentVideo = videos?.[currentVideoIndex];
+                  if (currentVideo) {
+                    capture("video_pause", {
+                      user_id: userDetails?.sub,
+                      video_id: currentVideo.slide,
+                      current_time: currentTime,
+                      timestamp: new Date().toISOString(),
+                    });
+                  }
+
                   // Notify parent about pause state change
                   if (onVideoStateChange) {
                     onVideoStateChange({
@@ -803,6 +1394,43 @@ const VideoPanel = forwardRef(
                     }));
                   }
                 }}
+                onSeeked={(e) => {
+                  const newTime = e.target.currentTime;
+                  // Mark seeking finished
+                  isSeekingRef.current = false;
+
+                  // Infer pre-seek time from the recent time samples buffer.
+                  // We look backwards for the most recent sample that differs from newTime by > threshold.
+                  const samples = timeSamplesRef.current || [];
+                  const THRESHOLD = 0.3; // seconds: treat tiny differences as not a seek
+                  let inferredFrom = previousTimeRef.current ?? previousTime;
+                  for (let i = samples.length - 1; i >= 0; i--) {
+                    const sample = samples[i];
+                    if (Math.abs(sample - newTime) > THRESHOLD) {
+                      inferredFrom = sample;
+                      break;
+                    }
+                  }
+
+                  const fromTime = inferredFrom;
+
+                  // Update previousTime state/ref to the new time after seek
+                  previousTimeRef.current = newTime;
+                  setPreviousTime(newTime);
+
+                  if (newTime > fromTime + 0.001) {
+                    const userDetails = getUserDetailsFromToken();
+                    const currentVideo = videos?.[currentVideoIndex];
+                    if (currentVideo) {
+                      capture("video_skip", {
+                        user_id: userDetails?.sub,
+                        video_id: currentVideo.slide,
+                        from_time: formatSeconds(fromTime),
+                        to_time: formatSeconds(newTime),
+                      });
+                    }
+                  }
+                }}
                 // onClick={togglePlayPause}
                 poster={videos?.[currentVideoIndex]?.thumbnail}
                 autoPlay={autoPlayEnabled}
@@ -817,7 +1445,7 @@ const VideoPanel = forwardRef(
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
               <span>
-                {currentVideoIndex + 1}/{videos?.length}
+                {(videos ?? [])?.[currentVideoIndex]?.slide}/{videos?.length}
               </span>
             </div>
           </div>
@@ -827,6 +1455,7 @@ const VideoPanel = forwardRef(
             isLoading={!conversationState.isConnected}
             isAudioPlaying={conversation.isSpeaking}
             isConnected={conversationState.isConnected}
+            avatarUrl={avatarUrl}
           />
         )}
         {showChat ? (
@@ -861,6 +1490,7 @@ const VideoPanel = forwardRef(
             showChat={showChat}
             onStartConversation={startConversation}
             onStopConversation={stopConversation}
+            agentId={agentId}
           />
         )}
       </div>

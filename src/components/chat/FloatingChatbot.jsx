@@ -426,7 +426,7 @@ const FloatingChatbot = ({ onPauseVideo, videos = [], presentationId }) => {
           <div className="bg-blue-600 text-white p-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <MessageCircleIcon size={20} />
-              <h3 className="font-semibold">TrainBoost Assistant</h3>
+              <h3 className="font-semibold">Upskillr Assistant</h3>
             </div>
             <div className="flex items-center space-x-2">
               <button
@@ -457,7 +457,7 @@ const FloatingChatbot = ({ onPauseVideo, videos = [], presentationId }) => {
                   size={48}
                   className="mx-auto mb-4 text-gray-300"
                 />
-                <p className="font-medium">Welcome to TrainBoost Assistant!</p>
+                <p className="font-medium">Welcome to Upskillr Assistant!</p>
                 <p className="text-sm mt-2">
                   Ask me anything about the presentation and I'll help you find
                   the answers.
@@ -534,7 +534,7 @@ const FloatingChatbot = ({ onPauseVideo, videos = [], presentationId }) => {
                   }
                 }}
                 className="w-full px-2 py-1.5 pr-20 text-gray-700 bg-white border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[52px] max-h-32"
-                placeholder={isListening ? "Listening..." : "Ask TrainBoost..."}
+                placeholder={isListening ? "Listening..." : "Ask Upskillr..."}
                 rows={3}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {

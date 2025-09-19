@@ -1,0 +1,31 @@
+{
+  "name": "Upskillr - AI Training Platform",
+  "short_name": "Upskillr",
+  "description": "Training Using AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#744FFF",
+  "theme_color": "#744FFF",
+  "orientation": "any",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

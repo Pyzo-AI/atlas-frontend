@@ -1,13 +1,22 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentVideoIndex } from "@/store/features/videoSlice";
+import { usePostHog } from "@/hooks/usePostHog";
+import { getUserDetailsFromToken } from "@/store/utils/token";
 
-const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
+const VideoPlaylist = ({
+  videos = [],
+  loading = false,
+  onVideoSelect,
+  presentationId,
+  isMobile = false
+}) => {
   const dispatch = useDispatch();
   const { currentVideoIndex } = useSelector((state) => state.video);
   const scrollContainerRef = useRef(null);
   const videoItemRefs = useRef([]);
   const [showFade, setShowFade] = useState(false);
+  const { capture } = usePostHog();
 
   const formatDuration = (duration) => {
     if (!duration) return "0:00";
@@ -20,14 +29,19 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
   const checkScrollPosition = () => {
     if (scrollContainerRef.current) {
       const container = scrollContainerRef.current;
-      const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 10; // 10px threshold
+      const isScrolledToEnd =
+        container.scrollLeft + container.clientWidth >=
+        container.scrollWidth - 10; // 10px threshold
       setShowFade(!isScrolledToEnd);
     }
   };
 
   // Auto-scroll to current video when currentVideoIndex changes
   useEffect(() => {
-    if (videoItemRefs.current[currentVideoIndex] && scrollContainerRef.current) {
+    if (
+      videoItemRefs.current[currentVideoIndex] &&
+      scrollContainerRef.current
+    ) {
       const currentVideoElement = videoItemRefs.current[currentVideoIndex];
       const container = scrollContainerRef.current;
 
@@ -43,10 +57,11 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
 
       // Calculate scroll position to center the item
       if (isOutOfViewLeft || isOutOfViewRight) {
-        const scrollTo = itemOffsetLeft - (container.clientWidth / 2) + (itemRect.width / 2);
+        const scrollTo =
+          itemOffsetLeft - container.clientWidth / 2 + itemRect.width / 2;
         container.scrollTo({
           left: scrollTo,
-          behavior: 'smooth'
+          behavior: "smooth",
         });
       }
     }
@@ -61,12 +76,37 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (container) {
-      container.addEventListener('scroll', checkScrollPosition);
-      return () => container.removeEventListener('scroll', checkScrollPosition);
+      container.addEventListener("scroll", checkScrollPosition);
+      return () => container.removeEventListener("scroll", checkScrollPosition);
     }
   }, []);
 
   const handleVideoSelect = (index) => {
+    if (index !== currentVideoIndex) {
+      // Track slide view when manually selecting from playlist
+      const selectedVideo = videos[index];
+      const userDetails = getUserDetailsFromToken();
+
+      capture("slide_view", {
+        user_id: userDetails?.sub,
+        module_id: presentationId,
+        slide_id: selectedVideo?.slide,
+        slide_title: selectedVideo?.title,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Track trainer video skip only when jumping forward to a later video
+      if (index > currentVideoIndex) {
+        const currentVideo = videos[currentVideoIndex];
+        const targetVideo = videos[index];
+        capture("trainer_video_skip", {
+          user_id: userDetails?.sub,
+          video_id: currentVideo?.slide, // Video being skipped FROM
+          target_video_id: targetVideo?.slide, // Video being jumped TO
+        });
+      }
+    }
+
     if (onVideoSelect) {
       // Use the callback from VideoPanel if provided
       onVideoSelect(index);
@@ -102,18 +142,18 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
 
   return (
     <div className="w-full rounded-xl relative">
-      <div 
-        ref={scrollContainerRef} 
+      <div
+        ref={scrollContainerRef}
         className="overflow-x-auto overflow-y-visible"
-        style={{ scrollBehavior: 'smooth' }}
+        style={{ scrollBehavior: "smooth" }}
       >
-        <div className="flex gap-2 pb-1.5 pt-5 overflow-y-visible">
+        <div className="flex gap-2 pb-1.5 pt-2 lg:pt-5 overflow-y-visible">
           {videos.map((video, index) => (
             <div
               key={index}
               ref={(el) => (videoItemRefs.current[index] = el)}
               onClick={() => handleVideoSelect(index)}
-              className={`relative flex-shrink-0 w-[119px] h-[68px] rounded-lg cursor-pointer transition-all duration-200 overflow-visible scroll-ml-4 ${
+              className={`relative flex-shrink-0  ${isMobile ? 'w-[150px] h-[45px]'  : 'w-[119px] h-[68px]'} rounded-lg cursor-pointer transition-all duration-200 overflow-visible scroll-ml-4 ${
                 currentVideoIndex === index
                   ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
                   : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
@@ -121,12 +161,12 @@ const VideoPlaylist = ({ videos = [], loading = false, onVideoSelect }) => {
             >
               {/* Video Info Container - using padding instead of absolute positioning */}
               <div className="p-2 flex flex-col gap-1.5">
-                <h4 className="font-lato font-medium text-[12px] leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2">
+                <h4 className={`font-lato font-medium ${isMobile ? 'text-[9px] text-600' : 'text-[12px]' } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}>
                   {video.title || "Untitled Video"}
                 </h4>
-                <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
+              {!isMobile &&  <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
                   {formatDuration(video.duration) || "0:00"}
-                </div>
+                </div>}
               </div>
 
               {/* Status indicator - keeping absolute position as requested */}
