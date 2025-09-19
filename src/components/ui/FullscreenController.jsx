@@ -103,7 +103,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
       )}
 
       {/* Fullscreen Toggle Button (always visible on mobile) */}
-      <button
+      {/* <button
         onClick={() => {
           const isFullscreen = document.fullscreenElement || 
                               document.webkitFullscreenElement || 
@@ -141,7 +141,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
             );
           }
         })()}
-      </button>
+      </button> */}
     </div>
   );
 };

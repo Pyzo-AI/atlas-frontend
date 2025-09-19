@@ -1,24 +1,24 @@
-import React from 'react'
-import back_arrow from '../../assets/svg/back_arrow.svg'
-import BreadCrumbConnect from '../../assets/svg/BreadCrumbConnect.svg'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import React from "react";
+import back_arrow from "../../assets/svg/back_arrow.svg";
+import BreadCrumbConnect from "../../assets/svg/BreadCrumbConnect.svg";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function BreadCrumb({ paths = [] }) {
-  const router = useRouter()
+  const router = useRouter();
   const handleBack = () => {
-    router.back()
-  }
+    router.back();
+  };
 
   const handlePathClick = (pathUrl) => {
-    router.push(pathUrl)
-  }
+    router.push(pathUrl);
+  };
 
-  const clickablePaths = paths.slice(0, -1)
-  const title = paths[paths.length - 1]
+  const clickablePaths = paths.slice(0, -1);
+  const title = paths[paths.length - 1];
 
   return (
-    <div className="flex items-center gap-[12px] mb-0 lg:mb-4">
+    <div className="invisible md:visible flex items-center gap-[12px] mb-[-12px] md:mb-4">
       <Image
         src={back_arrow}
         alt="back_arrow"
@@ -46,5 +46,5 @@ export default function BreadCrumb({ paths = [] }) {
         </span>
       )}
     </div>
-  )
+  );
 }

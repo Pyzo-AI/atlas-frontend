@@ -104,7 +104,7 @@ const QuestionModeUser = ({
       </div>
 
       {/* Bottom Input Section */}
-      <div className="mt-6 flex items-center justify-center px-3 gap-4 mx-auto">
+      <div className="mt-6 flex items-center justify-center px-0 md:px-3 gap-2 md:gap-4 mx-auto">
         <button
           onClick={handleChatHistory}
           className="cursor-pointer flex items-center gap-1 px-3 py-[7px] bg-[rgba(110,96,223,0.1)] rounded-[73.75px]"
