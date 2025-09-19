@@ -102,7 +102,7 @@ const Header = () => {
           alt="trainBoostLogo"
         />
         <h2 className="text-[16px] font-lato font-bold leading-[100%] tracking-[0.02em]">
-          Train Boost
+          Upskillr
         </h2>
       </div>
       <div className="flex flex-1 justify-end gap-10">

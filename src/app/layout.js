@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "TrainBoost",
+  title: "Upskillr",
   description: "Training Using AI",
 };
 

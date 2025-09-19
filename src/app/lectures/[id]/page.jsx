@@ -109,6 +109,7 @@ const Home = () => {
               width="30%"
               presentationId={presentationId}
               agentId={data?.presentation_agent_id}
+              avatarUrl={data?.presentation_trainer_image}
             />
           </div>
         </div>
