@@ -1,48 +1,54 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import "../styles/fullscreen.css";
-import "react-toastify/dist/ReactToastify.css";
-import { ReduxProvider } from "@/providers/ReduxProvider";
-import ElevenLabsProviderWrapper from "@/providers/ElevenLabsProvider";
-import PostHogProvider from "@/providers/PostHogProvider";
-import PrivateRoute from "@/components/auth/PrivateRoute";
-import Header from "@/components/layout/Header";
-import ResponsiveContainer from "@/components/layout/ResponsiveContainer";
-import { ToastContainer } from "react-toastify";
+import { Geist, Geist_Mono } from 'next/font/google'
+import './globals.css'
+import '../styles/fullscreen.css'
+import 'react-toastify/dist/ReactToastify.css'
+import { ReduxProvider } from '@/providers/ReduxProvider'
+import ElevenLabsProviderWrapper from '@/providers/ElevenLabsProvider'
+import PostHogProvider from '@/providers/PostHogProvider'
+import PrivateRoute from '@/components/auth/PrivateRoute'
+import Header from '@/components/layout/Header'
+import ResponsiveContainer from '@/components/layout/ResponsiveContainer'
+import { ToastContainer } from 'react-toastify'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 export const metadata = {
-  title: "TrainBoost",
-  description: "Training Using AI",
-  manifest: "/manifest.json",
+  title: 'TrainBoost',
+  description: 'Training Using AI',
+  manifest: '/manifest.json',
   icons: {
-    icon: "/train-boost-logo.svg",
+    icon: [
+      { url: '/train.svg', type: 'image/svg+xml' },
+      { url: '/train.svg', sizes: '192x192', type: 'image/svg+xml' },
+      { url: '/train.svg', sizes: '512x512', type: 'image/svg+xml' },
+    ],
+    apple: [{ url: '/train.svg', sizes: '180x180', type: 'image/svg+xml' }],
+    shortcut: '/train.svg',
   },
   viewport: {
-    width: "device-width",
+    width: 'device-width',
     initialScale: 1,
     maximumScale: 1,
     userScalable: false,
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: 'black-translucent',
   },
   other: {
-    "mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
   },
-};
+}
 
 export default function RootLayout({ children }) {
   return (
@@ -73,5 +79,5 @@ export default function RootLayout({ children }) {
         </PostHogProvider>
       </body>
     </html>
-  );
+  )
 }
