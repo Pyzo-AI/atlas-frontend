@@ -114,20 +114,7 @@ const Home = () => {
     });
   };
 
-  // Prevent scrolling on mobile landscape mode
-  useEffect(() => {
-    if (isLandscape) {
-      // Prevent scrolling
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
 
-      return () => {
-        // Restore scrolling when component unmounts or orientation changes
-        document.body.style.overflow = "";
-        document.documentElement.style.overflow = "";
-      };
-    }
-  }, [isLandscape]);
 
   if (isLoading) {
     return <PageSkeleton />;

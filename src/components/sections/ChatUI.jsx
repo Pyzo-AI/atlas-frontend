@@ -39,7 +39,7 @@ const ChatUI = ({
       {/* Chat Container */}
       <div className="flex flex-col h-full border border-[#E5E7EB] rounded-xl overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-center px-3 py-1 lg:py-3 pb-2 border-b border-[#E5E7EB] flex-shrink-0">
+        <div className="flex justify-between items-center px-3 py-1 lg:py-3 pb-1 md:pb-2 border-b border-[#E5E7EB] flex-shrink-0">
           <h2 className="font-lato font-bold text-[12px] lg:text-base leading-[19px] tracking-[0.02em] text-[#1A1C29]">
             Interaction History
           </h2>
@@ -104,7 +104,7 @@ const ChatUI = ({
         </div>
 
         {/* Bottom Actions Container */}
-        <div className="flex justify-center items-center gap-1 sm:gap-2 w-full bg-white rounded-[62px] px-2 sm:px-3 py-1.5 lg:py-2 flex-shrink-0 border-t border-[#E5E7EB]">
+        <div className="flex justify-center items-center gap-1 sm:gap-2 w-full bg-white px-2 sm:px-3 py-1.5 lg:py-2 flex-shrink-0 border-t border-[#E5E7EB]">
           {/* Interaction Mode Button */}
           <button
             onClick={handleInteractionMode}
