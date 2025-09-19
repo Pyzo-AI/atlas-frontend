@@ -170,6 +170,8 @@ const Home = () => {
                 presentationId={presentationId}
                 isMobileView={true}
                 isPhoneView={true}
+                agentId={data?.presentation_agent_id}
+                avatarUrl={data?.presentation_trainer_image}
               />
             </div>
           </div>
@@ -228,6 +230,8 @@ const Home = () => {
                 presentationId={presentationId}
                 isMobileView={true}
                 isPhoneView={false}
+                agentId={data?.presentation_agent_id}
+                avatarUrl={data?.presentation_trainer_image}
               />
             </div>
           </div>

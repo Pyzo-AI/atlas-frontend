@@ -85,7 +85,7 @@ const VideoPanel = forwardRef(
       isMobileView = false,
       isPhoneView = false,
       agentId,
-      avatarUrl
+      avatarUrl,
     },
     ref
   ) => {
@@ -327,7 +327,7 @@ const VideoPanel = forwardRef(
         await navigator.mediaDevices.getUserMedia({ audio: true });
         await conversation.startSession({
           agentId: agentId,
-          userId:getUserDetailsFromToken()?.email,
+          userId: getUserDetailsFromToken()?.email,
         });
 
         // Send context immediately after connection is established
@@ -767,7 +767,9 @@ const VideoPanel = forwardRef(
           {showRedirectPopup && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-                <h3 className="text-xl font-semibold mb-4">Training Complete!</h3>
+                <h3 className="text-xl font-semibold mb-4">
+                  Training Complete!
+                </h3>
                 <p className="mb-6">
                   Redirecting to Assessment in {countdown} seconds...
                 </p>
@@ -921,6 +923,7 @@ const VideoPanel = forwardRef(
                 onStartConversation={startConversation}
                 onStopConversation={stopConversation}
                 isMobileView={true}
+                agentId={agentId}
               />
             </div>
           )}
@@ -944,7 +947,9 @@ const VideoPanel = forwardRef(
               onStopConversation={stopConversation}
               isConnected={conversationState.isConnected}
               setShowChat={setShowChat}
-              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+              setIsJumpedOnChatFromInteractionMode={
+                setIsJumpedOnChatFromInteractionMode
+              }
               isMobile={true}
             />
           )}
@@ -960,7 +965,9 @@ const VideoPanel = forwardRef(
               isAudioPlaying={conversationState.isAudioPlaying}
               isAudioLoading={isListening}
               isConnected={conversationState.isConnected}
-              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+              setIsJumpedOnChatFromInteractionMode={
+                setIsJumpedOnChatFromInteractionMode
+              }
               isMobile={true}
             />
           )}
@@ -976,7 +983,9 @@ const VideoPanel = forwardRef(
           {showRedirectPopup && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-                <h3 className="text-xl font-semibold mb-4">Training Complete!</h3>
+                <h3 className="text-xl font-semibold mb-4">
+                  Training Complete!
+                </h3>
                 <p className="mb-6">
                   Redirecting to Assessment in {countdown} seconds...
                 </p>
@@ -1128,6 +1137,7 @@ const VideoPanel = forwardRef(
               showChat={showChat}
               onStartConversation={startConversation}
               onStopConversation={stopConversation}
+              agentId={agentId}
             />
           )}
 
@@ -1149,7 +1159,9 @@ const VideoPanel = forwardRef(
               onStopConversation={stopConversation}
               isConnected={conversationState.isConnected}
               setShowChat={setShowChat}
-              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+              setIsJumpedOnChatFromInteractionMode={
+                setIsJumpedOnChatFromInteractionMode
+              }
             />
           )}
 
@@ -1164,7 +1176,9 @@ const VideoPanel = forwardRef(
               isAudioPlaying={conversationState.isAudioPlaying}
               isAudioLoading={isListening}
               isConnected={conversationState.isConnected}
-              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+              setIsJumpedOnChatFromInteractionMode={
+                setIsJumpedOnChatFromInteractionMode
+              }
             />
           )}
         </div>
