@@ -1,16 +1,16 @@
-'use client'
-import React, { useState, useRef, useEffect } from 'react'
-import VideoPanel from '@/components/sections/VideoPanel'
-import PPTSection from '@/components/sections/PPTSection'
-import FloatingChatbot from '@/components/chat/FloatingChatbot'
-import { useGetAllVideoQuery } from '@/store/api/questionsApi'
-import { useDispatch, useSelector } from 'react-redux'
-import { setIsPlaying } from '@/store/features/videoSlice'
-import { usePathname, useParams } from 'next/navigation'
-import BreadCrumb from '@/components/common/BreadCrumb'
-import PageSkeleton from '@/components/common/PageSkeleton'
-import { usePortraitMode } from '@/hooks/usePortraitMode'
-import FullscreenController from '@/components/ui/FullscreenController'
+"use client";
+import React, { useState, useRef, useEffect } from "react";
+import VideoPanel from "@/components/sections/VideoPanel";
+import PPTSection from "@/components/sections/PPTSection";
+import FloatingChatbot from "@/components/chat/FloatingChatbot";
+import { useGetAllVideoQuery } from "@/store/api/questionsApi";
+import { useDispatch, useSelector } from "react-redux";
+import { setIsPlaying } from "@/store/features/videoSlice";
+import { usePathname, useParams } from "next/navigation";
+import BreadCrumb from "@/components/common/BreadCrumb";
+import PageSkeleton from "@/components/common/PageSkeleton";
+import { usePortraitMode } from "@/hooks/usePortraitMode";
+import FullscreenController from "@/components/ui/FullscreenController";
 
 // Portrait Mode Rotation Prompt Component
 const RotationPrompt = () => {
@@ -42,30 +42,30 @@ const RotationPrompt = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const Home = () => {
-  const params = useParams()
-  const presentationId = params.id
-  const { data, isLoading } = useGetAllVideoQuery(presentationId)
+  const params = useParams();
+  const presentationId = params.id;
+  const { data, isLoading } = useGetAllVideoQuery(presentationId);
   const videos = data?.data?.filter(
-    (video) => video?.trainer_video && video?.trainer_video?.trim() !== ''
-  )
-  const pathname = usePathname()
-  const videoPanelRef = useRef(null)
-  const dispatch = useDispatch()
-  const { pptVideoIndex } = useSelector((state) => state.video)
-  const isPortrait = usePortraitMode()
+    (video) => video?.trainer_video && video?.trainer_video?.trim() !== ""
+  );
+  const pathname = usePathname();
+  const videoPanelRef = useRef(null);
+  const dispatch = useDispatch();
+  const { pptVideoIndex } = useSelector((state) => state.video);
+  const isPortrait = usePortraitMode();
 
   // Device detection for different layouts
-  const isPhone = typeof window !== 'undefined' && window.innerWidth <= 956
+  const isPhone = typeof window !== "undefined" && window.innerWidth <= 956;
   const isTablet =
-    typeof window !== 'undefined' &&
+    typeof window !== "undefined" &&
     window.innerWidth > 956 &&
-    window.innerWidth <= 1024
-  const isMobileDevice = isPhone || isTablet
-  const isLandscape = !isPortrait && isMobileDevice
+    window.innerWidth <= 1024;
+  const isMobileDevice = isPhone || isTablet;
+  const isLandscape = !isPortrait && isMobileDevice;
 
   // Shared video state for synchronization
   const [videoState, setVideoState] = useState({
@@ -73,64 +73,64 @@ const Home = () => {
     isPlaying: false,
     currentVideoIndex: 0,
     duration: 0,
-  })
+  });
 
   // Separate state for PPT synchronization (only when video panel actually plays)
   const [pptSyncState, setPptSyncState] = useState({
     shouldSync: false,
     currentTime: 0,
     isPlaying: false,
-  })
+  });
 
   // Handle video state changes from VideoPanel
   const handleVideoStateChange = (newState) => {
-    setVideoState(newState)
+    setVideoState(newState);
 
     // Update PPT sync state only when video panel video actually plays
     setPptSyncState({
       shouldSync: newState.isPlaying,
       currentTime: newState.currentTime,
       isPlaying: newState.isPlaying,
-    })
-  }
+    });
+  };
 
   // Handle video pause from question panel
   const handlePauseVideo = () => {
     if (videoPanelRef.current && videoPanelRef.current.pauseVideo) {
-      videoPanelRef.current.pauseVideo()
+      videoPanelRef.current.pauseVideo();
     }
-  }
+  };
 
   // Handle pausing answer audio when video plays
   const handlePauseAnswerAudio = () => {
     // Reset Redux audio state
-    dispatch(setIsPlaying({ playing: false, audioId: null }))
+    dispatch(setIsPlaying({ playing: false, audioId: null }));
 
     // Pause all audio elements in the document
-    document.querySelectorAll('audio').forEach((audio) => {
+    document.querySelectorAll("audio").forEach((audio) => {
       if (!audio.paused) {
-        audio.pause()
+        audio.pause();
       }
-    })
-  }
+    });
+  };
 
   // Prevent scrolling on mobile landscape mode
   useEffect(() => {
     if (isLandscape) {
       // Prevent scrolling
-      document.body.style.overflow = 'hidden'
-      document.documentElement.style.overflow = 'hidden'
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
 
       return () => {
         // Restore scrolling when component unmounts or orientation changes
-        document.body.style.overflow = ''
-        document.documentElement.style.overflow = ''
-      }
+        document.body.style.overflow = "";
+        document.documentElement.style.overflow = "";
+      };
     }
-  }, [isLandscape])
+  }, [isLandscape]);
 
   if (isLoading) {
-    return <PageSkeleton />
+    return <PageSkeleton />;
   }
 
   // Phone landscape layout - 70/30 split for optimal phone experience
@@ -150,8 +150,8 @@ const Home = () => {
                 isVideoPlaying={pptSyncState.isPlaying}
                 videoDuration={videoState.duration}
                 width="100%"
-                title={data?.presentation_name || 'Corporate Finance'}
-                author={data?.presentation_author || 'Giri Prathap'}
+                title={data?.presentation_name || "Corporate Finance"}
+                author={data?.presentation_author || "Giri Prathap"}
                 isMobileView={true}
                 isPhoneView={true}
               />
@@ -175,7 +175,7 @@ const Home = () => {
           </div>
         </div>
       </FullscreenController>
-    )
+    );
   }
 
   // Tablet landscape layout - 60/40 split for tablets
@@ -187,10 +187,10 @@ const Home = () => {
           <div className="px-4 py-3 bg-[#F9F9F9]">
             <BreadCrumb
               paths={[
-                { path: '/', label: 'All Course' },
+                { path: "/", label: "All Course" },
                 {
-                  path: '/lectures/123',
-                  label: data?.presentation_name || 'Corporate Finance',
+                  path: "/lectures/123",
+                  label: data?.presentation_name || "Corporate Finance",
                 },
               ]}
             />
@@ -208,8 +208,8 @@ const Home = () => {
                 isVideoPlaying={pptSyncState.isPlaying}
                 videoDuration={videoState.duration}
                 width="100%"
-                title={data?.presentation_name || 'Corporate Finance'}
-                author={data?.presentation_author || 'Giri Prathap'}
+                title={data?.presentation_name || "Corporate Finance"}
+                author={data?.presentation_author || "Giri Prathap"}
                 isMobileView={true}
                 isPhoneView={false}
               />
@@ -233,7 +233,7 @@ const Home = () => {
           </div>
         </div>
       </FullscreenController>
-    )
+    );
   }
 
   return (
@@ -246,10 +246,10 @@ const Home = () => {
           <div className=" px-6 py-5 overflow-hidden">
             <BreadCrumb
               paths={[
-                { path: '/', label: 'All Courses' },
+                { path: "/", label: "All Courses" },
                 {
-                  path: '/lectures/123',
-                  label: data?.presentation_name || 'Untitled Presentation',
+                  path: "/lectures/123",
+                  label: data?.presentation_name || "Untitled Presentation",
                 },
               ]}
             />
@@ -263,8 +263,8 @@ const Home = () => {
                 isVideoPlaying={pptSyncState.isPlaying}
                 videoDuration={videoState.duration}
                 width="70%"
-                title={data?.presentation_name || 'Untitled Presentation'}
-                author={data?.presentation_author || 'Unknown'}
+                title={data?.presentation_name || "Untitled Presentation"}
+                author={data?.presentation_author || "Unknown"}
               />
               <VideoPanel
                 ref={videoPanelRef}
@@ -275,6 +275,8 @@ const Home = () => {
                 onPauseAnswerAudio={handlePauseAnswerAudio}
                 width="30%"
                 presentationId={presentationId}
+                agentId={data?.presentation_agent_id}
+                avatarUrl={data?.presentation_trainer_image}
               />
             </div>
           </div>
@@ -288,7 +290,7 @@ const Home = () => {
         /> */}
       </div>
     </>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

@@ -83,7 +83,7 @@ const LoginPage = () => {
           });
         }
 
-        toast.success("Login successful! Welcome to Train Boost", {
+        toast.success("Login successful! Welcome to Upskillr", {
           position: "top-right",
           autoClose: 2000,
         });
@@ -150,8 +150,8 @@ const LoginPage = () => {
                   className="w-6 h-6"
                 />
               </div>
-              <span className="text-[16px] font-lato font-bold leading-[19px] tracking-[0.02em] text-[#1A1C29]">
-                Train Boost
+              <span className="text-[20px] font-lato font-bold leading-[19px] tracking-[0.02em] text-[#1A1C29]">
+                Upskillr 
               </span>
             </div>
 

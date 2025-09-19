@@ -84,6 +84,8 @@ const VideoPanel = forwardRef(
       width = "30%",
       isMobileView = false,
       isPhoneView = false,
+      agentId,
+      avatarUrl
     },
     ref
   ) => {
@@ -324,8 +326,8 @@ const VideoPanel = forwardRef(
         setConversationState((prev) => ({ ...prev, isLoading: true }));
         await navigator.mediaDevices.getUserMedia({ audio: true });
         await conversation.startSession({
-          agentId: process.env.NEXT_PUBLIC_ELEVEN_LABS_AGENT_ID,
-          userId: getUserDetailsFromToken()?.email,
+          agentId: agentId,
+          userId:getUserDetailsFromToken()?.email,
         });
 
         // Send context immediately after connection is established
@@ -1439,6 +1441,7 @@ const VideoPanel = forwardRef(
             isLoading={!conversationState.isConnected}
             isAudioPlaying={conversation.isSpeaking}
             isConnected={conversationState.isConnected}
+            avatarUrl={avatarUrl}
           />
         )}
         {showChat ? (
@@ -1473,6 +1476,7 @@ const VideoPanel = forwardRef(
             showChat={showChat}
             onStartConversation={startConversation}
             onStopConversation={stopConversation}
+            agentId={agentId}
           />
         )}
       </div>
