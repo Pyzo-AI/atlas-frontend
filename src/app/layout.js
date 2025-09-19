@@ -25,8 +25,8 @@ export const metadata = {
   description: "Training Using AI",
   manifest: "/manifest.json",
   icons: {
-    icon: "/train.svg",
-    "apple-touch-icon": "/train.svg",
+    icon: "/icon.png",
+    "apple-touch-icon": "/icon.png",
   },
   viewport: {
     width: "device-width",
@@ -34,22 +34,21 @@ export const metadata = {
     maximumScale: 1,
     userScalable: false,
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Upskillr",
-  },
-  other: {
-    "mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-status-bar-style": "default",
-    "apple-mobile-web-app-title": "Upskillr",
-  },
+
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Upskillr" />
+        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icon.png" />
+        <link rel="icon" type="image/png" href="/icon.png" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
