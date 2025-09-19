@@ -1,15 +1,18 @@
 {
-    "name": "TrainBoost - AI Training Platform",
-    "short_name": "TrainBoost",
-    "description": "Training Using AI",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#744FFF",
-    "theme_color": "#744FFF",
-    "orientation": "any",
-    "icons": [{
-        "src": "/favicon.ico",
-        "sizes": "any",
-        "type": "image/x-icon"
-    }]
+  "name": "TrainBoost - AI Training Platform",
+  "short_name": "TrainBoost",
+  "description": "Training Using AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#744FFF",
+  "theme_color": "#744FFF",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/train-boost-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
