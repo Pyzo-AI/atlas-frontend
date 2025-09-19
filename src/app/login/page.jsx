@@ -137,7 +137,7 @@ const LoginPage = () => {
       />
 
       {/* Main login card */}
-      <div className="relative z-10 w-full max-w-[441px] bg-white rounded-[13px] shadow-[0px_4px_104px_rgba(0,0,0,0.07)] p-6 sm:p-[30px_30px_40px_30px]">
+      <div className="mt-[-50px] relative z-10 w-full max-w-[441px] bg-white rounded-[13px] shadow-[0px_4px_104px_rgba(0,0,0,0.07)] p-6 sm:p-[30px_30px_40px_30px]">
         <div className="flex flex-col items-center gap-8 sm:gap-12">
           {/* Header section */}
           <div className="flex flex-col items-center gap-1">
