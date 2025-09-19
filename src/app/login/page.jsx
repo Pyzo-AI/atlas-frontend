@@ -146,7 +146,7 @@ const LoginPage = () => {
               <div className="w-6 h-6">
                 <img
                   src={trainBoostLogo.src}
-                  alt="TrainBoost Logo"
+                  alt="Upskillr Logo"
                   className="w-6 h-6"
                 />
               </div>

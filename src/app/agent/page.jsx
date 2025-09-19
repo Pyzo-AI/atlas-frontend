@@ -92,7 +92,7 @@ export default function Conversation() {
     overrides: conversationHistory.length > 0 ? {
       agent: {
         prompt: {
-          prompt: `You are a helpful AI assistant for TrainBoost, an AI-powered training platform. ${generateContextSummary()}`
+          prompt: `You are a helpful AI assistant for Upskillr, an AI-powered training platform. ${generateContextSummary()}`
         },
         firstMessage: conversationHistory.length > 0
           ? "I remember our previous conversation. How can I continue helping you?"

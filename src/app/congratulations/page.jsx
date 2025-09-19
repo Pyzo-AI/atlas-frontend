@@ -41,7 +41,7 @@ export default function CongratulationsPage() {
           </h1>
           
           <p className="text-[18px] font-lato font-medium text-[#667085] mb-8">
-            Thank you for training with TrainBoost!
+            Thank you for training with Upskillr!
           </p>
           
           <div className="bg-[#F3EDFF] border border-[#744FFF] p-4 rounded-[8px] mb-8">
