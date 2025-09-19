@@ -76,7 +76,8 @@ const VideoPanel = forwardRef(
       onPauseAnswerAudio,
       presentationId,
       width = "30%",
-      agentId
+      agentId,
+      avatarUrl
     },
     ref
   ) => {
@@ -828,6 +829,7 @@ const VideoPanel = forwardRef(
             isLoading={!conversationState.isConnected}
             isAudioPlaying={conversation.isSpeaking}
             isConnected={conversationState.isConnected}
+            avatarUrl={avatarUrl}
           />
         )}
         {showChat ? (
