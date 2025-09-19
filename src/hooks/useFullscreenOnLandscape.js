@@ -53,13 +53,13 @@ export const useFullscreenOnLandscape = (enabled = true) => {
                 document.mozFullScreenElement ||
                 document.msFullscreenElement;
 
+            // Only auto-enter fullscreen on landscape, don't auto-exit
             if (isLandscape && !isFullscreen) {
                 enterFullscreen();
-            } else if (!isLandscape && isFullscreen) {
-                exitFullscreen();
             }
+            // Let users manually control exit from fullscreen
         }, 100);
-    }, [enabled, enterFullscreen, exitFullscreen]);
+    }, [enabled, enterFullscreen]);
 
     useEffect(() => {
         if (!enabled) return;

@@ -171,7 +171,7 @@ const Home = () => {
             </div>
 
             {/* Right Side - Video Panel (30% width for phones) */}
-            <div className="w-[30%] bg-[#F9F9F9] p-1 overflow-hidden">
+            <div className="w-[30%] bg-[#F9F9F9] px-1 overflow-hidden">
               <VideoPanel
                 ref={videoPanelRef}
                 videos={videos}
@@ -229,7 +229,7 @@ const Home = () => {
             </div>
 
             {/* Right Side - Video Panel (40% width for tablets) */}
-            <div className="w-[40%] bg-[#F9F9F9] p-3 overflow-hidden">
+            <div className="w-[40%] bg-[#F9F9F9] px-3 overflow-hidden">
               <VideoPanel
                 ref={videoPanelRef}
                 videos={videos}
