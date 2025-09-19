@@ -1,11 +1,11 @@
-import React from "react";
-import { useDispatch } from "react-redux";
-import { setIsQuestionMode } from "@/store/features/videoSlice";
-import back_to_session from "@/assets/svg/back_to_session.svg";
-import interaction_mode from "@/assets/svg/interaction_mode.svg";
-import ai_answer_icon from "@/assets/svg/ai_answer_icon.svg";
-import close_icon from "@/assets/svg/close.svg";
-import Image from "next/image";
+import React from 'react'
+import { useDispatch } from 'react-redux'
+import { setIsQuestionMode } from '@/store/features/videoSlice'
+import back_to_session from '@/assets/svg/back_to_session.svg'
+import interaction_mode from '@/assets/svg/interaction_mode.svg'
+import ai_answer_icon from '@/assets/svg/ai_answer_icon.svg'
+import close_icon from '@/assets/svg/close.svg'
+import Image from 'next/image'
 
 const ChatUI = ({
   onClose,
@@ -17,24 +17,22 @@ const ChatUI = ({
   setIsJumpedOnChatFromInteractionMode,
   isMobile = false,
 }) => {
-  const dispatch = useDispatch();
-
-
+  const dispatch = useDispatch()
 
   const handleInteractionMode = () => {
-    dispatch(setIsQuestionMode(true));
-    onClose();
-    onStartConversation();
-  };
+    dispatch(setIsQuestionMode(true))
+    onClose()
+    onStartConversation()
+  }
 
   const handleContinueLesson = () => {
-    dispatch(setIsQuestionMode(false));
-    setShowChat(false);
-    setIsJumpedOnChatFromInteractionMode(false);
+    dispatch(setIsQuestionMode(false))
+    setShowChat(false)
+    setIsJumpedOnChatFromInteractionMode(false)
     if (isConnected && onStopConversation) {
-      onStopConversation();
+      onStopConversation()
     }
-  };
+  }
 
   return (
     <div className="flex flex-col w-full bg-white h-full max-h-full">
@@ -42,7 +40,7 @@ const ChatUI = ({
       <div className="flex flex-col h-full border border-[#E5E7EB] rounded-xl overflow-hidden">
         {/* Header */}
         <div className="flex justify-between items-center px-3 py-1 lg:py-3 pb-2 border-b border-[#E5E7EB] flex-shrink-0">
-          <h2 className="font-lato font-bold text-sm lg:text-base leading-[19px] tracking-[0.02em] text-[#1A1C29]">
+          <h2 className="font-lato font-bold text-[12px] lg:text-base leading-[19px] tracking-[0.02em] text-[#1A1C29]">
             Interaction History
           </h2>
           <button
@@ -65,7 +63,7 @@ const ChatUI = ({
             <div className="space-y-3 sm:space-y-4 lg:space-y-6">
               {conversation.map((item, index) => (
                 <div key={index}>
-                  {item.type === "question" ? (
+                  {item.type === 'question' ? (
                     /* User Message */
                     <div className="flex justify-end">
                       <div className="max-w-[75%] bg-[rgba(26,26,26,0.07)] rounded-[10px_10px_10px_0px] px-2.5 py-2">
@@ -74,7 +72,7 @@ const ChatUI = ({
                         </p>
                       </div>
                     </div>
-                  ) : item.type === "answer" ? (
+                  ) : item.type === 'answer' ? (
                     /* AI Message */
                     <div className="flex gap-2 items-start">
                       <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-b from-[#685EDD] to-[#DA8BFF] flex items-center justify-center flex-shrink-0">
@@ -82,11 +80,11 @@ const ChatUI = ({
                       </div>
                       <div className="flex-1 max-w-[301px]">
                         <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-[#1A1C29]">
-                          {item.content || "No text answer found"}
+                          {item.content || 'No text answer found'}
                         </p>
                       </div>
                     </div>
-                  ) : item.type === "error" ? (
+                  ) : item.type === 'error' ? (
                     /* Error Message */
                     <div className="flex gap-2 items-start">
                       <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
@@ -130,7 +128,6 @@ const ChatUI = ({
             onClick={handleContinueLesson}
             className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-[#6E60DF] rounded-[73.75px]"
           >
-
             <Image
               className="w-4 h-4 lg:w-5 lg:h-5"
               src={back_to_session}
@@ -143,7 +140,7 @@ const ChatUI = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ChatUI;
+export default ChatUI

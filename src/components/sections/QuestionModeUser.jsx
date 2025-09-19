@@ -1,16 +1,16 @@
-import React, { useState, useRef, useEffect } from "react";
-import chat_history from "@/assets/svg/chat_history.svg";
-import back_to_session from "@/assets/svg/back_to_session.svg";
-import Image from "next/image";
-import tap_to_speak from "@/assets/svg/tap-to-speak.svg";
-import Lottie from "lottie-react";
-import userWaveAnimation from "@/assets/json/user_wave.json";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useState, useRef, useEffect } from 'react'
+import chat_history from '@/assets/svg/chat_history.svg'
+import back_to_session from '@/assets/svg/back_to_session.svg'
+import Image from 'next/image'
+import tap_to_speak from '@/assets/svg/tap-to-speak.svg'
+import Lottie from 'lottie-react'
+import userWaveAnimation from '@/assets/json/user_wave.json'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   setIsQuestionMode,
   setQuestion,
   setAnswerPptIndex,
-} from "@/store/features/videoSlice";
+} from '@/store/features/videoSlice'
 
 const QuestionModeUser = ({
   onPauseVideo,
@@ -24,54 +24,54 @@ const QuestionModeUser = ({
   setIsJumpedOnChatFromInteractionMode,
   isMobile = false,
 }) => {
-  const dispatch = useDispatch();
-  const { question } = useSelector((state) => state.video);
+  const dispatch = useDispatch()
+  const { question } = useSelector((state) => state.video)
   // No need for manual speech recognition as ElevenLabs handles it
 
   const handleTapToSpeak = () => {
     if (isConnected) {
       // Stop conversation if already connected
       if (onStopConversation) {
-        onStopConversation();
+        onStopConversation()
       }
     } else {
       // Start conversation
       if (onPauseVideo) {
-        onPauseVideo();
+        onPauseVideo()
       }
 
       // Stop any playing answer audio when starting new conversation
       if (onPauseAnswerAudio) {
-        onPauseAnswerAudio();
+        onPauseAnswerAudio()
       }
 
-      dispatch(setQuestion(""));
+      dispatch(setQuestion(''))
 
       if (onStartConversation) {
-        onStartConversation();
+        onStartConversation()
       }
     }
-  };
+  }
 
   const handleBackToSession = () => {
     // Stop conversation if active
     // if (isConnected && onStopConversation) {
     //   onStopConversation();
     // }
-    onStopConversation();
+    onStopConversation()
     // Clear state
-    dispatch(setQuestion(""));
-    dispatch(setIsQuestionMode(false));
-  };
+    dispatch(setQuestion(''))
+    dispatch(setIsQuestionMode(false))
+  }
 
   const handleChatHistory = () => {
-    setShowChat(true);
-    dispatch(setIsQuestionMode(false));
-    setIsJumpedOnChatFromInteractionMode(true);
+    setShowChat(true)
+    dispatch(setIsQuestionMode(false))
+    setIsJumpedOnChatFromInteractionMode(true)
     if (isConnected && onStopConversation) {
-      onStopConversation();
+      onStopConversation()
     }
-  };
+  }
 
   return (
     <div className="flex-1 border border-[#E5E7EB] rounded-[10px] p-3 pb-6 flex flex-col">
@@ -80,7 +80,11 @@ const QuestionModeUser = ({
         {/* Center Content */}
         <div className="flex flex-col items-center gap-[30px] max-w-[275px]">
           {/* Avatar/Tap to Speak */}
-          <div className={`w-[120px] ${isMobile ? 'h-[20px]' : 'h-[120px]'} flex items-center justify-center`}>
+          <div
+            className={`w-[120px] ${
+              isMobile ? 'h-[20px]' : 'h-[120px]'
+            } flex items-center justify-center`}
+          >
             {isAudioLoading ? (
               <Lottie
                 animationData={userWaveAnimation}
@@ -106,27 +110,28 @@ const QuestionModeUser = ({
           className="cursor-pointer flex items-center gap-1 px-3 py-[7px] bg-[rgba(110,96,223,0.1)] rounded-[73.75px]"
         >
           <Image
-            className="w-[18px] h-[18px]"
+            className="w-4 h-4 lg:w-5 lg:h-5"
             src={chat_history}
             alt="chat_history"
           />
         </button>
+
         <button
           onClick={handleBackToSession}
-          className="cursor-pointer flex items-center gap-1 px-3 py-1.5 bg-[#6E60DF] rounded-[73.75px]"
+          className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-[#6E60DF] rounded-[73.75px]"
         >
           <Image
-            className="w-5 h-5"
+            className="w-4 h-4 lg:w-5 lg:h-5"
             src={back_to_session}
             alt="back_to_session"
           />
-          <span className={`font-lato ${isMobile ? "text-[10px]" : 'font-medium text-xs'} text-white`}>
+          <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
             Continue Lesson
           </span>
         </button>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default QuestionModeUser;
+export default QuestionModeUser
