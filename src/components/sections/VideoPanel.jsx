@@ -935,6 +935,7 @@ const VideoPanel = forwardRef(
               isAudioPlaying={conversation.isSpeaking}
               isConnected={conversationState.isConnected}
               isMobile={true}
+              avatarUrl={avatarUrl}
             />
           )}
 
@@ -1147,6 +1148,7 @@ const VideoPanel = forwardRef(
               isLoading={!conversationState.isConnected}
               isAudioPlaying={conversation.isSpeaking}
               isConnected={conversationState.isConnected}
+              avatarUrl={avatarUrl}
             />
           )}
 

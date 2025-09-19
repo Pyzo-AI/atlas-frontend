@@ -52,7 +52,7 @@ const QuestionModeAI = forwardRef(
               <div
                 className={`${
                   isMobile ? "w-10 h-10" : "w-16 h-16"
-                } rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10`}
+                } rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10 flex items-center justify-center bg-white/20`}
               >
                 {avatarUrl ? (
                   <Image
@@ -60,10 +60,12 @@ const QuestionModeAI = forwardRef(
                     alt="Profile picture"
                     width={isMobile ? 40 : 64}
                     height={isMobile ? 40 : 64}
-                    className="rounded-full object-cover"
+                    className="rounded-full object-cover w-full h-full"
                   />
                 ) : (
-                  <span className="text-white text-xl font-semibold z-50">
+                  <span className={`text-white font-semibold z-50 ${
+                    isMobile ? "text-sm" : "text-xl"
+                  }`}>
                     {userName?.charAt(0)?.toUpperCase() || "U"}
                   </span>
                 )}
