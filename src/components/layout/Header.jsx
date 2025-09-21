@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import trainBoostLogo from "@/assets/svg/train-boost-logo.svg";
 import { decodeJWT } from "@/utils/jwt";
 import userIcon from "@/assets/svg/user.svg";
-import { trackLogout } from "@/utils/authTracking"; 
+import { trackLogout } from "@/utils/authTracking";
 
 const navigation = [
   // { name: "Home", href: "/" },
@@ -18,19 +18,21 @@ const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [userInfo, setUserInfo] = useState({ name: '', email: '' });
+  const [userInfo, setUserInfo] = useState({ name: "", email: "" });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef(null);
 
   // Get user info from JWT token
   useEffect(() => {
-    const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || '{}');
+    const tokens = JSON.parse(
+      localStorage.getItem("trainboost_tokens") || "{}"
+    );
     if (tokens.access_token) {
       const decoded = decodeJWT(tokens.access_token);
       if (decoded) {
         setUserInfo({
-          name: decoded.name || decoded.preferred_username || 'User',
-          email: decoded.email || ''
+          name: decoded.name || decoded.preferred_username || "User",
+          email: decoded.email || "",
         });
       }
     }
@@ -52,20 +54,22 @@ const Header = () => {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    
+
     // Get user ID for tracking before clearing tokens
-    const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || '{}');
+    const tokens = JSON.parse(
+      localStorage.getItem("trainboost_tokens") || "{}"
+    );
     let userId = null;
     if (tokens.access_token) {
       const decoded = decodeJWT(tokens.access_token);
       userId = decoded?.sub;
     }
-    
+
     // Track session end event
     if (userId) {
       trackLogout(userId);
     }
-    
+
     // try {
     //   if (tokens.refresh_token) {
     //     const response = await fetch('https://xstk67r5-3001.inc1.devtunnels.ms/auth/logout', {
@@ -75,13 +79,13 @@ const Header = () => {
     //       },
     //       body: JSON.stringify({ refresh_token: tokens.refresh_token }),
     //     });
-        
+
     //     if (response.ok) {
-          localStorage.removeItem("trainboost_tokens");
-          // Clear conversation history on logout
-          localStorage.removeItem("trainboost_conversation_history");
-          setIsDropdownOpen(false);
-          router.push("/login");
+    localStorage.removeItem("trainboost_tokens");
+    // Clear conversation history on logout
+    localStorage.removeItem("trainboost_conversation_history");
+    setIsDropdownOpen(false);
+    router.push("/login");
     //     }
     //   }
     // } catch (error) {
@@ -92,9 +96,10 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f1f2f4] px-10 py-2 bg-white/80 backdrop-blur-sm z-50">
-      <div className="flex items-center gap-1 text-[#121416] cursor-pointer"
-      onClick={() => router.push("/")}
+    <header className="fixed top-0 left-0 right-0 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f1f2f4] px-4 md:px-10 py-2 bg-white/80 backdrop-blur-sm z-50">
+      <div
+        className="flex items-center gap-1 text-[#121416] cursor-pointer"
+        onClick={() => router.push("/")}
       >
         <img
           className="w-6 h-6"
@@ -114,9 +119,9 @@ const Header = () => {
                 key={item.name}
                 href={item.href}
                 className={`font-lato font-semibold text-[14px] leading-[100%] tracking-[0.02em] ${
-                  isActive 
-                    ? 'text-blue-600 ' 
-                    : 'text-[#1A1C29] hover:text-blue-600'
+                  isActive
+                    ? "text-blue-600 "
+                    : "text-[#1A1C29] hover:text-blue-600"
                 }`}
               >
                 {item.name}
@@ -142,9 +147,7 @@ const Header = () => {
             <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-1 z-50">
               <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
                 <div className="font-medium">{userInfo.name}</div>
-                <div className="text-gray-500 break-all">
-                  {userInfo.email}
-                </div>
+                <div className="text-gray-500 break-all">{userInfo.email}</div>
               </div>
               <button
                 onClick={handleLogout}
@@ -152,12 +155,27 @@ const Header = () => {
                 className="cursor-pointer w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isLoggingOut && (
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                 )}
-                {isLoggingOut ? 'Signing out...' : 'Sign out'}
+                {isLoggingOut ? "Signing out..." : "Sign out"}
               </button>
             </div>
           )}
