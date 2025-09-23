@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { useGetQuizQuery } from "@/store/api/questionsApi";
 import Button from "@/components/common/Button";
 import BreadCrumb from "@/components/common/BreadCrumb";
+import { usePostHog } from "@/hooks/usePostHog";
+import { getUserDetailsFromToken } from "@/store/utils/token";
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -14,6 +16,8 @@ export default function AssessmentPage() {
   const [answers, setAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const [assessmentStartTime, setAssessmentStartTime] = useState(null);
+  const { capture } = usePostHog();
 
   useEffect(() => {
     if (isSubmitted) {
@@ -28,20 +32,35 @@ export default function AssessmentPage() {
     isError,
   } = useGetQuizQuery(presentationId);
 
+  // Track assessment start when quiz data is loaded
+  useEffect(() => {
+    if (quizData && !assessmentStartTime) {
+      const startTime = new Date().toISOString();
+      setAssessmentStartTime(startTime);
+
+      const userDetails = getUserDetailsFromToken();
+      capture("assessment_start", {
+        user_id: userDetails?.sub,
+        module_id: presentationId,
+        assessment_id: quizData.quiz_id || presentationId,
+      });
+    }
+  }, [quizData, assessmentStartTime, presentationId, capture]);
+
   // Show loading state while fetching data
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
+      <div className="min-h-screen bg-[#F9F9F9] pt-3 sm:pt-5 pb-4 sm:pb-8 px-4 sm:px-10">
         <BreadCrumb title="Assessment" />
-        <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
-          <div className="p-8">
+        <div className="max-w-4xl mx-auto bg-white rounded-lg sm:rounded-xl border border-[#E5E7EB] overflow-hidden">
+          <div className="p-4 sm:p-8">
             <div className="animate-pulse">
               {/* Loading header */}
-              <div className="mb-8">
-                <div className="h-8 bg-gray-200 rounded-lg w-2/3 mx-auto"></div>
+              <div className="mb-6 sm:mb-8">
+                <div className="h-6 sm:h-8 bg-gray-200 rounded-lg w-2/3 mx-auto"></div>
               </div>
 
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 {/* Loading question count */}
                 <div className="flex justify-between items-center mb-4">
                   <div className="h-4 bg-gray-200 rounded w-32"></div>
@@ -49,8 +68,8 @@ export default function AssessmentPage() {
 
                 {/* Loading question text */}
                 <div className="mb-4">
-                  <div className="h-[22px] bg-gray-200 rounded-lg mb-2"></div>
-                  <div className="h-[22px] bg-gray-200 rounded-lg w-3/4"></div>
+                  <div className="h-5 sm:h-[22px] bg-gray-200 rounded-lg mb-2"></div>
+                  <div className="h-5 sm:h-[22px] bg-gray-200 rounded-lg w-3/4"></div>
                 </div>
 
                 {/* Loading options */}
@@ -58,11 +77,11 @@ export default function AssessmentPage() {
                   {[1, 2, 3, 4].map((i) => (
                     <div
                       key={i}
-                      className="p-4 border border-[#E5E7EB] rounded-[8px]"
+                      className="p-3 sm:p-4 border border-[#E5E7EB] rounded-[8px]"
                     >
                       <div className="flex items-center">
-                        <div className="w-5 h-5 rounded-full border-2 border-gray-300 mr-3"></div>
-                        <div className="h-5 bg-gray-200 rounded-lg w-full"></div>
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-gray-300 mr-2 sm:mr-3 flex-shrink-0"></div>
+                        <div className="h-4 sm:h-5 bg-gray-200 rounded-lg w-full"></div>
                       </div>
                     </div>
                   ))}
@@ -70,9 +89,9 @@ export default function AssessmentPage() {
               </div>
 
               {/* Loading navigation buttons */}
-              <div className="flex justify-between pt-4 border-t border-[#E5E7EB]">
-                <div className="h-10 w-[100px] bg-gray-200 rounded-[8px]"></div>
-                <div className="h-10 w-[100px] bg-gray-200 rounded-[8px]"></div>
+              <div className="flex justify-between pt-3 sm:pt-4 border-t border-[#E5E7EB] gap-3">
+                <div className="h-9 sm:h-10 w-20 sm:w-[100px] bg-gray-200 rounded-[8px]"></div>
+                <div className="h-9 sm:h-10 w-20 sm:w-[100px] bg-gray-200 rounded-[8px]"></div>
               </div>
             </div>
           </div>
@@ -84,8 +103,8 @@ export default function AssessmentPage() {
   // Show error state if fetch fails
   if (isError || !quizData) {
     return (
-      <div className="min-h-screen bg-[#F9F9F9] flex items-center justify-center">
-        <div className="text-[18px] font-lato font-semibold text-red-500">
+      <div className="min-h-screen bg-[#F9F9F9] flex items-center justify-center px-4">
+        <div className="text-base sm:text-[18px] font-lato font-semibold text-red-500 text-center">
           Failed to load assessment. Please try again later.
         </div>
       </div>
@@ -127,41 +146,73 @@ export default function AssessmentPage() {
 
   const handleSubmit = () => {
     const finalScore = calculateScore();
+    const userDetails = getUserDetailsFromToken();
+    const completionTime = new Date().toISOString();
+
+    // Calculate time taken in seconds
+    const timeTaken = assessmentStartTime
+      ? Math.round(
+        (new Date(completionTime) - new Date(assessmentStartTime)) / 1000
+      )
+      : 0;
+
+    // Determine pass/fail (assuming 60% is passing)
+    const passingScore = process.env.NEXT_PUBLIC_ASSESSMENT_PASSING_SCORE || 100;
+    const passFail = finalScore >= passingScore ? "pass" : "fail";
+
+    // Track assessment submission event
+    capture("assessment_submit", {
+      user_id: userDetails?.sub,
+      assessment_id: quizData?.quiz_id || presentationId,
+      score: finalScore,
+      pass_fail: passFail,
+      time_taken: timeTaken,
+    });
+
+    // Track module completion event
+    capture("module_complete", {
+      user_id: userDetails?.sub,
+      module_id: presentationId,
+      completion_time: completionTime,
+      score: finalScore,
+      // total_questions: quizData?.questions?.length,
+    });
+
     setScore(finalScore);
     setIsSubmitted(true);
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] pt-5 pb-8 px-10">
-       <BreadCrumb
-          paths={[
-            { path: "/", label: "All Courses" },
-            {
-              path: `/lectures/${presentationId}`,
-              label: "Lectures",
-            },
-            { path: "", label: "Assessment" },
-          ]}
-        />
-      <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
-        <div className="p-8">
-          <h1 className="text-[24px] font-lato font-bold mb-8 text-center text-[#1A1C29]">
+    <div className="min-h-screen bg-[#F9F9F9] pt-3 sm:pt-5 pb-4 sm:pb-8 px-4 sm:px-10">
+      <BreadCrumb
+        paths={[
+          { path: "/", label: "All Courses" },
+          {
+            path: `/lectures/${presentationId}`,
+            label: "Lectures",
+          },
+          { path: "", label: "Assessment" },
+        ]}
+      />
+      <div className="max-w-4xl mx-auto bg-white rounded-lg sm:rounded-xl border border-[#E5E7EB] overflow-hidden">
+        <div className="p-4 sm:p-8">
+          <h1 className="text-xl sm:text-[24px] font-lato font-bold mb-6 sm:mb-8 text-center text-[#1A1C29]">
             {quizData.title}
           </h1>
 
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-[14px] font-lato font-medium text-[#667085]">
+          <div className="mb-4 sm:mb-6">
+            <div className="flex justify-between items-center mb-3 sm:mb-4">
+              <span className="text-sm sm:text-[14px] font-lato font-medium text-[#667085]">
                 Question {currentQuestionIndex + 1} of{" "}
                 {quizData?.questions?.length}
               </span>
             </div>
 
-            <h2 className="text-[18px] font-lato font-semibold mb-4 text-[#1A1C29]">
+            <h2 className="text-base sm:text-[18px] font-lato font-semibold mb-3 sm:mb-4 text-[#1A1C29] leading-relaxed">
               {currentQuestion?.question_text}
             </h2>
 
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {Object.entries(JSON.parse(currentQuestion?.options)).map(
                 ([option, text]) => (
                   <div
@@ -169,25 +220,23 @@ export default function AssessmentPage() {
                     onClick={() =>
                       handleAnswer(currentQuestion.question_id, option)
                     }
-                    className={`p-4 border rounded-[8px] cursor-pointer transition-colors ${
-                      answers[currentQuestion.question_id] === option
+                    className={`p-3 sm:p-4 border rounded-[8px] cursor-pointer transition-colors ${answers[currentQuestion.question_id] === option
                         ? "border-[#744FFF] bg-[#F3EDFF]"
                         : "border-[#E5E7EB] hover:border-[#744FFF]"
-                    }`}
+                      }`}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-start sm:items-center">
                       <div
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-3 ${
-                          answers[currentQuestion.question_id] === option
+                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center mr-2 sm:mr-3 mt-0.5 sm:mt-0 flex-shrink-0 ${answers[currentQuestion.question_id] === option
                             ? "border-[#744FFF] bg-[#744FFF]"
                             : "border-[#667085]"
-                        }`}
+                          }`}
                       >
                         {answers[currentQuestion.question_id] === option && (
-                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white"></div>
                         )}
                       </div>
-                      <span className="font-lato font-medium text-[#1A1C29]">
+                      <span className="font-lato font-medium text-[#1A1C29] text-sm sm:text-base leading-relaxed">
                         {option}. {text}
                       </span>
                     </div>
@@ -197,16 +246,15 @@ export default function AssessmentPage() {
             </div>
           </div>
 
-          <div className="flex justify-between pt-4 border-t border-[#E5E7EB]">
+          <div className="flex justify-between pt-3 sm:pt-4 border-t border-[#E5E7EB] gap-3">
             <Button
               onClick={handlePrevious}
               disabled={currentQuestionIndex === 0}
               variant="secondary"
-              className={`px-6 py-3 rounded-[8px] font-lato font-medium text-[14px] ${
-                currentQuestionIndex === 0
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[8px] font-lato font-medium text-sm sm:text-[14px] flex-1 sm:flex-none ${currentQuestionIndex === 0
                   ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
                   : "bg-white text-[#667085] hover:bg-gray-50 cursor-pointer border border-[#E5E7EB]"
-              }`}
+                }`}
             >
               Previous
             </Button>
@@ -216,24 +264,23 @@ export default function AssessmentPage() {
                 onClick={handleSubmit}
                 disabled={!answers[currentQuestion.question_id]}
                 variant="primary"
-                className={`px-6 py-3 rounded-[8px] font-lato font-medium text-[14px] ${
-                  !answers[currentQuestion.question_id]
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[8px] font-lato font-medium text-sm sm:text-[14px] flex-1 sm:flex-none ${!answers[currentQuestion.question_id]
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-[#744FFF] text-white hover:bg-[#6B46E5] cursor-pointer"
-                }`}
+                  }`}
               >
-                Submit Assessment
+                <span className="hidden sm:inline">Submit Assessment</span>
+                <span className="sm:hidden">Submit</span>
               </Button>
             ) : (
               <Button
                 onClick={handleNext}
                 disabled={!answers[currentQuestion.question_id]}
                 variant="primary"
-                className={`px-6 py-3 rounded-[8px] font-lato font-medium text-[14px] ${
-                  !answers[currentQuestion.question_id]
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[8px] font-lato font-medium text-sm sm:text-[14px] flex-1 sm:flex-none ${!answers[currentQuestion.question_id]
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-[#744FFF] text-white hover:bg-[#6B46E5] cursor-pointer"
-                }`}
+                  }`}
               >
                 Next
               </Button>

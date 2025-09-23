@@ -1,0 +1,79 @@
+/* Fullscreen styles */
+:fullscreen {
+    background: #000;
+}
+
+:-webkit-full-screen {
+    background: #000;
+}
+
+:-moz-full-screen {
+    background: #000;
+}
+
+:-ms-fullscreen {
+    background: #000;
+}
+
+/* Hide scrollbars in fullscreen */
+:fullscreen body {
+    overflow: hidden;
+}
+
+:-webkit-full-screen body {
+    overflow: hidden;
+}
+
+:-moz-full-screen body {
+    overflow: hidden;
+}
+
+:-ms-fullscreen body {
+    overflow: hidden;
+}
+
+/* Landscape orientation styles */
+@media screen and (orientation: landscape) and (max-width: 956px) {
+    /* Ensure scrolling is always available */
+    body, html {
+        overflow: auto !important;
+        height: auto !important;
+        position: static !important;
+    }
+
+    /* Hide browser UI elements when possible */
+    .fullscreen-landscape {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999;
+    }
+}
+
+/* Force scrolling on mobile devices */
+@media screen and (max-width: 956px) {
+    body {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* PWA-like experience */
+@media all and (display-mode: standalone) {
+    body {
+        overflow-x: hidden;
+    }
+}
+
+/* iOS Safari specific */
+@supports (-webkit-touch-callout: none) {
+    .ios-fullscreen {
+        /* iOS Safari fullscreen adjustments */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+}

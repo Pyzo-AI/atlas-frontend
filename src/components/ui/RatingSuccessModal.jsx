@@ -15,7 +15,7 @@ const RatingSuccessModal = ({ isOpen, onClose }) => {
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-xl w-[420px]">
+      <div className="relative bg-white rounded-2xl shadow-xl w-full md:w-[420px] mx-4 md:mx-0">
         {/* Close Button */}
         <button
           onClick={onClose}

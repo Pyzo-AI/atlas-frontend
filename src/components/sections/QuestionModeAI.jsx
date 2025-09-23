@@ -4,13 +4,15 @@ import React, {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import { toast } from "react-toastify";
 import chat_star from "../../assets/svg/chat_star.svg";
 import Image from "next/image";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 
 const QuestionModeAI = forwardRef(
-  ({ isAudioPlaying, isLoading, isConnected, avatarUrl }, ref) => {
+  (
+    { isAudioPlaying, isLoading, isConnected, isMobile = false, avatarUrl },
+    ref
+  ) => {
     // ElevenLabs handles audio automatically
     useImperativeHandle(ref, () => ({
       // No manual audio control needed
@@ -19,7 +21,7 @@ const QuestionModeAI = forwardRef(
     const userName = getUserDetailsFromToken()?.name;
 
     return (
-      <div className="p-3 bg-white rounded-xl border border-[#E5E7EB]">
+      <div className="p-1 md:p-3 bg-white rounded-xl border border-[#E5E7EB]">
         <div
           className="w-full aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center"
           style={{
@@ -47,17 +49,23 @@ const QuestionModeAI = forwardRef(
               )}
 
               {/* Main Avatar */}
-              <div className="w-16 h-16 rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10 flex items-center justify-center bg-white/20">
+              <div
+                className={`${
+                  isMobile ? "w-10 h-10" : "w-16 h-16"
+                } rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10 flex items-center justify-center bg-white/20`}
+              >
                 {avatarUrl ? (
                   <Image
                     src={avatarUrl}
                     alt="Profile picture"
-                    width={64}
-                    height={64}
-                    className="rounded-full object-cover"
+                    width={isMobile ? 40 : 64}
+                    height={isMobile ? 40 : 64}
+                    className="rounded-full object-cover w-full h-full"
                   />
                 ) : (
-                  <span className="text-white text-xl font-semibold z-50">
+                  <span className={`text-white font-semibold z-50 ${
+                    isMobile ? "text-sm" : "text-xl"
+                  }`}>
                     {userName?.charAt(0)?.toUpperCase() || "U"}
                   </span>
                 )}
@@ -66,7 +74,11 @@ const QuestionModeAI = forwardRef(
 
             {/* Text Content */}
             {isLoading ? (
-              <div className="flex flex-col items-center space-y-3">
+              <div
+                className={`flex flex-col items-center ${
+                  isMobile ? "space-y-1" : "space-y-3"
+                }`}
+              >
                 {/* Thinking Animation */}
                 <div className="relative">
                   <div className="flex items-center space-x-1">
@@ -89,11 +101,11 @@ const QuestionModeAI = forwardRef(
                 </p>
               </div>
             ) : isConnected ? (
-              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white">
+              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block">
                 {isAudioPlaying ? "Speaking..." : "Listening..."}
               </p>
             ) : (
-              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white">
+              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block">
                 {
                   "Ask me anything about the presentation, and I'll help with the answers."
                 }
