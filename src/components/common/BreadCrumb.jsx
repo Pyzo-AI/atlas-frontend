@@ -2,10 +2,12 @@ import React from "react";
 import back_arrow from "../../assets/svg/back_arrow.svg";
 import BreadCrumbConnect from "../../assets/svg/BreadCrumbConnect.svg";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function BreadCrumb({ paths = [] }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isLecturesPage = pathname?.startsWith("/lectures/");
   const handleBack = () => {
     router.back();
   };
@@ -18,7 +20,11 @@ export default function BreadCrumb({ paths = [] }) {
   const title = paths[paths.length - 1];
 
   return (
-    <div className="invisible md:visible flex items-center gap-[12px] mb-[-12px] md:mb-4">
+    <div
+      className={`flex items-center gap-[12px] mt-1 lg:mt-0 ${
+        isLecturesPage ? "mb-0 lg:mb-4" : "mb-4"
+      }`}
+    >
       <Image
         src={back_arrow}
         alt="back_arrow"
