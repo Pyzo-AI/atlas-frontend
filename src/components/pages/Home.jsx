@@ -21,6 +21,7 @@ const presentations = {
       author: "Dr. Ananya Mehta",
       status: "start",
       isCompleted: false,
+      isPresentationCompleted: false,
       image:
         "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
       lock_info: {
@@ -33,8 +34,9 @@ const presentations = {
       presentation_id: 2,
       title: "Basics of Financial Planning",
       author: "Ms. Shreya Iyer",
-      status: "completed",
+      status: "start",
       isCompleted: true,
+      isPresentationCompleted: false,
       image:
         "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
       lock_info: {
@@ -52,6 +54,7 @@ const presentations = {
       author: "Mr. Arjun Deshmukh",
       status: "progress",
       isCompleted: false,
+      isPresentationCompleted: false,
       image:
         "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop",
       lock_info: {
@@ -69,6 +72,7 @@ const presentations = {
       author: "Dr. Kavita Nair",
       status: "completed",
       isCompleted: true,
+      isPresentationCompleted: true,
       image:
         "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=300&fit=crop",
       lock_info: {
@@ -85,6 +89,7 @@ const presentations = {
       author: "Mr. Kunal Verma",
       status: "start",
       isCompleted: false,
+      isPresentationCompleted: false,
       image:
         "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
       lock_info: {
@@ -99,6 +104,7 @@ const presentations = {
       author: "Dr. Sneha Reddy",
       status: "progress",
       isCompleted: false,
+      isPresentationCompleted: false,
       image:
         "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=300&fit=crop",
       lock_info: {
@@ -116,6 +122,7 @@ const presentations = {
       author: "Prof. Aditya Bansal",
       status: "start",
       isCompleted: false,
+      isPresentationCompleted: false,
       image:
         "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop",
       lock_info: {
@@ -130,6 +137,7 @@ const presentations = {
       author: "Prof. Neeraj Sharma",
       status: "progress",
       isCompleted: false,
+      isPresentationCompleted: false,
       image:
         "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=400&h=300&fit=crop",
       lock_info: {
@@ -158,7 +166,7 @@ const PresentationCard = ({ presentation, onClick }) => {
   };
 
   const getBadgeInfo = () => {
-    if (presentation.isCompleted || presentation.status === "completed") {
+    if (presentation.isPresentationCompleted) {
       return {
         icon: completed,
         color: "#008236",
@@ -385,7 +393,7 @@ const Home = () => {
   }
 
   const completedCount = presentations?.data?.filter(
-    (p) => p.isCompleted || p.status === "completed"
+    (p) => p.isPresentationCompleted
   ).length;
   const totalCount = presentations?.data?.length;
 
@@ -533,14 +541,13 @@ const Home = () => {
               .filter((p) => {
                 if (filter === "all") return true;
                 if (filter === "completed")
-                  return p.isCompleted || p.status === "completed";
+                  return p.isPresentationCompleted;
                 if (filter === "overdue")
                   return p.due_info?.status === "overdue";
                 if (filter === "due-soon")
                   return (
                     p.due_info?.status === "due" &&
-                    !p.isCompleted &&
-                    p.status !== "completed"
+                    !p.isPresentationCompleted
                   );
                 if (filter === "locked")
                   return p.lock_info?.status === "locked";
