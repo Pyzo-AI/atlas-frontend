@@ -6,126 +6,238 @@ import { useGetPresentationsQuery } from "../../store/api/questionsApi";
 import chat_star from "../../assets/svg/chat_star.svg";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
+import overdue from "../../assets/svg/overdue.svg";
+import locked from "../../assets/svg/locked.svg";
+import unlocked from "../../assets/svg/unlocked.svg";
+import completed from "../../assets/svg/completed.svg";
+import dueSoon from "../../assets/svg/due-soon.svg";
+
+
 // Course data matching Figma design
-const dummyPresentations = [
-  {
-    presentation_id: 1,
-    title: "Introduction to Digital Banking",
-    author: "Dr. Ananya Mehta",
-    status: "start",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 2,
-    title: "Basics of Financial Planning",
-    author: "Ms. Shreya Iyer",
-    status: "completed",
-    isCompleted: true,
-    image:
-      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 3,
-    title: "Customer Service Excellence",
-    author: "Mr. Arjun Deshmukh",
-    status: "progress",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 4,
-    title: "Effective Communication Skills",
-    author: "Dr. Kavita Nair",
-    status: "completed",
-    isCompleted: true,
-    image:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 5,
-    title: "Workplace Ethics & Compliance",
-    author: "Mr. Kunal Verma",
-    status: "start",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 6,
-    title: "Understanding Investment Products",
-    author: "Dr. Sneha Reddy",
-    status: "progress",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 7,
-    title: "Leadership and Team Management",
-    author: "Prof. Aditya Bansal",
-    status: "start",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 8,
-    title: "Time Management for Professionals",
-    author: "Prof. Neeraj Sharma",
-    status: "progress",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=400&h=300&fit=crop",
-  },
-];
+const presentations = {
+  data: [
+    {
+      presentation_id: 1,
+      title: "Introduction to Digital Banking",
+      author: "Dr. Ananya Mehta",
+      status: "start",
+      isCompleted: false,
+      image:
+        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "locked",
+        status_msg: "Unlocks in 2h 4m",
+        unlock_time: "2025-09-25T16:08:00+05:30",
+      },
+    },
+    {
+      presentation_id: 2,
+      title: "Basics of Financial Planning",
+      author: "Ms. Shreya Iyer",
+      status: "completed",
+      isCompleted: true,
+      image:
+        "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "unlocked",
+      },
+      due_info: {
+        status: "due",
+        status_msg: "Due in 2 days",
+        due_time: "2025-09-27T23:59:00+05:30",
+      },
+    },
+    {
+      presentation_id: 3,
+      title: "Customer Service Excellence",
+      author: "Mr. Arjun Deshmukh",
+      status: "progress",
+      isCompleted: false,
+      image:
+        "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "unlocked",
+      },
+      due_info: {
+        status: "overdue",
+        status_msg: "Overdue by 2 days",
+        due_time: "2025-09-23T23:59:00+05:30",
+      },
+    },
+    {
+      presentation_id: 4,
+      title: "Effective Communication Skills",
+      author: "Dr. Kavita Nair",
+      status: "completed",
+      isCompleted: true,
+      image:
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "unlocked",
+      },
+      due_info: {
+        status: "not_set",
+        status_msg: "No due date",
+      },
+    },
+    {
+      presentation_id: 5,
+      title: "Workplace Ethics & Compliance",
+      author: "Mr. Kunal Verma",
+      status: "start",
+      isCompleted: false,
+      image:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "locked",
+        status_msg: "Unlocks in 3h 10m",
+        unlock_time: "2025-09-25T17:14:00+05:30",
+      },
+    },
+    {
+      presentation_id: 6,
+      title: "Understanding Investment Products",
+      author: "Dr. Sneha Reddy",
+      status: "progress",
+      isCompleted: false,
+      image:
+        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "unlocked",
+      },
+      due_info: {
+        status: "due",
+        status_msg: "Due in 1 week",
+        due_time: "2025-10-02T23:59:00+05:30",
+      },
+    },
+    {
+      presentation_id: 7,
+      title: "Leadership and Team Management",
+      author: "Prof. Aditya Bansal",
+      status: "start",
+      isCompleted: false,
+      image:
+        "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "locked",
+        status_msg: "Unlocks in 2h 30m",
+        unlock_time: "2025-09-25T16:34:00+05:30",
+      },
+    },
+    {
+      presentation_id: 8,
+      title: "Time Management for Professionals",
+      author: "Prof. Neeraj Sharma",
+      status: "progress",
+      isCompleted: false,
+      image:
+        "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "unlocked",
+      },
+      due_info: {
+        status: "overdue",
+        status_msg: "Overdue by 1 day",
+        due_time: "2025-09-24T23:59:00+05:30",
+      },
+    },
+  ],
+};
 
 const PresentationCard = ({ presentation, onClick }) => {
-  const getStatusBadge = () => {
-    switch (presentation.status) {
-      case "completed":
-        return (
-          <div className="flex items-center justify-center px-[6px] py-[2.5px] bg-[#DCFCE7] rounded-[10px]">
-            <span className="text-[10px] font-lato font-normal leading-[12px] text-[#008236]">
-              Completed
-            </span>
-          </div>
-        );
-      case "progress":
-        return (
-          <div className="flex items-center justify-center px-[6px] py-[2.5px] bg-[#DBEAFE] rounded-[10px]">
-            <span className="text-[10px] font-lato font-normal leading-[12px] text-[#1447E6]">
-              In Progress
-            </span>
-          </div>
-        );
-      default:
-        return (
-          <div className="flex items-center justify-center px-[6px] py-[2.5px] bg-[#F3EDFF] rounded-[10px]">
-            <span className="text-[10px] font-lato font-normal leading-[12px] text-[#685EDD]">
-              Start Learning
-            </span>
-          </div>
-        );
-    }
+  const calculateTimeDifference = (targetTime) => {
+    const now = new Date();
+    const target = new Date(targetTime);
+    const diff = Math.abs(target - now);
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${days}D: ${hours}H: ${minutes}M`;
   };
+
+  const getBadgeInfo = () => {
+    if (presentation.isCompleted || presentation.status === "completed") {
+      return {
+        icon: completed,
+        color: "#008236",
+        title: "Completed",
+        subtitle: "Completed 3/10/2024"
+      };
+    }
+    
+    if (presentation.due_info?.status === "overdue" && presentation.due_info?.due_time) {
+      return {
+        icon: overdue,
+        color: "#F04638",
+        title: "Overdue",
+        subtitle: `Overdue by ${calculateTimeDifference(presentation.due_info.due_time)}`
+      };
+    }
+    
+    if (presentation.due_info?.status === "due" && presentation.due_info?.due_time) {
+      return {
+        icon: dueSoon,
+        color: "#E08910",
+        title: "Due Soon",
+        subtitle: `Due in ${calculateTimeDifference(presentation.due_info.due_time)}`
+      };
+    }
+    
+    if (presentation.lock_info?.status === "locked" && presentation.lock_info?.unlock_time) {
+      return {
+        icon: locked,
+        color: "#3F68E8",
+        title: "Locked",
+        subtitle: `Unlocks in ${calculateTimeDifference(presentation.lock_info.unlock_time)}`
+      };
+    }
+    
+    return {
+      icon: unlocked,
+      color: "#685EDD",
+      title: "Unlocked",
+      subtitle: presentation.due_info?.due_time ? `Due in ${calculateTimeDifference(presentation.due_info.due_time)}` : "No due date"
+    };
+  };
+
+
+
+  const badgeInfo = getBadgeInfo();
+  const isLocked = presentation.lock_info?.status === "locked";
 
   return (
     <div
-      className="flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)] transition-shadow duration-300"
-      onClick={onClick}
+      className={`relative flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] transition-shadow duration-300 ${
+        isLocked ? " cursor-not-allowed" : "cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)]"
+      }`}
+      onClick={isLocked ? undefined : onClick}
     >
+      {/* badge */}
+      <div className="absolute top-4.5 right-4.5 bg-[#FEF3F359] backdrop-blur-lg p-1.5 rounded z-10">
+        <div className="flex items-center gap-1" style={{ color: badgeInfo.color }}>
+          <Image width={12} height={12} src={badgeInfo.icon} alt={badgeInfo.title} />
+          <p className="font-lato font-semibold text-[10px] leading-[100%] tracking-[0em]">
+            {badgeInfo.title}
+          </p>
+        </div>
+        <p className="mt-1 font-lato font-normal text-[10px] leading-[100%] tracking-[0em] text-[#111827]">
+          {badgeInfo.subtitle}
+        </p>
+      </div>
       <div className="flex flex-col items-start gap-[12px] w-full flex-1">
         {/* Thumbnail */}
         <div className="w-full flex-1 bg-[#F3EDFF] rounded-[8px] overflow-hidden relative">
-        {presentation?.image && presentation.image.trim() !== "" && <Image
-            src={presentation.image}
-            alt={presentation?.title}
-            fill
-            className="object-cover"
-          />}
+          {presentation?.image && presentation.image.trim() !== "" && (
+            <Image
+              src={presentation.image}
+              alt={presentation?.title}
+              fill
+              className="object-cover"
+            />
+          )}
         </div>
 
         {/* Content */}
@@ -153,7 +265,7 @@ const Home = () => {
   const [filter, setFilter] = useState("all");
   const { capture } = usePostHog();
   const {
-    data: presentations = [],
+    data: presentation = [],
     isLoading: loading,
     error,
   } = useGetPresentationsQuery(undefined, {
@@ -168,8 +280,7 @@ const Home = () => {
 
     // Track module start event
     capture("module_start", {
-      user_id:
-        userDetails?.sub,
+      user_id: userDetails?.sub,
       module_id: presentationId,
       // module_title: selectedPresentation?.title,
       // module_author: selectedPresentation?.author,
