@@ -167,7 +167,7 @@ export default function AssessmentPage() {
       await submitCompletionStatus({
         presentationId,
         isPresentationCompleted: passFail === "pass",
-        userId: userDetails?.sub,
+        user_id: userDetails?.sub,
       }).unwrap();
 
       // Track assessment submission event

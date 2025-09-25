@@ -73,6 +73,7 @@ const presentations = {
       status: "completed",
       isCompleted: true,
       isPresentationCompleted: true,
+      presentationCompletedDate: "2024-10-06T14:30:00+05:30",
       image:
         "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=300&fit=crop",
       lock_info: {
@@ -166,16 +167,34 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    return `${days}D: ${hours}H: ${minutes}M`;
+    return `${days}D:${hours}H:${minutes}M:${seconds}S`;
   };
 
   const getBadgeInfo = () => {
     if (presentation.isPresentationCompleted) {
+      const completedDate = presentation.presentationCompletedDate 
+        ? new Date(presentation.presentationCompletedDate).toLocaleDateString()
+        : "Unknown date";
       return {
         icon: completed,
         color: "#008236",
         title: "Completed",
-        subtitle: "Completed 3/10/2024",
+        subtitle: `Completed ${completedDate}`,
+      };
+    }
+
+    // Check lock status first - highest priority
+    if (
+      presentation.lock_info?.status === "locked" &&
+      presentation.lock_info?.unlock_time
+    ) {
+      return {
+        icon: locked,
+        color: "#3F68E8",
+        title: "Locked",
+        subtitle: `Unlocks in ${calculateTimeDifference(
+          presentation.lock_info.unlock_time
+        )}`,
       };
     }
 
@@ -203,20 +222,6 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
         title: "Due Soon",
         subtitle: `Due in ${calculateTimeDifference(
           presentation.due_info.due_time
-        )}`,
-      };
-    }
-
-    if (
-      presentation.lock_info?.status === "locked" &&
-      presentation.lock_info?.unlock_time
-    ) {
-      return {
-        icon: locked,
-        color: "#3F68E8",
-        title: "Locked",
-        subtitle: `Unlocks in ${calculateTimeDifference(
-          presentation.lock_info.unlock_time
         )}`,
       };
     }
@@ -311,7 +316,7 @@ const Home = () => {
     return () => clearInterval(timer);
   }, []);
   const {
-    data: presentation = [],
+    data: presentations = [],
     isLoading: loading,
     error,
   } = useGetPresentationsQuery(undefined, {
