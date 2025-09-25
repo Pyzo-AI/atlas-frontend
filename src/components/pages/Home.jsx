@@ -12,7 +12,6 @@ import unlocked from "../../assets/svg/unlocked.svg";
 import completed from "../../assets/svg/completed.svg";
 import dueSoon from "../../assets/svg/due-soon.svg";
 
-
 // Course data matching Figma design
 const presentations = {
   data: [
@@ -150,11 +149,11 @@ const PresentationCard = ({ presentation, onClick }) => {
     const now = new Date();
     const target = new Date(targetTime);
     const diff = Math.abs(target - now);
-    
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     return `${days}D: ${hours}H: ${minutes}M`;
   };
 
@@ -164,46 +163,61 @@ const PresentationCard = ({ presentation, onClick }) => {
         icon: completed,
         color: "#008236",
         title: "Completed",
-        subtitle: "Completed 3/10/2024"
+        subtitle: "Completed 3/10/2024",
       };
     }
-    
-    if (presentation.due_info?.status === "overdue" && presentation.due_info?.due_time) {
+
+    if (
+      presentation.due_info?.status === "overdue" &&
+      presentation.due_info?.due_time
+    ) {
       return {
         icon: overdue,
         color: "#F04638",
         title: "Overdue",
-        subtitle: `Overdue by ${calculateTimeDifference(presentation.due_info.due_time)}`
+        subtitle: `Overdue by ${calculateTimeDifference(
+          presentation.due_info.due_time
+        )}`,
       };
     }
-    
-    if (presentation.due_info?.status === "due" && presentation.due_info?.due_time) {
+
+    if (
+      presentation.due_info?.status === "due" &&
+      presentation.due_info?.due_time
+    ) {
       return {
         icon: dueSoon,
         color: "#E08910",
         title: "Due Soon",
-        subtitle: `Due in ${calculateTimeDifference(presentation.due_info.due_time)}`
+        subtitle: `Due in ${calculateTimeDifference(
+          presentation.due_info.due_time
+        )}`,
       };
     }
-    
-    if (presentation.lock_info?.status === "locked" && presentation.lock_info?.unlock_time) {
+
+    if (
+      presentation.lock_info?.status === "locked" &&
+      presentation.lock_info?.unlock_time
+    ) {
       return {
         icon: locked,
         color: "#3F68E8",
         title: "Locked",
-        subtitle: `Unlocks in ${calculateTimeDifference(presentation.lock_info.unlock_time)}`
+        subtitle: `Unlocks in ${calculateTimeDifference(
+          presentation.lock_info.unlock_time
+        )}`,
       };
     }
-    
+
     return {
       icon: unlocked,
       color: "#685EDD",
       title: "Unlocked",
-      subtitle: presentation.due_info?.due_time ? `Due in ${calculateTimeDifference(presentation.due_info.due_time)}` : "No due date"
+      subtitle: presentation.due_info?.due_time
+        ? `Due in ${calculateTimeDifference(presentation.due_info.due_time)}`
+        : "No due date",
     };
   };
-
-
 
   const badgeInfo = getBadgeInfo();
   const isLocked = presentation.lock_info?.status === "locked";
@@ -211,14 +225,24 @@ const PresentationCard = ({ presentation, onClick }) => {
   return (
     <div
       className={`relative flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] transition-shadow duration-300 ${
-        isLocked ? " cursor-not-allowed" : "cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)]"
+        isLocked
+          ? " cursor-not-allowed"
+          : "cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)]"
       }`}
       onClick={isLocked ? undefined : onClick}
     >
       {/* badge */}
-      <div className="absolute top-4.5 right-4.5 bg-[#FEF3F359] backdrop-blur-lg p-1.5 rounded z-10">
-        <div className="flex items-center gap-1" style={{ color: badgeInfo.color }}>
-          <Image width={12} height={12} src={badgeInfo.icon} alt={badgeInfo.title} />
+      <div className="absolute top-4.5 right-4.5 bg-[#FEF3F359] backdrop-blur-lg p-1.5 rounded z-2">
+        <div
+          className="flex items-center gap-1"
+          style={{ color: badgeInfo.color }}
+        >
+          <Image
+            width={12}
+            height={12}
+            src={badgeInfo.icon}
+            alt={badgeInfo.title}
+          />
           <p className="font-lato font-semibold text-[10px] leading-[100%] tracking-[0em]">
             {badgeInfo.title}
           </p>
@@ -263,6 +287,7 @@ const PresentationCard = ({ presentation, onClick }) => {
 const Home = () => {
   const router = useRouter();
   const [filter, setFilter] = useState("all");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { capture } = usePostHog();
   const {
     data: presentation = [],
@@ -402,63 +427,127 @@ const Home = () => {
             Available Courses
           </h2>
 
-          {/* Tabs */}
-          {/* <div className="flex items-start p-1 w-[234px] h-[32px] bg-white border border-[#E0E2E7] rounded-[6px]">
-            <button
-              onClick={() => setFilter("all")}
-              className={`flex justify-center items-center px-[8px] py-[2px] gap-[8px] flex-1 h-[22px] rounded-[4px] cursor-pointer ${
-                filter === "all" ? "bg-[#744FFF]" : ""
-              }`}
-            >
-              <span
-                className={`font-lato font-medium text-[12px] leading-[20px] ${
-                  filter === "all" ? "text-white" : "text-[#667085]"
+          {/* Desktop Tabs */}
+          <div className="hidden lg:flex items-start p-1 w-auto h-[32px] bg-white border border-[#E0E2E7] rounded-[6px] gap-1">
+            {[
+              "all",
+              "overdue",
+              "due-soon",
+              "unlocked",
+              "locked",
+              "completed",
+            ].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${
+                  filter === tab ? "bg-[#744FFF]" : ""
                 }`}
               >
-                All
-              </span>
-            </button>
+                <span
+                  className={`font-lato font-medium text-[10px] leading-[20px] whitespace-nowrap ${
+                    filter === tab ? "text-white" : "text-[#667085]"
+                  }`}
+                >
+                  {tab === "all"
+                    ? "All"
+                    : tab === "overdue"
+                    ? "Overdue"
+                    : tab === "due-soon"
+                    ? "Due Soon"
+                    : tab === "unlocked"
+                    ? "Unlocked"
+                    : tab === "locked"
+                    ? "Locked"
+                    : "Completed"}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Mobile/Tablet Dropdown */}
+          <div className="relative lg:hidden">
             <button
-              onClick={() => setFilter("in-progress")}
-              className={`flex justify-center items-center px-[12px] py-[6px] gap-[8px] flex-1 h-[22px] rounded-[4px] cursor-pointer ${
-                filter === "in-progress" ? "bg-[#744FFF]" : ""
-              }`}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center justify-between px-3 py-2 w-28 h-[30px] bg-white border border-[#E0E2E7] rounded-[6px]"
             >
-              <span
-                className={`font-lato font-medium text-[12px] leading-[20px] whitespace-nowrap ${
-                  filter === "in-progress" ? "text-white" : "text-[#667085]"
-                }`}
-              >
-                In Progress
+              <span className="font-lato font-medium text-[12px] text-[#667085]">
+                {filter === "all"
+                  ? "All"
+                  : filter === "overdue"
+                  ? "Overdue"
+                  : filter === "due-soon"
+                  ? "Due Soon"
+                  : filter === "unlocked"
+                  ? "Unlocked"
+                  : filter === "locked"
+                  ? "Locked"
+                  : "Completed"}
               </span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
-            <button
-              onClick={() => setFilter("completed")}
-              className={`flex justify-center items-center px-[12px] py-[6px] gap-[8px] flex-1 h-[22px] rounded-[4px] cursor-pointer ${
-                filter === "completed" ? "bg-[#744FFF]" : ""
-              }`}
-            >
-              <span
-                className={`font-lato font-medium text-[12px] leading-[20px] ${
-                  filter === "completed" ? "text-white" : "text-[#667085]"
-                }`}
-              >
-                Completed
-              </span>
-            </button>
-          </div> */}
+            {isDropdownOpen && (
+              <div className="absolute top-full mt-1 w-28 bg-white border border-[#E0E2E7] rounded-[6px] shadow-lg z-10">
+                {[
+                  "all",
+                  "overdue",
+                  "due-soon",
+                  "unlocked",
+                  "locked",
+                  "completed",
+                ].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setFilter(tab);
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${
+                      filter === tab ? "bg-[#744FFF] text-white" : "text-[#667085]"
+                    }`}
+                  >
+                    {tab === "all"
+                      ? "All"
+                      : tab === "overdue"
+                      ? "Overdue"
+                      : tab === "due-soon"
+                      ? "Due Soon"
+                      : tab === "unlocked"
+                      ? "Unlocked"
+                      : tab === "locked"
+                      ? "Locked"
+                      : "Completed"}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Course Grid */}
         <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-[12px] w-full">
             {presentations?.data
-              .filter(
-                (p) =>
-                  filter === "all" ||
-                  (filter === "completed" && p.isCompleted) ||
-                  (filter === "in-progress" && !p.isCompleted)
-              )
+              .filter((p) => {
+                if (filter === "all") return true;
+                if (filter === "completed")
+                  return p.isCompleted || p.status === "completed";
+                if (filter === "overdue")
+                  return p.due_info?.status === "overdue";
+                if (filter === "due-soon")
+                  return (
+                    p.due_info?.status === "due" &&
+                    !p.isCompleted &&
+                    p.status !== "completed"
+                  );
+                if (filter === "locked")
+                  return p.lock_info?.status === "locked";
+                if (filter === "unlocked")
+                  return p.lock_info?.status === "unlocked";
+                return true;
+              })
               .map((presentation) => (
                 <PresentationCard
                   key={presentation.presentation_id}
