@@ -152,15 +152,19 @@ const presentations = {
   ],
 };
 
-const PresentationCard = ({ presentation, onClick }) => {
+const PresentationCard = ({ presentation, onClick, currentTime }) => {
   const calculateTimeDifference = (targetTime) => {
-    const now = new Date();
     const target = new Date(targetTime);
-    const diff = Math.abs(target - now);
+    const diff = target - currentTime;
+
+    if (diff <= 0) {
+      return "0D: 0H: 0M: 0S";
+    }
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
     return `${days}D: ${hours}H: ${minutes}M`;
   };
@@ -296,7 +300,16 @@ const Home = () => {
   const router = useRouter();
   const [filter, setFilter] = useState("all");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const { capture } = usePostHog();
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
   const {
     data: presentation = [],
     isLoading: loading,
@@ -492,8 +505,18 @@ const Home = () => {
                   ? "Locked"
                   : "Completed"}
               </span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
             {isDropdownOpen && (
@@ -513,7 +536,9 @@ const Home = () => {
                       setIsDropdownOpen(false);
                     }}
                     className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${
-                      filter === tab ? "bg-[#744FFF] text-white" : "text-[#667085]"
+                      filter === tab
+                        ? "bg-[#744FFF] text-white"
+                        : "text-[#667085]"
                     }`}
                   >
                     {tab === "all"
@@ -540,14 +565,12 @@ const Home = () => {
             {presentations?.data
               .filter((p) => {
                 if (filter === "all") return true;
-                if (filter === "completed")
-                  return p.isPresentationCompleted;
+                if (filter === "completed") return p.isPresentationCompleted;
                 if (filter === "overdue")
                   return p.due_info?.status === "overdue";
                 if (filter === "due-soon")
                   return (
-                    p.due_info?.status === "due" &&
-                    !p.isPresentationCompleted
+                    p.due_info?.status === "due" && !p.isPresentationCompleted
                   );
                 if (filter === "locked")
                   return p.lock_info?.status === "locked";
@@ -559,6 +582,7 @@ const Home = () => {
                 <PresentationCard
                   key={presentation.presentation_id}
                   presentation={presentation}
+                  currentTime={currentTime}
                   onClick={() =>
                     handlePresentationClick(presentation.presentation_id)
                   }
