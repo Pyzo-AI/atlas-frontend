@@ -2,11 +2,12 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useGetQuizQuery } from "@/store/api/questionsApi";
+import { useGetQuizQuery, useSubmitCompletionStatusMutation } from "@/store/api/questionsApi";
 import Button from "@/components/common/Button";
 import BreadCrumb from "@/components/common/BreadCrumb";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
+import { toast } from "react-toastify";
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function AssessmentPage() {
   const [score, setScore] = useState(0);
   const [assessmentStartTime, setAssessmentStartTime] = useState(null);
   const { capture } = usePostHog();
+  const [submitCompletionStatus, { isLoading: isSubmitting }] = useSubmitCompletionStatusMutation();
 
   useEffect(() => {
     if (isSubmitted) {
@@ -144,7 +146,7 @@ export default function AssessmentPage() {
     return Math.round((correct / quizData?.questions?.length) * 100);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const finalScore = calculateScore();
     const userDetails = getUserDetailsFromToken();
     const completionTime = new Date().toISOString();
@@ -157,29 +159,41 @@ export default function AssessmentPage() {
       : 0;
 
     // Determine pass/fail (assuming 60% is passing)
-    const passingScore = process.env.NEXT_PUBLIC_ASSESSMENT_PASSING_SCORE || 100;
+    const passingScore = process.env.NEXT_PUBLIC_ASSESSMENT_PASSING_SCORE || 60;
     const passFail = finalScore >= passingScore ? "pass" : "fail";
 
-    // Track assessment submission event
-    capture("assessment_submit", {
-      user_id: userDetails?.sub,
-      assessment_id: quizData?.quiz_id || presentationId,
-      score: finalScore,
-      pass_fail: passFail,
-      time_taken: timeTaken,
-    });
+    // API call to submit completion status
+    try {
+      await submitCompletionStatus({
+        presentationId,
+        isPresentationCompleted: passFail === "pass",
+        user_id: userDetails?.sub,
+      }).unwrap();
 
-    // Track module completion event
-    capture("module_complete", {
-      user_id: userDetails?.sub,
-      module_id: presentationId,
-      completion_time: completionTime,
-      score: finalScore,
-      // total_questions: quizData?.questions?.length,
-    });
+      // Track assessment submission event
+      capture("assessment_submit", {
+        user_id: userDetails?.sub,
+        assessment_id: quizData?.quiz_id || presentationId,
+        score: finalScore,
+        pass_fail: passFail,
+        time_taken: timeTaken,
+      });
 
-    setScore(finalScore);
-    setIsSubmitted(true);
+      // Track module completion event
+      capture("module_complete", {
+        user_id: userDetails?.sub,
+        module_id: presentationId,
+        completion_time: completionTime,
+        score: finalScore,
+        // total_questions: quizData?.questions?.length,
+      });
+
+      setScore(finalScore);
+      setIsSubmitted(true);
+    } catch (error) {
+      console.log('Error submitting completion status:', error);
+      toast.error("Failed to submit assessment. Please try again.");
+    }
   };
 
   return (
@@ -262,15 +276,15 @@ export default function AssessmentPage() {
             {isLastQuestion ? (
               <Button
                 onClick={handleSubmit}
-                disabled={!answers[currentQuestion.question_id]}
+                disabled={!answers[currentQuestion.question_id] || isSubmitting}
                 variant="primary"
-                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[8px] font-lato font-medium text-sm sm:text-[14px] flex-1 sm:flex-none ${!answers[currentQuestion.question_id]
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[8px] font-lato font-medium text-sm sm:text-[14px] flex-1 sm:flex-none ${!answers[currentQuestion.question_id] || isSubmitting
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-[#744FFF] text-white hover:bg-[#6B46E5] cursor-pointer"
                   }`}
               >
-                <span className="hidden sm:inline">Submit Assessment</span>
-                <span className="sm:hidden">Submit</span>
+                <span className="hidden sm:inline">{isSubmitting ? "Submitting..." : "Submit Assessment"}</span>
+                <span className="sm:hidden">{isSubmitting ? "Submitting..." : "Submit"}</span>
               </Button>
             ) : (
               <Button
