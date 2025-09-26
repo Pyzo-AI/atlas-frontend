@@ -249,7 +249,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
       onClick={isLocked ? undefined : onClick}
     >
       {/* badge */}
-      <div className="absolute top-4.5 right-4.5 bg-[#FEF3F359] backdrop-blur-lg p-1.5 rounded z-2">
+      <div className="absolute top-4.5 right-4.5 bg-[#fff] backdrop-blur-lg p-1.5 rounded z-2">
         <div
           className="flex items-center gap-1"
           style={{ color: badgeInfo.color }}
