@@ -952,6 +952,7 @@ const VideoPanel = forwardRef(
                 setIsJumpedOnChatFromInteractionMode
               }
               isMobile={true}
+              agentId={agentId}
             />
           )}
 
@@ -1164,6 +1165,7 @@ const VideoPanel = forwardRef(
               setIsJumpedOnChatFromInteractionMode={
                 setIsJumpedOnChatFromInteractionMode
               }
+              agentId={agentId}
             />
           )}
 
@@ -1471,6 +1473,7 @@ const VideoPanel = forwardRef(
             setIsJumpedOnChatFromInteractionMode={
               setIsJumpedOnChatFromInteractionMode
             }
+            agentId={agentId}
           />
         ) : isQuestionMode ? (
           <QuestionModeUser
