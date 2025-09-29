@@ -5,6 +5,7 @@ import message from "../../assets/svg/message.svg";
 import chat_star from "../../assets/svg/chat_star.svg";
 import microphone from "../../assets/svg/microphone.svg";
 import Image from "next/image";
+import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup";
 
 const AILearningAssistant = ({
   showChat,
@@ -16,10 +17,34 @@ const AILearningAssistant = ({
 }) => {
   const { isQuestionMode } = useSelector((state) => state.video);
   const dispatch = useDispatch();
+  const [showMicPopup, setShowMicPopup] = useState(false);
 
-  const handleStartQA = () => {
-    dispatch(setIsQuestionMode(true));
-    onStartConversation();
+  const handleStartQA = async () => {
+    if (!agentId) return;
+    
+    try {
+      const permission = await navigator.permissions.query({ name: 'microphone' });
+      
+      if (permission.state === 'granted') {
+        dispatch(setIsQuestionMode(true));
+        onStartConversation();
+      } else {
+        setShowMicPopup(true);
+      }
+    } catch (error) {
+      setShowMicPopup(true);
+    }
+  };
+
+  const handleAllowMicrophone = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      setShowMicPopup(false);
+      dispatch(setIsQuestionMode(true));
+      onStartConversation();
+    } catch (error) {
+      setShowMicPopup(false);
+    }
   };
 
   const handleMessageClick = () => {
@@ -28,7 +53,14 @@ const AILearningAssistant = ({
   };
 
   return (
-    <div className="flex flex-col items-start p-1 md:p-[6px] lg:p-3 gap-2.5 w-full h-full flex-1 border border-[#E5E7EB] rounded-xl bg-white overflow-hidden">
+    <>
+      {showMicPopup && (
+        <MicrophonePermissionPopup 
+          onCancel={() => setShowMicPopup(false)}
+          onAllowMicrophone={handleAllowMicrophone}
+        />
+      )}
+      <div className="flex flex-col items-start p-1 md:p-[6px] lg:p-3 gap-2.5 w-full h-full flex-1 border border-[#E5E7EB] rounded-xl bg-white overflow-hidden">
       {/* Inner Frame */}
       <div
         className={`w-full h-full bg-[#E0DDFF] rounded-xl ${
@@ -119,7 +151,7 @@ const AILearningAssistant = ({
                 alt="Microphone"
                 style={!agentId ? { filter: "grayscale(100%)" } : {}}
               />
-              <span className={`text-[8px] sm:text-[9px] md:text-xs`}>
+               <span className={`text-[8px] sm:text-[9px] md:text-xs`}>
                 Interaction Mode
               </span>
             </button>
@@ -133,6 +165,7 @@ const AILearningAssistant = ({
         </div>
       </div>
     </div>
+    </>
   );
 };
 

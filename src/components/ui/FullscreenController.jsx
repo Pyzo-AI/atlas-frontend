@@ -81,12 +81,12 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
               For the best learning experience, we recommend using fullscreen mode in landscape orientation.
             </p>
             <div className="flex gap-3">
-              <button
+              {/* <button
                 onClick={() => setShowLandscapePrompt(false)}
                 className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Maybe Later
-              </button>
+              </button> */}
               <button
                 onClick={() => {
                   enterFullscreen();
