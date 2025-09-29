@@ -178,7 +178,7 @@ const LoginPage = () => {
                   // type="email"
                   autoComplete="email"
                   required
-                  className="w-full h-11 sm:h-[44px] bg-white border border-[#E5E7EB] rounded-[11px] px-3 py-2 sm:py-[9px] text-sm sm:text-[14px] font-lato font-normal leading-tight sm:leading-[17px] text-black placeholder:text-[rgba(0,0,0,0.5)] focus:outline-none focus:border-[#4A47C8] transition-colors"
+                  className="w-full h-11 sm:h-[44px] bg-white border border-[#E5E7EB] rounded-[11px] px-3 py-2 sm:py-[9px] text-base sm:text-[14px] font-lato font-normal leading-tight sm:leading-[17px] text-black placeholder:text-[rgba(0,0,0,0.5)] focus:outline-none focus:border-[#4A47C8] transition-colors"
                   placeholder="abc@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -200,7 +200,7 @@ const LoginPage = () => {
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
-                    className="w-full h-11 sm:h-[44px] bg-white border border-[#E5E7EB] rounded-[11px] px-3 py-2 sm:py-[9px] pr-12 text-sm sm:text-[14px] font-lato font-normal leading-tight sm:leading-[17px] text-black placeholder:text-[rgba(0,0,0,0.5)] focus:outline-none focus:border-[#4A47C8] transition-colors"
+                    className="w-full h-11 sm:h-[44px] bg-white border border-[#E5E7EB] rounded-[11px] px-3 py-2 sm:py-[9px] pr-12 text-base sm:text-[14px] font-lato font-normal leading-tight sm:leading-[17px] text-black placeholder:text-[rgba(0,0,0,0.5)] focus:outline-none focus:border-[#4A47C8] transition-colors"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

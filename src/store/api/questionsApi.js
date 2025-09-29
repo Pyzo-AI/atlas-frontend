@@ -31,6 +31,15 @@ export const questionsApi = createApi({
       }),
       invalidatesTags: ['Question'],
     }),
+
+    // Submit completion status
+    submitCompletionStatus: builder.mutation({
+      query: ({ presentationId, ...statusData }) => ({
+        url: `presentations/${presentationId}/completion-status`,
+        method: 'POST',
+        body: statusData,
+      }),
+    }),
     
   
   }),
@@ -41,4 +50,5 @@ export const {
   useSubmitQuestionMutation,
   useGetAllVideoQuery,
   useGetPresentationsQuery,
+  useSubmitCompletionStatusMutation,
 } = questionsApi;

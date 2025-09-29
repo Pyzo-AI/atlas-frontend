@@ -6,126 +6,210 @@ import { useGetPresentationsQuery } from "../../store/api/questionsApi";
 import chat_star from "../../assets/svg/chat_star.svg";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
-// Course data matching Figma design
-const dummyPresentations = [
-  {
-    presentation_id: 1,
-    title: "Introduction to Digital Banking",
-    author: "Dr. Ananya Mehta",
-    status: "start",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 2,
-    title: "Basics of Financial Planning",
-    author: "Ms. Shreya Iyer",
-    status: "completed",
-    isCompleted: true,
-    image:
-      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 3,
-    title: "Customer Service Excellence",
-    author: "Mr. Arjun Deshmukh",
-    status: "progress",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 4,
-    title: "Effective Communication Skills",
-    author: "Dr. Kavita Nair",
-    status: "completed",
-    isCompleted: true,
-    image:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 5,
-    title: "Workplace Ethics & Compliance",
-    author: "Mr. Kunal Verma",
-    status: "start",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 6,
-    title: "Understanding Investment Products",
-    author: "Dr. Sneha Reddy",
-    status: "progress",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 7,
-    title: "Leadership and Team Management",
-    author: "Prof. Aditya Bansal",
-    status: "start",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop",
-  },
-  {
-    presentation_id: 8,
-    title: "Time Management for Professionals",
-    author: "Prof. Neeraj Sharma",
-    status: "progress",
-    isCompleted: false,
-    image:
-      "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=400&h=300&fit=crop",
-  },
-];
+import overdue from "../../assets/svg/overdue.svg";
+import locked from "../../assets/svg/locked.svg";
+import unlocked from "../../assets/svg/unlocked.svg";
+import completed from "../../assets/svg/completed.svg";
+import dueSoon from "../../assets/svg/due-soon.svg";
 
-const PresentationCard = ({ presentation, onClick }) => {
-  const getStatusBadge = () => {
-    switch (presentation.status) {
-      case "completed":
-        return (
-          <div className="flex items-center justify-center px-[6px] py-[2.5px] bg-[#DCFCE7] rounded-[10px]">
-            <span className="text-[10px] font-lato font-normal leading-[12px] text-[#008236]">
-              Completed
-            </span>
-          </div>
-        );
-      case "progress":
-        return (
-          <div className="flex items-center justify-center px-[6px] py-[2.5px] bg-[#DBEAFE] rounded-[10px]">
-            <span className="text-[10px] font-lato font-normal leading-[12px] text-[#1447E6]">
-              In Progress
-            </span>
-          </div>
-        );
-      default:
-        return (
-          <div className="flex items-center justify-center px-[6px] py-[2.5px] bg-[#F3EDFF] rounded-[10px]">
-            <span className="text-[10px] font-lato font-normal leading-[12px] text-[#685EDD]">
-              Start Learning
-            </span>
-          </div>
-        );
-    }
+// Course data matching Figma design
+const presentations = {
+  data: [
+    {
+      presentation_id: 1,
+      title: "Introduction to Digital Banking",
+      author: "Dr. Ananya Mehta",
+      status: "locked",
+      isCompleted: false,
+      isPresentationCompleted: false,
+      image:
+        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "locked",
+        unlock_time: "2025-09-30T16:08:00+05:30",
+      },
+      due_info: {
+        status: "due",
+        due_time: "2025-10-03T16:08:00+05:30",
+      },
+    },
+    {
+      presentation_id: 2,
+      title: "Basics of Financial Planning",
+      author: "Ms. Shreya Iyer",
+      status: "progress",
+      isCompleted: false,
+      isPresentationCompleted: false,
+      image:
+        "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "unlocked",
+      },
+      due_info: {
+        status: "due",
+        due_time: "2025-10-03T16:08:00+05:30",
+      },
+    },
+    {
+      presentation_id: 3,
+      title: "Customer Service Excellence",
+      author: "Mr. Arjun Deshmukh",
+      status: "overdue",
+      isCompleted: false,
+      isPresentationCompleted: false,
+      image:
+        "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "unlocked",
+      },
+      due_info: {
+        status: "overdue",
+        due_time: "2025-09-25T16:08:00+05:30",
+      },
+    },
+    {
+      presentation_id: 4,
+      title: "Effective Communication Skills",
+      author: "Dr. Kavita Nair",
+      status: "completed",
+      isCompleted: true,
+      isPresentationCompleted: true,
+      presentationCompletedDate: "2024-12-15T14:30:00+05:30",
+      image:
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=300&fit=crop",
+      lock_info: {
+        status: "unlocked",
+      },
+    },
+  ],
+};
+
+const PresentationCard = ({ presentation, onClick, currentTime }) => {
+  const getUnlockMessage = (targetTime) => {
+    const target = new Date(targetTime);
+    const diff = target - currentTime;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return `Unlocks in ${days} ${days === 1 ? "day" : "days"}`;
   };
+
+  const getOverdueMessage = (targetTime) => {
+    const target = new Date(targetTime);
+    const diff = Math.abs(target - currentTime);
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return `Overdue by ${days} ${days === 1 ? "day" : "days"}`;
+  };
+
+  const getDueMessage = (targetTime) => {
+    const target = new Date(targetTime);
+    const diff = target - currentTime;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return `Due in ${days} ${days === 1 ? "day" : "days"}`;
+  };
+
+  const getBadgeInfo = () => {
+    if (presentation.isPresentationCompleted) {
+      const completedDate = presentation.presentationCompletedDate
+        ? new Date(presentation.presentationCompletedDate).toLocaleDateString()
+        : "Unknown date";
+      return {
+        icon: completed,
+        color: "#008236",
+        title: "Completed",
+        subtitle: `Completed ${completedDate}`,
+      };
+    }
+
+    // Check lock status first - highest priority
+    if (
+      presentation.lock_info?.status === "locked" &&
+      presentation.lock_info?.unlock_time
+    ) {
+      return {
+        icon: locked,
+        color: "#E7E7E7",
+        textColor: "#1A1C29",
+        title: "Locked",
+        subtitle: getUnlockMessage(presentation.lock_info.unlock_time),
+      };
+    }
+
+    if (
+      presentation.due_info?.status === "overdue" &&
+      presentation.due_info?.due_time
+    ) {
+      return {
+        icon: overdue,
+        color: "#FEE2E2",
+        textColor: "#DC2626",
+        title: "Overdue",
+        subtitle: getOverdueMessage(presentation.due_info.due_time),
+      };
+    }
+
+    if (
+      presentation.due_info?.status === "due" &&
+      presentation.due_info?.due_time
+    ) {
+      return {
+        icon: unlocked,
+        color: "#DBEAFE",
+        textColor: "#1447E6",
+        title: "In Progress",
+        subtitle: getDueMessage(presentation.due_info.due_time),
+      };
+    }
+
+    // If no lock_info or due_info available, return minimal info
+    if (!presentation.lock_info && !presentation.due_info) {
+      return {
+        icon: null,
+        color: null,
+        textColor: null,
+        title: null,
+        subtitle: null,
+      };
+    }
+
+    return {
+      icon: unlocked,
+      color: "#DBEAFE",
+      textColor: "#1447E6",
+      title: "In Progress",
+      subtitle: null,
+    };
+  };
+
+  const badgeInfo = getBadgeInfo();
+  const isLocked = presentation.lock_info?.status === "locked";
 
   return (
     <div
-      className="flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)] transition-shadow duration-300"
-      onClick={onClick}
+      className={`relative flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] transition-shadow duration-300 ${
+        isLocked
+          ? " cursor-not-allowed"
+          : "cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)]"
+      }`}
+      onClick={isLocked ? undefined : onClick}
     >
+      {/* badge */}
+      {badgeInfo.subtitle && (
+        <div className="absolute top-4.5 right-4.5 flex flex-col items-end p-1 gap-0.5 bg-[#744FFF] rounded-[5px] z-10">
+          <p className="font-lato font-medium text-[10px] leading-[10px] text-[#fff]">
+            {badgeInfo.subtitle}
+          </p>
+        </div>
+      )}
       <div className="flex flex-col items-start gap-[12px] w-full flex-1">
         {/* Thumbnail */}
         <div className="w-full flex-1 bg-[#F3EDFF] rounded-[8px] overflow-hidden relative">
-        {presentation?.image && presentation.image.trim() !== "" && <Image
-            src={presentation.image}
-            alt={presentation?.title}
-            fill
-            className="object-cover"
-          />}
+          {presentation?.image && presentation.image.trim() !== "" && (
+            <Image
+              src={presentation.image}
+              alt={presentation?.title}
+              fill
+              className="object-cover"
+            />
+          )}
         </div>
 
         {/* Content */}
@@ -140,7 +224,19 @@ const PresentationCard = ({ presentation, onClick }) => {
             <span className="font-lato font-normal text-xs sm:text-[12px] leading-tight sm:leading-[14px] text-[#585858]">
               {presentation?.author || "Unknown Author"}
             </span>
-            {/* {getStatusBadge()} */}
+            {badgeInfo.title && (
+              <div
+                className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px]"
+                style={{ backgroundColor: badgeInfo.color }}
+              >
+                <span
+                  className="font-lato font-medium text-[11px] leading-4"
+                  style={{ color: badgeInfo.textColor || "#FFFFFF" }}
+                >
+                  {badgeInfo.title}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -151,7 +247,20 @@ const PresentationCard = ({ presentation, onClick }) => {
 const Home = () => {
   const router = useRouter();
   const [filter, setFilter] = useState("all");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const { capture } = usePostHog();
+
+  // Calculate counts for each filter
+
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
   const {
     data: presentations = [],
     isLoading: loading,
@@ -160,6 +269,19 @@ const Home = () => {
     refetchOnMountOrArgChange: true,
   });
 
+    const getCounts = () => {
+    const data = presentations?.data || [];
+    return {
+      all: data.length,
+      locked: data.filter(p => p.lock_info?.status === "locked").length,
+      "in-progress": data.filter(p => p.lock_info?.status === "unlocked" && !p.isPresentationCompleted && p.due_info?.status !== "overdue").length,
+      overdue: data.filter(p => p.due_info?.status === "overdue").length,
+      completed: data.filter(p => p.isPresentationCompleted).length,
+    };
+  };
+
+
+  const counts = getCounts();
   const handlePresentationClick = (presentationId) => {
     const userDetails = getUserDetailsFromToken();
     const selectedPresentation = presentations?.data?.find(
@@ -168,8 +290,7 @@ const Home = () => {
 
     // Track module start event
     capture("module_start", {
-      user_id:
-        userDetails?.sub,
+      user_id: userDetails?.sub,
       module_id: presentationId,
       // module_title: selectedPresentation?.title,
       // module_author: selectedPresentation?.author,
@@ -249,7 +370,7 @@ const Home = () => {
   }
 
   const completedCount = presentations?.data?.filter(
-    (p) => p.isCompleted || p.status === "completed"
+    (p) => p.isPresentationCompleted
   ).length;
   const totalCount = presentations?.data?.length;
 
@@ -291,73 +412,160 @@ const Home = () => {
             Available Courses
           </h2>
 
-          {/* Tabs */}
-          {/* <div className="flex items-start p-1 w-[234px] h-[32px] bg-white border border-[#E0E2E7] rounded-[6px]">
+          {/* Desktop Tabs */}
+          <div className="hidden lg:flex items-start p-1 w-auto h-[32px] bg-white border border-[#E0E2E7] rounded-[6px] gap-1">
+            {["all", "locked", "in-progress", "overdue", "completed"].map(
+              (tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setFilter(tab)}
+                  className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${
+                    filter === tab ? "bg-[#744FFF]" : ""
+                  }`}
+                >
+                  <span
+                    className={`font-lato font-medium text-[10px] leading-[20px] whitespace-nowrap ${
+                      filter === tab ? "text-white" : "text-[#667085]"
+                    }`}
+                  >
+                    {tab === "all"
+                      ? `All (${counts.all})`
+                      : tab === "locked"
+                      ? `Locked`
+                      : tab === "in-progress"
+                      ? `In Progress`
+                      : tab === "overdue"
+                      ? `Overdue`
+                      : `Completed`}
+                  </span>
+                </button>
+              )
+            )}
+          </div>
+
+          {/* Mobile/Tablet Dropdown */}
+          <div className="relative lg:hidden">
             <button
-              onClick={() => setFilter("all")}
-              className={`flex justify-center items-center px-[8px] py-[2px] gap-[8px] flex-1 h-[22px] rounded-[4px] cursor-pointer ${
-                filter === "all" ? "bg-[#744FFF]" : ""
-              }`}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center justify-between px-3 py-2 w-32 h-[30px] bg-white border border-[#E0E2E7] rounded-[6px]"
             >
-              <span
-                className={`font-lato font-medium text-[12px] leading-[20px] ${
-                  filter === "all" ? "text-white" : "text-[#667085]"
-                }`}
-              >
-                All
+              <span className="font-lato font-medium text-[12px] text-[#667085]">
+                {filter === "all"
+                  ? `All (${counts.all})`
+                  : filter === "locked"
+                  ? `Locked`
+                  : filter === "in-progress"
+                  ? `In Progress`
+                  : filter === "overdue"
+                  ? `Overdue`
+                  : `Completed`}
               </span>
-            </button>
-            <button
-              onClick={() => setFilter("in-progress")}
-              className={`flex justify-center items-center px-[12px] py-[6px] gap-[8px] flex-1 h-[22px] rounded-[4px] cursor-pointer ${
-                filter === "in-progress" ? "bg-[#744FFF]" : ""
-              }`}
-            >
-              <span
-                className={`font-lato font-medium text-[12px] leading-[20px] whitespace-nowrap ${
-                  filter === "in-progress" ? "text-white" : "text-[#667085]"
-                }`}
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                In Progress
-              </span>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
             </button>
-            <button
-              onClick={() => setFilter("completed")}
-              className={`flex justify-center items-center px-[12px] py-[6px] gap-[8px] flex-1 h-[22px] rounded-[4px] cursor-pointer ${
-                filter === "completed" ? "bg-[#744FFF]" : ""
-              }`}
-            >
-              <span
-                className={`font-lato font-medium text-[12px] leading-[20px] ${
-                  filter === "completed" ? "text-white" : "text-[#667085]"
-                }`}
-              >
-                Completed
-              </span>
-            </button>
-          </div> */}
+            {isDropdownOpen && (
+              <div className="absolute top-full mt-1 w-32 bg-white border border-[#E0E2E7] rounded-[6px] shadow-lg z-50">
+                {["all", "locked", "in-progress", "overdue", "completed"].map(
+                  (tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => {
+                        setFilter(tab);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${
+                        filter === tab
+                          ? "bg-[#744FFF] text-white"
+                          : "text-[#667085]"
+                      }`}
+                    >
+                      {tab === "all"
+                        ? `All (${counts.all})`
+                        : tab === "locked"
+                        ? `Locked`
+                        : tab === "in-progress"
+                        ? `In Progress`
+                        : tab === "overdue"
+                        ? `Overdue`
+                        : `Completed`}
+                    </button>
+                  )
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Course Grid */}
         <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-[12px] w-full">
-            {presentations?.data
-              .filter(
-                (p) =>
-                  filter === "all" ||
-                  (filter === "completed" && p.isCompleted) ||
-                  (filter === "in-progress" && !p.isCompleted)
-              )
-              .map((presentation) => (
-                <PresentationCard
-                  key={presentation.presentation_id}
-                  presentation={presentation}
-                  onClick={() =>
-                    handlePresentationClick(presentation.presentation_id)
-                  }
-                />
-              ))}
-          </div>
+          {(() => {
+            const filteredPresentations = presentations?.data?.filter((p) => {
+              if (filter === "all") return true;
+              if (filter === "locked")
+                return p.lock_info?.status === "locked";
+              if (filter === "in-progress")
+                return (
+                  p.lock_info?.status === "unlocked" &&
+                  !p.isPresentationCompleted &&
+                  p.due_info?.status !== "overdue"
+                );
+              if (filter === "overdue")
+                return p.due_info?.status === "overdue" && !p.isPresentationCompleted;
+              if (filter === "completed") return p.isPresentationCompleted;
+              return true;
+            }) || [];
+
+            if (filteredPresentations.length === 0) {
+              return (
+                <div className="flex flex-col items-center justify-center w-full min-h-[50vh]">
+                  <div className="flex flex-col items-center gap-4 text-center">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#F3EDFF] rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#744FFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <h3 className="font-lato font-semibold text-lg sm:text-xl text-[#1A1C29]">
+                        No Courses Found
+                      </h3>
+                      {/* <p className="font-lato font-normal text-sm sm:text-base text-[#585858] max-w-md">
+                        {filter === "all" 
+                          ? "No courses are available at the moment. Please check back later."
+                          : `No courses found for the "${filter === "in-progress" ? "In Progress" : filter.charAt(0).toUpperCase() + filter.slice(1)}" filter.`
+                        }
+                      </p> */}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-[12px] w-full">
+                {filteredPresentations.map((presentation) => (
+                  <PresentationCard
+                    key={presentation.presentation_id}
+                    presentation={presentation}
+                    currentTime={currentTime}
+                    onClick={() =>
+                      handlePresentationClick(presentation.presentation_id)
+                    }
+                  />
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

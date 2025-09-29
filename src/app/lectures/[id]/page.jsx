@@ -124,9 +124,22 @@ const Home = () => {
   if (isLandscape && isPhone) {
     return (
       <FullscreenController enableAutoFullscreen={true}>
-        <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0">
+        <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0 flex-col">
+          {/* Breadcrumb Navigation */}
+          <div className="px-2 py-2 bg-[#F9F9F9]">
+            <BreadCrumb
+              paths={[
+                { path: "/", label: "All Course" },
+                {
+                  path: "/lectures/123",
+                  label: data?.presentation_name || "Corporate Finance",
+                },
+              ]}
+            />
+          </div>
+
           {/* Main Content Area - Phone optimized */}
-          <div className="flex flex-1 bg-white m-2 rounded-lg overflow-hidden">
+          <div className="flex flex-1 bg-white mx-2 mb-2 rounded-lg overflow-hidden">
             {/* Left Side - Slides/PPT Section (70% width for phones) */}
             <div className="w-[70%] overflow-hidden">
               <PPTSection
