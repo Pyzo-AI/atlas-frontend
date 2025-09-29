@@ -522,7 +522,7 @@ const Home = () => {
                     p.due_info?.status !== "overdue"
                   );
                 if (filter === "overdue")
-                  return p.due_info?.status === "overdue";
+                  return p.due_info?.status === "overdue" && !p.isPresentationCompleted;
                 if (filter === "completed") return p.isPresentationCompleted;
                 return true;
               })
