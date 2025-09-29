@@ -171,7 +171,7 @@ const VideoPlaylist = ({
 
               {/* Status indicator - keeping absolute position as requested */}
               {currentVideoIndex > index && (
-                <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-50 overflow-visible">
+                <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
                   <svg
                     className="w-[9.6px] h-[9.6px] text-white"
                     fill="currentColor"

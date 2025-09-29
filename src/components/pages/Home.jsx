@@ -19,23 +19,26 @@ const presentations = {
       presentation_id: 1,
       title: "Introduction to Digital Banking",
       author: "Dr. Ananya Mehta",
-      status: "start",
+      status: "locked",
       isCompleted: false,
       isPresentationCompleted: false,
       image:
         "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
       lock_info: {
         status: "locked",
-        status_msg: "Unlocks in 2h 4m",
-        unlock_time: "2025-09-25T16:08:00+05:30",
+        unlock_time: "2025-09-30T16:08:00+05:30",
+      },
+      due_info: {
+        status: "due",
+        due_time: "2025-10-03T16:08:00+05:30",
       },
     },
     {
       presentation_id: 2,
       title: "Basics of Financial Planning",
       author: "Ms. Shreya Iyer",
-      status: "start",
-      isCompleted: true,
+      status: "progress",
+      isCompleted: false,
       isPresentationCompleted: false,
       image:
         "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
@@ -44,15 +47,14 @@ const presentations = {
       },
       due_info: {
         status: "due",
-        status_msg: "Due in 2 days",
-        due_time: "2025-09-27T23:59:00+05:30",
+        due_time: "2025-10-03T16:08:00+05:30",
       },
     },
     {
       presentation_id: 3,
       title: "Customer Service Excellence",
       author: "Mr. Arjun Deshmukh",
-      status: "progress",
+      status: "overdue",
       isCompleted: false,
       isPresentationCompleted: false,
       image:
@@ -62,8 +64,7 @@ const presentations = {
       },
       due_info: {
         status: "overdue",
-        status_msg: "Overdue by 2 days",
-        due_time: "2025-09-23T23:59:00+05:30",
+        due_time: "2025-09-25T16:08:00+05:30",
       },
     },
     {
@@ -73,106 +74,41 @@ const presentations = {
       status: "completed",
       isCompleted: true,
       isPresentationCompleted: true,
-      presentationCompletedDate: "2024-10-06T14:30:00+05:30",
+      presentationCompletedDate: "2024-12-15T14:30:00+05:30",
       image:
         "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=300&fit=crop",
       lock_info: {
         status: "unlocked",
-      },
-      due_info: {
-        status: "not_set",
-        status_msg: "No due date",
-      },
-    },
-    {
-      presentation_id: 5,
-      title: "Workplace Ethics & Compliance",
-      author: "Mr. Kunal Verma",
-      status: "start",
-      isCompleted: false,
-      isPresentationCompleted: false,
-      image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-      lock_info: {
-        status: "locked",
-        status_msg: "Unlocks in 3h 10m",
-        unlock_time: "2025-09-25T17:14:00+05:30",
-      },
-    },
-    {
-      presentation_id: 6,
-      title: "Understanding Investment Products",
-      author: "Dr. Sneha Reddy",
-      status: "progress",
-      isCompleted: false,
-      isPresentationCompleted: false,
-      image:
-        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=300&fit=crop",
-      lock_info: {
-        status: "unlocked",
-      },
-      due_info: {
-        status: "due",
-        status_msg: "Due in 1 week",
-        due_time: "2025-10-02T23:59:00+05:30",
-      },
-    },
-    {
-      presentation_id: 7,
-      title: "Leadership and Team Management",
-      author: "Prof. Aditya Bansal",
-      status: "start",
-      isCompleted: false,
-      isPresentationCompleted: false,
-      image:
-        "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop",
-      lock_info: {
-        status: "locked",
-        status_msg: "Unlocks in 2h 30m",
-        unlock_time: "2025-09-25T16:34:00+05:30",
-      },
-    },
-    {
-      presentation_id: 8,
-      title: "Time Management for Professionals",
-      author: "Prof. Neeraj Sharma",
-      status: "progress",
-      isCompleted: false,
-      isPresentationCompleted: false,
-      image:
-        "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=400&h=300&fit=crop",
-      lock_info: {
-        status: "unlocked",
-      },
-      due_info: {
-        status: "overdue",
-        status_msg: "Overdue by 1 day",
-        due_time: "2025-09-24T23:59:00+05:30",
       },
     },
   ],
 };
 
 const PresentationCard = ({ presentation, onClick, currentTime }) => {
-  const calculateTimeDifference = (targetTime) => {
+  const getUnlockMessage = (targetTime) => {
     const target = new Date(targetTime);
     const diff = target - currentTime;
-
-    if (diff <= 0) {
-      return "0D: 0H: 0M: 0S";
-    }
-
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    return `Unlocks in ${days} ${days === 1 ? "day" : "days"}`;
+  };
 
-    return `${days}D:${hours}H:${minutes}M:${seconds}S`;
+  const getOverdueMessage = (targetTime) => {
+    const target = new Date(targetTime);
+    const diff = Math.abs(target - currentTime);
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return `Overdue by ${days} ${days === 1 ? "day" : "days"}`;
+  };
+
+  const getDueMessage = (targetTime) => {
+    const target = new Date(targetTime);
+    const diff = target - currentTime;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return `Due in ${days} ${days === 1 ? "day" : "days"}`;
   };
 
   const getBadgeInfo = () => {
     if (presentation.isPresentationCompleted) {
-      const completedDate = presentation.presentationCompletedDate 
+      const completedDate = presentation.presentationCompletedDate
         ? new Date(presentation.presentationCompletedDate).toLocaleDateString()
         : "Unknown date";
       return {
@@ -190,11 +126,10 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
     ) {
       return {
         icon: locked,
-        color: "#3F68E8",
+        color: "#E7E7E7",
+        textColor: "#1A1C29",
         title: "Locked",
-        subtitle: `Unlocks in ${calculateTimeDifference(
-          presentation.lock_info.unlock_time
-        )}`,
+        subtitle: getUnlockMessage(presentation.lock_info.unlock_time),
       };
     }
 
@@ -204,11 +139,10 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
     ) {
       return {
         icon: overdue,
-        color: "#F04638",
+        color: "#FEE2E2",
+        textColor: "#DC2626",
         title: "Overdue",
-        subtitle: `Overdue by ${calculateTimeDifference(
-          presentation.due_info.due_time
-        )}`,
+        subtitle: getOverdueMessage(presentation.due_info.due_time),
       };
     }
 
@@ -217,22 +151,31 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
       presentation.due_info?.due_time
     ) {
       return {
-        icon: dueSoon,
-        color: "#E08910",
-        title: "Due Soon",
-        subtitle: `Due in ${calculateTimeDifference(
-          presentation.due_info.due_time
-        )}`,
+        icon: unlocked,
+        color: "#DBEAFE",
+        textColor: "#1447E6",
+        title: "In Progress",
+        subtitle: getDueMessage(presentation.due_info.due_time),
+      };
+    }
+
+    // If no lock_info or due_info available, return minimal info
+    if (!presentation.lock_info && !presentation.due_info) {
+      return {
+        icon: null,
+        color: null,
+        textColor: null,
+        title: null,
+        subtitle: null,
       };
     }
 
     return {
       icon: unlocked,
-      color: "#685EDD",
-      title: "Unlocked",
-      subtitle: presentation.due_info?.due_time
-        ? `Due in ${calculateTimeDifference(presentation.due_info.due_time)}`
-        : "No due date",
+      color: "#DBEAFE",
+      textColor: "#1447E6",
+      title: "In Progress",
+      subtitle: null,
     };
   };
 
@@ -249,25 +192,13 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
       onClick={isLocked ? undefined : onClick}
     >
       {/* badge */}
-      <div className="absolute top-4.5 right-4.5 bg-[#FEF3F359] backdrop-blur-lg p-1.5 rounded z-2">
-        <div
-          className="flex items-center gap-1"
-          style={{ color: badgeInfo.color }}
-        >
-          <Image
-            width={12}
-            height={12}
-            src={badgeInfo.icon}
-            alt={badgeInfo.title}
-          />
-          <p className="font-lato font-semibold text-[10px] leading-[100%] tracking-[0em]">
-            {badgeInfo.title}
+      {badgeInfo.subtitle && (
+        <div className="absolute top-4.5 right-4.5 flex flex-col items-end p-1 gap-0.5 bg-[#744FFF] rounded-[5px] z-10">
+          <p className="font-lato font-medium text-[10px] leading-[10px] text-[#fff]">
+            {badgeInfo.subtitle}
           </p>
         </div>
-        <p className="mt-1 font-lato font-normal text-[10px] leading-[100%] tracking-[0em] text-[#111827]">
-          {badgeInfo.subtitle}
-        </p>
-      </div>
+      )}
       <div className="flex flex-col items-start gap-[12px] w-full flex-1">
         {/* Thumbnail */}
         <div className="w-full flex-1 bg-[#F3EDFF] rounded-[8px] overflow-hidden relative">
@@ -293,7 +224,19 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
             <span className="font-lato font-normal text-xs sm:text-[12px] leading-tight sm:leading-[14px] text-[#585858]">
               {presentation?.author || "Unknown Author"}
             </span>
-            {/* {getStatusBadge()} */}
+            {badgeInfo.title && (
+              <div
+                className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px]"
+                style={{ backgroundColor: badgeInfo.color }}
+              >
+                <span
+                  className="font-lato font-medium text-[11px] leading-4"
+                  style={{ color: badgeInfo.textColor || "#FFFFFF" }}
+                >
+                  {badgeInfo.title}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -307,6 +250,9 @@ const Home = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const { capture } = usePostHog();
+
+  // Calculate counts for each filter
+
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -323,6 +269,19 @@ const Home = () => {
     refetchOnMountOrArgChange: true,
   });
 
+    const getCounts = () => {
+    const data = presentations?.data || [];
+    return {
+      all: data.length,
+      locked: data.filter(p => p.lock_info?.status === "locked").length,
+      "in-progress": data.filter(p => p.lock_info?.status === "unlocked" && !p.isPresentationCompleted && p.due_info?.status !== "overdue").length,
+      overdue: data.filter(p => p.due_info?.status === "overdue").length,
+      completed: data.filter(p => p.isPresentationCompleted).length,
+    };
+  };
+
+
+  const counts = getCounts();
   const handlePresentationClick = (presentationId) => {
     const userDetails = getUserDetailsFromToken();
     const selectedPresentation = presentations?.data?.find(
@@ -455,60 +414,51 @@ const Home = () => {
 
           {/* Desktop Tabs */}
           <div className="hidden lg:flex items-start p-1 w-auto h-[32px] bg-white border border-[#E0E2E7] rounded-[6px] gap-1">
-            {[
-              "all",
-              "overdue",
-              "due-soon",
-              "unlocked",
-              "locked",
-              "completed",
-            ].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setFilter(tab)}
-                className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${
-                  filter === tab ? "bg-[#744FFF]" : ""
-                }`}
-              >
-                <span
-                  className={`font-lato font-medium text-[10px] leading-[20px] whitespace-nowrap ${
-                    filter === tab ? "text-white" : "text-[#667085]"
+            {["all", "locked", "in-progress", "overdue", "completed"].map(
+              (tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setFilter(tab)}
+                  className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${
+                    filter === tab ? "bg-[#744FFF]" : ""
                   }`}
                 >
-                  {tab === "all"
-                    ? "All"
-                    : tab === "overdue"
-                    ? "Overdue"
-                    : tab === "due-soon"
-                    ? "Due Soon"
-                    : tab === "unlocked"
-                    ? "Unlocked"
-                    : tab === "locked"
-                    ? "Locked"
-                    : "Completed"}
-                </span>
-              </button>
-            ))}
+                  <span
+                    className={`font-lato font-medium text-[10px] leading-[20px] whitespace-nowrap ${
+                      filter === tab ? "text-white" : "text-[#667085]"
+                    }`}
+                  >
+                    {tab === "all"
+                      ? `All (${counts.all})`
+                      : tab === "locked"
+                      ? `Locked`
+                      : tab === "in-progress"
+                      ? `In Progress`
+                      : tab === "overdue"
+                      ? `Overdue`
+                      : `Completed`}
+                  </span>
+                </button>
+              )
+            )}
           </div>
 
           {/* Mobile/Tablet Dropdown */}
           <div className="relative lg:hidden">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center justify-between px-3 py-2 w-28 h-[30px] bg-white border border-[#E0E2E7] rounded-[6px]"
+              className="flex items-center justify-between px-3 py-2 w-32 h-[30px] bg-white border border-[#E0E2E7] rounded-[6px]"
             >
               <span className="font-lato font-medium text-[12px] text-[#667085]">
                 {filter === "all"
-                  ? "All"
-                  : filter === "overdue"
-                  ? "Overdue"
-                  : filter === "due-soon"
-                  ? "Due Soon"
-                  : filter === "unlocked"
-                  ? "Unlocked"
+                  ? `All (${counts.all})`
                   : filter === "locked"
-                  ? "Locked"
-                  : "Completed"}
+                  ? `Locked`
+                  : filter === "in-progress"
+                  ? `In Progress`
+                  : filter === "overdue"
+                  ? `Overdue`
+                  : `Completed`}
               </span>
               <svg
                 className="w-4 h-4"
@@ -525,40 +475,33 @@ const Home = () => {
               </svg>
             </button>
             {isDropdownOpen && (
-              <div className="absolute top-full mt-1 w-28 bg-white border border-[#E0E2E7] rounded-[6px] shadow-lg z-10">
-                {[
-                  "all",
-                  "overdue",
-                  "due-soon",
-                  "unlocked",
-                  "locked",
-                  "completed",
-                ].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => {
-                      setFilter(tab);
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${
-                      filter === tab
-                        ? "bg-[#744FFF] text-white"
-                        : "text-[#667085]"
-                    }`}
-                  >
-                    {tab === "all"
-                      ? "All"
-                      : tab === "overdue"
-                      ? "Overdue"
-                      : tab === "due-soon"
-                      ? "Due Soon"
-                      : tab === "unlocked"
-                      ? "Unlocked"
-                      : tab === "locked"
-                      ? "Locked"
-                      : "Completed"}
-                  </button>
-                ))}
+              <div className="absolute top-full mt-1 w-32 bg-white border border-[#E0E2E7] rounded-[6px] shadow-lg z-50">
+                {["all", "locked", "in-progress", "overdue", "completed"].map(
+                  (tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => {
+                        setFilter(tab);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${
+                        filter === tab
+                          ? "bg-[#744FFF] text-white"
+                          : "text-[#667085]"
+                      }`}
+                    >
+                      {tab === "all"
+                        ? `All (${counts.all})`
+                        : tab === "locked"
+                        ? `Locked`
+                        : tab === "in-progress"
+                        ? `In Progress`
+                        : tab === "overdue"
+                        ? `Overdue`
+                        : `Completed`}
+                    </button>
+                  )
+                )}
               </div>
             )}
           </div>
@@ -570,17 +513,17 @@ const Home = () => {
             {presentations?.data
               .filter((p) => {
                 if (filter === "all") return true;
-                if (filter === "completed") return p.isPresentationCompleted;
-                if (filter === "overdue")
-                  return p.due_info?.status === "overdue";
-                if (filter === "due-soon")
-                  return (
-                    p.due_info?.status === "due" && !p.isPresentationCompleted
-                  );
                 if (filter === "locked")
                   return p.lock_info?.status === "locked";
-                if (filter === "unlocked")
-                  return p.lock_info?.status === "unlocked";
+                if (filter === "in-progress")
+                  return (
+                    p.lock_info?.status === "unlocked" &&
+                    !p.isPresentationCompleted &&
+                    p.due_info?.status !== "overdue"
+                  );
+                if (filter === "overdue")
+                  return p.due_info?.status === "overdue";
+                if (filter === "completed") return p.isPresentationCompleted;
                 return true;
               })
               .map((presentation) => (
