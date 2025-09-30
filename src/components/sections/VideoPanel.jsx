@@ -86,6 +86,8 @@ const VideoPanel = forwardRef(
       isPhoneView = false,
       agentId,
       avatarUrl,
+      conversationHistory = [],
+      setConversationHistory,
     },
     ref
   ) => {
@@ -131,7 +133,6 @@ const VideoPanel = forwardRef(
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
     const [showChat, setShowChat] = useState(false);
-    const [conversationHistory, setConversationHistory] = useState([]);
     const [persistentConversationHistory, setPersistentConversationHistory] =
       useState([]);
     const [contextSent, setContextSent] = useState(false);
