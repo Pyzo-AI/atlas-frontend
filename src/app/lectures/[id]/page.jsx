@@ -81,7 +81,7 @@ const Home = () => {
     currentTime: 0,
     isPlaying: false,
   });
-
+  const [conversationHistory, setConversationHistory] = useState([]);
   // Handle video state changes from VideoPanel
   const handleVideoStateChange = (newState) => {
     setVideoState(newState);
@@ -113,8 +113,6 @@ const Home = () => {
       }
     });
   };
-
-
 
   if (isLoading) {
     return <PageSkeleton />;
@@ -172,6 +170,8 @@ const Home = () => {
                 isPhoneView={true}
                 agentId={data?.presentation_agent_id}
                 avatarUrl={data?.presentation_trainer_image}
+                conversationHistory={conversationHistory}
+                setConversationHistory={setConversationHistory}
               />
             </div>
           </div>
@@ -232,6 +232,8 @@ const Home = () => {
                 isPhoneView={false}
                 agentId={data?.presentation_agent_id}
                 avatarUrl={data?.presentation_trainer_image}
+                conversationHistory={conversationHistory}
+                setConversationHistory={setConversationHistory}
               />
             </div>
           </div>
@@ -281,6 +283,8 @@ const Home = () => {
                 presentationId={presentationId}
                 agentId={data?.presentation_agent_id}
                 avatarUrl={data?.presentation_trainer_image}
+                conversationHistory={conversationHistory}
+                setConversationHistory={setConversationHistory}
               />
             </div>
           </div>
