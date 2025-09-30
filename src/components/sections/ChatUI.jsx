@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { setIsQuestionMode } from '@/store/features/videoSlice'
 import back_to_session from '@/assets/svg/back_to_session.svg'
@@ -6,6 +6,7 @@ import interaction_mode from '@/assets/svg/interaction_mode.svg'
 import ai_answer_icon from '@/assets/svg/ai_answer_icon.svg'
 import close_icon from '@/assets/svg/close.svg'
 import Image from 'next/image'
+import MicrophonePermissionPopup from '@/components/ui/MicrophonePermissionPopup'
 
 const ChatUI = ({
   onClose,
@@ -16,13 +17,44 @@ const ChatUI = ({
   setShowChat,
   setIsJumpedOnChatFromInteractionMode,
   isMobile = false,
+  agentId,
 }) => {
   const dispatch = useDispatch()
+  const [showMicPopup, setShowMicPopup] = useState(false)
 
-  const handleInteractionMode = () => {
-    dispatch(setIsQuestionMode(true))
-    onClose()
-    onStartConversation()
+  const handleInteractionMode = async () => {
+    if (!agentId) return;
+    
+    try {
+      // Check microphone permission first
+      const permission = await navigator.permissions.query({ name: 'microphone' });
+      
+      if (permission.state === 'granted') {
+        // Permission already granted, proceed
+        dispatch(setIsQuestionMode(true))
+        onClose()
+        onStartConversation()
+      } else {
+        // Show permission popup
+        setShowMicPopup(true)
+      }
+    } catch (error) {
+      // Fallback for browsers that don't support permissions API
+      setShowMicPopup(true)
+    }
+  }
+
+  const handleAllowMicrophone = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true })
+      setShowMicPopup(false)
+      dispatch(setIsQuestionMode(true))
+      onClose()
+      onStartConversation()
+    } catch (error) {
+      console.error('Microphone permission denied:', error)
+      setShowMicPopup(false)
+    }
   }
 
   const handleContinueLesson = () => {
@@ -35,7 +67,14 @@ const ChatUI = ({
   }
 
   return (
-    <div className="flex flex-col w-full bg-white h-full max-h-full">
+    <>
+      {showMicPopup && (
+        <MicrophonePermissionPopup 
+          onCancel={() => setShowMicPopup(false)}
+          onAllowMicrophone={handleAllowMicrophone}
+        />
+      )}
+      <div className="flex flex-col w-full bg-white h-full max-h-full">
       {/* Chat Container */}
       <div className="flex flex-col h-full border border-[#E5E7EB] rounded-xl overflow-hidden">
         {/* Header */}
@@ -107,8 +146,13 @@ const ChatUI = ({
         <div className="flex justify-center items-center gap-1 sm:gap-2 w-full bg-white px-2 sm:px-3 py-1.5 lg:py-2 flex-shrink-0 border-t border-[#E5E7EB]">
           {/* Interaction Mode Button */}
           <button
-            onClick={handleInteractionMode}
-            className="flex items-center justify-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-[rgba(110,96,223,0.1)] rounded-[74px] cursor-pointer"
+            onClick={agentId ? handleInteractionMode : undefined}
+            disabled={!agentId}
+            className={`flex items-center justify-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-[74px] ${
+              agentId 
+                ? 'bg-[rgba(110,96,223,0.1)] cursor-pointer' 
+                : 'bg-gray-100 cursor-not-allowed opacity-50'
+            }`}
           >
             <Image
               className="w-4 h-4 lg:w-5 lg:h-5"
@@ -117,7 +161,7 @@ const ChatUI = ({
             />
 
             {!isMobile && (
-              <span className="font-lato font-medium text-[8px] sm:text-[9px] lg:text-xs leading-4 text-center text-[#6E60DF] whitespace-nowrap">
+              <span className="font-lato font-medium text-[8px] sm:text-[9px] lg:text-[10px] leading-3 text-center text-[#6E60DF] whitespace-nowrap">
                 Interaction Mode
               </span>
             )}
@@ -140,6 +184,7 @@ const ChatUI = ({
         </div>
       </div>
     </div>
+    </>
   )
 }
 
