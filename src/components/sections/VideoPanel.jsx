@@ -88,6 +88,7 @@ const VideoPanel = forwardRef(
       avatarUrl,
       conversationHistory = [],
       setConversationHistory,
+      isPresentationQuizPassed
     },
     ref
   ) => {
@@ -393,14 +394,11 @@ const VideoPanel = forwardRef(
       }, 1000);
 
       if (countdown === 0) {
-        // Get presentationId from current URL
-        const currentPath = window.location.pathname;
-        const presentationId = currentPath.split("/lectures/")[1];
-        router.push(`/assessment/${presentationId}`);
+        router.push(getRedirectPath());
       }
 
       return () => clearInterval(timer);
-    }, [showRedirectPopup, countdown, router]);
+    }, [showRedirectPopup, countdown, router, isPresentationQuizPassed]);
 
     // Initialize video on first load
     useEffect(() => {
@@ -760,6 +758,13 @@ const VideoPanel = forwardRef(
       }
       setShowChat(false);
     };
+
+    // Global redirect path
+    const getRedirectPath = () => {
+      const currentPath = window.location.pathname;
+      const presentationId = currentPath.split("/lectures/")[1];
+      return isPresentationQuizPassed ? `/review/${presentationId}?showDisclaimer=true` : `/assessment/${presentationId}`;
+    };
     // Phone view - optimized for 30% width with very compact layout
     if (isMobileView && isPhoneView) {
       return (
@@ -772,7 +777,7 @@ const VideoPanel = forwardRef(
                   Training Complete!
                 </h3>
                 <p className="mb-6">
-                  Redirecting to Assessment in {countdown} seconds...
+                  Redirecting to {isPresentationQuizPassed ? 'Review' : 'Assessment'} in {countdown} seconds...
                 </p>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div
@@ -789,13 +794,11 @@ const VideoPanel = forwardRef(
                   </button>
                   <button
                     onClick={() => {
-                      const currentPath = window.location.pathname;
-                      const presentationId = currentPath.split("/lectures/")[1];
-                      router.push(`/assessment/${presentationId}`);
+                      router.push(getRedirectPath());
                     }}
                     className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
                   >
-                    Go to Assessment Now
+                    Go to {isPresentationQuizPassed ? 'Review' : 'Assessment'} Now
                   </button>
                 </div>
               </div>
@@ -990,7 +993,7 @@ const VideoPanel = forwardRef(
                   Training Complete!
                 </h3>
                 <p className="mb-6">
-                  Redirecting to Assessment in {countdown} seconds...
+                  Redirecting to {isPresentationQuizPassed ? 'Review' : 'Assessment'} in {countdown} seconds...
                 </p>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div
@@ -1007,13 +1010,11 @@ const VideoPanel = forwardRef(
                   </button>
                   <button
                     onClick={() => {
-                      const currentPath = window.location.pathname;
-                      const presentationId = currentPath.split("/lectures/")[1];
-                      router.push(`/assessment/${presentationId}`);
+                      router.push(getRedirectPath());
                     }}
                     className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
                   >
-                    Go to Assessment Now
+                    Go to {isPresentationQuizPassed ? 'Review' : 'Assessment'} Now
                   </button>
                 </div>
               </div>
@@ -1201,11 +1202,11 @@ const VideoPanel = forwardRef(
             <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
               <h3 className="text-xl font-semibold mb-4">Training Complete!</h3>
               <p className="mb-6">
-                Redirecting to Assessment in {countdown} seconds...
+                Redirecting to {isPresentationQuizPassed ? 'Review' : 'Assessment'} in {countdown} seconds...
               </p>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
-                  className="bg-blue-600 h-2.5 rounded-full"
+                  className="bg-[#744FFF] h-2.5 rounded-full"
                   style={{ width: `${(10 - countdown) * 10}%` }}
                 ></div>
               </div>
@@ -1218,13 +1219,11 @@ const VideoPanel = forwardRef(
                 </button>
                 <button
                   onClick={() => {
-                    const currentPath = window.location.pathname;
-                    const presentationId = currentPath.split("/lectures/")[1];
-                    router.push(`/assessment/${presentationId}`);
+                    router.push(getRedirectPath());
                   }}
                   className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
                 >
-                  Go to Assessment Now
+                  Go to {isPresentationQuizPassed ? 'Review' : 'Assessment'} Now
                 </button>
               </div>
             </div>
