@@ -48,7 +48,9 @@ const RotationPrompt = () => {
 const Home = () => {
   const params = useParams();
   const presentationId = params.id;
-  const { data, isLoading } = useGetAllVideoQuery(presentationId);
+  const { data, isLoading } = useGetAllVideoQuery(presentationId, {
+    refetchOnMountOrArgChange: true
+  });
   const videos = data?.data?.filter(
     (video) => video?.trainer_video && video?.trainer_video?.trim() !== ""
   );
@@ -172,6 +174,9 @@ const Home = () => {
                 avatarUrl={data?.presentation_trainer_image}
                 conversationHistory={conversationHistory}
                 setConversationHistory={setConversationHistory}
+                isPresentationQuizPassed={
+                  data?.is_presentation_quiz_passed || false
+                }
               />
             </div>
           </div>
@@ -234,6 +239,9 @@ const Home = () => {
                 avatarUrl={data?.presentation_trainer_image}
                 conversationHistory={conversationHistory}
                 setConversationHistory={setConversationHistory}
+                isPresentationQuizPassed={
+                  data?.is_presentation_quiz_passed || false
+                }
               />
             </div>
           </div>
@@ -285,6 +293,9 @@ const Home = () => {
                 avatarUrl={data?.presentation_trainer_image}
                 conversationHistory={conversationHistory}
                 setConversationHistory={setConversationHistory}
+                isPresentationQuizPassed={
+                  data?.is_presentation_quiz_passed || false
+                }
               />
             </div>
           </div>
