@@ -60,7 +60,7 @@ const Home = () => {
   // Check if video can be skipped based on API response
   //
   const canSkipVideo = data?.hasOwnProperty("is_skippable")
-    ? data.is_video_skipped
+    ? data.is_skippable
     : !userName?.includes("jeenaseekho");
   
   const pathname = usePathname();
