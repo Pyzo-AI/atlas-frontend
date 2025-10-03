@@ -11,6 +11,7 @@ import BreadCrumb from "@/components/common/BreadCrumb";
 import PageSkeleton from "@/components/common/PageSkeleton";
 import { usePortraitMode } from "@/hooks/usePortraitMode";
 import FullscreenController from "@/components/ui/FullscreenController";
+import { getUserDetailsFromToken } from "@/store/utils/token";
 
 // Portrait Mode Rotation Prompt Component
 const RotationPrompt = () => {
@@ -49,11 +50,19 @@ const Home = () => {
   const params = useParams();
   const presentationId = params.id;
   const { data, isLoading } = useGetAllVideoQuery(presentationId, {
-    refetchOnMountOrArgChange: true
+    refetchOnMountOrArgChange: true,
   });
   const videos = data?.data?.filter(
     (video) => video?.trainer_video && video?.trainer_video?.trim() !== ""
   );
+  const userName = getUserDetailsFromToken()?.preferred_username;
+  console.log(userName, "userName");
+  // Check if video can be skipped based on API response
+  //
+  const canSkipVideo = data?.hasOwnProperty("is_skippable")
+    ? data.is_video_skipped
+    : !userName?.includes("jeenaseekho");
+  
   const pathname = usePathname();
   const videoPanelRef = useRef(null);
   const dispatch = useDispatch();
@@ -154,6 +163,7 @@ const Home = () => {
                 author={data?.presentation_author || "Giri Prathap"}
                 isMobileView={true}
                 isPhoneView={true}
+                canSkipVideo={canSkipVideo}
               />
             </div>
 
@@ -177,6 +187,7 @@ const Home = () => {
                 isPresentationQuizPassed={
                   data?.is_presentation_quiz_passed || false
                 }
+                canSkipVideo={canSkipVideo}
               />
             </div>
           </div>
@@ -219,6 +230,7 @@ const Home = () => {
                 author={data?.presentation_author || "Giri Prathap"}
                 isMobileView={true}
                 isPhoneView={false}
+                canSkipVideo={canSkipVideo}
               />
             </div>
 
@@ -242,6 +254,7 @@ const Home = () => {
                 isPresentationQuizPassed={
                   data?.is_presentation_quiz_passed || false
                 }
+                canSkipVideo={canSkipVideo}
               />
             </div>
           </div>
@@ -279,6 +292,7 @@ const Home = () => {
                 width="70%"
                 title={data?.presentation_name || "Untitled Presentation"}
                 author={data?.presentation_author || "Unknown"}
+                canSkipVideo={canSkipVideo}
               />
               <VideoPanel
                 ref={videoPanelRef}
@@ -296,6 +310,7 @@ const Home = () => {
                 isPresentationQuizPassed={
                   data?.is_presentation_quiz_passed || false
                 }
+                canSkipVideo={canSkipVideo}
               />
             </div>
           </div>

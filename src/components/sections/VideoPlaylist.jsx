@@ -9,7 +9,8 @@ const VideoPlaylist = ({
   loading = false,
   onVideoSelect,
   presentationId,
-  isMobile = false
+  isMobile = false,
+  canSkipVideo = false,
 }) => {
   const dispatch = useDispatch();
   const { currentVideoIndex } = useSelector((state) => state.video);
@@ -152,25 +153,43 @@ const VideoPlaylist = ({
             <div
               key={index}
               ref={(el) => (videoItemRefs.current[index] = el)}
-              onClick={() => handleVideoSelect(index)}
-              className={`relative flex-shrink-0  ${isMobile ? 'w-[150px] h-[45px]'  : 'w-[119px] h-[68px]'} rounded-lg cursor-pointer transition-all duration-200 overflow-visible scroll-ml-4 ${
+              onClick={() => {
+                if (!canSkipVideo && index > currentVideoIndex) {
+                  return;
+                }
+                handleVideoSelect(index);
+              }}
+              className={`relative flex-shrink-0  ${
+                isMobile ? "w-[150px] h-[45px]" : "w-[119px] h-[68px]"
+              } rounded-lg transition-all duration-200 overflow-visible scroll-ml-4 ${
                 currentVideoIndex === index
                   ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
                   : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
+              }
+              ${
+                !canSkipVideo && index > currentVideoIndex
+                  ? "opacity-50 cursor-not-allowed"
+                  : "cursor-pointer"
               }`}
             >
               {/* Video Info Container - using padding instead of absolute positioning */}
               <div className="p-2 flex flex-col gap-1.5">
-                <h4 className={`font-lato font-medium ${isMobile ? 'text-[9px] text-600' : 'text-[12px]' } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}>
+                <h4
+                  className={`font-lato font-medium ${
+                    isMobile ? "text-[9px] text-600" : "text-[12px]"
+                  } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}
+                >
                   {video.title || "Untitled Video"}
                 </h4>
-              {!isMobile &&  <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
-                  {formatDuration(video.duration) || "0:00"}
-                </div>}
+                {!isMobile && (
+                  <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
+                    {formatDuration(video.duration) || "0:00"}
+                  </div>
+                )}
               </div>
 
               {/* Status indicator - keeping absolute position as requested */}
-              {currentVideoIndex > index && (
+              {/* {currentVideoIndex > index && (
                 <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
                   <svg
                     className="w-[9.6px] h-[9.6px] text-white"
@@ -184,7 +203,7 @@ const VideoPlaylist = ({
                     />
                   </svg>
                 </div>
-              )}
+              )} */}
             </div>
           ))}
         </div>
