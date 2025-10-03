@@ -1,12 +1,12 @@
-import React from 'react'
-import VideoPlaylist from './VideoPlaylist'
-import SlideVideoSection from './SlideVideoSection'
+import React from "react";
+import VideoPlaylist from "./VideoPlaylist";
+import SlideVideoSection from "./SlideVideoSection";
 
 const PPTSection = ({
   videos = [],
   loading = false,
-  height = 'calc(100vh - 240px)',
-  width = '70%',
+  height = "calc(100vh - 240px)",
+  width = "70%",
   currentVideoIndex = 0,
   currentVideoTime = 0,
   isVideoPlaying = false,
@@ -16,6 +16,7 @@ const PPTSection = ({
   author,
   isMobileView = false,
   isPhoneView = false,
+  canSkipVideo = true,
 }) => {
   // Phone view - optimized for 70% width with compact layout
   if (isMobileView && isPhoneView) {
@@ -35,11 +36,11 @@ const PPTSection = ({
         {/* Bottom info section - Compact for phones */}
         <div className="flex justify-between items-center">
           <p className="font-bold text-[10px] leading-[100%] tracking-[0.02em] font-lato truncate">
-            {title || 'Corporate Finance'}
+            {title || "Corporate Finance"}
           </p>
           <p className="font-semibold text-[8px] leading-[100%] tracking-[0.02em] font-lato">
-            <span className="text-[#00000080]">By:</span>{' '}
-            {author || 'Giri Prathap'}
+            <span className="text-[#00000080]">By:</span>{" "}
+            {author || "Giri Prathap"}
           </p>
         </div>
 
@@ -53,7 +54,7 @@ const PPTSection = ({
           />
         </div>
       </div>
-    )
+    );
   }
 
   // Tablet view - adjust for landscape layout with proper padding
@@ -74,11 +75,11 @@ const PPTSection = ({
         {/* Bottom info section */}
         <div className="flex justify-between items-center">
           <p className="font-bold text-[16px] leading-[100%] tracking-[0.02em] font-lato">
-            {title || 'Corporate Finance'}
+            {title || "Corporate Finance"}
           </p>
           <p className="font-semibold text-[12px] leading-[100%] tracking-[0.02em] font-lato">
-            <span className="text-[#00000080]">By:</span>{' '}
-            {author || 'Giri Prathap'}
+            <span className="text-[#00000080]">By:</span>{" "}
+            {author || "Giri Prathap"}
           </p>
         </div>
 
@@ -91,7 +92,7 @@ const PPTSection = ({
           />
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -114,11 +115,11 @@ const PPTSection = ({
       </div>
       <div className="mt-3 flex justify-between items-center pr-1">
         <p className="font-bold text-[20px] leading-[100%] tracking-[0.02em] font-lato">
-          {title || 'Untitled'}
+          {title || "Untitled"}
         </p>
 
         <p className="font-semibold text-[14px] leading-[100%] tracking-[0.02em] font-lato">
-          <span className="text-[#00000080]">By:</span> {author || 'Unknown'}
+          <span className="text-[#00000080]">By:</span> {author || "Unknown"}
         </p>
       </div>
 
@@ -127,9 +128,10 @@ const PPTSection = ({
         videos={videos}
         loading={loading}
         onVideoSelect={onVideoSelect}
+        canSkipVideo={canSkipVideo}
       />
     </div>
-  )
-}
+  );
+};
 
-export default PPTSection
+export default PPTSection;
