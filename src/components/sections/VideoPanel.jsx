@@ -88,7 +88,8 @@ const VideoPanel = forwardRef(
       avatarUrl,
       conversationHistory = [],
       setConversationHistory,
-      isPresentationQuizPassed
+      isPresentationQuizPassed,
+      canSkipVideo = false,
     },
     ref
   ) => {
@@ -115,6 +116,9 @@ const VideoPanel = forwardRef(
     const isSeekingRef = useRef(false);
     // Keep a short rolling buffer of recent timeupdate values to infer pre-seek time
     const timeSamplesRef = useRef([]);
+    // When we programmatically restore the time to block a user seek we mark this ref
+    // so we can ignore the resulting seek events.
+    const blockedSeekRef = useRef(false);
     // Slide view tracking
     const [slideViewStartTime, setSlideViewStartTime] = useState("");
     // Persistent video settings
@@ -763,7 +767,9 @@ const VideoPanel = forwardRef(
     const getRedirectPath = () => {
       const currentPath = window.location.pathname;
       const presentationId = currentPath.split("/lectures/")[1];
-      return isPresentationQuizPassed ? `/review/${presentationId}?showDisclaimer=true` : `/assessment/${presentationId}`;
+      return isPresentationQuizPassed
+        ? `/review/${presentationId}?showDisclaimer=true`
+        : `/assessment/${presentationId}`;
     };
     // Phone view - optimized for 30% width with very compact layout
     if (isMobileView && isPhoneView) {
@@ -777,7 +783,9 @@ const VideoPanel = forwardRef(
                   Training Complete!
                 </h3>
                 <p className="mb-6">
-                  Redirecting to {isPresentationQuizPassed ? 'Review' : 'Assessment'} in {countdown} seconds...
+                  Redirecting to{" "}
+                  {isPresentationQuizPassed ? "Review" : "Assessment"} in{" "}
+                  {countdown} seconds...
                 </p>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div
@@ -798,7 +806,8 @@ const VideoPanel = forwardRef(
                     }}
                     className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
                   >
-                    Go to {isPresentationQuizPassed ? 'Review' : 'Assessment'} Now
+                    Go to {isPresentationQuizPassed ? "Review" : "Assessment"}{" "}
+                    Now
                   </button>
                 </div>
               </div>
@@ -993,7 +1002,9 @@ const VideoPanel = forwardRef(
                   Training Complete!
                 </h3>
                 <p className="mb-6">
-                  Redirecting to {isPresentationQuizPassed ? 'Review' : 'Assessment'} in {countdown} seconds...
+                  Redirecting to{" "}
+                  {isPresentationQuizPassed ? "Review" : "Assessment"} in{" "}
+                  {countdown} seconds...
                 </p>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div
@@ -1014,7 +1025,8 @@ const VideoPanel = forwardRef(
                     }}
                     className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
                   >
-                    Go to {isPresentationQuizPassed ? 'Review' : 'Assessment'} Now
+                    Go to {isPresentationQuizPassed ? "Review" : "Assessment"}{" "}
+                    Now
                   </button>
                 </div>
               </div>
@@ -1202,7 +1214,9 @@ const VideoPanel = forwardRef(
             <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
               <h3 className="text-xl font-semibold mb-4">Training Complete!</h3>
               <p className="mb-6">
-                Redirecting to {isPresentationQuizPassed ? 'Review' : 'Assessment'} in {countdown} seconds...
+                Redirecting to{" "}
+                {isPresentationQuizPassed ? "Review" : "Assessment"} in{" "}
+                {countdown} seconds...
               </p>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
@@ -1223,7 +1237,7 @@ const VideoPanel = forwardRef(
                   }}
                   className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
                 >
-                  Go to {isPresentationQuizPassed ? 'Review' : 'Assessment'} Now
+                  Go to {isPresentationQuizPassed ? "Review" : "Assessment"} Now
                 </button>
               </div>
             </div>
@@ -1241,7 +1255,9 @@ const VideoPanel = forwardRef(
                 key={`trainer-video-${currentVideoIndex}`}
                 ref={videoRef}
                 src={videos?.[currentVideoIndex]?.trainer_video}
-                className="absolute top-0 left-0 w-full h-full object-cover"
+                className={`absolute top-0 left-0 w-full h-full object-cover ${
+                  !canSkipVideo ? "no-skip-controls" : ""
+                }`}
                 onEnded={handleVideoEnd}
                 onTimeUpdate={(e) => {
                   const time = e.target.currentTime;
@@ -1273,6 +1289,28 @@ const VideoPanel = forwardRef(
                   }
                 }}
                 onSeeking={() => {
+                  // If skipping is disabled, revert any user-initiated seek immediately
+                  if (!canSkipVideo) {
+                    const prev = previousTimeRef.current ?? currentTime;
+                    blockedSeekRef.current = true;
+                    // Use requestAnimationFrame to avoid interfering with the browser's
+                    // internal seek handling and to prevent a tight event loop.
+                    requestAnimationFrame(() => {
+                      if (
+                        videoRef.current &&
+                        Math.abs(videoRef.current.currentTime - prev) > 0.01
+                      ) {
+                        try {
+                          videoRef.current.currentTime = prev;
+                        } catch (err) {
+                          // ignore
+                        }
+                      }
+                      // keep blocked flag for a short time; it will be cleared in onSeeked
+                    });
+                    return;
+                  }
+
                   // When user starts seeking, capture the current time as the "from" time
                   isSeekingRef.current = true;
                   previousTimeRef.current =
@@ -1400,6 +1438,16 @@ const VideoPanel = forwardRef(
                 }}
                 onSeeked={(e) => {
                   const newTime = e.target.currentTime;
+                  // If this seek was blocked (we restored time programmatically), ignore it
+                  if (blockedSeekRef.current) {
+                    // Clear the flag and ensure previousTime reflects actual playhead
+                    blockedSeekRef.current = false;
+                    previousTimeRef.current = newTime;
+                    setPreviousTime(newTime);
+                    // Do not send skip analytics
+                    return;
+                  }
+
                   // Mark seeking finished
                   isSeekingRef.current = false;
 
@@ -1442,6 +1490,22 @@ const VideoPanel = forwardRef(
                 controlsList="nodownload"
                 disablePictureInPicture
               />
+              {/* Global styles to disable pointer events on native timeline/control elements
+                  in WebKit browsers when skipping is disabled. */}
+              <style jsx global>{`
+                .no-skip-controls::-webkit-media-controls-timeline,
+                .no-skip-controls::-webkit-media-controls-seek-back-button,
+                .no-skip-controls::-webkit-media-controls-seek-forward-button,
+                .no-skip-controls::-webkit-media-controls-current-time-display,
+                .no-skip-controls::-webkit-media-controls-time-remaining-display {
+                  pointer-events: none !important;
+                  cursor: not-allowed !important;
+                }
+                /* Also try to make the scrubber/thumb non-interactive */
+                .no-skip-controls::-webkit-media-controls-slider {
+                  pointer-events: none !important;
+                }
+              `}</style>
             </div>
             {/* Time display below video */}
             <div className="px-1 flex justify-between mt-2 text-[12px] leading-4 tracking-normal font-normal text-center text-gray-600 font-lato">
