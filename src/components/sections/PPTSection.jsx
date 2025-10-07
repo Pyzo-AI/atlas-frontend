@@ -51,6 +51,7 @@ const PPTSection = ({
             loading={loading}
             onVideoSelect={onVideoSelect}
             isMobile={true}
+            canSkipVideo={canSkipVideo}
           />
         </div>
       </div>
@@ -89,6 +90,7 @@ const PPTSection = ({
             videos={videos}
             loading={loading}
             onVideoSelect={onVideoSelect}
+            canSkipVideo={canSkipVideo}
           />
         </div>
       </div>
