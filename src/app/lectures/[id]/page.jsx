@@ -5,7 +5,7 @@ import PPTSection from "@/components/sections/PPTSection";
 import FloatingChatbot from "@/components/chat/FloatingChatbot";
 import { useGetAllVideoQuery, useSubmitVideoProgressMutation } from "@/store/api/questionsApi";
 import { useDispatch, useSelector } from "react-redux";
-import { setIsPlaying } from "@/store/features/videoSlice";
+import { setIsPlaying, setCurrentVideoIndex, setCurrentVideoTime, setIsVideoPlaying } from "@/store/features/videoSlice";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import BreadCrumb from "@/components/common/BreadCrumb";
 import PageSkeleton from "@/components/common/PageSkeleton";
@@ -233,6 +233,21 @@ const Home = () => {
     };
   }, [router, presentationId]);
 
+  // Cleanup Redux video state when leaving the page
+  useEffect(() => {
+    return () => {
+      try {
+        // Reset current video index and time so that returning to the page
+        // will reinitialize from API values.
+        dispatch(setCurrentVideoIndex(0));
+        dispatch(setCurrentVideoTime(0));
+        dispatch(setIsVideoPlaying(false));
+      } catch (err) {
+        // ignore
+      }
+    };
+  }, [dispatch]);
+
   // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = (e) => {
@@ -259,6 +274,42 @@ const Home = () => {
       clearInterval(historyCheck);
     };
   }, [presentationId]);
+  // Initialize current video and start time from API response when landing on page
+  useEffect(() => {
+    if (!data || !data.data || data.data.length === 0) return;
+
+    try {
+      const apiCurrentSlide = data.current_slide_number;
+      const apiCurrentSlideDuration = data.current_slide_duration;
+
+      // Find the index in the filtered videos list that matches the API current slide
+      const allVideos = data.data.filter(
+        (video) => video?.trainer_video && video?.trainer_video?.trim() !== ""
+      );
+
+      const idx = allVideos.findIndex((v) => v.slide === apiCurrentSlide);
+
+      if (idx !== -1) {
+        // Decide initial start time: use apiCurrentSlideDuration but if it equals the
+        // slide duration then start from 0 (apply the same equal->0 rule)
+        const slideObj = allVideos[idx];
+        let startTime = typeof apiCurrentSlideDuration === 'number' ? apiCurrentSlideDuration : 0;
+
+        if (
+          typeof slideObj?.duration === 'number' &&
+          typeof startTime === 'number' &&
+          Math.abs(slideObj.duration - startTime) <= 1e-6
+        ) {
+          startTime = 0;
+        }
+
+        dispatch(setCurrentVideoIndex(idx));
+        dispatch(setCurrentVideoTime(startTime || 0));
+      }
+    } catch (err) {
+      console.error('Failed to init current video from API data', err);
+    }
+  }, [data, dispatch]);
 
   if (isLoading) {
     return <PageSkeleton />;
