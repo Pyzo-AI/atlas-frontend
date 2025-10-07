@@ -27,6 +27,7 @@ import QuestionModeAI from "./QuestionModeAI";
 import ChatUI from "./ChatUI";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
+import { updateVideoProgress, startVideoSession } from "@/utils/videoProgress";
 
 // Conversation history management for VideoPanel
 const {
@@ -80,6 +81,7 @@ const VideoPanel = forwardRef(
       onVideoStateChange,
       onPauseVideo,
       onPauseAnswerAudio,
+      onVideoEnd,
       presentationId,
       width = "30%",
       isMobileView = false,
@@ -121,6 +123,7 @@ const VideoPanel = forwardRef(
     const blockedSeekRef = useRef(false);
     // Slide view tracking
     const [slideViewStartTime, setSlideViewStartTime] = useState("");
+    const [videoStartTime, setVideoStartTime] = useState(0);
     // Persistent video settings
     const [videoSettings, setVideoSettings] = useState({
       muted: false,
@@ -469,6 +472,15 @@ const VideoPanel = forwardRef(
         const currentVideo = videos[currentVideoIndex];
         const newSrc = currentVideo?.trainer_video;
 
+        // Save progress for previous video when switching
+        if (newSrc && newSrc !== lastVideoSrc && lastVideoSrc) {
+          const prevVideoIndex = videos.findIndex(v => v.trainer_video === lastVideoSrc);
+          if (prevVideoIndex !== -1) {
+            const prevVideo = videos[prevVideoIndex];
+            updateVideoProgress(presentationId, prevVideo.slide, Math.floor(currentTime - videoStartTime));
+          }
+        }
+
         // Only reload if the source is actually different
         if (newSrc && newSrc !== lastVideoSrc) {
           setLastVideoSrc(newSrc);
@@ -509,6 +521,10 @@ const VideoPanel = forwardRef(
           // Update slide when video changes
           if (currentVideo?.slide) {
             dispatch(setCurrentSlide(currentVideo.slide));
+
+            // Start new video session
+            startVideoSession(presentationId, currentVideo.slide);
+            setVideoStartTime(0);
 
             // Track slide view event
             const userDetails = getUserDetailsFromToken();
@@ -661,9 +677,14 @@ const VideoPanel = forwardRef(
 
     // Handle video end
     const handleVideoEnd = () => {
+      // Save progress for completed video
+      const currentVideo = videos?.[currentVideoIndex];
+      if (currentVideo) {
+        updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
+      }
+
       // Track video completion event
       const userDetails = getUserDetailsFromToken();
-      const currentVideo = videos?.[currentVideoIndex];
       console.log(currentVideo, "currentVideo");
       if (currentVideo) {
         capture("video_complete", {
@@ -672,6 +693,11 @@ const VideoPanel = forwardRef(
           watch_duration: currentTime,
           replays: null,
         });
+      }
+
+      // Call parent callback for last video
+      if (currentVideoIndex >= videos?.length - 1 && onVideoEnd) {
+        onVideoEnd();
       }
 
       if (currentVideoIndex < videos?.length - 1) {
@@ -719,6 +745,12 @@ const VideoPanel = forwardRef(
     // Handle video selection from playlist
     const handleVideoSelect = (index) => {
       if (index !== currentVideoIndex) {
+        // Save progress for current video before switching
+        const currentVideo = videos[currentVideoIndex];
+        if (currentVideo) {
+          updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
+        }
+        
         setAutoPlayEnabled(true); // Enable autoplay when selecting from playlist
         dispatch(setCurrentVideoIndex(index));
         setIsPlaying(false);
@@ -1278,6 +1310,13 @@ const VideoPanel = forwardRef(
                   }
                   setCurrentTime(time);
                   dispatch(setCurrentVideoTime(time));
+                  
+                  // Update video progress with current video position
+                  const currentVideo = videos?.[currentVideoIndex];
+                  if (currentVideo && !e.target.paused) {
+                    updateVideoProgress(presentationId, currentVideo.slide, Math.floor(time));
+                  }
+                  
                   // Pass video state to parent for PPT synchronization
                   if (onVideoStateChange) {
                     onVideoStateChange({
@@ -1352,6 +1391,9 @@ const VideoPanel = forwardRef(
                   if (onPauseAnswerAudio) {
                     onPauseAnswerAudio();
                   }
+
+                  // Set video start time for progress tracking
+                  setVideoStartTime(currentTime);
 
                   // Track video play event
                   const userDetails = getUserDetailsFromToken();

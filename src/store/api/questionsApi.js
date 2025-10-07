@@ -40,6 +40,15 @@ export const questionsApi = createApi({
         body: statusData,
       }),
     }),
+
+    // Submit video progress
+    submitVideoProgress: builder.mutation({
+      query: (progressData) => ({
+        url: 'api/learner/activities',
+        method: 'POST',
+        body: progressData,
+      }),
+    }),
     
   
   }),
@@ -51,4 +60,5 @@ export const {
   useGetAllVideoQuery,
   useGetPresentationsQuery,
   useSubmitCompletionStatusMutation,
+  useSubmitVideoProgressMutation,
 } = questionsApi;

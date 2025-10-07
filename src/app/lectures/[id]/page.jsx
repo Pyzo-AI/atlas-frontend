@@ -3,15 +3,16 @@ import React, { useState, useRef, useEffect } from "react";
 import VideoPanel from "@/components/sections/VideoPanel";
 import PPTSection from "@/components/sections/PPTSection";
 import FloatingChatbot from "@/components/chat/FloatingChatbot";
-import { useGetAllVideoQuery } from "@/store/api/questionsApi";
+import { useGetAllVideoQuery, useSubmitVideoProgressMutation } from "@/store/api/questionsApi";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsPlaying } from "@/store/features/videoSlice";
-import { usePathname, useParams } from "next/navigation";
+import { usePathname, useParams, useRouter } from "next/navigation";
 import BreadCrumb from "@/components/common/BreadCrumb";
 import PageSkeleton from "@/components/common/PageSkeleton";
 import { usePortraitMode } from "@/hooks/usePortraitMode";
 import FullscreenController from "@/components/ui/FullscreenController";
 import { getUserDetailsFromToken } from "@/store/utils/token";
+import { getVideoProgress, clearVideoProgress } from "@/utils/videoProgress";
 
 // Portrait Mode Rotation Prompt Component
 const RotationPrompt = () => {
@@ -48,6 +49,7 @@ const RotationPrompt = () => {
 
 const Home = () => {
   const params = useParams();
+  const router = useRouter();
   const presentationId = params.id;
   const { data, isLoading } = useGetAllVideoQuery(presentationId, {
     refetchOnMountOrArgChange: true,
@@ -93,6 +95,7 @@ const Home = () => {
     isPlaying: false,
   });
   const [conversationHistory, setConversationHistory] = useState([]);
+  const [submitVideoProgress] = useSubmitVideoProgressMutation();
   // Handle video state changes from VideoPanel
   const handleVideoStateChange = (newState) => {
     setVideoState(newState);
@@ -124,6 +127,138 @@ const Home = () => {
       }
     });
   };
+
+  // Submit video progress to API
+  const submitProgressToAPI = async () => {
+    try {
+      const progressData = getVideoProgress(presentationId);
+      if (progressData && progressData.slide_data.length > 0) {
+        await submitVideoProgress({
+          presentation_id: parseInt(presentationId),
+          slide_data: progressData.slide_data
+        });
+        clearVideoProgress(presentationId);
+        console.log('Video progress submitted successfully');
+      }
+    } catch (error) {
+      console.error('Failed to submit video progress:', error);
+    }
+  };
+
+  // Store submit function globally for cleanup
+  useEffect(() => {
+    window.submitVideoProgressGlobal = submitProgressToAPI;
+    return () => {
+      if (window.submitVideoProgressGlobal) {
+        window.submitVideoProgressGlobal();
+        delete window.submitVideoProgressGlobal;
+      }
+    };
+  }, [presentationId]);
+
+  // 5-minute interval tracking
+  useEffect(() => {
+    const interval = setInterval(() => {
+      submitProgressToAPI();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [presentationId]);
+
+  // Page unload/close tracking
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      submitProgressToAPI();
+      // For some browsers, we need to set returnValue
+      e.returnValue = '';
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        submitProgressToAPI();
+      }
+    };
+
+    const handlePageHide = (e) => {
+      submitProgressToAPI();
+    };
+
+    const handleUnload = () => {
+      submitProgressToAPI();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('unload', handleUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('unload', handleUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [presentationId]);
+
+  // Handle router navigation
+  useEffect(() => {
+    const handleRouteChange = () => {
+      submitProgressToAPI();
+    };
+
+    // Listen for route changes
+    const originalPush = router.push;
+    const originalBack = router.back;
+    const originalReplace = router.replace;
+
+    router.push = (...args) => {
+      handleRouteChange();
+      return originalPush.apply(router, args);
+    };
+
+    router.back = (...args) => {
+      handleRouteChange();
+      return originalBack.apply(router, args);
+    };
+
+    router.replace = (...args) => {
+      handleRouteChange();
+      return originalReplace.apply(router, args);
+    };
+
+    return () => {
+      router.push = originalPush;
+      router.back = originalBack;
+      router.replace = originalReplace;
+    };
+  }, [router, presentationId]);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = (e) => {
+      console.log('Browser back/forward detected');
+      submitProgressToAPI();
+    };
+
+    // Track initial history length
+    const initialHistoryLength = window.history.length;
+    
+    // Listen for popstate (browser back/forward)
+    window.addEventListener('popstate', handlePopState, true);
+    
+    // Periodically check if history length changed (additional safety)
+    const historyCheck = setInterval(() => {
+      if (window.history.length < initialHistoryLength) {
+        console.log('History length decreased - likely back navigation');
+        submitProgressToAPI();
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState, true);
+      clearInterval(historyCheck);
+    };
+  }, [presentationId]);
 
   if (isLoading) {
     return <PageSkeleton />;
