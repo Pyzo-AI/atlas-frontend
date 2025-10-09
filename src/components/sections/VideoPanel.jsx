@@ -27,6 +27,7 @@ import QuestionModeAI from "./QuestionModeAI";
 import ChatUI from "./ChatUI";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
+import { updateVideoProgress, startVideoSession } from "@/utils/videoProgress";
 
 // Conversation history management for VideoPanel
 const {
@@ -80,6 +81,7 @@ const VideoPanel = forwardRef(
       onVideoStateChange,
       onPauseVideo,
       onPauseAnswerAudio,
+      onVideoEnd,
       presentationId,
       width = "30%",
       isMobileView = false,
@@ -121,6 +123,7 @@ const VideoPanel = forwardRef(
     const blockedSeekRef = useRef(false);
     // Slide view tracking
     const [slideViewStartTime, setSlideViewStartTime] = useState("");
+    const [videoStartTime, setVideoStartTime] = useState(0);
     // Persistent video settings
     const [videoSettings, setVideoSettings] = useState({
       muted: false,
@@ -132,7 +135,7 @@ const VideoPanel = forwardRef(
     const preloadVideoRef = useRef(null); // For preloading next video
     const router = useRouter();
     const dispatch = useDispatch();
-    const { currentVideoIndex, isQuestionMode } = useSelector(
+    const { currentVideoIndex, isQuestionMode, currentVideoTime: reduxCurrentVideoTime } = useSelector(
       (state) => state.video
     );
     const { capture } = usePostHog();
@@ -469,6 +472,15 @@ const VideoPanel = forwardRef(
         const currentVideo = videos[currentVideoIndex];
         const newSrc = currentVideo?.trainer_video;
 
+        // Save progress for previous video when switching
+        if (newSrc && newSrc !== lastVideoSrc && lastVideoSrc) {
+          const prevVideoIndex = videos.findIndex(v => v.trainer_video === lastVideoSrc);
+          if (prevVideoIndex !== -1) {
+            const prevVideo = videos[prevVideoIndex];
+            updateVideoProgress(presentationId, prevVideo.slide, Math.floor(currentTime - videoStartTime));
+          }
+        }
+
         // Only reload if the source is actually different
         if (newSrc && newSrc !== lastVideoSrc) {
           setLastVideoSrc(newSrc);
@@ -509,6 +521,10 @@ const VideoPanel = forwardRef(
           // Update slide when video changes
           if (currentVideo?.slide) {
             dispatch(setCurrentSlide(currentVideo.slide));
+
+            // Start new video session
+            startVideoSession(presentationId, currentVideo.slide);
+            setVideoStartTime(0);
 
             // Track slide view event
             const userDetails = getUserDetailsFromToken();
@@ -661,9 +677,14 @@ const VideoPanel = forwardRef(
 
     // Handle video end
     const handleVideoEnd = () => {
+      // Save progress for completed video
+      const currentVideo = videos?.[currentVideoIndex];
+      if (currentVideo) {
+        updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
+      }
+
       // Track video completion event
       const userDetails = getUserDetailsFromToken();
-      const currentVideo = videos?.[currentVideoIndex];
       console.log(currentVideo, "currentVideo");
       if (currentVideo) {
         capture("video_complete", {
@@ -674,11 +695,34 @@ const VideoPanel = forwardRef(
         });
       }
 
+      // Call parent callback for last video
+      if (currentVideoIndex >= videos?.length - 1 && onVideoEnd) {
+        onVideoEnd();
+      }
+
       if (currentVideoIndex < videos?.length - 1) {
         const nextVideoIndex = currentVideoIndex + 1;
         const nextVideo = videos[nextVideoIndex];
         console.log(nextVideo, "nextVideo");
         setAutoPlayEnabled(true); // Enable autoplay for next video
+        // Set start time for next video based on its duration_viewed (unless duration equals duration_viewed)
+        try {
+          let startTime = 0;
+          if (nextVideo && typeof nextVideo.duration_viewed === 'number') {
+            startTime = nextVideo.duration_viewed;
+          }
+          if (
+            nextVideo &&
+            typeof nextVideo.duration === 'number' &&
+            typeof nextVideo.duration_viewed === 'number' &&
+            Math.abs(nextVideo.duration - nextVideo.duration_viewed) <= 1e-6
+          ) {
+            startTime = 0;
+          }
+          dispatch(setCurrentVideoTime(startTime || 0));
+        } catch (err) {
+          // ignore
+        }
         dispatch(setCurrentVideoIndex(nextVideoIndex));
         dispatch(setCurrentSlide(nextVideo?.slide));
 
@@ -719,7 +763,28 @@ const VideoPanel = forwardRef(
     // Handle video selection from playlist
     const handleVideoSelect = (index) => {
       if (index !== currentVideoIndex) {
+        // Save progress for current video before switching
+        const currentVideo = videos[currentVideoIndex];
+        if (currentVideo) {
+          updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
+        }
+        
         setAutoPlayEnabled(true); // Enable autoplay when selecting from playlist
+        // Set the new video's start time from its duration_viewed
+        try {
+          const target = videos?.[index];
+          let startTime = 0;
+          if (target && typeof target.duration_viewed === 'number') startTime = target.duration_viewed;
+          if (
+            target &&
+            typeof target.duration === 'number' &&
+            typeof target.duration_viewed === 'number' &&
+            Math.abs(target.duration - target.duration_viewed) <= 1e-6
+          ) {
+            startTime = 0;
+          }
+          dispatch(setCurrentVideoTime(startTime || 0));
+        } catch (err) {}
         dispatch(setCurrentVideoIndex(index));
         setIsPlaying(false);
       }
@@ -728,6 +793,20 @@ const VideoPanel = forwardRef(
     // Handle transcript item click
     const handleTranscriptClick = (index) => {
       setAutoPlayEnabled(true);
+      try {
+        const target = videos?.[index];
+        let startTime = 0;
+        if (target && typeof target.duration_viewed === 'number') startTime = target.duration_viewed;
+        if (
+          target &&
+          typeof target.duration === 'number' &&
+          typeof target.duration_viewed === 'number' &&
+          Math.abs(target.duration - target.duration_viewed) <= 1e-6
+        ) {
+          startTime = 0;
+        }
+        dispatch(setCurrentVideoTime(startTime || 0));
+      } catch (err) {}
       dispatch(setCurrentVideoIndex(index));
       setIsPlaying(false);
     };
@@ -845,6 +924,45 @@ const VideoPanel = forwardRef(
                     const newDuration = e.target.duration;
                     setDuration(newDuration);
                     applyVideoSettings(e.target);
+
+                    // Determine start time priority:
+                    // 1) Redux stored currentVideoTime (if > 0)
+                    // 2) Slide's duration_viewed from API
+                    // If slide.duration === duration_viewed then start at 0
+                    try {
+                      const slideObj = videos?.[currentVideoIndex];
+                      let startTime = 0;
+
+                      if (typeof reduxCurrentVideoTime === 'number' && reduxCurrentVideoTime > 0) {
+                        startTime = reduxCurrentVideoTime;
+                      } else if (slideObj && typeof slideObj.duration_viewed === 'number') {
+                        startTime = slideObj.duration_viewed;
+                      }
+
+                      if (
+                        slideObj &&
+                        typeof slideObj.duration === 'number' &&
+                        typeof slideObj.duration_viewed === 'number' &&
+                        Math.abs(slideObj.duration - slideObj.duration_viewed) <= 1e-6
+                      ) {
+                        startTime = 0;
+                      }
+
+                      if (startTime && typeof startTime === 'number' && !isNaN(startTime)) {
+                        // Clamp to duration
+                        const safeStart = Math.min(startTime, newDuration || startTime);
+                        try {
+                          e.target.currentTime = safeStart;
+                        } catch (err) {
+                          // ignore if browser disallows; we'll try again on canplay
+                        }
+                        dispatch(setCurrentVideoTime(safeStart));
+                        setCurrentTime(safeStart);
+                      }
+                    } catch (err) {
+                      console.error('Error applying start time on metadata load', err);
+                    }
+
                     if (onVideoStateChange) {
                       onVideoStateChange({
                         currentTime,
@@ -1064,6 +1182,38 @@ const VideoPanel = forwardRef(
                     const newDuration = e.target.duration;
                     setDuration(newDuration);
                     applyVideoSettings(e.target);
+
+                    try {
+                      const slideObj = videos?.[currentVideoIndex];
+                      let startTime = 0;
+
+                      if (typeof reduxCurrentVideoTime === 'number' && reduxCurrentVideoTime > 0) {
+                        startTime = reduxCurrentVideoTime;
+                      } else if (slideObj && typeof slideObj.duration_viewed === 'number') {
+                        startTime = slideObj.duration_viewed;
+                      }
+
+                      if (
+                        slideObj &&
+                        typeof slideObj.duration === 'number' &&
+                        typeof slideObj.duration_viewed === 'number' &&
+                        Math.abs(slideObj.duration - slideObj.duration_viewed) <= 1e-6
+                      ) {
+                        startTime = 0;
+                      }
+
+                      if (startTime && typeof startTime === 'number' && !isNaN(startTime)) {
+                        const safeStart = Math.min(startTime, newDuration || startTime);
+                        try {
+                          e.target.currentTime = safeStart;
+                        } catch (err) {}
+                        dispatch(setCurrentVideoTime(safeStart));
+                        setCurrentTime(safeStart);
+                      }
+                    } catch (err) {
+                      console.error('Error applying start time on metadata load', err);
+                    }
+
                     if (onVideoStateChange) {
                       onVideoStateChange({
                         currentTime,
@@ -1278,6 +1428,13 @@ const VideoPanel = forwardRef(
                   }
                   setCurrentTime(time);
                   dispatch(setCurrentVideoTime(time));
+                  
+                  // Update video progress with current video position
+                  const currentVideo = videos?.[currentVideoIndex];
+                  if (currentVideo && !e.target.paused) {
+                    updateVideoProgress(presentationId, currentVideo.slide, Math.floor(time));
+                  }
+                  
                   // Pass video state to parent for PPT synchronization
                   if (onVideoStateChange) {
                     onVideoStateChange({
@@ -1322,6 +1479,38 @@ const VideoPanel = forwardRef(
                   setDuration(newDuration);
                   // Apply persistent settings when metadata is loaded
                   applyVideoSettings(e.target);
+
+                  try {
+                    const slideObj = videos?.[currentVideoIndex];
+                    let startTime = 0;
+
+                    if (typeof reduxCurrentVideoTime === 'number' && reduxCurrentVideoTime > 0) {
+                      startTime = reduxCurrentVideoTime;
+                    } else if (slideObj && typeof slideObj.duration_viewed === 'number') {
+                      startTime = slideObj.duration_viewed;
+                    }
+
+                    if (
+                      slideObj &&
+                      typeof slideObj.duration === 'number' &&
+                      typeof slideObj.duration_viewed === 'number' &&
+                      Math.abs(slideObj.duration - slideObj.duration_viewed) <= 1e-6
+                    ) {
+                      startTime = 0;
+                    }
+
+                    if (startTime && typeof startTime === 'number' && !isNaN(startTime)) {
+                      const safeStart = Math.min(startTime, newDuration || startTime);
+                      try {
+                        e.target.currentTime = safeStart;
+                      } catch (err) {}
+                      dispatch(setCurrentVideoTime(safeStart));
+                      setCurrentTime(safeStart);
+                    }
+                  } catch (err) {
+                    console.error('Error applying start time on metadata load', err);
+                  }
+
                   // Notify parent about duration
                   if (onVideoStateChange) {
                     onVideoStateChange({
@@ -1352,6 +1541,9 @@ const VideoPanel = forwardRef(
                   if (onPauseAnswerAudio) {
                     onPauseAnswerAudio();
                   }
+
+                  // Set video start time for progress tracking
+                  setVideoStartTime(currentTime);
 
                   // Track video play event
                   const userDetails = getUserDetailsFromToken();
