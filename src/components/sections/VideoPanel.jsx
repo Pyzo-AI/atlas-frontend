@@ -1068,7 +1068,8 @@ const VideoPanel = forwardRef(
                   poster={videos?.[currentVideoIndex]?.thumbnail}
                   autoPlay={autoPlayEnabled}
                   controls={true}
-                  controlsList="nodownload"
+                  controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplaybook" : "nodownload"}
+                  style={!canSkipVideo ? { pointerEvents: 'none' } : undefined}
                   disablePictureInPicture
                 />
               </div>
@@ -1337,7 +1338,8 @@ const VideoPanel = forwardRef(
                   poster={videos?.[currentVideoIndex]?.thumbnail}
                   autoPlay={autoPlayEnabled}
                   controls={true}
-                  controlsList="nodownload"
+                  controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplaybook" : "nodownload"}
+                  style={!canSkipVideo ? { pointerEvents: 'none' } : undefined}
                   disablePictureInPicture
                 />
               </div>
@@ -1465,6 +1467,8 @@ const VideoPanel = forwardRef(
                 className={`absolute top-0 left-0 w-full h-full object-cover ${
                   !canSkipVideo ? "no-skip-controls" : ""
                 }`}
+                controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplayback" : undefined}
+                style={!canSkipVideo ? { pointerEvents: 'none' } : undefined}
                 onEnded={handleVideoEnd}
                 onTimeUpdate={(e) => {
                   const time = e.target.currentTime;
@@ -1757,23 +1761,40 @@ const VideoPanel = forwardRef(
                 poster={videos?.[currentVideoIndex]?.thumbnail}
                 autoPlay={autoPlayEnabled}
                 controls={true}
-                controlsList="nodownload"
                 disablePictureInPicture
               />
               {/* Global styles to disable pointer events on native timeline/control elements
-                  in WebKit browsers when skipping is disabled. */}
+                  for both desktop and mobile browsers when skipping is disabled. */}
               <style jsx global>{`
+                /* WebKit browsers (Safari, Chrome) */
                 .no-skip-controls::-webkit-media-controls-timeline,
                 .no-skip-controls::-webkit-media-controls-seek-back-button,
                 .no-skip-controls::-webkit-media-controls-seek-forward-button,
                 .no-skip-controls::-webkit-media-controls-current-time-display,
-                .no-skip-controls::-webkit-media-controls-time-remaining-display {
+                .no-skip-controls::-webkit-media-controls-time-remaining-display,
+                .no-skip-controls::-webkit-media-controls-slider {
                   pointer-events: none !important;
                   cursor: not-allowed !important;
                 }
-                /* Also try to make the scrubber/thumb non-interactive */
-                .no-skip-controls::-webkit-media-controls-slider {
-                  pointer-events: none !important;
+                
+                /* Mobile-specific: Disable touch interactions */
+                .no-skip-controls {
+                  -webkit-touch-callout: none !important;
+                  -webkit-user-select: none !important;
+                  -khtml-user-select: none !important;
+                  -moz-user-select: none !important;
+                  -ms-user-select: none !important;
+                  user-select: none !important;
+                }
+                
+                /* Additional mobile browser support */
+                @media (max-width: 1024px) {
+                  .no-skip-controls {
+                    pointer-events: none !important;
+                  }
+                  .no-skip-controls::-webkit-media-controls {
+                    pointer-events: none !important;
+                  }
                 }
               `}</style>
             </div>
