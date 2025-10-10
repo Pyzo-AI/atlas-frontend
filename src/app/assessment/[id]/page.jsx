@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useGetQuizQuery, useSubmitCompletionStatusMutation } from "@/store/api/questionsApi";
+import { useGetQuizQuery, useSubmitCompletionStatusMutation, useGetAssessmentQuery, useSubmitAssessmentMutation } from "@/store/api/questionsApi";
 import Button from "@/components/common/Button";
 import BreadCrumb from "@/components/common/BreadCrumb";
 import { usePostHog } from "@/hooks/usePostHog";
@@ -13,6 +13,8 @@ export default function AssessmentPage() {
   const router = useRouter();
   const params = useParams();
   const presentationId = params.id;
+  const searchParams = useSearchParams();
+  const assessmentId = searchParams.get('assessment-id');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -20,23 +22,42 @@ export default function AssessmentPage() {
   const [assessmentStartTime, setAssessmentStartTime] = useState(null);
   const { capture } = usePostHog();
   const [submitCompletionStatus, { isLoading: isSubmitting }] = useSubmitCompletionStatusMutation();
+  const [submitAssessment, { isLoading: isAssessmentSubmitting }] = useSubmitAssessmentMutation();
 
   useEffect(() => {
     if (isSubmitted) {
-      router.push(`/result?score=${score}&id=${presentationId}`);
+      router.push(assessmentId? `/result?score=${score}&id=${presentationId}&assessment-id=${assessmentId}`:`/result?score=${score}&id=${presentationId}`);
     }
   }, [isSubmitted, score, presentationId, router]);
 
-  // Fetch quiz data using the dynamic presentation ID
+  // Fetch quiz data conditionally based on assessment-id parameter
   const {
     data: quizData,
     isLoading,
     isError,
-  } = useGetQuizQuery(presentationId);
+  } = useGetQuizQuery(presentationId, {
+    skip: !!assessmentId
+  });
 
-  // Track assessment start when quiz data is loaded
+  const {
+    data: assessmentData,
+    isLoading: isAssessmentLoading,
+    isError: isAssessmentError,
+  } = useGetAssessmentQuery(assessmentId, {
+    skip: !assessmentId,
+    refetchOnMountOrArgChange: true
+  });
+
+  const submissionId = assessmentData?.submission_id || null;
+
+  // Use assessment data when available, otherwise use quiz data
+  const currentData = assessmentData || quizData;
+  const currentLoading = assessmentId ? isAssessmentLoading : isLoading;
+  const currentError = assessmentId ? isAssessmentError : isError;
+
+  // Track assessment start when data is loaded
   useEffect(() => {
-    if (quizData && !assessmentStartTime) {
+    if (currentData && !assessmentStartTime) {
       const startTime = new Date().toISOString();
       setAssessmentStartTime(startTime);
 
@@ -44,13 +65,13 @@ export default function AssessmentPage() {
       capture("assessment_start", {
         user_id: userDetails?.sub,
         module_id: presentationId,
-        assessment_id: quizData.quiz_id || presentationId,
+        assessment_id: currentData.quiz_id || assessmentId || presentationId,
       });
     }
-  }, [quizData, assessmentStartTime, presentationId, capture]);
+  }, [currentData, assessmentStartTime, presentationId, assessmentId, capture]);
 
   // Show loading state while fetching data
-  if (isLoading) {
+  if (currentLoading) {
     return (
       <div className="min-h-screen bg-[#F9F9F9] pt-3 sm:pt-5 pb-4 sm:pb-8 px-4 sm:px-10">
         <BreadCrumb title="Assessment" />
@@ -103,7 +124,7 @@ export default function AssessmentPage() {
   }
 
   // Show error state if fetch fails
-  if (isError || !quizData) {
+  if (currentError || !currentData) {
     return (
       <div className="min-h-screen bg-[#F9F9F9] flex items-center justify-center px-4">
         <div className="text-base sm:text-[18px] font-lato font-semibold text-red-500 text-center">
@@ -113,9 +134,9 @@ export default function AssessmentPage() {
     );
   }
 
-  const currentQuestion = quizData?.questions?.[currentQuestionIndex];
+  const currentQuestion = currentData?.questions?.[currentQuestionIndex];
   const isLastQuestion =
-    currentQuestionIndex === quizData?.questions?.length - 1;
+    currentQuestionIndex === currentData?.questions?.length - 1;
 
   const handleAnswer = (questionId, answer) => {
     setAnswers((prev) => ({
@@ -125,7 +146,7 @@ export default function AssessmentPage() {
   };
 
   const handleNext = () => {
-    if (currentQuestionIndex < quizData?.questions?.length - 1) {
+    if (currentQuestionIndex < currentData?.questions?.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     }
   };
@@ -138,12 +159,12 @@ export default function AssessmentPage() {
 
   const calculateScore = () => {
     let correct = 0;
-    quizData?.questions?.forEach((question) => {
+    currentData?.questions?.forEach((question) => {
       if (answers[question.question_id] === question.correct_answer) {
         correct++;
       }
     });
-    return Math.round((correct / quizData?.questions?.length) * 100);
+    return Math.round((correct / currentData?.questions?.length) * 100);
   };
 
   const handleSubmit = async () => {
@@ -162,19 +183,43 @@ export default function AssessmentPage() {
     const passingScore = process.env.NEXT_PUBLIC_ASSESSMENT_PASSING_SCORE || 60;
     const passFail = finalScore >= passingScore ? "pass" : "fail";
 
-    // API call to submit completion status
     try {
-      await submitCompletionStatus({
-        presentationId,
-        isPresentationCompleted: passFail === "pass",
-        user_id: userDetails?.sub,
-      }).unwrap();
+      let responseScore = finalScore;
+      
+      if (assessmentId && submissionId) {
+        // Format answers for new assessment API
+        const formattedAnswers = Object.entries(answers).map(([questionId, answer]) => ({
+          question_id: parseInt(questionId),
+          answer_text: answer
+        }));
+
+        const response = await submitAssessment({
+          submissionId,
+          answers: formattedAnswers
+        }).unwrap();
+        
+        responseScore = response.percentage;
+        
+        // Call completion status API after assessment submission
+        await submitCompletionStatus({
+          presentationId,
+          isPresentationCompleted: response.passed,
+          user_id: userDetails?.sub,
+        }).unwrap();
+      } else {
+        // Original completion status API
+        await submitCompletionStatus({
+          presentationId,
+          isPresentationCompleted: passFail === "pass",
+          user_id: userDetails?.sub,
+        }).unwrap();
+      }
 
       // Track assessment submission event
       capture("assessment_submit", {
         user_id: userDetails?.sub,
-        assessment_id: quizData?.quiz_id || presentationId,
-        score: finalScore,
+        assessment_id: currentData?.quiz_id || assessmentId || presentationId,
+        score: responseScore,
         pass_fail: passFail,
         time_taken: timeTaken,
       });
@@ -184,14 +229,13 @@ export default function AssessmentPage() {
         user_id: userDetails?.sub,
         module_id: presentationId,
         completion_time: completionTime,
-        score: finalScore,
-        // total_questions: quizData?.questions?.length,
+        score: responseScore,
       });
 
-      setScore(finalScore);
+      setScore(responseScore);
       setIsSubmitted(true);
     } catch (error) {
-      console.log('Error submitting completion status:', error);
+      console.log('Error submitting assessment:', error);
       toast.error("Failed to submit assessment. Please try again.");
     }
   };
@@ -211,14 +255,14 @@ export default function AssessmentPage() {
       <div className="max-w-4xl mx-auto bg-white rounded-lg sm:rounded-xl border border-[#E5E7EB] overflow-hidden">
         <div className="p-4 sm:p-8">
           <h1 className="text-xl sm:text-[24px] font-lato font-bold mb-6 sm:mb-8 text-center text-[#1A1C29]">
-            {quizData.title}
+            {currentData.title}
           </h1>
 
           <div className="mb-4 sm:mb-6">
             <div className="flex justify-between items-center mb-3 sm:mb-4">
               <span className="text-sm sm:text-[14px] font-lato font-medium text-[#667085]">
                 Question {currentQuestionIndex + 1} of{" "}
-                {quizData?.questions?.length}
+                {currentData?.questions?.length}
               </span>
             </div>
 
@@ -227,7 +271,11 @@ export default function AssessmentPage() {
             </h2>
 
             <div className="space-y-2 sm:space-y-3">
-              {Object.entries(JSON.parse(currentQuestion?.options)).map(
+              {Object.entries(
+                typeof currentQuestion?.options === 'string' 
+                  ? JSON.parse(currentQuestion.options.replace(/'/g, '"'))
+                  : currentQuestion?.options || {}
+              ).map(
                 ([option, text]) => (
                   <div
                     key={option}
@@ -276,15 +324,15 @@ export default function AssessmentPage() {
             {isLastQuestion ? (
               <Button
                 onClick={handleSubmit}
-                disabled={!answers[currentQuestion.question_id] || isSubmitting}
+                disabled={!answers[currentQuestion.question_id] || isSubmitting || isAssessmentSubmitting}
                 variant="primary"
-                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[8px] font-lato font-medium text-sm sm:text-[14px] flex-1 sm:flex-none ${!answers[currentQuestion.question_id] || isSubmitting
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[8px] font-lato font-medium text-sm sm:text-[14px] flex-1 sm:flex-none ${!answers[currentQuestion.question_id] || isSubmitting || isAssessmentSubmitting
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-[#744FFF] text-white hover:bg-[#6B46E5] cursor-pointer"
                   }`}
               >
-                <span className="hidden sm:inline">{isSubmitting ? "Submitting..." : "Submit Assessment"}</span>
-                <span className="sm:hidden">{isSubmitting ? "Submitting..." : "Submit"}</span>
+                <span className="hidden sm:inline">{(isSubmitting || isAssessmentSubmitting) ? "Submitting..." : "Submit Assessment"}</span>
+                <span className="sm:hidden">{(isSubmitting || isAssessmentSubmitting) ? "Submitting..." : "Submit"}</span>
               </Button>
             ) : (
               <Button

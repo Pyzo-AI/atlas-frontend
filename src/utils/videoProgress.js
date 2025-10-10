@@ -31,8 +31,8 @@ export const updateVideoProgress = (presentationId, slideId, durationSeconds) =>
       presentation.slide_data.push(slideEntry);
     }
     
-    // Update duration
-    slideEntry.duration_seconds = durationSeconds;
+    // Update duration only if new value is higher
+    slideEntry.duration_seconds = Math.max(slideEntry.duration_seconds, durationSeconds);
     
     localStorage.setItem(VIDEO_PROGRESS_KEY, JSON.stringify(progressData));
   } catch (error) {
