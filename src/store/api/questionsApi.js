@@ -49,8 +49,21 @@ export const questionsApi = createApi({
         body: progressData,
       }),
     }),
-    
-  
+
+    // Get assessment
+    getAssessment: builder.query({
+      query: (assessmentId) => `api/learner/assessments/${assessmentId}/start`,
+      providesTags: ['Question'],
+    }),
+
+    // Submit assessment
+    submitAssessment: builder.mutation({
+      query: ({ submissionId, answers }) => ({
+        url: `api/learner/submissions/${submissionId}/submit`,
+        method: 'POST',
+        body: { answers },
+      }),
+    }),
   }),
 });
 
@@ -61,4 +74,6 @@ export const {
   useGetPresentationsQuery,
   useSubmitCompletionStatusMutation,
   useSubmitVideoProgressMutation,
+  useGetAssessmentQuery,
+  useSubmitAssessmentMutation,
 } = questionsApi;

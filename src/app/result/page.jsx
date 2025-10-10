@@ -11,6 +11,8 @@ import BreadCrumb from "@/components/common/BreadCrumb";
 function ResultContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+    const assessmentId = searchParams.get('assessment-id');
+    console.log(assessmentId,"Assessment ID in Result Page");
   const [score, setScore] = useState(null);
   const dispatch = useDispatch();
   const presentationId = searchParams.get("id");
@@ -25,7 +27,7 @@ function ResultContent() {
   const isPerfectScore = score == passingScore;
 
   const handleRetry = () => {
-    router.push(`/assessment/${presentationId}`);
+    router.push(`/assessment/${presentationId}?assessment-id=${assessmentId}`);
   };
 
   const handleRestartTraining = () => {
