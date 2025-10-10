@@ -40,8 +40,30 @@ export const questionsApi = createApi({
         body: statusData,
       }),
     }),
-    
-  
+
+    // Submit video progress
+    submitVideoProgress: builder.mutation({
+      query: (progressData) => ({
+        url: 'api/learner/activities',
+        method: 'POST',
+        body: progressData,
+      }),
+    }),
+
+    // Get assessment
+    getAssessment: builder.query({
+      query: (assessmentId) => `api/learner/assessments/${assessmentId}/start`,
+      providesTags: ['Question'],
+    }),
+
+    // Submit assessment
+    submitAssessment: builder.mutation({
+      query: ({ submissionId, answers }) => ({
+        url: `api/learner/submissions/${submissionId}/submit`,
+        method: 'POST',
+        body: { answers },
+      }),
+    }),
   }),
 });
 
@@ -51,4 +73,7 @@ export const {
   useGetAllVideoQuery,
   useGetPresentationsQuery,
   useSubmitCompletionStatusMutation,
+  useSubmitVideoProgressMutation,
+  useGetAssessmentQuery,
+  useSubmitAssessmentMutation,
 } = questionsApi;

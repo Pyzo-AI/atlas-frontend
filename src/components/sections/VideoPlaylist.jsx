@@ -3,12 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCurrentVideoIndex } from "@/store/features/videoSlice";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
+import { getVideoProgress } from "@/utils/videoProgress";
+import { useParams } from "next/navigation";
 
 const VideoPlaylist = ({
   videos = [],
   loading = false,
   onVideoSelect,
-  presentationId,
   isMobile = false,
   canSkipVideo = false,
 }) => {
@@ -18,6 +19,7 @@ const VideoPlaylist = ({
   const videoItemRefs = useRef([]);
   const [showFade, setShowFade] = useState(false);
   const { capture } = usePostHog();
+  const presentationId = useParams().id;
 
   const formatDuration = (duration) => {
     if (!duration) return "0:00";
@@ -35,6 +37,39 @@ const VideoPlaylist = ({
         container.scrollWidth - 10; // 10px threshold
       setShowFade(!isScrolledToEnd);
     }
+  };
+
+  const hasLocalProgress = (slideId) => {
+    try {
+      const progressData = getVideoProgress(presentationId);
+      const slideEntries =
+        progressData?.slide_data?.filter(
+          (entry) => entry.slide_id === slideId
+        ) || [];
+      const maxLocalDuration =
+        slideEntries.length > 0
+          ? Math.max(...slideEntries.map((entry) => entry.duration_seconds))
+          : 0;
+      const apiDuration =
+        videos.find((video) => video.slide === slideId)?.duration_viewed || 0;
+      return Math.max(maxLocalDuration, apiDuration);
+    } catch {
+      return 0;
+    }
+  };
+
+  const isVideoCompleted = (slideId) => {
+    const viewedDuration = Math.floor(hasLocalProgress(slideId));
+    const totalDuration = Math.floor(
+      videos.find((video) => video.slide === slideId)?.duration || 0
+    );
+    const isAlreadyCompleted = videos.find(
+      (video) => video.slide === slideId
+    )?.is_completed;
+    const isCompleted =
+      isAlreadyCompleted ||
+      (totalDuration > 0 && viewedDuration >= totalDuration);
+    return viewedDuration >= totalDuration;
   };
 
   // Auto-scroll to current video when currentVideoIndex changes
@@ -154,7 +189,7 @@ const VideoPlaylist = ({
               key={index}
               ref={(el) => (videoItemRefs.current[index] = el)}
               onClick={() => {
-                if (!canSkipVideo && index > currentVideoIndex) {
+                if (!canSkipVideo && hasLocalProgress(video.slide) === 0) {
                   return;
                 }
                 handleVideoSelect(index);
@@ -167,7 +202,7 @@ const VideoPlaylist = ({
                   : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
               }
               ${
-                !canSkipVideo && index > currentVideoIndex
+                !canSkipVideo && hasLocalProgress(video.slide) === 0
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
               }`}
@@ -189,7 +224,7 @@ const VideoPlaylist = ({
               </div>
 
               {/* Status indicator - keeping absolute position as requested */}
-              {/* {currentVideoIndex > index && (
+              {isVideoCompleted(video?.slide) && (
                 <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
                   <svg
                     className="w-[9.6px] h-[9.6px] text-white"
@@ -203,7 +238,7 @@ const VideoPlaylist = ({
                     />
                   </svg>
                 </div>
-              )} */}
+              )}
             </div>
           ))}
         </div>
