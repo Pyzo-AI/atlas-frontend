@@ -92,6 +92,7 @@ const VideoPanel = forwardRef(
       setConversationHistory,
       isPresentationQuizPassed,
       canSkipVideo = false,
+      assessmentId,
     },
     ref
   ) => {
@@ -135,9 +136,11 @@ const VideoPanel = forwardRef(
     const preloadVideoRef = useRef(null); // For preloading next video
     const router = useRouter();
     const dispatch = useDispatch();
-    const { currentVideoIndex, isQuestionMode, currentVideoTime: reduxCurrentVideoTime } = useSelector(
-      (state) => state.video
-    );
+    const {
+      currentVideoIndex,
+      isQuestionMode,
+      currentVideoTime: reduxCurrentVideoTime,
+    } = useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
     const [showChat, setShowChat] = useState(false);
@@ -474,10 +477,16 @@ const VideoPanel = forwardRef(
 
         // Save progress for previous video when switching
         if (newSrc && newSrc !== lastVideoSrc && lastVideoSrc) {
-          const prevVideoIndex = videos.findIndex(v => v.trainer_video === lastVideoSrc);
+          const prevVideoIndex = videos.findIndex(
+            (v) => v.trainer_video === lastVideoSrc
+          );
           if (prevVideoIndex !== -1) {
             const prevVideo = videos[prevVideoIndex];
-            updateVideoProgress(presentationId, prevVideo.slide, Math.floor(currentTime - videoStartTime));
+            updateVideoProgress(
+              presentationId,
+              prevVideo.slide,
+              Math.floor(currentTime - videoStartTime)
+            );
           }
         }
 
@@ -680,7 +689,11 @@ const VideoPanel = forwardRef(
       // Save progress for completed video
       const currentVideo = videos?.[currentVideoIndex];
       if (currentVideo) {
-        updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
+        updateVideoProgress(
+          presentationId,
+          currentVideo.slide,
+          Math.floor(currentTime - videoStartTime)
+        );
       }
 
       // Track video completion event
@@ -708,13 +721,13 @@ const VideoPanel = forwardRef(
         // Set start time for next video based on its duration_viewed (unless duration equals duration_viewed)
         try {
           let startTime = 0;
-          if (nextVideo && typeof nextVideo.duration_viewed === 'number') {
+          if (nextVideo && typeof nextVideo.duration_viewed === "number") {
             startTime = nextVideo.duration_viewed;
           }
           if (
             nextVideo &&
-            typeof nextVideo.duration === 'number' &&
-            typeof nextVideo.duration_viewed === 'number' &&
+            typeof nextVideo.duration === "number" &&
+            typeof nextVideo.duration_viewed === "number" &&
             Math.abs(nextVideo.duration - nextVideo.duration_viewed) <= 1e-6
           ) {
             startTime = 0;
@@ -766,19 +779,24 @@ const VideoPanel = forwardRef(
         // Save progress for current video before switching
         const currentVideo = videos[currentVideoIndex];
         if (currentVideo) {
-          updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
+          updateVideoProgress(
+            presentationId,
+            currentVideo.slide,
+            Math.floor(currentTime - videoStartTime)
+          );
         }
-        
+
         setAutoPlayEnabled(true); // Enable autoplay when selecting from playlist
         // Set the new video's start time from its duration_viewed
         try {
           const target = videos?.[index];
           let startTime = 0;
-          if (target && typeof target.duration_viewed === 'number') startTime = target.duration_viewed;
+          if (target && typeof target.duration_viewed === "number")
+            startTime = target.duration_viewed;
           if (
             target &&
-            typeof target.duration === 'number' &&
-            typeof target.duration_viewed === 'number' &&
+            typeof target.duration === "number" &&
+            typeof target.duration_viewed === "number" &&
             Math.abs(target.duration - target.duration_viewed) <= 1e-6
           ) {
             startTime = 0;
@@ -796,11 +814,12 @@ const VideoPanel = forwardRef(
       try {
         const target = videos?.[index];
         let startTime = 0;
-        if (target && typeof target.duration_viewed === 'number') startTime = target.duration_viewed;
+        if (target && typeof target.duration_viewed === "number")
+          startTime = target.duration_viewed;
         if (
           target &&
-          typeof target.duration === 'number' &&
-          typeof target.duration_viewed === 'number' &&
+          typeof target.duration === "number" &&
+          typeof target.duration_viewed === "number" &&
           Math.abs(target.duration - target.duration_viewed) <= 1e-6
         ) {
           startTime = 0;
@@ -848,6 +867,8 @@ const VideoPanel = forwardRef(
       const presentationId = currentPath.split("/lectures/")[1];
       return isPresentationQuizPassed
         ? `/review/${presentationId}?showDisclaimer=true`
+        : assessmentId
+        ? `/assessment/${presentationId}?assessment-id=${assessmentId}`
         : `/assessment/${presentationId}`;
     };
     // Phone view - optimized for 30% width with very compact layout
@@ -933,24 +954,39 @@ const VideoPanel = forwardRef(
                       const slideObj = videos?.[currentVideoIndex];
                       let startTime = 0;
 
-                      if (typeof reduxCurrentVideoTime === 'number' && reduxCurrentVideoTime > 0) {
+                      if (
+                        typeof reduxCurrentVideoTime === "number" &&
+                        reduxCurrentVideoTime > 0
+                      ) {
                         startTime = reduxCurrentVideoTime;
-                      } else if (slideObj && typeof slideObj.duration_viewed === 'number') {
+                      } else if (
+                        slideObj &&
+                        typeof slideObj.duration_viewed === "number"
+                      ) {
                         startTime = slideObj.duration_viewed;
                       }
 
                       if (
                         slideObj &&
-                        typeof slideObj.duration === 'number' &&
-                        typeof slideObj.duration_viewed === 'number' &&
-                        Math.abs(slideObj.duration - slideObj.duration_viewed) <= 1e-6
+                        typeof slideObj.duration === "number" &&
+                        typeof slideObj.duration_viewed === "number" &&
+                        Math.abs(
+                          slideObj.duration - slideObj.duration_viewed
+                        ) <= 1e-6
                       ) {
                         startTime = 0;
                       }
 
-                      if (startTime && typeof startTime === 'number' && !isNaN(startTime)) {
+                      if (
+                        startTime &&
+                        typeof startTime === "number" &&
+                        !isNaN(startTime)
+                      ) {
                         // Clamp to duration
-                        const safeStart = Math.min(startTime, newDuration || startTime);
+                        const safeStart = Math.min(
+                          startTime,
+                          newDuration || startTime
+                        );
                         try {
                           e.target.currentTime = safeStart;
                         } catch (err) {
@@ -960,7 +996,10 @@ const VideoPanel = forwardRef(
                         setCurrentTime(safeStart);
                       }
                     } catch (err) {
-                      console.error('Error applying start time on metadata load', err);
+                      console.error(
+                        "Error applying start time on metadata load",
+                        err
+                      );
                     }
 
                     if (onVideoStateChange) {
@@ -1187,23 +1226,38 @@ const VideoPanel = forwardRef(
                       const slideObj = videos?.[currentVideoIndex];
                       let startTime = 0;
 
-                      if (typeof reduxCurrentVideoTime === 'number' && reduxCurrentVideoTime > 0) {
+                      if (
+                        typeof reduxCurrentVideoTime === "number" &&
+                        reduxCurrentVideoTime > 0
+                      ) {
                         startTime = reduxCurrentVideoTime;
-                      } else if (slideObj && typeof slideObj.duration_viewed === 'number') {
+                      } else if (
+                        slideObj &&
+                        typeof slideObj.duration_viewed === "number"
+                      ) {
                         startTime = slideObj.duration_viewed;
                       }
 
                       if (
                         slideObj &&
-                        typeof slideObj.duration === 'number' &&
-                        typeof slideObj.duration_viewed === 'number' &&
-                        Math.abs(slideObj.duration - slideObj.duration_viewed) <= 1e-6
+                        typeof slideObj.duration === "number" &&
+                        typeof slideObj.duration_viewed === "number" &&
+                        Math.abs(
+                          slideObj.duration - slideObj.duration_viewed
+                        ) <= 1e-6
                       ) {
                         startTime = 0;
                       }
 
-                      if (startTime && typeof startTime === 'number' && !isNaN(startTime)) {
-                        const safeStart = Math.min(startTime, newDuration || startTime);
+                      if (
+                        startTime &&
+                        typeof startTime === "number" &&
+                        !isNaN(startTime)
+                      ) {
+                        const safeStart = Math.min(
+                          startTime,
+                          newDuration || startTime
+                        );
                         try {
                           e.target.currentTime = safeStart;
                         } catch (err) {}
@@ -1211,7 +1265,10 @@ const VideoPanel = forwardRef(
                         setCurrentTime(safeStart);
                       }
                     } catch (err) {
-                      console.error('Error applying start time on metadata load', err);
+                      console.error(
+                        "Error applying start time on metadata load",
+                        err
+                      );
                     }
 
                     if (onVideoStateChange) {
@@ -1428,13 +1485,17 @@ const VideoPanel = forwardRef(
                   }
                   setCurrentTime(time);
                   dispatch(setCurrentVideoTime(time));
-                  
+
                   // Update video progress with current video position
                   const currentVideo = videos?.[currentVideoIndex];
                   if (currentVideo && !e.target.paused) {
-                    updateVideoProgress(presentationId, currentVideo.slide, Math.floor(time));
+                    updateVideoProgress(
+                      presentationId,
+                      currentVideo.slide,
+                      Math.floor(time)
+                    );
                   }
-                  
+
                   // Pass video state to parent for PPT synchronization
                   if (onVideoStateChange) {
                     onVideoStateChange({
@@ -1484,23 +1545,37 @@ const VideoPanel = forwardRef(
                     const slideObj = videos?.[currentVideoIndex];
                     let startTime = 0;
 
-                    if (typeof reduxCurrentVideoTime === 'number' && reduxCurrentVideoTime > 0) {
+                    if (
+                      typeof reduxCurrentVideoTime === "number" &&
+                      reduxCurrentVideoTime > 0
+                    ) {
                       startTime = reduxCurrentVideoTime;
-                    } else if (slideObj && typeof slideObj.duration_viewed === 'number') {
+                    } else if (
+                      slideObj &&
+                      typeof slideObj.duration_viewed === "number"
+                    ) {
                       startTime = slideObj.duration_viewed;
                     }
 
                     if (
                       slideObj &&
-                      typeof slideObj.duration === 'number' &&
-                      typeof slideObj.duration_viewed === 'number' &&
-                      Math.abs(slideObj.duration - slideObj.duration_viewed) <= 1e-6
+                      typeof slideObj.duration === "number" &&
+                      typeof slideObj.duration_viewed === "number" &&
+                      Math.abs(slideObj.duration - slideObj.duration_viewed) <=
+                        1e-6
                     ) {
                       startTime = 0;
                     }
 
-                    if (startTime && typeof startTime === 'number' && !isNaN(startTime)) {
-                      const safeStart = Math.min(startTime, newDuration || startTime);
+                    if (
+                      startTime &&
+                      typeof startTime === "number" &&
+                      !isNaN(startTime)
+                    ) {
+                      const safeStart = Math.min(
+                        startTime,
+                        newDuration || startTime
+                      );
                       try {
                         e.target.currentTime = safeStart;
                       } catch (err) {}
@@ -1508,7 +1583,10 @@ const VideoPanel = forwardRef(
                       setCurrentTime(safeStart);
                     }
                   } catch (err) {
-                    console.error('Error applying start time on metadata load', err);
+                    console.error(
+                      "Error applying start time on metadata load",
+                      err
+                    );
                   }
 
                   // Notify parent about duration

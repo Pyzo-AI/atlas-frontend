@@ -58,9 +58,9 @@ const Home = () => {
     (video) => video?.trainer_video && video?.trainer_video?.trim() !== ""
   );
   const userName = getUserDetailsFromToken()?.preferred_username;
-  console.log(userName, "userName");
-  // Check if video can be skipped based on API response
-  //
+  const assessmentId = data?.assessment_details?.[0]?.id; 
+  console.log("Assessment ID from API:", assessmentId);
+
   const canSkipVideo = data?.hasOwnProperty("is_skippable")
     ? data.is_skippable
     : !userName?.includes("jeenaseekho");
@@ -374,6 +374,7 @@ const Home = () => {
                   data?.is_presentation_quiz_passed || false
                 }
                 canSkipVideo={canSkipVideo}
+                assessmentId={assessmentId}
               />
             </div>
           </div>
@@ -441,6 +442,7 @@ const Home = () => {
                   data?.is_presentation_quiz_passed || false
                 }
                 canSkipVideo={canSkipVideo}
+                assessmentId={assessmentId}
               />
             </div>
           </div>
@@ -497,6 +499,7 @@ const Home = () => {
                   data?.is_presentation_quiz_passed || false
                 }
                 canSkipVideo={canSkipVideo}
+                assessmentId={assessmentId}
               />
             </div>
           </div>
