@@ -28,6 +28,8 @@ import ChatUI from "./ChatUI";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
 import { updateVideoProgress, startVideoSession } from "@/utils/videoProgress";
+import redirecting_logo from "@/assets/svg/redirecting.svg";
+import Image from "next/image";
 
 // Conversation history management for VideoPanel
 const {
@@ -394,13 +396,13 @@ const VideoPanel = forwardRef(
       if (!showRedirectPopup) return;
 
       const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
+        // setCountdown((prev) => {
+        //   if (prev <= 1) {
+        //     clearInterval(timer);
+        //     return 0;
+        //   }
+        //   return prev - 1;
+        // });
       }, 1000);
 
       if (countdown === 0) {
@@ -766,6 +768,10 @@ const VideoPanel = forwardRef(
       setCountdown(10);
     };
 
+    const handleRedirectToHomePage = () => {
+      router.push("/");
+    };
+
     // Format time in MM:SS
     const formatTime = (timeInSeconds) => {
       const minutes = Math.floor(timeInSeconds / 60);
@@ -877,38 +883,59 @@ const VideoPanel = forwardRef(
         <div className="flex flex-col h-full gap-1">
           {/* Redirect Popup */}
           {showRedirectPopup && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-                <h3 className="text-xl font-semibold mb-4">
-                  Training Complete!
-                </h3>
-                <p className="mb-6">
-                  Redirecting to{" "}
-                  {isPresentationQuizPassed ? "Review" : "Assessment"} in{" "}
-                  {countdown} seconds...
-                </p>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-blue-600 h-2.5 rounded-full"
-                    style={{ width: `${(10 - countdown) * 10}%` }}
-                  ></div>
-                </div>
-                <div className="mt-6 flex justify-end space-x-3">
-                  <button
-                    onClick={handleClosePopup}
-                    className="cursor-pointer px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => {
-                      router.push(getRedirectPath());
-                    }}
-                    className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
-                  >
-                    Go to {isPresentationQuizPassed ? "Review" : "Assessment"}{" "}
-                    Now
-                  </button>
+            <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
+              <div className="relative flex flex-col items-center p-5 gap-5 w-96  bg-white rounded-2xl">
+                {/* Content Container */}
+                <div className="flex flex-col items-center gap-6 w-[336px] ">
+                  {/* Icon and Text Section */}
+                  <div className="flex flex-col items-center gap-5 w-[336px] ">
+                    {/* Icon */}
+                    <Image
+                      src={redirecting_logo}
+                      alt="Training Completed"
+                      width={80}
+                      height={80}
+                      className="w-[50px] h-[50px]"
+                    />
+
+                    {/* Text Content */}
+                    <div className="flex flex-col items-center gap-2 w-[336px] h-[70px]">
+                      <h3 className="font-lato font-bold text-xl leading-6 text-[#1A1C29]">
+                        Training Completed!
+                      </h3>
+                      <div className="flex flex-col items-center gap-1 w-[336px] h-[38px]">
+                        <p className="font-lato font-normal text-sm leading-[17px] text-center text-[rgba(26,28,41,0.8)]">
+                          You'll be redirected to the assessment in
+                        </p>
+                        <span className="font-lato font-bold text-sm leading-[17px] text-[#744FFF]">
+                          {countdown} seconds.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex flex-row items-center gap-3 w-[336px] h-10">
+                    {/* Do It Later Button */}
+                    <button
+                      onClick={handleRedirectToHomePage}
+                      className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[rgba(116,79,255,0.12)] rounded-[73.75px] cursor-pointer"
+                    >
+                      <span className="font-lato font-semibold text-base leading-4 text-center text-[#744FFF]">
+                        Do It Later
+                      </span>
+                    </button>
+
+                    {/* Start Now Button */}
+                    <button
+                      onClick={() => router.push(getRedirectPath())}
+                      className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[#744FFF] rounded-[73.75px] cursor-pointer"
+                    >
+                      <span className="font-lato font-semibold text-base leading-4 text-center text-white">
+                        Start Now
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1068,8 +1095,12 @@ const VideoPanel = forwardRef(
                   poster={videos?.[currentVideoIndex]?.thumbnail}
                   autoPlay={autoPlayEnabled}
                   controls={true}
-                  controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplaybook" : "nodownload"}
-                  style={!canSkipVideo ? { pointerEvents: 'none' } : undefined}
+                  controlsList={
+                    !canSkipVideo
+                      ? "nodownload nofullscreen noremoteplaybook"
+                      : "nodownload"
+                  }
+                  style={!canSkipVideo ? { pointerEvents: "none" } : undefined}
                   disablePictureInPicture
                 />
               </div>
@@ -1154,38 +1185,59 @@ const VideoPanel = forwardRef(
         <div className="flex flex-col h-full gap-3">
           {/* Redirect Popup */}
           {showRedirectPopup && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-                <h3 className="text-xl font-semibold mb-4">
-                  Training Complete!
-                </h3>
-                <p className="mb-6">
-                  Redirecting to{" "}
-                  {isPresentationQuizPassed ? "Review" : "Assessment"} in{" "}
-                  {countdown} seconds...
-                </p>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-blue-600 h-2.5 rounded-full"
-                    style={{ width: `${(10 - countdown) * 10}%` }}
-                  ></div>
-                </div>
-                <div className="mt-6 flex justify-end space-x-3">
-                  <button
-                    onClick={handleClosePopup}
-                    className="cursor-pointer px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => {
-                      router.push(getRedirectPath());
-                    }}
-                    className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
-                  >
-                    Go to {isPresentationQuizPassed ? "Review" : "Assessment"}{" "}
-                    Now
-                  </button>
+            <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
+              <div className="relative flex flex-col items-center p-6 gap-5 w-96  bg-white rounded-2xl">
+                {/* Content Container */}
+                <div className="flex flex-col items-center gap-6 w-[336px] ">
+                  {/* Icon and Text Section */}
+                  <div className="flex flex-col items-center gap-5 w-[336px] ">
+                    {/* Icon */}
+                    <Image
+                      src={redirecting_logo}
+                      alt="Training Completed"
+                      width={80}
+                      height={80}
+                      className="w-[50px] h-[50px]"
+                    />
+
+                    {/* Text Content */}
+                    <div className="flex flex-col items-center gap-2 w-[336px] h-[70px]">
+                      <h3 className="font-lato font-bold text-xl leading-6 text-[#1A1C29]">
+                        Training Completed!
+                      </h3>
+                      <div className="flex flex-col items-center gap-1 w-[336px] h-[38px]">
+                        <p className="font-lato font-normal text-sm leading-[17px] text-center text-[rgba(26,28,41,0.8)]">
+                          You'll be redirected to the assessment in
+                        </p>
+                        <span className="font-lato font-bold text-sm leading-[17px] text-[#744FFF]">
+                          {countdown} seconds.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex flex-row items-center gap-3 w-[336px] h-10">
+                    {/* Do It Later Button */}
+                    <button
+                      onClick={handleRedirectToHomePage}
+                      className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[rgba(116,79,255,0.12)] rounded-[73.75px] cursor-pointer"
+                    >
+                      <span className="font-lato font-semibold text-base leading-4 text-center text-[#744FFF]">
+                        Do It Later
+                      </span>
+                    </button>
+
+                    {/* Start Now Button */}
+                    <button
+                      onClick={() => router.push(getRedirectPath())}
+                      className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[#744FFF] rounded-[73.75px] cursor-pointer"
+                    >
+                      <span className="font-lato font-semibold text-base leading-4 text-center text-white">
+                        Start Now
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1338,8 +1390,12 @@ const VideoPanel = forwardRef(
                   poster={videos?.[currentVideoIndex]?.thumbnail}
                   autoPlay={autoPlayEnabled}
                   controls={true}
-                  controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplaybook" : "nodownload"}
-                  style={!canSkipVideo ? { pointerEvents: 'none' } : undefined}
+                  controlsList={
+                    !canSkipVideo
+                      ? "nodownload nofullscreen noremoteplaybook"
+                      : "nodownload"
+                  }
+                  style={!canSkipVideo ? { pointerEvents: "none" } : undefined}
                   disablePictureInPicture
                 />
               </div>
@@ -1419,35 +1475,59 @@ const VideoPanel = forwardRef(
       >
         {/* Redirect Popup */}
         {showRedirectPopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-              <h3 className="text-xl font-semibold mb-4">Training Complete!</h3>
-              <p className="mb-6">
-                Redirecting to{" "}
-                {isPresentationQuizPassed ? "Review" : "Assessment"} in{" "}
-                {countdown} seconds...
-              </p>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className="bg-[#744FFF] h-2.5 rounded-full"
-                  style={{ width: `${(10 - countdown) * 10}%` }}
-                ></div>
-              </div>
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={handleClosePopup}
-                  className="cursor-pointer px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    router.push(getRedirectPath());
-                  }}
-                  className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
-                >
-                  Go to {isPresentationQuizPassed ? "Review" : "Assessment"} Now
-                </button>
+          <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
+            <div className="relative flex flex-col items-center p-6 gap-5 w-96  bg-white rounded-2xl">
+              {/* Content Container */}
+              <div className="flex flex-col items-center gap-6 w-[336px] ">
+                {/* Icon and Text Section */}
+                <div className="flex flex-col items-center gap-5 w-[336px] ">
+                  {/* Icon */}
+                  <Image
+                    src={redirecting_logo}
+                    alt="Training Completed"
+                    width={80}
+                    height={80}
+                    className="w-[50px] h-[50px]"
+                  />
+
+                  {/* Text Content */}
+                  <div className="flex flex-col items-center gap-2 w-[336px] h-[70px]">
+                    <h3 className="font-lato font-bold text-xl leading-6 text-[#1A1C29]">
+                      Training Completed!
+                    </h3>
+                    <div className="flex flex-col items-center gap-1 w-[336px] h-[38px]">
+                      <p className="font-lato font-normal text-sm leading-[17px] text-center text-[rgba(26,28,41,0.8)]">
+                        You'll be redirected to the assessment in
+                      </p>
+                      <span className="font-lato font-bold text-sm leading-[17px] text-[#744FFF]">
+                        {countdown} seconds.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex flex-row items-center gap-3 w-[336px] h-10">
+                  {/* Do It Later Button */}
+                  <button
+                    onClick={handleRedirectToHomePage}
+                    className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[rgba(116,79,255,0.12)] rounded-[73.75px] cursor-pointer"
+                  >
+                    <span className="font-lato font-semibold text-base leading-4 text-center text-[#744FFF]">
+                      Do It Later
+                    </span>
+                  </button>
+
+                  {/* Start Now Button */}
+                  <button
+                    onClick={() => router.push(getRedirectPath())}
+                    className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[#744FFF] rounded-[73.75px] cursor-pointer"
+                  >
+                    <span className="font-lato font-semibold text-base leading-4 text-center text-white">
+                      Start Now
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1467,8 +1547,12 @@ const VideoPanel = forwardRef(
                 className={`absolute top-0 left-0 w-full h-full object-cover ${
                   !canSkipVideo ? "no-skip-controls" : ""
                 }`}
-                controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplayback" : undefined}
-                style={!canSkipVideo ? { pointerEvents: 'none' } : undefined}
+                controlsList={
+                  !canSkipVideo
+                    ? "nodownload nofullscreen noremoteplayback"
+                    : undefined
+                }
+                style={!canSkipVideo ? { pointerEvents: "none" } : undefined}
                 onEnded={handleVideoEnd}
                 onTimeUpdate={(e) => {
                   const time = e.target.currentTime;
@@ -1776,7 +1860,7 @@ const VideoPanel = forwardRef(
                   pointer-events: none !important;
                   cursor: not-allowed !important;
                 }
-                
+
                 /* Mobile-specific: Disable touch interactions */
                 .no-skip-controls {
                   -webkit-touch-callout: none !important;
@@ -1786,7 +1870,7 @@ const VideoPanel = forwardRef(
                   -ms-user-select: none !important;
                   user-select: none !important;
                 }
-                
+
                 /* Additional mobile browser support */
                 @media (max-width: 1024px) {
                   .no-skip-controls {
