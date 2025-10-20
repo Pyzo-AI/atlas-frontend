@@ -7,20 +7,11 @@ import {
   setAnswerPptIndex,
   setIsQuestionMode,
 } from "@/store/features/videoSlice";
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useConversation } from "@elevenlabs/react";
-import {
-  CONVERSATION_CONFIG,
-  cleanExpiredMessages,
-} from "@/config/conversationConfig";
+import { CONVERSATION_CONFIG, cleanExpiredMessages } from "@/config/conversationConfig";
 import AILearningAssistant from "./AILearningAssistant";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
@@ -66,10 +57,7 @@ const saveConversationHistory = (history) => {
   try {
     // Keep only the most recent messages to prevent localStorage bloat
     const trimmedHistory = history.slice(-MAX_HISTORY_MESSAGES);
-    localStorage.setItem(
-      CONVERSATION_STORAGE_KEY,
-      JSON.stringify(trimmedHistory)
-    );
+    localStorage.setItem(CONVERSATION_STORAGE_KEY, JSON.stringify(trimmedHistory));
   } catch (error) {
     console.error("Error saving conversation history:", error);
   }
@@ -103,10 +91,7 @@ const VideoPanel = forwardRef(
       isConnected: false,
       isAudioPlaying: false,
     });
-    const [
-      isJumpedOnChatFromInteractionMode,
-      setIsJumpedOnChatFromInteractionMode,
-    ] = useState(false);
+    const [isJumpedOnChatFromInteractionMode, setIsJumpedOnChatFromInteractionMode] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
@@ -146,8 +131,7 @@ const VideoPanel = forwardRef(
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
     const [showChat, setShowChat] = useState(false);
-    const [persistentConversationHistory, setPersistentConversationHistory] =
-      useState([]);
+    const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
     const [contextSent, setContextSent] = useState(false);
     // Keep ref updated with current isQuestionMode value
     useEffect(() => {
@@ -166,12 +150,7 @@ const VideoPanel = forwardRef(
 
       // Get the last N meaningful messages for context (configurable)
       const recentMessages = persistentConversationHistory
-        .filter(
-          (msg) =>
-            msg.message &&
-            msg.message.trim() &&
-            !msg.message.includes("audioData")
-        )
+        .filter((msg) => msg.message && msg.message.trim() && !msg.message.includes("audioData"))
         .slice(-MAX_CONTEXT_MESSAGES)
         .map((msg) => {
           const source = msg.source === "user" ? "User" : "AI";
@@ -263,15 +242,9 @@ const VideoPanel = forwardRef(
             timestamp: new Date().toISOString(),
           });
 
-          setConversationHistory((prev) => [
-            ...prev,
-            { type: "question", content },
-          ]);
+          setConversationHistory((prev) => [...prev, { type: "question", content }]);
         } else {
-          setConversationHistory((prev) => [
-            ...prev,
-            { type: "answer", content: message.message },
-          ]);
+          setConversationHistory((prev) => [...prev, { type: "answer", content: message.message }]);
         }
 
         // Send context after AI's first message (only if not already sent)
@@ -298,11 +271,7 @@ const VideoPanel = forwardRef(
         }
 
         // Store in persistent history (for context continuity)
-        if (
-          message.message &&
-          message.message.trim() &&
-          !message.message.includes("audioData")
-        ) {
+        if (message.message && message.message.trim() && !message.message.includes("audioData")) {
           const newMessage = {
             id: Date.now() + Math.random(),
             timestamp: new Date().toISOString(),
@@ -479,16 +448,10 @@ const VideoPanel = forwardRef(
 
         // Save progress for previous video when switching
         if (newSrc && newSrc !== lastVideoSrc && lastVideoSrc) {
-          const prevVideoIndex = videos.findIndex(
-            (v) => v.trainer_video === lastVideoSrc
-          );
+          const prevVideoIndex = videos.findIndex((v) => v.trainer_video === lastVideoSrc);
           if (prevVideoIndex !== -1) {
             const prevVideo = videos[prevVideoIndex];
-            updateVideoProgress(
-              presentationId,
-              prevVideo.slide,
-              Math.floor(currentTime - videoStartTime)
-            );
+            updateVideoProgress(presentationId, prevVideo.slide, Math.floor(currentTime - videoStartTime));
           }
         }
 
@@ -514,10 +477,7 @@ const VideoPanel = forwardRef(
               preloadVideoRef.current.src = "";
               setPreloadedVideoIndex(-1);
             } catch (error) {
-              console.log(
-                "Error using preloaded video, falling back to normal load:",
-                error
-              );
+              console.log("Error using preloaded video, falling back to normal load:", error);
               videoRef.current.load();
               setPreloadedVideoIndex(-1);
             }
@@ -576,15 +536,7 @@ const VideoPanel = forwardRef(
           }
         }
       }
-    }, [
-      currentVideoIndex,
-      videos,
-      dispatch,
-      preloadedVideoIndex,
-      hasInitialized,
-      autoPlayEnabled,
-      videoSettings,
-    ]);
+    }, [currentVideoIndex, videos, dispatch, preloadedVideoIndex, hasInitialized, autoPlayEnabled, videoSettings]);
 
     // Add effect to scroll active video into view
     useEffect(() => {
@@ -649,23 +601,14 @@ const VideoPanel = forwardRef(
           }
         }
       }
-    }, [
-      currentTime,
-      duration,
-      currentVideoIndex,
-      videos,
-      preloadedVideoIndex,
-      videoSettings,
-    ]);
+    }, [currentTime, duration, currentVideoIndex, videos, preloadedVideoIndex, videoSettings]);
 
     // Sync PPT to video panel when video starts playing
     useEffect(() => {
       if (isPlaying) {
         // When video panel starts playing, sync PPT to the same video
         dispatch(syncPptToVideoPanel());
-        console.log(
-          `Syncing PPT to video panel's current video: ${currentVideoIndex + 1}`
-        );
+        console.log(`Syncing PPT to video panel's current video: ${currentVideoIndex + 1}`);
       }
     }, [isPlaying, currentVideoIndex, dispatch]);
 
@@ -691,11 +634,7 @@ const VideoPanel = forwardRef(
       // Save progress for completed video
       const currentVideo = videos?.[currentVideoIndex];
       if (currentVideo) {
-        updateVideoProgress(
-          presentationId,
-          currentVideo.slide,
-          Math.floor(currentTime - videoStartTime)
-        );
+        updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
       }
 
       // Track video completion event
@@ -785,11 +724,7 @@ const VideoPanel = forwardRef(
         // Save progress for current video before switching
         const currentVideo = videos[currentVideoIndex];
         if (currentVideo) {
-          updateVideoProgress(
-            presentationId,
-            currentVideo.slide,
-            Math.floor(currentTime - videoStartTime)
-          );
+          updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
         }
 
         setAutoPlayEnabled(true); // Enable autoplay when selecting from playlist
@@ -797,8 +732,7 @@ const VideoPanel = forwardRef(
         try {
           const target = videos?.[index];
           let startTime = 0;
-          if (target && typeof target.duration_viewed === "number")
-            startTime = target.duration_viewed;
+          if (target && typeof target.duration_viewed === "number") startTime = target.duration_viewed;
           if (
             target &&
             typeof target.duration === "number" &&
@@ -820,8 +754,7 @@ const VideoPanel = forwardRef(
       try {
         const target = videos?.[index];
         let startTime = 0;
-        if (target && typeof target.duration_viewed === "number")
-          startTime = target.duration_viewed;
+        if (target && typeof target.duration_viewed === "number") startTime = target.duration_viewed;
         if (
           target &&
           typeof target.duration === "number" &&
@@ -874,22 +807,25 @@ const VideoPanel = forwardRef(
       return isPresentationQuizPassed
         ? `/review/${presentationId}?showDisclaimer=true`
         : assessmentId
-        ? `/assessment/${presentationId}?assessment-id=${assessmentId}`
-        : `/assessment/${presentationId}`;
+          ? `/assessment/${presentationId}?assessment-id=${assessmentId}`
+          : `/assessment/${presentationId}`;
     };
-    // Phone view - optimized for 30% width with very compact layout
-    if (isMobileView && isPhoneView) {
+    if (isMobileView) {
+      const isPhone = isPhoneView;
+
       return (
-        <div className="flex flex-col h-full gap-1">
+        <div className={`flex flex-col h-full ${isPhone ? "gap-1" : "gap-3"}`}>
           {/* Redirect Popup */}
           {showRedirectPopup && (
             <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
-              <div className="relative flex flex-col items-center p-5 gap-5 w-96  bg-white rounded-2xl">
+              <div
+                className={`relative flex flex-col items-center  gap-5 w-96 bg-white rounded-2xl ${
+                  isPhone ? "p-5" : "p-6"
+                }`}>
                 {/* Content Container */}
-                <div className="flex flex-col items-center gap-6 w-[336px] ">
-                  {/* Icon and Text Section */}
-                  <div className="flex flex-col items-center gap-5 w-[336px] ">
-                    {/* Icon */}
+                <div className="flex flex-col items-center gap-6 w-[336px]">
+                  {/* Icon */}
+                  <div className="flex flex-col items-center gap-5 w-[336px]">
                     <Image
                       src={redirecting_logo}
                       alt="Training Completed"
@@ -900,9 +836,7 @@ const VideoPanel = forwardRef(
 
                     {/* Text Content */}
                     <div className="flex flex-col items-center gap-2 w-[336px] h-[70px]">
-                      <h3 className="font-lato font-bold text-xl leading-6 text-[#1A1C29]">
-                        Training Completed!
-                      </h3>
+                      <h3 className="font-lato font-bold text-xl leading-6 text-[#1A1C29]">Training Completed!</h3>
                       <div className="flex flex-col items-center gap-1 w-[336px] h-[38px]">
                         <p className="font-lato font-normal text-sm leading-[17px] text-center text-[rgba(26,28,41,0.8)]">
                           You'll be redirected to the assessment in
@@ -916,21 +850,16 @@ const VideoPanel = forwardRef(
 
                   {/* Buttons */}
                   <div className="flex flex-row items-center gap-3 w-[336px] h-10">
-                    {/* Do It Later Button */}
                     <button
                       onClick={handleRedirectToHomePage}
-                      className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[rgba(116,79,255,0.12)] rounded-[73.75px] cursor-pointer"
-                    >
+                      className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[rgba(116,79,255,0.12)] rounded-[73.75px] cursor-pointer">
                       <span className="font-lato font-semibold text-base leading-4 text-center text-[#744FFF]">
                         Do It Later
                       </span>
                     </button>
-
-                    {/* Start Now Button */}
                     <button
                       onClick={() => router.push(getRedirectPath())}
-                      className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[#744FFF] rounded-[73.75px] cursor-pointer"
-                    >
+                      className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[#744FFF] rounded-[73.75px] cursor-pointer">
                       <span className="font-lato font-semibold text-base leading-4 text-center text-white">
                         Start Now
                       </span>
@@ -941,14 +870,15 @@ const VideoPanel = forwardRef(
             </div>
           )}
 
-          {/* Video Section - Very compact for phones */}
-          {!isQuestionMode && !showChat ? (
+          {/* Video Section */}
+          {!isQuestionMode && !showChat && (
             <div
-              className="cursor-pointer p-1 md:p-[6px] lg:p-3 bg-white rounded border border-[#E5E7EB] flex-shrink-0"
-              onClick={togglePlayPause}
-            >
-              <div className="relative w-full pt-[25%] h-32 bg-black rounded overflow-hidden">
-                {/* Very small aspect ratio for phones */}
+              className={`cursor-pointer bg-white border border-[#E5E7EB] ${
+                isPhone ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0" : "p-2 pb-1 rounded-lg "
+              }`}
+              onClick={togglePlayPause}>
+              <div
+                className={`relative w-full bg-black  overflow-hidden ${isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg"}`}>
                 <video
                   key={`trainer-video-${currentVideoIndex}`}
                   ref={videoRef}
@@ -959,98 +889,58 @@ const VideoPanel = forwardRef(
                     const time = e.target.currentTime;
                     setCurrentTime(time);
                     dispatch(setCurrentVideoTime(time));
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime: time,
-                        isPlaying: !e.target.paused,
-                        currentVideoIndex,
-                        duration: e.target.duration || duration,
-                      });
-                    }
+                    onVideoStateChange?.({
+                      currentTime: time,
+                      isPlaying: !e.target.paused,
+                      currentVideoIndex,
+                      duration: e.target.duration || duration,
+                    });
                   }}
                   onLoadedMetadata={(e) => {
                     const newDuration = e.target.duration;
                     setDuration(newDuration);
                     applyVideoSettings(e.target);
 
-                    // Determine start time priority:
-                    // 1) Redux stored currentVideoTime (if > 0)
-                    // 2) Slide's duration_viewed from API
-                    // If slide.duration === duration_viewed then start at 0
                     try {
                       const slideObj = videos?.[currentVideoIndex];
                       let startTime = 0;
-
-                      if (
-                        typeof reduxCurrentVideoTime === "number" &&
-                        reduxCurrentVideoTime > 0
-                      ) {
+                      if (typeof reduxCurrentVideoTime === "number" && reduxCurrentVideoTime > 0) {
                         startTime = reduxCurrentVideoTime;
-                      } else if (
-                        slideObj &&
-                        typeof slideObj.duration_viewed === "number"
-                      ) {
+                      } else if (slideObj && typeof slideObj.duration_viewed === "number") {
                         startTime = slideObj.duration_viewed;
                       }
-
                       if (
                         slideObj &&
                         typeof slideObj.duration === "number" &&
                         typeof slideObj.duration_viewed === "number" &&
-                        Math.abs(
-                          slideObj.duration - slideObj.duration_viewed
-                        ) <= 1e-6
+                        Math.abs(slideObj.duration - slideObj.duration_viewed) <= 1e-6
                       ) {
                         startTime = 0;
                       }
-
-                      if (
-                        startTime &&
-                        typeof startTime === "number" &&
-                        !isNaN(startTime)
-                      ) {
-                        // Clamp to duration
-                        const safeStart = Math.min(
-                          startTime,
-                          newDuration || startTime
-                        );
-                        try {
-                          e.target.currentTime = safeStart;
-                        } catch (err) {
-                          // ignore if browser disallows; we'll try again on canplay
-                        }
+                      if (startTime && typeof startTime === "number" && !isNaN(startTime)) {
+                        const safeStart = Math.min(startTime, newDuration || startTime);
+                        e.target.currentTime = safeStart;
                         dispatch(setCurrentVideoTime(safeStart));
                         setCurrentTime(safeStart);
                       }
                     } catch (err) {
-                      console.error(
-                        "Error applying start time on metadata load",
-                        err
-                      );
+                      console.error("Error applying start time on metadata load", err);
                     }
 
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying,
-                        currentVideoIndex,
-                        duration: newDuration,
-                      });
-                    }
+                    onVideoStateChange?.({
+                      currentTime,
+                      isPlaying,
+                      currentVideoIndex,
+                      duration: newDuration,
+                    });
                   }}
-                  onCanPlay={(e) => {
-                    applyVideoSettings(e.target);
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
+                  onCanPlay={(e) => applyVideoSettings(e.target)}
+                  onClick={(e) => e.stopPropagation()}
                   onPlay={() => {
                     setIsPlaying(true);
                     dispatch(setIsVideoPlaying(true));
                     dispatch(setAnswerPptIndex(null));
-                    if (onPauseAnswerAudio) {
-                      onPauseAnswerAudio();
-                    }
+                    onPauseAnswerAudio?.();
                     const userDetails = getUserDetailsFromToken();
                     const currentVideo = videos?.[currentVideoIndex];
                     if (currentVideo) {
@@ -1061,14 +951,12 @@ const VideoPanel = forwardRef(
                         timestamp: new Date().toISOString(),
                       });
                     }
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying: true,
-                        currentVideoIndex,
-                        duration,
-                      });
-                    }
+                    onVideoStateChange?.({
+                      currentTime,
+                      isPlaying: true,
+                      currentVideoIndex,
+                      duration,
+                    });
                   }}
                   onPause={() => {
                     setIsPlaying(false);
@@ -1083,29 +971,25 @@ const VideoPanel = forwardRef(
                         timestamp: new Date().toISOString(),
                       });
                     }
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying: false,
-                        currentVideoIndex,
-                        duration,
-                      });
-                    }
+                    onVideoStateChange?.({
+                      currentTime,
+                      isPlaying: false,
+                      currentVideoIndex,
+                      duration,
+                    });
                   }}
                   poster={videos?.[currentVideoIndex]?.thumbnail}
                   autoPlay={autoPlayEnabled}
-                  controls={true}
-                  controlsList={
-                    !canSkipVideo
-                      ? "nodownload nofullscreen noremoteplaybook"
-                      : "nodownload"
-                  }
+                  controls
+                  controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplaybook" : "nodownload"}
                   style={!canSkipVideo ? { pointerEvents: "none" } : undefined}
                   disablePictureInPicture
                 />
               </div>
-              {/* Time display - very small for phones */}
-              <div className="px-1 flex justify-between mt-1 text-[8px] leading-3 tracking-normal font-normal text-center text-gray-600 font-lato">
+
+              {/* Time display */}
+              <div
+                className={`px-1 flex justify-between mt-1 font-lato text-gray-600 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`}>
                 <span>
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </span>
@@ -1114,34 +998,32 @@ const VideoPanel = forwardRef(
                 </span>
               </div>
             </div>
-          ) : null}
+          )}
 
-          {/* AI Learning Assistant - Compact for phones */}
+          {/* AI Assistant, Question Mode, Chat, etc. */}
           {!isQuestionMode && !showChat && (
-            <div className="flex-1 min-h-0">
+            <div className={`${isPhone ? "flex-1 min-h-0" : ""}`}>
               <AILearningAssistant
                 setShowChat={setShowChat}
                 showChat={showChat}
                 onStartConversation={startConversation}
                 onStopConversation={stopConversation}
-                isMobileView={true}
                 agentId={agentId}
+                isMobile={isPhone ? true : false}
               />
             </div>
           )}
 
-          {/* Question Mode - Compact */}
           {isQuestionMode && (
             <QuestionModeAI
               isLoading={!conversationState.isConnected}
               isAudioPlaying={conversation.isSpeaking}
               isConnected={conversationState.isConnected}
-              isMobile={true}
               avatarUrl={avatarUrl}
+              isMobile={isPhone ? true : false}
             />
           )}
 
-          {/* Chat UI - Compact */}
           {showChat && (
             <ChatUI
               onClose={handleCloseChatUI}
@@ -1150,15 +1032,12 @@ const VideoPanel = forwardRef(
               onStopConversation={stopConversation}
               isConnected={conversationState.isConnected}
               setShowChat={setShowChat}
-              setIsJumpedOnChatFromInteractionMode={
-                setIsJumpedOnChatFromInteractionMode
-              }
-              isMobile={true}
+              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
               agentId={agentId}
+              isMobile={isPhone ? true : false}
             />
           )}
 
-          {/* Question Mode User - Compact */}
           {isQuestionMode && !showChat && (
             <QuestionModeUser
               onPauseVideo={pauseVideo}
@@ -1169,299 +1048,8 @@ const VideoPanel = forwardRef(
               isAudioPlaying={conversationState.isAudioPlaying}
               isAudioLoading={isListening}
               isConnected={conversationState.isConnected}
-              setIsJumpedOnChatFromInteractionMode={
-                setIsJumpedOnChatFromInteractionMode
-              }
-              isMobile={true}
-            />
-          )}
-        </div>
-      );
-    }
-
-    // Tablet view - optimize video size to show AI Learning Assistant
-    if (isMobileView) {
-      return (
-        <div className="flex flex-col h-full gap-3">
-          {/* Redirect Popup */}
-          {showRedirectPopup && (
-            <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
-              <div className="relative flex flex-col items-center p-6 gap-5 w-96  bg-white rounded-2xl">
-                {/* Content Container */}
-                <div className="flex flex-col items-center gap-6 w-[336px] ">
-                  {/* Icon and Text Section */}
-                  <div className="flex flex-col items-center gap-5 w-[336px] ">
-                    {/* Icon */}
-                    <Image
-                      src={redirecting_logo}
-                      alt="Training Completed"
-                      width={80}
-                      height={80}
-                      className="w-[50px] h-[50px]"
-                    />
-
-                    {/* Text Content */}
-                    <div className="flex flex-col items-center gap-2 w-[336px] h-[70px]">
-                      <h3 className="font-lato font-bold text-xl leading-6 text-[#1A1C29]">
-                        Training Completed!
-                      </h3>
-                      <div className="flex flex-col items-center gap-1 w-[336px] h-[38px]">
-                        <p className="font-lato font-normal text-sm leading-[17px] text-center text-[rgba(26,28,41,0.8)]">
-                          You'll be redirected to the assessment in
-                        </p>
-                        <span className="font-lato font-bold text-sm leading-[17px] text-[#744FFF]">
-                          {countdown} seconds.
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Buttons */}
-                  <div className="flex flex-row items-center gap-3 w-[336px] h-10">
-                    {/* Do It Later Button */}
-                    <button
-                      onClick={handleRedirectToHomePage}
-                      className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[rgba(116,79,255,0.12)] rounded-[73.75px] cursor-pointer"
-                    >
-                      <span className="font-lato font-semibold text-base leading-4 text-center text-[#744FFF]">
-                        Do It Later
-                      </span>
-                    </button>
-
-                    {/* Start Now Button */}
-                    <button
-                      onClick={() => router.push(getRedirectPath())}
-                      className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[#744FFF] rounded-[73.75px] cursor-pointer"
-                    >
-                      <span className="font-lato font-semibold text-base leading-4 text-center text-white">
-                        Start Now
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Video Section - Smaller height to fit AI Assistant */}
-          {!isQuestionMode && !showChat ? (
-            <div
-              className="cursor-pointer p-2 pb-1 bg-white rounded-lg border border-[#E5E7EB]"
-              onClick={togglePlayPause}
-            >
-              <div className="relative w-full pt-[40%] h-50 bg-black rounded-lg overflow-hidden">
-                {/* Reduced aspect ratio for mobile */}
-                <video
-                  key={`trainer-video-${currentVideoIndex}`}
-                  ref={videoRef}
-                  src={videos?.[currentVideoIndex]?.trainer_video}
-                  className="absolute top-0 left-0 w-full h-full object-cover"
-                  onEnded={handleVideoEnd}
-                  onTimeUpdate={(e) => {
-                    const time = e.target.currentTime;
-                    setCurrentTime(time);
-                    dispatch(setCurrentVideoTime(time));
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime: time,
-                        isPlaying: !e.target.paused,
-                        currentVideoIndex,
-                        duration: e.target.duration || duration,
-                      });
-                    }
-                  }}
-                  onLoadedMetadata={(e) => {
-                    const newDuration = e.target.duration;
-                    setDuration(newDuration);
-                    applyVideoSettings(e.target);
-
-                    try {
-                      const slideObj = videos?.[currentVideoIndex];
-                      let startTime = 0;
-
-                      if (
-                        typeof reduxCurrentVideoTime === "number" &&
-                        reduxCurrentVideoTime > 0
-                      ) {
-                        startTime = reduxCurrentVideoTime;
-                      } else if (
-                        slideObj &&
-                        typeof slideObj.duration_viewed === "number"
-                      ) {
-                        startTime = slideObj.duration_viewed;
-                      }
-
-                      if (
-                        slideObj &&
-                        typeof slideObj.duration === "number" &&
-                        typeof slideObj.duration_viewed === "number" &&
-                        Math.abs(
-                          slideObj.duration - slideObj.duration_viewed
-                        ) <= 1e-6
-                      ) {
-                        startTime = 0;
-                      }
-
-                      if (
-                        startTime &&
-                        typeof startTime === "number" &&
-                        !isNaN(startTime)
-                      ) {
-                        const safeStart = Math.min(
-                          startTime,
-                          newDuration || startTime
-                        );
-                        try {
-                          e.target.currentTime = safeStart;
-                        } catch (err) {}
-                        dispatch(setCurrentVideoTime(safeStart));
-                        setCurrentTime(safeStart);
-                      }
-                    } catch (err) {
-                      console.error(
-                        "Error applying start time on metadata load",
-                        err
-                      );
-                    }
-
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying,
-                        currentVideoIndex,
-                        duration: newDuration,
-                      });
-                    }
-                  }}
-                  onCanPlay={(e) => {
-                    applyVideoSettings(e.target);
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onPlay={() => {
-                    setIsPlaying(true);
-                    dispatch(setIsVideoPlaying(true));
-                    dispatch(setAnswerPptIndex(null));
-                    if (onPauseAnswerAudio) {
-                      onPauseAnswerAudio();
-                    }
-                    const userDetails = getUserDetailsFromToken();
-                    const currentVideo = videos?.[currentVideoIndex];
-                    if (currentVideo) {
-                      capture("video_play", {
-                        user_id: userDetails?.sub,
-                        module_id: presentationId,
-                        video_id: currentVideo.slide,
-                        timestamp: new Date().toISOString(),
-                      });
-                    }
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying: true,
-                        currentVideoIndex,
-                        duration,
-                      });
-                    }
-                  }}
-                  onPause={() => {
-                    setIsPlaying(false);
-                    dispatch(setIsVideoPlaying(false));
-                    const userDetails = getUserDetailsFromToken();
-                    const currentVideo = videos?.[currentVideoIndex];
-                    if (currentVideo) {
-                      capture("video_pause", {
-                        user_id: userDetails?.sub,
-                        video_id: currentVideo.slide,
-                        current_time: currentTime,
-                        timestamp: new Date().toISOString(),
-                      });
-                    }
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying: false,
-                        currentVideoIndex,
-                        duration,
-                      });
-                    }
-                  }}
-                  poster={videos?.[currentVideoIndex]?.thumbnail}
-                  autoPlay={autoPlayEnabled}
-                  controls={true}
-                  controlsList={
-                    !canSkipVideo
-                      ? "nodownload nofullscreen noremoteplaybook"
-                      : "nodownload"
-                  }
-                  style={!canSkipVideo ? { pointerEvents: "none" } : undefined}
-                  disablePictureInPicture
-                />
-              </div>
-              {/* Time display below video - smaller text */}
-              <div className="px-1 flex justify-between mt-1 text-[10px] leading-4 tracking-normal font-normal text-center text-gray-600 font-lato">
-                <span>
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
-                <span>
-                  {currentVideoIndex + 1}/{videos?.length}
-                </span>
-              </div>
-            </div>
-          ) : null}
-
-          {/* AI Learning Assistant - Always visible in mobile */}
-          {!isQuestionMode && !showChat && (
-            <AILearningAssistant
-              setShowChat={setShowChat}
-              showChat={showChat}
-              onStartConversation={startConversation}
-              onStopConversation={stopConversation}
-              agentId={agentId}
-            />
-          )}
-
-          {/* Question Mode */}
-          {isQuestionMode && (
-            <QuestionModeAI
-              isLoading={!conversationState.isConnected}
-              isAudioPlaying={conversation.isSpeaking}
-              isConnected={conversationState.isConnected}
-              avatarUrl={avatarUrl}
-            />
-          )}
-
-          {/* Chat UI */}
-          {showChat && (
-            <ChatUI
-              onClose={handleCloseChatUI}
-              conversation={conversationHistory}
-              onStartConversation={startConversation}
-              onStopConversation={stopConversation}
-              isConnected={conversationState.isConnected}
-              setShowChat={setShowChat}
-              setIsJumpedOnChatFromInteractionMode={
-                setIsJumpedOnChatFromInteractionMode
-              }
-              agentId={agentId}
-            />
-          )}
-
-          {/* Question Mode User */}
-          {isQuestionMode && !showChat && (
-            <QuestionModeUser
-              onPauseVideo={pauseVideo}
-              onStartConversation={startConversation}
-              onStopConversation={stopConversation}
-              setShowChat={setShowChat}
-              onPauseAnswerAudio={stopAnswerAudio}
-              isAudioPlaying={conversationState.isAudioPlaying}
-              isAudioLoading={isListening}
-              isConnected={conversationState.isConnected}
-              setIsJumpedOnChatFromInteractionMode={
-                setIsJumpedOnChatFromInteractionMode
-              }
+              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+              isMobile={isPhone ? true : false}
             />
           )}
         </div>
@@ -1469,10 +1057,7 @@ const VideoPanel = forwardRef(
     }
 
     return (
-      <div
-        className="flex flex-col h-full relative gap-4 flex-shrink-0 pl-4"
-        style={{ width }}
-      >
+      <div className="flex flex-col h-full relative gap-4 flex-shrink-0 pl-4" style={{ width }}>
         {/* Redirect Popup */}
         {showRedirectPopup && (
           <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
@@ -1492,9 +1077,7 @@ const VideoPanel = forwardRef(
 
                   {/* Text Content */}
                   <div className="flex flex-col items-center gap-2 w-[336px] h-[70px]">
-                    <h3 className="font-lato font-bold text-xl leading-6 text-[#1A1C29]">
-                      Training Completed!
-                    </h3>
+                    <h3 className="font-lato font-bold text-xl leading-6 text-[#1A1C29]">Training Completed!</h3>
                     <div className="flex flex-col items-center gap-1 w-[336px] h-[38px]">
                       <p className="font-lato font-normal text-sm leading-[17px] text-center text-[rgba(26,28,41,0.8)]">
                         You'll be redirected to the assessment in
@@ -1511,8 +1094,7 @@ const VideoPanel = forwardRef(
                   {/* Do It Later Button */}
                   <button
                     onClick={handleRedirectToHomePage}
-                    className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[rgba(116,79,255,0.12)] rounded-[73.75px] cursor-pointer"
-                  >
+                    className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[rgba(116,79,255,0.12)] rounded-[73.75px] cursor-pointer">
                     <span className="font-lato font-semibold text-base leading-4 text-center text-[#744FFF]">
                       Do It Later
                     </span>
@@ -1521,8 +1103,7 @@ const VideoPanel = forwardRef(
                   {/* Start Now Button */}
                   <button
                     onClick={() => router.push(getRedirectPath())}
-                    className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[#744FFF] rounded-[73.75px] cursor-pointer"
-                  >
+                    className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[#744FFF] rounded-[73.75px] cursor-pointer">
                     <span className="font-lato font-semibold text-base leading-4 text-center text-white">
                       Start Now
                     </span>
@@ -1535,8 +1116,7 @@ const VideoPanel = forwardRef(
         {!isQuestionMode && !showChat ? (
           <div
             className="cursor-pointer p-3 pb-2 bg-white rounded-xl border border-[#E5E7EB]"
-            onClick={togglePlayPause}
-          >
+            onClick={togglePlayPause}>
             <div className="relative w-full pt-[56.25%] bg-black rounded-lg overflow-hidden">
               {" "}
               {/* 16:9 Aspect Ratio */}
@@ -1547,11 +1127,7 @@ const VideoPanel = forwardRef(
                 className={`absolute top-0 left-0 w-full h-full object-cover ${
                   !canSkipVideo ? "no-skip-controls" : ""
                 }`}
-                controlsList={
-                  !canSkipVideo
-                    ? "nodownload nofullscreen noremoteplayback"
-                    : undefined
-                }
+                controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplayback" : undefined}
                 style={!canSkipVideo ? { pointerEvents: "none" } : undefined}
                 onEnded={handleVideoEnd}
                 onTimeUpdate={(e) => {
@@ -1577,11 +1153,7 @@ const VideoPanel = forwardRef(
                   // Update video progress with current video position
                   const currentVideo = videos?.[currentVideoIndex];
                   if (currentVideo && !e.target.paused) {
-                    updateVideoProgress(
-                      presentationId,
-                      currentVideo.slide,
-                      Math.floor(time)
-                    );
+                    updateVideoProgress(presentationId, currentVideo.slide, Math.floor(time));
                   }
 
                   // Pass video state to parent for PPT synchronization
@@ -1602,10 +1174,7 @@ const VideoPanel = forwardRef(
                     // Use requestAnimationFrame to avoid interfering with the browser's
                     // internal seek handling and to prevent a tight event loop.
                     requestAnimationFrame(() => {
-                      if (
-                        videoRef.current &&
-                        Math.abs(videoRef.current.currentTime - prev) > 0.01
-                      ) {
+                      if (videoRef.current && Math.abs(videoRef.current.currentTime - prev) > 0.01) {
                         try {
                           videoRef.current.currentTime = prev;
                         } catch (err) {
@@ -1619,8 +1188,7 @@ const VideoPanel = forwardRef(
 
                   // When user starts seeking, capture the current time as the "from" time
                   isSeekingRef.current = true;
-                  previousTimeRef.current =
-                    videoRef.current?.currentTime || currentTime;
+                  previousTimeRef.current = videoRef.current?.currentTime || currentTime;
                   setPreviousTime(previousTimeRef.current);
                 }}
                 onLoadedMetadata={(e) => {
@@ -1633,15 +1201,9 @@ const VideoPanel = forwardRef(
                     const slideObj = videos?.[currentVideoIndex];
                     let startTime = 0;
 
-                    if (
-                      typeof reduxCurrentVideoTime === "number" &&
-                      reduxCurrentVideoTime > 0
-                    ) {
+                    if (typeof reduxCurrentVideoTime === "number" && reduxCurrentVideoTime > 0) {
                       startTime = reduxCurrentVideoTime;
-                    } else if (
-                      slideObj &&
-                      typeof slideObj.duration_viewed === "number"
-                    ) {
+                    } else if (slideObj && typeof slideObj.duration_viewed === "number") {
                       startTime = slideObj.duration_viewed;
                     }
 
@@ -1649,21 +1211,13 @@ const VideoPanel = forwardRef(
                       slideObj &&
                       typeof slideObj.duration === "number" &&
                       typeof slideObj.duration_viewed === "number" &&
-                      Math.abs(slideObj.duration - slideObj.duration_viewed) <=
-                        1e-6
+                      Math.abs(slideObj.duration - slideObj.duration_viewed) <= 1e-6
                     ) {
                       startTime = 0;
                     }
 
-                    if (
-                      startTime &&
-                      typeof startTime === "number" &&
-                      !isNaN(startTime)
-                    ) {
-                      const safeStart = Math.min(
-                        startTime,
-                        newDuration || startTime
-                      );
+                    if (startTime && typeof startTime === "number" && !isNaN(startTime)) {
+                      const safeStart = Math.min(startTime, newDuration || startTime);
                       try {
                         e.target.currentTime = safeStart;
                       } catch (err) {}
@@ -1671,10 +1225,7 @@ const VideoPanel = forwardRef(
                       setCurrentTime(safeStart);
                     }
                   } catch (err) {
-                    console.error(
-                      "Error applying start time on metadata load",
-                      err
-                    );
+                    console.error("Error applying start time on metadata load", err);
                   }
 
                   // Notify parent about duration
@@ -1773,10 +1324,7 @@ const VideoPanel = forwardRef(
                   const newMuted = e.target.muted;
                   const newVolume = e.target.volume;
 
-                  if (
-                    newMuted !== videoSettings.muted ||
-                    newVolume !== videoSettings.volume
-                  ) {
+                  if (newMuted !== videoSettings.muted || newVolume !== videoSettings.volume) {
                     setVideoSettings((prev) => ({
                       ...prev,
                       muted: newMuted,
@@ -1909,9 +1457,7 @@ const VideoPanel = forwardRef(
             onStopConversation={stopConversation}
             isConnected={conversationState.isConnected}
             setShowChat={setShowChat}
-            setIsJumpedOnChatFromInteractionMode={
-              setIsJumpedOnChatFromInteractionMode
-            }
+            setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
             agentId={agentId}
           />
         ) : isQuestionMode ? (
@@ -1924,9 +1470,7 @@ const VideoPanel = forwardRef(
             isAudioPlaying={conversationState.isAudioPlaying}
             isAudioLoading={isListening}
             isConnected={conversationState.isConnected}
-            setIsJumpedOnChatFromInteractionMode={
-              setIsJumpedOnChatFromInteractionMode
-            }
+            setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
           />
         ) : (
           <AILearningAssistant
