@@ -400,7 +400,7 @@ const Home = () => {
           </div>
         </div>
       </FullscreenController>
-    );
+    )
   }
 
   return (
