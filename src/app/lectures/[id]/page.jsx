@@ -46,7 +46,7 @@ const RotationPrompt = () => {
 };
 
 // Combined components moved outside to prevent re-creation on every render
-const CombinedBreadCrumb = ({ data }) => {
+const CombinedBreadCrumb = React.memo(({ data }) => {
   return <BreadCrumb
     paths={[
       { path: "/", label: "All Courses" },
@@ -56,9 +56,9 @@ const CombinedBreadCrumb = ({ data }) => {
       },
     ]}
   />
-}
+})
 
-const CombinedPPTSection = ({
+const CombinedPPTSection = React.memo(({
   isMobile = false,
   isPhone = false,
   videos,
@@ -87,9 +87,9 @@ const CombinedPPTSection = ({
       canSkipVideo={canSkipVideo}
     />
   );
-}
+})
 
-const CombinedVideoPanel = ({
+const CombinedVideoPanel = React.memo(({
   isMobile = false,
   isPhone = false,
   videoPanelRef,
@@ -128,7 +128,7 @@ const CombinedVideoPanel = ({
       assessmentId={assessmentId}
     />
   );
-}
+})
 
 const Home = () => {
   const params = useParams();
@@ -140,7 +140,8 @@ const Home = () => {
   const videos = data?.data?.filter((video) => video?.trainer_video && video?.trainer_video?.trim() !== "");
   const userName = getUserDetailsFromToken()?.preferred_username;
   const assessmentId = data?.assessment_details?.[0]?.id;
-  console.log("Assessment ID from API:", assessmentId);
+
+
 
   const canSkipVideo = data?.hasOwnProperty("is_skippable") ? data.is_skippable : !userName?.includes("jeenaseekho");
 

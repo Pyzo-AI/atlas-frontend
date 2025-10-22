@@ -593,7 +593,7 @@ const VideoPanel = forwardRef(
 
           // Optional: Preload poster/thumbnail
           if (videos[nextVideoIndex]?.thumbnail) {
-            const img = new Image();
+            const img = new window.Image();
             img.src = videos[nextVideoIndex].thumbnail;
             // console.log("Preloading thumbnail:", videos[nextVideoIndex]?.thumbnail);
             // img.src =
