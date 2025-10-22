@@ -307,7 +307,66 @@ const Home = () => {
     return <PageSkeleton />;
   }
 
-  // Phone landscape layout - 70/30 split for optimal phone experience
+  const CombinedBreadCrumb = () => {
+    return <BreadCrumb
+      paths={[
+        { path: "/", label: "All Courses" },
+        {
+          path: "/lectures/123",
+          label: data?.presentation_name || "Untitled Presentation",
+        },
+      ]}
+    />
+  }
+
+  const CombinedPPTSection = ({ isMobile = false, isPhone = false }) => {
+    const width = isMobile ? "100%" : "70%";
+
+    return (
+      <PPTSection
+        videos={videos}
+        loading={isLoading}
+        currentVideoIndex={pptVideoIndex}
+        currentVideoTime={pptSyncState.currentTime}
+        isVideoPlaying={pptSyncState.isPlaying}
+        videoDuration={videoState.duration}
+        width={width}
+        title={data?.presentation_name || "Untitled Presentation"}
+        author={data?.presentation_author || "Unknown"}
+        isMobileView={isMobile}
+        isPhoneView={isPhone}
+        canSkipVideo={canSkipVideo}
+      />
+    );
+  }
+
+  const CombinedVideoPanel = ({ isMobile = false, isPhone = false }) => {
+    const width = isMobile ? "100%" : "30%";
+
+    return (
+      <VideoPanel
+        ref={videoPanelRef}
+        videos={videos}
+        loading={isLoading}
+        onVideoStateChange={handleVideoStateChange}
+        onPauseVideo={handlePauseVideo}
+        onPauseAnswerAudio={handlePauseAnswerAudio}
+        width={width}
+        presentationId={presentationId}
+        isMobileView={isMobile}
+        isPhoneView={isPhone}
+        agentId={data?.presentation_agent_id}
+        avatarUrl={data?.presentation_trainer_image}
+        conversationHistory={conversationHistory}
+        setConversationHistory={setConversationHistory}
+        isPresentationQuizPassed={data?.is_presentation_quiz_passed || false}
+        canSkipVideo={canSkipVideo}
+        assessmentId={assessmentId}
+      />
+    );
+  }
+
+
   if (isLandscape && (isPhone || isTablet)) {
     // Dynamic width ratios
     const leftWidth = isPhone ? "w-[70%]" : "w-[60%]";
@@ -323,58 +382,20 @@ const Home = () => {
         <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0 flex-col">
           {/* Breadcrumb Navigation */}
           <div className={`${paddingX} ${paddingY} bg-[#F9F9F9]`}>
-            <BreadCrumb
-              paths={[
-                { path: "/", label: "All Course" },
-                {
-                  path: "/lectures/123",
-                  label: data?.presentation_name || "Corporate Finance",
-                },
-              ]}
-            />
+            <CombinedBreadCrumb />
+
           </div>
 
           {/* Main Content Area */}
           <div className={`flex flex-1 bg-white ${marginX} ${marginY} rounded-lg overflow-hidden`}>
             {/* Left Side - Slides/PPT Section */}
             <div className={`${leftWidth} overflow-hidden`}>
-              <PPTSection
-                videos={videos}
-                loading={isLoading}
-                currentVideoIndex={pptVideoIndex}
-                currentVideoTime={pptSyncState.currentTime}
-                isVideoPlaying={pptSyncState.isPlaying}
-                videoDuration={videoState.duration}
-                width="100%"
-                title={data?.presentation_name || "Corporate Finance"}
-                author={data?.presentation_author || "Giri Prathap"}
-                isMobileView={true}
-                isPhoneView={isPhone}
-                canSkipVideo={canSkipVideo}
-              />
+              <CombinedPPTSection isMobile={true} isPhone={isPhone} />
             </div>
 
             {/* Right Side - Video Panel */}
             <div className={`${rightWidth} bg-[#F9F9F9] ${rightPadding} overflow-hidden`}>
-              <VideoPanel
-                ref={videoPanelRef}
-                videos={videos}
-                loading={isLoading}
-                onVideoStateChange={handleVideoStateChange}
-                onPauseVideo={handlePauseVideo}
-                onPauseAnswerAudio={handlePauseAnswerAudio}
-                width="100%"
-                presentationId={presentationId}
-                isMobileView={true}
-                isPhoneView={isPhone}
-                agentId={data?.presentation_agent_id}
-                avatarUrl={data?.presentation_trainer_image}
-                conversationHistory={conversationHistory}
-                setConversationHistory={setConversationHistory}
-                isPresentationQuizPassed={data?.is_presentation_quiz_passed || false}
-                canSkipVideo={canSkipVideo}
-                assessmentId={assessmentId}
-              />
+              <CombinedVideoPanel isMobile={true} isPhone={isPhone} />
             </div>
           </div>
         </div>
@@ -390,46 +411,10 @@ const Home = () => {
       <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-[#F9F9F9] overflow-x-hidden">
         <div className="layout-container flex h-full grow flex-col">
           <div className=" px-6 py-5 overflow-hidden">
-            <BreadCrumb
-              paths={[
-                { path: "/", label: "All Courses" },
-                {
-                  path: "/lectures/123",
-                  label: data?.presentation_name || "Untitled Presentation",
-                },
-              ]}
-            />
-
+            <CombinedBreadCrumb />
             <div className="flex w-full h-[calc(100%-36px)] min-w-0 bg-white py-4 px-5">
-              <PPTSection
-                videos={videos}
-                loading={isLoading}
-                currentVideoIndex={pptVideoIndex}
-                currentVideoTime={pptSyncState.currentTime}
-                isVideoPlaying={pptSyncState.isPlaying}
-                videoDuration={videoState.duration}
-                width="70%"
-                title={data?.presentation_name || "Untitled Presentation"}
-                author={data?.presentation_author || "Unknown"}
-                canSkipVideo={canSkipVideo}
-              />
-              <VideoPanel
-                ref={videoPanelRef}
-                videos={videos}
-                loading={isLoading}
-                onVideoStateChange={handleVideoStateChange}
-                onPauseVideo={handlePauseVideo}
-                onPauseAnswerAudio={handlePauseAnswerAudio}
-                width="30%"
-                presentationId={presentationId}
-                agentId={data?.presentation_agent_id}
-                avatarUrl={data?.presentation_trainer_image}
-                conversationHistory={conversationHistory}
-                setConversationHistory={setConversationHistory}
-                isPresentationQuizPassed={data?.is_presentation_quiz_passed || false}
-                canSkipVideo={canSkipVideo}
-                assessmentId={assessmentId}
-              />
+              <CombinedPPTSection />
+              <CombinedVideoPanel />
             </div>
           </div>
         </div>
