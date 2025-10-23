@@ -1204,7 +1204,7 @@ const VideoPanel = forwardRef(
               onStartConversation={startConversation}
               onStopConversation={stopConversation}
               agentId={agentId}
-              isMobile={isMobile && isPhone}
+              isMobileView={isMobile && isPhone}
             />
           </div>
         )}
