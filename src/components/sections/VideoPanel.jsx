@@ -742,7 +742,7 @@ const VideoPanel = forwardRef(
             startTime = 0;
           }
           dispatch(setCurrentVideoTime(startTime || 0));
-        } catch (err) { }
+        } catch (err) {}
         dispatch(setCurrentVideoIndex(index));
         setIsPlaying(false);
       }
@@ -764,7 +764,7 @@ const VideoPanel = forwardRef(
           startTime = 0;
         }
         dispatch(setCurrentVideoTime(startTime || 0));
-      } catch (err) { }
+      } catch (err) {}
       dispatch(setCurrentVideoIndex(index));
       setIsPlaying(false);
     };
@@ -816,16 +816,16 @@ const VideoPanel = forwardRef(
 
     return (
       <div
-        className={`flex flex-col h-full ${isMobile
-          ? `${isPhone ? "gap-1" : "gap-3"}`
-          : "gap-4 flex-shrink-0 pl-4 relative"
-          }`}
-        style={!isMobile ? { width } : undefined}
-      >
+        className={`flex flex-col h-full ${
+          isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
+        }`}
+        style={!isMobile ? { width } : undefined}>
         {/* Redirect Popup - Unified for both mobile and desktop */}
         {showRedirectPopup && (
           <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
-            <div className={`relative flex flex-col items-center gap-5 w-96 bg-white rounded-2xl ${isPhone ? "p-5" : "p-6"
+            <div
+              className={`relative flex flex-col items-center gap-5 w-96 bg-white rounded-2xl ${
+                isPhone ? "p-5" : "p-6"
               }`}>
               {/* Content Container */}
               <div className="flex flex-col items-center gap-6 w-[336px]">
@@ -878,21 +878,25 @@ const VideoPanel = forwardRef(
         {/* Video Section - Responsive for both mobile and desktop */}
         {!isQuestionMode && !showChat && (
           <div
-            className={`cursor-pointer bg-white border border-[#E5E7EB] ${isMobile
-              ? (isPhone ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0" : "p-2 pb-1 rounded-lg")
-              : "p-3 pb-2 rounded-xl"
-              }`}
+            className={`cursor-pointer bg-white border border-[#E5E7EB] ${
+              isMobile
+                ? isPhone
+                  ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
+                  : "p-2 pb-1 rounded-lg"
+                : "p-3 pb-2 rounded-xl"
+            }`}
             onClick={togglePlayPause}>
-            <div className={`relative w-full bg-black overflow-hidden ${isMobile
-              ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg")
-              : "pt-[56.25%] rounded-lg"
+            <div
+              className={`relative w-full bg-black overflow-hidden ${
+                isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
               }`}>
               <video
                 key={`trainer-video-${currentVideoIndex}`}
                 ref={videoRef}
                 src={videos?.[currentVideoIndex]?.trainer_video}
-                className={`absolute top-0 left-0 w-full h-full object-cover ${!canSkipVideo ? "no-skip-controls" : ""
-                  }`}
+                className={`absolute top-0 left-0 w-full h-full object-cover ${
+                  !canSkipVideo ? "no-skip-controls" : ""
+                }`}
                 controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplayback" : "nodownload"}
                 style={!canSkipVideo ? { pointerEvents: "none" } : undefined}
                 onEnded={handleVideoEnd}
@@ -1027,7 +1031,7 @@ const VideoPanel = forwardRef(
                       const safeStart = Math.min(startTime, newDuration || startTime);
                       try {
                         e.target.currentTime = safeStart;
-                      } catch (err) { }
+                      } catch (err) {}
                       dispatch(setCurrentVideoTime(safeStart));
                       setCurrentTime(safeStart);
                     }
@@ -1173,9 +1177,11 @@ const VideoPanel = forwardRef(
             </div>
 
             {/* Time display - Responsive styling */}
-            <div className={`px-1 flex justify-between font-lato text-gray-600 ${isMobile
-              ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
-              : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
+            <div
+              className={`px-1 flex justify-between font-lato text-gray-600 ${
+                isMobile
+                  ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
+                  : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
               }`}>
               <span>
                 {formatTime(currentTime)} / {formatTime(duration)}
@@ -1183,17 +1189,15 @@ const VideoPanel = forwardRef(
               <span>
                 {isMobile
                   ? `${currentVideoIndex + 1}/${videos?.length}`
-                  : `${(videos ?? [])?.[currentVideoIndex]?.slide}/${videos?.length}`
-                }
+                  : `${(videos ?? [])?.[currentVideoIndex]?.slide}/${videos?.length}`}
               </span>
             </div>
           </div>
         )}
 
-
         {/* AI Assistant Section - Responsive */}
         {!isQuestionMode && !showChat && (
-          <div className={isMobile && isPhone ? "flex-1 min-h-0" : ""}>
+          <div className={isMobile && isPhone ? "flex-1 min-h-0" : "h-full"}>
             <AILearningAssistant
               setShowChat={setShowChat}
               showChat={showChat}
