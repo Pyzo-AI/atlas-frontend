@@ -523,7 +523,18 @@ const VideoPanel = forwardRef(
               onPauseAnswerAudio();
             }
 
-            videoRef.current.play();
+            // Wait for video to be ready before playing to avoid play/pause conflicts
+            setTimeout(() => {
+              if (videoRef.current && videoRef.current.play) {
+                const playPromise = videoRef.current.play();
+                if (playPromise !== undefined) {
+                  playPromise.catch(error => {
+                    console.log("Auto-play was prevented:", error);
+                    // Auto-play was prevented, this is normal behavior
+                  });
+                }
+              }
+            }, 100);
           }
         }
       }
@@ -738,6 +749,7 @@ const VideoPanel = forwardRef(
       if (videoRef.current) {
         if (isPlaying) {
           videoRef.current.pause();
+          setIsPlaying(false);
         } else {
           // Reset answerPptIndex when video starts playing
           dispatch(setAnswerPptIndex(null));
@@ -747,9 +759,20 @@ const VideoPanel = forwardRef(
             onPauseAnswerAudio();
           }
 
-          videoRef.current.play();
+          const playPromise = videoRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                setIsPlaying(true);
+              })
+              .catch(error => {
+                console.log("Play was prevented:", error);
+                setIsPlaying(false);
+              });
+          } else {
+            setIsPlaying(true);
+          }
         }
-        setIsPlaying(!isPlaying);
       }
     };
 
@@ -849,8 +872,7 @@ const VideoPanel = forwardRef(
               className={`relative w-full bg-black overflow-hidden ${isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
                 }`}>
               <VideoPlayer
-                key={`trainer-video-$
-                  {currentVideoIndex}`}
+                key={`trainer-video-${currentVideoIndex}-${videos?.[currentVideoIndex]?.trainer_video}`}
                 ref={videoRef}
                 src={videos?.[currentVideoIndex]?.trainer_video}
                 className="absolute top-0 left-0 w-full h-full"
@@ -1073,7 +1095,7 @@ const VideoPanel = forwardRef(
                 }}
                 onRateChange={(e) => {
                   const newRate = e.target.playbackRate;
-                  
+
                   // Update video settings with new playback rate
                   if (newRate !== videoSettings.playbackRate) {
                     setVideoSettings((prev) => ({
@@ -1081,7 +1103,7 @@ const VideoPanel = forwardRef(
                       playbackRate: newRate,
                     }));
                   }
-                  
+
                   // Track playback rate change event
                   const userDetails = getUserDetailsFromToken();
                   const currentVideo = videos?.[currentVideoIndex];
