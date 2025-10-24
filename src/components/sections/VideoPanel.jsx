@@ -21,6 +21,7 @@ import { usePostHog } from "@/hooks/usePostHog";
 import { updateVideoProgress, startVideoSession } from "@/utils/videoProgress";
 import redirecting_logo from "@/assets/svg/redirecting.svg";
 import Image from "next/image";
+import VideoPlayer from "@/components/VideoPlayer";
 
 // Conversation history management for VideoPanel
 const {
@@ -109,6 +110,7 @@ const VideoPanel = forwardRef(
     // When we programmatically restore the time to block a user seek we mark this ref
     // so we can ignore the resulting seek events.
     const blockedSeekRef = useRef(false);
+    const skipBackwardRef = useRef(false);
     // Slide view tracking
     const [slideViewStartTime, setSlideViewStartTime] = useState("");
     const [videoStartTime, setVideoStartTime] = useState(0);
@@ -352,6 +354,8 @@ const VideoPanel = forwardRef(
     const [showRedirectPopup, setShowRedirectPopup] = useState(false);
     const [countdown, setCountdown] = useState(10);
     const [preloadedVideoIndex, setPreloadedVideoIndex] = useState(-1);
+    const [initialVideoTime, setInitialVideoTime] = useState(0);
+    const [isSkippingBackward, setIsSkippingBackward] = useState(false);
 
     // Function to stop conversation
     const stopAnswerAudio = () => {
@@ -431,14 +435,7 @@ const VideoPanel = forwardRef(
       pauseVideo,
     }));
 
-    // Apply persistent video settings when video loads
-    const applyVideoSettings = (videoElement) => {
-      if (videoElement) {
-        videoElement.muted = videoSettings.muted;
-        videoElement.playbackRate = videoSettings.playbackRate;
-        videoElement.volume = videoSettings.volume;
-      }
-    };
+    // Note: Video settings are now handled by VideoPlayer component props
 
     // Handle video index changes (only when actually changing)
     useEffect(() => {
@@ -460,33 +457,29 @@ const VideoPanel = forwardRef(
           setLastVideoSrc(newSrc);
           console.log(`Switching to video ${currentVideoIndex}...`);
 
-          // Check if we have a preloaded video for this index
+          // Calculate initial time for new video
+          let startTime = 0;
+          if (typeof reduxCurrentVideoTime === "number" && reduxCurrentVideoTime > 0) {
+            startTime = reduxCurrentVideoTime;
+          } else if (currentVideo && typeof currentVideo.duration_viewed === "number") {
+            startTime = currentVideo.duration_viewed;
+          }
+
           if (
-            preloadedVideoIndex === currentVideoIndex &&
-            preloadVideoRef.current &&
-            preloadVideoRef.current.readyState >= 2
+            currentVideo &&
+            typeof currentVideo.duration === "number" &&
+            typeof currentVideo.duration_viewed === "number" &&
+            Math.abs(currentVideo.duration - currentVideo.duration_viewed) <= 1e-6
           ) {
-            console.log(`Using preloaded video for index ${currentVideoIndex}`);
+            startTime = 0;
+          }
 
-            try {
-              // Copy the preloaded video source to main video
-              videoRef.current.src = preloadVideoRef.current.src;
-              videoRef.current.load();
+          setInitialVideoTime(startTime);
 
-              // Clean up the preloaded video
-              preloadVideoRef.current.src = "";
-              setPreloadedVideoIndex(-1);
-            } catch (error) {
-              console.log("Error using preloaded video, falling back to normal load:", error);
-              videoRef.current.load();
-              setPreloadedVideoIndex(-1);
-            }
-          } else {
-            // Load video normally if not preloaded or preload failed
-            videoRef.current.load();
-            if (preloadedVideoIndex === currentVideoIndex) {
-              setPreloadedVideoIndex(-1); // Reset if preload was attempted but failed
-            }
+          // VideoPlayer component handles loading automatically via src prop change
+          // Preloading is handled internally by Video.js
+          if (preloadedVideoIndex === currentVideoIndex) {
+            setPreloadedVideoIndex(-1); // Reset preload tracking
           }
 
           // Update slide when video changes
@@ -530,13 +523,11 @@ const VideoPanel = forwardRef(
               onPauseAnswerAudio();
             }
 
-            videoRef.current.play().catch((error) => {
-              console.log("Error playing video:", error);
-            });
+            videoRef.current.play();
           }
         }
       }
-    }, [currentVideoIndex, videos, dispatch, preloadedVideoIndex, hasInitialized, autoPlayEnabled, videoSettings]);
+    }, [currentVideoIndex, videos, dispatch, preloadedVideoIndex, hasInitialized, autoPlayEnabled]);
 
     // Add effect to scroll active video into view
     useEffect(() => {
@@ -565,30 +556,8 @@ const VideoPanel = forwardRef(
         ) {
           console.log(`Preloading video ${nextVideoIndex}...`);
 
-          // Create preload video element if it doesn't exist
-          if (!preloadVideoRef.current) {
-            preloadVideoRef.current = document.createElement("video");
-            preloadVideoRef.current.preload = "auto";
-            preloadVideoRef.current.style.display = "none";
-            document.body.appendChild(preloadVideoRef.current);
-          }
-
-          // Set source and start preloading
-          preloadVideoRef.current.src = videos[nextVideoIndex].trainer_video;
-          preloadVideoRef.current.onerror = (e) => {
-            // console.log(`Failed to preload video ${nextVideoIndex}:`, e);
-            setPreloadedVideoIndex(-1);
-          };
-          preloadVideoRef.current.oncanplaythrough = () => {
-            console.log(`Video ${nextVideoIndex} preloaded successfully`);
-            // Apply persistent settings to preloaded video
-            applyVideoSettings(preloadVideoRef.current);
-          };
-          preloadVideoRef.current.onloadedmetadata = () => {
-            // Apply persistent settings when preloaded video metadata is loaded
-            applyVideoSettings(preloadVideoRef.current);
-          };
-          preloadVideoRef.current.load();
+          // Video.js handles preloading internally, just track the index
+          console.log(`Next video ${nextVideoIndex} will be preloaded by Video.js`);
           setPreloadedVideoIndex(nextVideoIndex);
 
           // Optional: Preload poster/thumbnail
@@ -601,7 +570,7 @@ const VideoPanel = forwardRef(
           }
         }
       }
-    }, [currentTime, duration, currentVideoIndex, videos, preloadedVideoIndex, videoSettings]);
+    }, [currentTime, duration, currentVideoIndex, videos, preloadedVideoIndex]);
 
     // Sync PPT to video panel when video starts playing
     useEffect(() => {
@@ -619,15 +588,7 @@ const VideoPanel = forwardRef(
       }
     }, [isQuestionMode]);
 
-    // Cleanup preload video element on unmount
-    useEffect(() => {
-      return () => {
-        if (preloadVideoRef.current) {
-          document.body.removeChild(preloadVideoRef.current);
-          preloadVideoRef.current = null;
-        }
-      };
-    }, []);
+    // Cleanup is handled by VideoPlayer component
 
     // Handle video end
     const handleVideoEnd = () => {
@@ -673,6 +634,7 @@ const VideoPanel = forwardRef(
           ) {
             startTime = 0;
           }
+          setInitialVideoTime(startTime || 0);
           dispatch(setCurrentVideoTime(startTime || 0));
         } catch (err) {
           // ignore
@@ -741,8 +703,9 @@ const VideoPanel = forwardRef(
           ) {
             startTime = 0;
           }
+          setInitialVideoTime(startTime || 0);
           dispatch(setCurrentVideoTime(startTime || 0));
-        } catch (err) {}
+        } catch (err) { }
         dispatch(setCurrentVideoIndex(index));
         setIsPlaying(false);
       }
@@ -763,8 +726,9 @@ const VideoPanel = forwardRef(
         ) {
           startTime = 0;
         }
+        setInitialVideoTime(startTime || 0);
         dispatch(setCurrentVideoTime(startTime || 0));
-      } catch (err) {}
+      } catch (err) { }
       dispatch(setCurrentVideoIndex(index));
       setIsPlaying(false);
     };
@@ -783,9 +747,7 @@ const VideoPanel = forwardRef(
             onPauseAnswerAudio();
           }
 
-          videoRef.current.play().catch((error) => {
-            console.log("Error playing video:", error);
-          });
+          videoRef.current.play();
         }
         setIsPlaying(!isPlaying);
       }
@@ -816,17 +778,15 @@ const VideoPanel = forwardRef(
 
     return (
       <div
-        className={`flex flex-col h-full ${
-          isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
-        }`}
+        className={`flex flex-col h-full ${isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
+          }`}
         style={!isMobile ? { width } : undefined}>
         {/* Redirect Popup - Unified for both mobile and desktop */}
         {showRedirectPopup && (
           <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
             <div
-              className={`relative flex flex-col items-center gap-5 w-96 bg-white rounded-2xl ${
-                isPhone ? "p-5" : "p-6"
-              }`}>
+              className={`relative flex flex-col items-center gap-5 w-96 bg-white rounded-2xl ${isPhone ? "p-5" : "p-6"
+                }`}>
               {/* Content Container */}
               <div className="flex flex-col items-center gap-6 w-[336px]">
                 {/* Icon */}
@@ -878,27 +838,23 @@ const VideoPanel = forwardRef(
         {/* Video Section - Responsive for both mobile and desktop */}
         {!isQuestionMode && !showChat && (
           <div
-            className={`cursor-pointer bg-white border border-[#E5E7EB] ${
-              isMobile
-                ? isPhone
-                  ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
-                  : "p-2 pb-1 rounded-lg"
-                : "p-3 pb-2 rounded-xl"
-            }`}
+            className={`cursor-pointer bg-white border border-[#E5E7EB] ${isMobile
+              ? isPhone
+                ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
+                : "p-2 pb-1 rounded-lg"
+              : "p-3 pb-2 rounded-xl"
+              }`}
             onClick={togglePlayPause}>
             <div
-              className={`relative w-full bg-black overflow-hidden ${
-                isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
-              }`}>
-              <video
-                key={`trainer-video-${currentVideoIndex}`}
+              className={`relative w-full bg-black overflow-hidden ${isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
+                }`}>
+              <VideoPlayer
+                key={`trainer-video-$
+                  {currentVideoIndex}`}
                 ref={videoRef}
                 src={videos?.[currentVideoIndex]?.trainer_video}
-                className={`absolute top-0 left-0 w-full h-full object-cover ${
-                  !canSkipVideo ? "no-skip-controls" : ""
-                }`}
-                controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplayback" : "nodownload"}
-                style={!canSkipVideo ? { pointerEvents: "none" } : undefined}
+                className="absolute top-0 left-0 w-full h-full"
+                canSkipVideo={canSkipVideo}
                 onEnded={handleVideoEnd}
                 onTimeUpdate={(e) => {
                   const time = e.target.currentTime;
@@ -939,14 +895,24 @@ const VideoPanel = forwardRef(
                   });
                 }}
                 onSeeking={() => {
+                  console.log('Seeking event triggered, isSkippingBackward:', isSkippingBackward);
+
                   // Desktop-specific seeking logic
                   if (!isMobile) {
+                    // Don't interfere with skip backward operations
+                    if (isSkippingBackward || skipBackwardRef.current) {
+                      console.log('Skipping seeking prevention due to skip backward');
+                      return;
+                    }
+
                     if (!canSkipVideo) {
+                      console.log('Preventing seek - canSkipVideo is false');
                       const prev = previousTimeRef.current ?? currentTime;
                       blockedSeekRef.current = true;
                       requestAnimationFrame(() => {
                         if (videoRef.current && Math.abs(videoRef.current.currentTime - prev) > 0.01) {
                           try {
+                            console.log('Resetting video time from', videoRef.current.currentTime, 'to', prev);
                             videoRef.current.currentTime = prev;
                           } catch (err) {
                             // ignore
@@ -962,9 +928,18 @@ const VideoPanel = forwardRef(
                   }
                 }}
                 onSeeked={(e) => {
+                  console.log('Seeked event triggered');
+
                   // Desktop-specific seeked logic
                   if (!isMobile) {
                     const newTime = e.target.currentTime;
+
+                    // Don't interfere with skip backward operations
+                    if (isSkippingBackward || skipBackwardRef.current) {
+                      console.log('Skipping seeked logic due to skip backward');
+                      return;
+                    }
+
                     if (blockedSeekRef.current) {
                       blockedSeekRef.current = false;
                       previousTimeRef.current = newTime;
@@ -1006,41 +981,16 @@ const VideoPanel = forwardRef(
                 onLoadedMetadata={(e) => {
                   const newDuration = e.target.duration;
                   setDuration(newDuration);
-                  applyVideoSettings(e.target);
 
-                  try {
-                    const slideObj = videos?.[currentVideoIndex];
-                    let startTime = 0;
-
-                    if (typeof reduxCurrentVideoTime === "number" && reduxCurrentVideoTime > 0) {
-                      startTime = reduxCurrentVideoTime;
-                    } else if (slideObj && typeof slideObj.duration_viewed === "number") {
-                      startTime = slideObj.duration_viewed;
-                    }
-
-                    if (
-                      slideObj &&
-                      typeof slideObj.duration === "number" &&
-                      typeof slideObj.duration_viewed === "number" &&
-                      Math.abs(slideObj.duration - slideObj.duration_viewed) <= 1e-6
-                    ) {
-                      startTime = 0;
-                    }
-
-                    if (startTime && typeof startTime === "number" && !isNaN(startTime)) {
-                      const safeStart = Math.min(startTime, newDuration || startTime);
-                      try {
-                        e.target.currentTime = safeStart;
-                      } catch (err) {}
-                      dispatch(setCurrentVideoTime(safeStart));
-                      setCurrentTime(safeStart);
-                    }
-                  } catch (err) {
-                    console.error("Error applying start time on metadata load", err);
+                  // Reset initial time after it's been used
+                  if (initialVideoTime > 0) {
+                    setCurrentTime(initialVideoTime);
+                    dispatch(setCurrentVideoTime(initialVideoTime));
+                    setInitialVideoTime(0); // Reset to prevent further interference
                   }
 
                   onVideoStateChange?.({
-                    currentTime,
+                    currentTime: initialVideoTime || 0,
                     isPlaying,
                     currentVideoIndex,
                     duration: newDuration,
@@ -1050,7 +1000,6 @@ const VideoPanel = forwardRef(
                   if (!isMobile) {
                     console.log("Trainer video can play");
                   }
-                  applyVideoSettings(e.target);
                 }}
                 onClick={(e) => e.stopPropagation()}
                 onPlay={() => {
@@ -1123,66 +1072,79 @@ const VideoPanel = forwardRef(
                   }
                 }}
                 onRateChange={(e) => {
-                  if (!isMobile) {
-                    const newRate = e.target.playbackRate;
-                    if (newRate !== videoSettings.playbackRate) {
-                      setVideoSettings((prev) => ({
-                        ...prev,
-                        playbackRate: newRate,
-                      }));
-                    }
+                  const newRate = e.target.playbackRate;
+                  
+                  // Update video settings with new playback rate
+                  if (newRate !== videoSettings.playbackRate) {
+                    setVideoSettings((prev) => ({
+                      ...prev,
+                      playbackRate: newRate,
+                    }));
+                  }
+                  
+                  // Track playback rate change event
+                  const userDetails = getUserDetailsFromToken();
+                  const currentVideo = videos?.[currentVideoIndex];
+                  if (currentVideo) {
+                    capture("video_speed_change", {
+                      user_id: userDetails?.sub,
+                      video_id: currentVideo.slide,
+                      new_speed: newRate,
+                      timestamp: new Date().toISOString(),
+                    });
                   }
                 }}
                 poster={videos?.[currentVideoIndex]?.thumbnail}
                 autoPlay={autoPlayEnabled}
                 controls={true}
-                disablePictureInPicture
+                disablePictureInPicture={true}
+                muted={videoSettings.muted}
+                volume={videoSettings.volume}
+                playbackRate={videoSettings.playbackRate}
+                currentTime={initialVideoTime}
+                onSkipBackward={(data) => {
+                  console.log('Skip backward triggered:', data);
+
+                  // Set flags to prevent seeking interference
+                  setIsSkippingBackward(true);
+                  skipBackwardRef.current = true;
+
+                  // Reset flags after a longer delay to ensure all seeking events are handled
+                  setTimeout(() => {
+                    setIsSkippingBackward(false);
+                    skipBackwardRef.current = false;
+                    console.log('Skip backward flags reset');
+                  }, 1000);
+
+                  // Update current time state and refs
+                  setCurrentTime(data.to);
+                  dispatch(setCurrentVideoTime(data.to));
+                  previousTimeRef.current = data.to;
+                  setPreviousTime(data.to);
+
+                  // Track skip backward analytics
+                  const userDetails = getUserDetailsFromToken();
+                  const currentVideo = videos?.[currentVideoIndex];
+                  if (currentVideo) {
+                    capture("video_skip_backward", {
+                      user_id: userDetails?.sub,
+                      video_id: currentVideo.slide,
+                      from_time: formatSeconds(data.from),
+                      to_time: formatSeconds(data.to),
+                    });
+                  }
+                }}
               />
 
-              {/* Desktop-only styles for no-skip controls */}
-              {!isMobile && (
-                <style jsx global>{`
-                  /* WebKit browsers (Safari, Chrome) */
-                  .no-skip-controls::-webkit-media-controls-timeline,
-                  .no-skip-controls::-webkit-media-controls-seek-back-button,
-                  .no-skip-controls::-webkit-media-controls-seek-forward-button,
-                  .no-skip-controls::-webkit-media-controls-current-time-display,
-                  .no-skip-controls::-webkit-media-controls-time-remaining-display,
-                  .no-skip-controls::-webkit-media-controls-slider {
-                    pointer-events: none !important;
-                    cursor: not-allowed !important;
-                  }
-
-                  /* Mobile-specific: Disable touch interactions */
-                  .no-skip-controls {
-                    -webkit-touch-callout: none !important;
-                    -webkit-user-select: none !important;
-                    -khtml-user-select: none !important;
-                    -moz-user-select: none !important;
-                    -ms-user-select: none !important;
-                    user-select: none !important;
-                  }
-
-                  /* Additional mobile browser support */
-                  @media (max-width: 1024px) {
-                    .no-skip-controls {
-                      pointer-events: none !important;
-                    }
-                    .no-skip-controls::-webkit-media-controls {
-                      pointer-events: none !important;
-                    }
-                  }
-                `}</style>
-              )}
+              {/* Custom styles are now handled by VideoPlayer component */}
             </div>
 
             {/* Time display - Responsive styling */}
             <div
-              className={`px-1 flex justify-between font-lato text-gray-600 ${
-                isMobile
-                  ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
-                  : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
-              }`}>
+              className={`px-1 flex justify-between font-lato text-gray-600 ${isMobile
+                ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
+                : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
+                }`}>
               <span>
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
