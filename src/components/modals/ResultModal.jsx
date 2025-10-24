@@ -100,7 +100,7 @@ export default function ResultModal({
         <p className="text-[#555] mb-1">
           {isPerfectScore
             ? "You've mastered the training with a perfect score!"
-            : `You correctly answered ${correctAnswers || Math.round((score / 100) * (totalQuestions || 10))} out of ${totalQuestions || 2} questions`}
+            : `You correctly answered ${correctAnswers ?? Math.round((score / 100) * (totalQuestions || 2))} out of ${totalQuestions || 2} questions`}
         </p>
 
         {/* Warning message for non-perfect scores */}

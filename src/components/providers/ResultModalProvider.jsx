@@ -4,19 +4,31 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { restoreResultModal, hideResultModal } from '@/store/features/resultModalSlice';
 import ResultModal from '@/components/modals/ResultModal';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function ResultModalProvider({ children }) {
   const dispatch = useDispatch();
   const router = useRouter();
+  const pathname = usePathname();
   const { isOpen, score, presentationId, assessmentId, totalQuestions, correctAnswers } = useSelector(
     (state) => state.resultModal
   );
+
+  // Only show modal on assessment pages
+  const isAssessmentPage = pathname?.includes('/assessment/');
+  const shouldShowModal = isOpen && isAssessmentPage;
 
   // Restore modal state on component mount
   useEffect(() => {
     dispatch(restoreResultModal());
   }, [dispatch]);
+
+  // Clear modal state when leaving assessment pages
+  useEffect(() => {
+    if (!isAssessmentPage && isOpen) {
+      dispatch(hideResultModal());
+    }
+  }, [isAssessmentPage, isOpen, dispatch]);
 
   const handleRetry = () => {
     // Close the modal first
@@ -46,7 +58,7 @@ export default function ResultModalProvider({ children }) {
     <>
       {children}
       <ResultModal
-        isOpen={isOpen}
+        isOpen={shouldShowModal}
         onClose={handleCloseModal}
         score={score}
         presentationId={presentationId}
