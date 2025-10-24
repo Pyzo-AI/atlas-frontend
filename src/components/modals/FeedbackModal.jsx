@@ -6,7 +6,8 @@ import Modal from "@/components/common/Modal";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
 import { useSubmitFeedbackMutation } from "@/store/api/questionsApi";
-import ReviewImage from "@/assets/svg/review.svg";
+import review_image from "@/assets/svg/review.svg";
+import Image from "next/image";
 
 export default function FeedbackModal({ isOpen, onClose, presentationId }) {
   const [rating, setRating] = useState(0);
@@ -75,22 +76,22 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
   return (
     <Modal
       isOpen={isOpen}
-      onClose={() => {}} // Prevent closing
+      onClose={() => { }} // Prevent closing
       closeOnOverlayClick={false}
       closeOnEscape={false}
       size="md"
       className="overflow-hidden mx-4 sm:mx-0 rounded-3xl">
       <div className="p-8 bg-white">
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-2">
           {/* Header Section */}
           <div className="flex flex-col items-center gap-4">
             {/* Icon - Using a simple emoji since we don't have the image */}
             <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center">
-              <ReviewImage />
+              <Image src={review_image} alt="Review" className="w-12 h-12" />
             </div>
 
             {/* Title */}
-            <h2 className="text-2xl font-bold text-gray-900 text-center">How Was the Training?</h2>
+            <h2 className="text-xl font-bold text-[#1A1C29] text-center">How Was the Training?</h2>
           </div>
 
           {/* Rating Section */}
@@ -104,14 +105,11 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
                 <div key={star} className="relative w-8 h-8">
                   {/* Star SVG */}
                   <svg
-                    className={`w-8 h-8 cursor-pointer transition-colors ${
-                      isFullStar
-                        ? "text-yellow-400 fill-current"
-                        : isHalfStar
-                          ? "text-yellow-400 fill-current"
-                          : "text-gray-300"
-                    }`}
-                    viewBox="0 0 24 24">
+                    className="w-8 h-8 cursor-pointer transition-colors"
+                    viewBox="0 0 24 24"
+                    fill={isFullStar ? "#FCD34D" : "white"}
+                    stroke={isFullStar || isHalfStar ? "#FCD34D" : "#D1D5DB"}
+                    strokeWidth="1">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                     {isHalfStar && (
                       <defs>
@@ -150,22 +148,21 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
                 value={review}
                 onChange={handleReviewChange}
                 placeholder="Write a review… (optional)"
-                className="w-full h-24 p-3 text-sm resize-none border rounded-xl outline-none border-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                className="w-full h-24 p-3 text-sm resize-none border rounded-xl outline-none border-gray-300 focus:border-[#744FFF] focus:ring-1 focus:ring-[#744FFF]"
               />
               <div className="absolute bottom-3 right-3 text-xs text-gray-400">({review.length}/250)</div>
             </div>
           </div>
 
           {/* Submit Button */}
-          <div className="relative group w-full">
+          <div className="relative group w-full flex justify-center">
             <button
               onClick={handleSubmit}
               disabled={isSubmitDisabled || isSubmitting}
-              className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all duration-200 ${
-                isSubmitDisabled || isSubmitting
-                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                  : "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg"
-              }`}>
+              className={`w-1/2 py-2 rounded-4xl font-semibold text-lg transition-all duration-200 ${isSubmitDisabled || isSubmitting
+                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                : "bg-[#744FFF] hover:bg-[#6B46E5] text-white shadow-lg"
+                }`}>
               {isSubmitting ? (
                 <div className="flex items-center justify-center">
                   <svg
