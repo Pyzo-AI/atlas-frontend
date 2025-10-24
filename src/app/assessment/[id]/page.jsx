@@ -17,10 +17,20 @@ export default function AssessmentPage() {
   const presentationId = params.id;
   const searchParams = useSearchParams();
   const assessmentId = searchParams.get('assessment-id');
+  const retryParam = searchParams.get('retry');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [assessmentStartTime, setAssessmentStartTime] = useState(null);
   const { capture } = usePostHog();
+
+  // Reset state when retry parameter changes (fresh assessment)
+  useEffect(() => {
+    if (retryParam) {
+      setCurrentQuestionIndex(0);
+      setAnswers({});
+      setAssessmentStartTime(null);
+    }
+  }, [retryParam]);
   const [submitCompletionStatus, { isLoading: isSubmitting }] = useSubmitCompletionStatusMutation();
   const [submitAssessment, { isLoading: isAssessmentSubmitting }] = useSubmitAssessmentMutation();
 
@@ -31,6 +41,7 @@ export default function AssessmentPage() {
     data: quizData,
     isLoading,
     isError,
+    refetch: refetchQuiz
   } = useGetQuizQuery(presentationId, {
     skip: !!assessmentId
   });
@@ -39,10 +50,22 @@ export default function AssessmentPage() {
     data: assessmentData,
     isLoading: isAssessmentLoading,
     isError: isAssessmentError,
+    refetch: refetchAssessment
   } = useGetAssessmentQuery(assessmentId, {
     skip: !assessmentId,
     refetchOnMountOrArgChange: true
   });
+
+  // Refetch data when retry parameter changes
+  useEffect(() => {
+    if (retryParam) {
+      if (assessmentId) {
+        refetchAssessment();
+      } else {
+        refetchQuiz();
+      }
+    }
+  }, [retryParam, assessmentId, refetchAssessment, refetchQuiz]);
 
   const submissionId = assessmentData?.submission_id || null;
 
@@ -228,11 +251,35 @@ export default function AssessmentPage() {
         score: responseScore,
       });
 
+      // Calculate correct answers for display
+      let correctAnswers = 0;
+      const questions = currentData?.questions || [];
+
+      questions.forEach((question) => {
+        if (answers[question.question_id] === question.correct_answer) {
+          correctAnswers++;
+        }
+      });
+
+      console.log('Assessment results:', {
+        totalQuestions: questions.length,
+        correctAnswers,
+        score: responseScore,
+        questions: questions.map(q => ({
+          id: q.question_id,
+          userAnswer: answers[q.question_id],
+          correctAnswer: q.correct_answer,
+          isCorrect: answers[q.question_id] === q.correct_answer
+        }))
+      });
+
       // Show result modal instead of redirecting
       dispatch(showResultModal({
         score: responseScore,
         presentationId,
-        assessmentId
+        assessmentId,
+        totalQuestions: questions.length,
+        correctAnswers
       }));
     } catch (error) {
       console.log('Error submitting assessment:', error);

@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 export default function ResultModalProvider({ children }) {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { isOpen, score, presentationId, assessmentId } = useSelector(
+  const { isOpen, score, presentationId, assessmentId, totalQuestions, correctAnswers } = useSelector(
     (state) => state.resultModal
   );
 
@@ -19,10 +19,18 @@ export default function ResultModalProvider({ children }) {
   }, [dispatch]);
 
   const handleRetry = () => {
+    // Close the modal first
+    dispatch(hideResultModal());
+
+    // Navigate to assessment with fresh parameter to trigger new API call
     if (assessmentId) {
-      router.push(`/assessment/${presentationId}?assessment-id=${assessmentId}`);
+      // For new assessment API, add timestamp to force fresh call
+      const timestamp = Date.now();
+      router.push(`/assessment/${presentationId}?assessment-id=${assessmentId}&retry=${timestamp}`);
     } else {
-      router.push(`/assessment/${presentationId}`);
+      // For legacy quiz, add timestamp to force fresh call
+      const timestamp = Date.now();
+      router.push(`/assessment/${presentationId}?retry=${timestamp}`);
     }
   };
 
@@ -43,6 +51,8 @@ export default function ResultModalProvider({ children }) {
         score={score}
         presentationId={presentationId}
         assessmentId={assessmentId}
+        totalQuestions={totalQuestions}
+        correctAnswers={correctAnswers}
         onRetry={handleRetry}
         onRestartTraining={handleRestartTraining}
       />
