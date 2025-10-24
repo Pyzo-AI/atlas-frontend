@@ -369,13 +369,13 @@ const VideoPanel = forwardRef(
       if (!showRedirectPopup) return;
 
       const timer = setInterval(() => {
-        // setCountdown((prev) => {
-        //   if (prev <= 1) {
-        //     clearInterval(timer);
-        //     return 0;
-        //   }
-        //   return prev - 1;
-        // });
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
 
       if (countdown === 0) {
@@ -785,15 +785,13 @@ const VideoPanel = forwardRef(
       setShowChat(false);
     };
 
-    // Global redirect path
+    // Global redirect path - always go to assessment first
     const getRedirectPath = () => {
       const currentPath = window.location.pathname;
       const presentationId = currentPath.split("/lectures/")[1];
-      return isPresentationQuizPassed
-        ? `/review/${presentationId}?showDisclaimer=true`
-        : assessmentId
-          ? `/assessment/${presentationId}?assessment-id=${assessmentId}`
-          : `/assessment/${presentationId}`;
+      return assessmentId
+        ? `/assessment/${presentationId}?assessment-id=${assessmentId}`
+        : `/assessment/${presentationId}`;
     };
     // Determine device type for responsive styling
     const isPhone = isPhoneView;

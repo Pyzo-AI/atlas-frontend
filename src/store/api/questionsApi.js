@@ -21,7 +21,7 @@ export const questionsApi = createApi({
       query: () => 'presentations/',
       providesTags: ['Question'],
     }),
-    
+
     // Submit a new question
     submitQuestion: builder.mutation({
       query: ({ presentationId, ...questionData }) => ({
@@ -64,6 +64,15 @@ export const questionsApi = createApi({
         body: { answers },
       }),
     }),
+
+    // Submit feedback
+    submitFeedback: builder.mutation({
+      query: (feedbackData) => ({
+        url: 'presentations/feedback',
+        method: 'POST',
+        body: feedbackData,
+      }),
+    }),
   }),
 });
 
@@ -76,4 +85,5 @@ export const {
   useSubmitVideoProgressMutation,
   useGetAssessmentQuery,
   useSubmitAssessmentMutation,
+  useSubmitFeedbackMutation,
 } = questionsApi;
