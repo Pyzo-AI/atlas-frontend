@@ -127,7 +127,7 @@ const VideoPlayer = forwardRef(
         poster: poster,
         muted: muted,
         autoplay: autoPlay,
-        playbackRates: [0.5, 1, 1.25, 1.5, 2],
+        playbackRates: [0.5, 1, 1.5, 2],
         disablePictureInPicture: true,
         fullscreen: {
           options: {
@@ -148,10 +148,10 @@ const VideoPlayer = forwardRef(
         responsive: {
           breakpoints: {
             tiny: {
-              playbackRates: [0.75, 1, 1.25, 1.5],
+              playbackRates: [0.5, 1, 1.5, 2],
             },
             small: {
-              playbackRates: [0.75, 1, 1.25, 1.5],
+              playbackRates: [0.5, 1, 1.5, 2],
             },
           },
         },
@@ -934,8 +934,8 @@ const VideoPlayer = forwardRef(
             display: block !important;
           }
 
-          /* Mobile responsive adjustments for playback rate */
-          @media (max-width: 768px) {
+          /* Mobile responsive adjustments for playback rate - Portrait mode */
+          @media (max-width: 768px) and (orientation: portrait) {
             .video-js .vjs-playback-rate .vjs-playback-rate-value {
               font-size: 12px;
               line-height: 1.8;
@@ -953,7 +953,24 @@ const VideoPlayer = forwardRef(
             }
           }
 
-          @media (max-width: 480px) {
+          /* Mobile landscape mode - Desktop-like playback rate styling */
+          @media (max-width: 768px) and (orientation: landscape) {
+            .video-js .vjs-playback-rate .vjs-playback-rate-value {
+              font-size: 13px;
+              line-height: 2;
+              padding: 0 0.4em;
+            }
+            
+            .video-js .vjs-playback-rate {
+              min-width: 2.8em !important;
+              max-width: 3.5em;
+            }
+            
+
+          }
+
+          /* Very small screens - Portrait mode only */
+          @media (max-width: 480px) and (orientation: portrait) {
             .video-js .vjs-playback-rate .vjs-playback-rate-value {
               font-size: 11px;
               line-height: 1.6;
@@ -981,6 +998,72 @@ const VideoPlayer = forwardRef(
             margin-bottom: 0.8em !important;
           }
 
+          /* Fix menu positioning for landscape mode */
+          @media (max-width: 768px) and (orientation: landscape) {
+            .video-js .vjs-menu-button-popup .vjs-menu {
+              position: absolute !important;
+              bottom: 100% !important;
+              right: 0 !important;
+              left: auto !important;
+              margin-bottom: 0.5em !important;
+              z-index: 1000 !important;
+              transform: none !important;
+            }
+            
+            .video-js .vjs-playback-rate .vjs-menu {
+              bottom: 100% !important;
+              right: 0 !important;
+              left: auto !important;
+              margin-bottom: 0.5em !important;
+              min-width: 4em !important;
+              max-width: 6em !important;
+              transform: none !important;
+            }
+            
+            /* Ensure menu button has proper positioning context */
+            .video-js .vjs-playback-rate {
+              position: relative !important;
+            }
+            
+            /* Fix volume control sizing for landscape mode */
+            .video-js .vjs-volume-panel {
+              width: auto !important;
+              min-width: 4em !important;
+            }
+            
+            .video-js .vjs-volume-control {
+              width: 5em !important;
+              height: 2.5em !important;
+            }
+            
+            .video-js .vjs-volume-bar {
+              width: 4em !important;
+              height: 0.3em !important;
+              margin: 1.1em 0.5em !important;
+            }
+            
+            .video-js .vjs-mute-control {
+              width: 2em !important;
+              height: 2.5em !important;
+            }
+            
+            /* Ensure volume slider is visible and properly sized */
+            .video-js .vjs-volume-level {
+              height: 100% !important;
+            }
+            
+            .video-js .vjs-volume-handle {
+              width: 0.8em !important;
+              height: 0.8em !important;
+            }
+            
+            /* Volume panel hover state for better visibility */
+            .video-js .vjs-volume-panel:hover .vjs-volume-control {
+              opacity: 1 !important;
+              visibility: visible !important;
+            }
+          }
+
           /* Increase max-height for tiny and x-small layouts */
           .video-js.vjs-layout-tiny .vjs-menu-button-popup .vjs-menu .vjs-menu-content,
           .video-js.vjs-layout-x-small .vjs-menu-button-popup .vjs-menu .vjs-menu-content {
@@ -994,16 +1077,33 @@ const VideoPlayer = forwardRef(
             min-height: 1em !important;
           }
           
-          /* Mobile menu adjustments */
-          @media (max-width: 768px) {
+          /* Mobile menu adjustments - Portrait mode */
+          @media (max-width: 768px) and (orientation: portrait) {
             .video-js .vjs-menu li {
               font-size: 14px;
               padding: 4px 12px !important;
               min-height: 1em !important;
             }
           }
+
+          /* Mobile landscape mode - Desktop-like menu styling */
+          @media (max-width: 768px) and (orientation: landscape) {
+            .video-js .vjs-menu li {
+              font-size: 13px;
+              padding: 6px 12px !important;
+              min-height: 1.5em !important;
+              white-space: nowrap;
+            }
+            
+            .video-js .vjs-menu .vjs-menu-content {
+              background-color: rgba(0, 0, 0, 0.9) !important;
+              border-radius: 4px !important;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+            }
+          }
           
-          @media (max-width: 480px) {
+          /* Very small screens - Portrait mode only */
+          @media (max-width: 480px) and (orientation: portrait) {
             .video-js .vjs-menu li {
               font-size: 16px;
               padding: 20px 12px !important;
@@ -1029,8 +1129,8 @@ const VideoPlayer = forwardRef(
             user-select: none;
           }
 
-          /* Mobile control bar optimizations */
-          @media (max-width: 768px) {
+          /* Mobile control bar optimizations - Portrait mode only */
+          @media (max-width: 768px) and (orientation: portrait) {
             .video-js .vjs-control-bar {
               font-size: 1.4em;
               height: 3.5em;
@@ -1053,7 +1153,33 @@ const VideoPlayer = forwardRef(
             }
           }
 
-          @media (max-width: 480px) {
+          /* Mobile landscape mode - Use desktop-like styling */
+          @media (max-width: 768px) and (orientation: landscape) {
+            .video-js .vjs-control-bar {
+              font-size: 1em;
+              height: 2.5em;
+              padding: 0 0.5em;
+            }
+            
+            .video-js .vjs-control-bar .vjs-control {
+              width: auto;
+              min-width: 2em;
+            }
+            
+            /* Normal spacing for landscape */
+            .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
+              margin: 0 0.1em;
+            }
+            
+            /* Ensure volume panel has enough space */
+            .video-js .vjs-volume-panel {
+              flex-shrink: 0 !important;
+              min-width: 6em !important;
+            }
+          }
+
+          /* Very small screens - Portrait mode only */
+          @media (max-width: 480px) and (orientation: portrait) {
             .video-js .vjs-control-bar {
               font-size: 1.2em;
               height: 3em;
@@ -1094,11 +1220,18 @@ const VideoPlayer = forwardRef(
           .video-js .vjs-progress-control {
             flex-grow: 1 !important;
             width: auto !important;
+            min-width: 4em !important;
           }
 
-          /* Make sure other controls don't expand */
+          /* Make sure other controls don't expand but have minimum space */
           .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
             flex-shrink: 0 !important;
+          }
+          
+          /* Ensure volume panel gets adequate space */
+          .video-js .vjs-volume-panel {
+            flex-shrink: 0 !important;
+            min-width: 5em !important;
           }
 
           /* Hide or minimize the custom control spacer that's taking up space */
