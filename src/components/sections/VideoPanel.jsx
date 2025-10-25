@@ -857,14 +857,14 @@ const VideoPanel = forwardRef(
         )}
 
         {/* Video Section - Responsive for both mobile and desktop */}
-        {!isQuestionMode && !showChat && (
+        {!isQuestionMode && (
           <div
             className={`cursor-pointer bg-white border border-[#E5E7EB] ${isMobile
               ? isPhone
                 ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
                 : "p-2 pb-1 rounded-lg"
               : "p-3 pb-2 rounded-xl"
-              }`}
+              } ${showChat ? 'hidden' : ''}`}
             onClick={togglePlayPause}>
             <div
               className={`relative w-full bg-black overflow-hidden ${isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
@@ -1021,7 +1021,7 @@ const VideoPanel = forwardRef(
                     console.log("Trainer video can play");
                   }
                 }}
-                onClick={(e) => e.stopPropagation()}
+
                 onPlay={() => {
                   setIsPlaying(true);
                   dispatch(setIsVideoPlaying(true));
@@ -1178,13 +1178,14 @@ const VideoPanel = forwardRef(
         )}
 
         {/* AI Assistant Section - Responsive */}
-        {!isQuestionMode && !showChat && (
-          <div className={isMobile && isPhone ? "flex-1 min-h-0" : "h-full"}>
+        {!isQuestionMode && (
+          <div className={`${isMobile && isPhone ? "flex-1 min-h-0" : "h-full"} ${showChat ? 'hidden' : ''}`}>
             <AILearningAssistant
               setShowChat={setShowChat}
               showChat={showChat}
               onStartConversation={startConversation}
               onStopConversation={stopConversation}
+              onPauseVideo={pauseVideo}
               agentId={agentId}
               isMobileView={isMobile && isPhone}
             />

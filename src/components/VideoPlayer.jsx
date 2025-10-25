@@ -184,6 +184,28 @@ const VideoPlayer = forwardRef(
           e.stopPropagation();
         });
 
+        // Prevent volume/mute control clicks from bubbling to parent
+        const volumePanel = playerRef.current.controlBar.volumePanel;
+        if (volumePanel) {
+          const volumePanelEl = volumePanel.el();
+          if (volumePanelEl) {
+            volumePanelEl.addEventListener('click', (e) => {
+              e.stopPropagation();
+            }, false);
+          }
+        }
+
+        // Prevent play button clicks from bubbling to parent
+        const playToggle = playerRef.current.controlBar.playToggle;
+        if (playToggle) {
+          const playToggleEl = playToggle.el();
+          if (playToggleEl) {
+            playToggleEl.addEventListener('click', (e) => {
+              e.stopPropagation();
+            }, false);
+          }
+        }
+
         // Customize playback rate menu to look more like default HTML video
         const playbackRateMenuButton = playerRef.current.controlBar.playbackRateMenuButton;
         if (playbackRateMenuButton) {
@@ -202,6 +224,11 @@ const VideoPlayer = forwardRef(
             // Ensure it's always visible on mobile
             menuButton.classList.remove("vjs-hidden");
             menuButton.setAttribute("data-mobile-visible", "true");
+
+            // Prevent playback rate menu clicks from bubbling to parent
+            menuButton.addEventListener('click', (e) => {
+              e.stopPropagation();
+            }, false);
           }
         }
 
@@ -214,13 +241,31 @@ const VideoPlayer = forwardRef(
           if (!canSkipVideo) {
             const progressControlEl = progressControl.el();
             const progressHolder = progressControlEl.querySelector(".vjs-progress-holder");
+            const playProgressBar = progressControlEl.querySelector(".vjs-play-progress");
+            const loadProgressBar = progressControlEl.querySelector(".vjs-load-progress");
 
+            // Add class for CSS targeting
+            progressControlEl.classList.add("no-seek");
+
+            // Comprehensive pointer events blocking
             progressControlEl.style.pointerEvents = "none";
             progressControlEl.style.cursor = "default";
+            progressControlEl.style.touchAction = "none";
 
             if (progressHolder) {
               progressHolder.style.pointerEvents = "none";
               progressHolder.style.cursor = "default";
+              progressHolder.style.touchAction = "none";
+            }
+
+            // Block all child elements
+            if (playProgressBar) {
+              playProgressBar.style.pointerEvents = "none";
+              playProgressBar.style.touchAction = "none";
+            }
+            if (loadProgressBar) {
+              loadProgressBar.style.pointerEvents = "none";
+              loadProgressBar.style.touchAction = "none";
             }
 
             // Remove all event listeners
@@ -229,6 +274,69 @@ const VideoPlayer = forwardRef(
             progressControl.off("touchstart");
             progressControl.off("mouseup");
             progressControl.off("mousemove");
+            progressControl.off("touchend");
+            progressControl.off("touchmove");
+
+            // Comprehensive event prevention for iOS Safari
+            const preventSeekEvents = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              return false;
+            };
+
+            // Add event listeners with capture for iOS compatibility
+            progressControlEl.addEventListener('click', preventSeekEvents, true);
+            progressControlEl.addEventListener('mousedown', preventSeekEvents, true);
+            progressControlEl.addEventListener('mouseup', preventSeekEvents, true);
+            progressControlEl.addEventListener('touchstart', preventSeekEvents, true);
+            progressControlEl.addEventListener('touchend', preventSeekEvents, true);
+            progressControlEl.addEventListener('touchmove', preventSeekEvents, true);
+
+            // Also prevent on child elements for iOS
+            if (progressHolder) {
+              progressHolder.addEventListener('click', preventSeekEvents, true);
+              progressHolder.addEventListener('mousedown', preventSeekEvents, true);
+              progressHolder.addEventListener('touchstart', preventSeekEvents, true);
+              progressHolder.addEventListener('touchend', preventSeekEvents, true);
+              progressHolder.addEventListener('touchmove', preventSeekEvents, true);
+            }
+
+            // Add event listeners to the CSS overlay elements for iOS Safari
+            setTimeout(() => {
+              const overlayEl = progressControlEl.querySelector('::before');
+              const holderOverlayEl = progressHolder?.querySelector('::before');
+
+              // Since we can't directly access pseudo-elements, we'll add a real overlay
+              const createOverlay = (parent) => {
+                const overlay = document.createElement('div');
+                overlay.style.position = 'absolute';
+                overlay.style.top = '-10px';
+                overlay.style.left = '0';
+                overlay.style.right = '0';
+                overlay.style.bottom = '-10px';
+                overlay.style.zIndex = '999999';
+                overlay.style.background = 'transparent';
+                overlay.style.pointerEvents = 'auto';
+                overlay.style.touchAction = 'none';
+
+                overlay.addEventListener('click', preventSeekEvents, true);
+                overlay.addEventListener('mousedown', preventSeekEvents, true);
+                overlay.addEventListener('touchstart', preventSeekEvents, true);
+                overlay.addEventListener('touchend', preventSeekEvents, true);
+                overlay.addEventListener('touchmove', preventSeekEvents, true);
+
+                parent.style.position = 'relative';
+                parent.appendChild(overlay);
+                return overlay;
+              };
+
+              // Create overlays for better iOS Safari blocking
+              if (progressControlEl && !progressControlEl.querySelector('.seek-block-overlay')) {
+                const overlay = createOverlay(progressControlEl);
+                overlay.classList.add('seek-block-overlay');
+              }
+            }, 100);
           }
         }
 
@@ -286,7 +394,12 @@ const VideoPlayer = forwardRef(
             createEl() {
               return super.createEl("button", {
                 className: "vjs-skip-backward vjs-control vjs-button",
-                innerHTML: "<span>⏪5</span>",
+                innerHTML: `
+                  <span class="skip-backward-content">
+                    <span class="skip-arrows-custom">◀◀</span>
+                    <span class="skip-time">5</span>
+                  </span>
+                `,
               });
             }
 
@@ -334,8 +447,8 @@ const VideoPlayer = forwardRef(
             overlay.innerHTML = `
           <div class="skip-back-animation">
             <div class="skip-arrows">
-              <span>⏪</span>
-              <span>⏪</span>
+              <span>◀◀</span>
+              <span>◀◀</span>
             </div>
             <div class="skip-text">-5s</div>
           </div>
@@ -441,6 +554,11 @@ const VideoPlayer = forwardRef(
         const time = playerRef.current.currentTime();
         const dur = playerRef.current.duration();
 
+        // Track previous time for seek prevention
+        if (!seekingRef.current) {
+          playerRef.current.previousTime = time;
+        }
+
         if (onTimeUpdate) {
           onTimeUpdate({
             target: {
@@ -454,6 +572,20 @@ const VideoPlayer = forwardRef(
 
       playerRef.current.on("seeking", () => {
         seekingRef.current = true;
+
+        // Prevent seeking if canSkipVideo is false (iOS Safari specific)
+        if (!canSkipVideo) {
+          const currentTime = playerRef.current.currentTime();
+          const previousTime = playerRef.current.previousTime || 0;
+
+          // Restore to previous time to block the seek
+          setTimeout(() => {
+            if (playerRef.current && Math.abs(playerRef.current.currentTime() - currentTime) > 0.1) {
+              playerRef.current.currentTime(previousTime);
+            }
+          }, 0);
+        }
+
         if (onSeeking) {
           onSeeking();
         }
@@ -511,6 +643,30 @@ const VideoPlayer = forwardRef(
           });
         }
       });
+
+      // Additional iOS Safari seek prevention
+      if (!canSkipVideo) {
+        const videoElement = playerRef.current.el().querySelector('video');
+        if (videoElement) {
+          let lastValidTime = 0;
+
+          const preventSeekOnVideo = () => {
+            if (!seekingRef.current) {
+              lastValidTime = videoElement.currentTime;
+            }
+          };
+
+          const restoreTimeOnSeek = () => {
+            if (seekingRef.current && Math.abs(videoElement.currentTime - lastValidTime) > 1) {
+              videoElement.currentTime = lastValidTime;
+            }
+          };
+
+          videoElement.addEventListener('timeupdate', preventSeekOnVideo);
+          videoElement.addEventListener('seeking', restoreTimeOnSeek);
+          videoElement.addEventListener('seeked', restoreTimeOnSeek);
+        }
+      }
 
       return () => {
         if (playerRef.current) {
@@ -585,6 +741,29 @@ const VideoPlayer = forwardRef(
             pointer-events: none !important;
             cursor: default !important;
             user-select: none !important;
+            touch-action: none !important;
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+          }
+
+          /* iOS Safari specific restrictions */
+          .vjs-progress-control.no-seek {
+            position: relative !important;
+          }
+
+          .vjs-progress-control.no-seek::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 999999;
+            background: transparent;
+            pointer-events: auto !important;
+            touch-action: none !important;
           }
 
           /* Disable hover and active states */
@@ -596,22 +775,56 @@ const VideoPlayer = forwardRef(
             outline: none !important;
           }
 
-          /* Disable touch actions completely */
-          .vjs-progress-control.no-seek {
+          /* Additional iOS Safari restrictions */
+          .vjs-progress-control.no-seek .vjs-progress-holder {
+            position: relative !important;
+          }
+
+          .vjs-progress-control.no-seek .vjs-progress-holder::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            right: 0;
+            bottom: -10px;
+            z-index: 999999;
+            background: transparent;
+            pointer-events: auto !important;
             touch-action: none !important;
-            -webkit-touch-callout: none !important;
-            -webkit-user-select: none !important;
-            -moz-user-select: none !important;
-            -ms-user-select: none !important;
           }
 
           .vjs-skip-backward {
             width: 3.2em;
             cursor: pointer;
+            color: white !important; /* White color like other controls */
           }
 
-          .vjs-skip-backward span {
-            font-size: 1.3em;
+          .vjs-skip-backward:hover {
+            color: #f0f0f0 !important; /* Light gray on hover */
+          }
+
+          .skip-backward-content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: inherit;
+            gap: 4px;
+          }
+
+          .skip-arrows-custom {
+            font-size: 0.9em;
+            line-height: 1;
+            letter-spacing: -1px;
+            color: inherit;
+          }
+
+          .skip-time {
+            font-size: 0.9em;
+            line-height: 1;
+            color: inherit;
             font-weight: bold;
           }
 
@@ -645,11 +858,13 @@ const VideoPlayer = forwardRef(
           .skip-arrows {
             font-size: 24px;
             margin-bottom: 4px;
+            color: white; /* Ensure arrows are white on dark overlay */
           }
 
           .skip-arrows span {
             display: inline-block;
             animation: skipArrowMove 0.6s ease-out;
+            color: inherit;
           }
 
           .skip-arrows span:nth-child(2) {
@@ -861,6 +1076,18 @@ const VideoPlayer = forwardRef(
           .video-js .vjs-progress-control {
             display: flex !important;
             visibility: visible !important;
+          }
+
+          /* Ensure essential controls maintain proper pointer events */
+          .video-js .vjs-control-bar .vjs-volume-panel,
+          .video-js .vjs-control-bar .vjs-play-control,
+          .video-js .vjs-control-bar .vjs-playback-rate {
+            pointer-events: auto !important;
+          }
+
+          /* Ensure progress control allows interactions when seeking is enabled */
+          .video-js .vjs-progress-control:not(.no-seek) {
+            pointer-events: auto !important;
           }
 
           /* Simply expand the seek bar without changing layout order */
