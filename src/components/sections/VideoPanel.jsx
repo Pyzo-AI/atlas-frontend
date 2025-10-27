@@ -921,7 +921,8 @@ const VideoPanel = forwardRef(
                   if (!isMobile) {
                     // Don't interfere with skip backward operations
                     if (isSkippingBackward || skipBackwardRef.current) {
-                      console.log('Skipping seeking prevention due to skip backward');
+                      console.log('Allowing seek for skip backward operation');
+                      isSeekingRef.current = true;
                       return;
                     }
 
@@ -954,9 +955,12 @@ const VideoPanel = forwardRef(
                   if (!isMobile) {
                     const newTime = e.target.currentTime;
 
-                    // Don't interfere with skip backward operations
+                    // Handle skip backward operations properly
                     if (isSkippingBackward || skipBackwardRef.current) {
-                      console.log('Skipping seeked logic due to skip backward');
+                      console.log('Completing skip backward operation to:', newTime);
+                      isSeekingRef.current = false;
+                      previousTimeRef.current = newTime;
+                      setPreviousTime(newTime);
                       return;
                     }
 
@@ -1125,22 +1129,25 @@ const VideoPanel = forwardRef(
                 onSkipBackward={(data) => {
                   console.log('Skip backward triggered:', data);
 
-                  // Set flags to prevent seeking interference
+                  // Set flags BEFORE the video time change to prevent seeking interference
                   setIsSkippingBackward(true);
                   skipBackwardRef.current = true;
 
-                  // Reset flags after a longer delay to ensure all seeking events are handled
+                  // Immediately update the previous time reference to the new position
+                  // This prevents the seeking logic from trying to restore the old position
+                  previousTimeRef.current = data.to;
+                  setPreviousTime(data.to);
+
+                  // Update current time state
+                  setCurrentTime(data.to);
+                  dispatch(setCurrentVideoTime(data.to));
+
+                  // Reset flags after seeking events are complete
                   setTimeout(() => {
                     setIsSkippingBackward(false);
                     skipBackwardRef.current = false;
                     console.log('Skip backward flags reset');
-                  }, 1000);
-
-                  // Update current time state and refs
-                  setCurrentTime(data.to);
-                  dispatch(setCurrentVideoTime(data.to));
-                  previousTimeRef.current = data.to;
-                  setPreviousTime(data.to);
+                  }, 500); // Reduced timeout since we're handling it better
 
                   // Track skip backward analytics
                   const userDetails = getUserDetailsFromToken();

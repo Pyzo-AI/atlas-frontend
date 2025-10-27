@@ -43,6 +43,7 @@ const VideoPlayer = forwardRef(
     const [duration, setDuration] = useState(0);
     const timeUpdateRef = useRef(null);
     const seekingRef = useRef(false);
+    const skipBackwardInProgressRef = useRef(false);
 
     useEffect(() => {
       setIsClient(true);
@@ -357,6 +358,9 @@ const VideoPlayer = forwardRef(
               const newTime = Math.max(0, currentTime - 5);
               const wasPlaying = !playerRef.current.paused();
 
+              // Set flag to disable seeking prevention during skip backward
+              skipBackwardInProgressRef.current = true;
+
               console.log("J key skip backward:", { from: currentTime, to: newTime, wasPlaying });
 
               if (onSkipBackward) {
@@ -373,6 +377,11 @@ const VideoPlayer = forwardRef(
                   console.log("Resuming playback after J key skip");
                   playerRef.current.play();
                 }
+
+                // Reset flag after skip backward is complete
+                setTimeout(() => {
+                  skipBackwardInProgressRef.current = false;
+                }, 100);
               }, 50);
 
               e.preventDefault();
@@ -408,7 +417,8 @@ const VideoPlayer = forwardRef(
               const newTime = Math.max(0, currentTime - 5);
               const wasPlaying = !this.player().paused();
 
-              // Skip backward button clicked
+              // Set flag to disable seeking prevention during skip backward
+              skipBackwardInProgressRef.current = true;
 
               // Call the callback if provided
               if (onSkipBackward) {
@@ -425,6 +435,11 @@ const VideoPlayer = forwardRef(
                   console.log("Resuming playback after skip");
                   this.player().play();
                 }
+
+                // Reset flag after skip backward is complete
+                setTimeout(() => {
+                  skipBackwardInProgressRef.current = false;
+                }, 100);
               }, 50);
             }
           }
@@ -480,6 +495,9 @@ const VideoPlayer = forwardRef(
                   const newTime = Math.max(0, currentTime - 5);
                   const wasPlaying = !playerRef.current.paused();
 
+                  // Set flag to disable seeking prevention during skip backward
+                  skipBackwardInProgressRef.current = true;
+
                   console.log("Mobile double-tap skip backward:", { from: currentTime, to: newTime, wasPlaying });
 
                   // Call the callback if provided
@@ -497,6 +515,11 @@ const VideoPlayer = forwardRef(
                       console.log("Resuming playback after mobile skip");
                       playerRef.current.play();
                     }
+
+                    // Reset flag after skip backward is complete
+                    setTimeout(() => {
+                      skipBackwardInProgressRef.current = false;
+                    }, 100);
                   }, 50);
 
                   showSkipAnimation();
@@ -573,12 +596,13 @@ const VideoPlayer = forwardRef(
       playerRef.current.on("seeking", () => {
         seekingRef.current = true;
 
-        // Prevent seeking if canSkipVideo is false (iOS Safari specific)
-        if (!canSkipVideo) {
+        // Prevent seeking if canSkipVideo is false, but allow skip backward operations
+        if (!canSkipVideo && !skipBackwardInProgressRef.current) {
           const currentTime = playerRef.current.currentTime();
           const previousTime = playerRef.current.previousTime || 0;
 
-          // Restore to previous time to block the seek
+          console.log('VideoPlayer seeking - blocking seek, restoring to:', previousTime);
+          // Restore to previous time to block seeking
           setTimeout(() => {
             if (playerRef.current && Math.abs(playerRef.current.currentTime() - currentTime) > 0.1) {
               playerRef.current.currentTime(previousTime);
@@ -657,8 +681,12 @@ const VideoPlayer = forwardRef(
           };
 
           const restoreTimeOnSeek = () => {
-            if (seekingRef.current && Math.abs(videoElement.currentTime - lastValidTime) > 1) {
+            if (seekingRef.current && Math.abs(videoElement.currentTime - lastValidTime) > 1 && !skipBackwardInProgressRef.current) {
+              console.log('Native video - blocking seek, restoring to:', lastValidTime);
               videoElement.currentTime = lastValidTime;
+            } else if (skipBackwardInProgressRef.current) {
+              console.log('Native video - allowing skip backward to:', videoElement.currentTime);
+              lastValidTime = videoElement.currentTime;
             }
           };
 
