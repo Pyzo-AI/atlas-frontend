@@ -130,10 +130,20 @@ const VideoPlayer = forwardRef(
         autoplay: autoPlay,
         playbackRates: [0.5, 1, 1.5, 2],
         disablePictureInPicture: true,
+        // iOS-specific configurations to prevent fullscreen
+        playsinline: true,
+        webkit_playsinline: true,
         fullscreen: {
           options: {
             navigationUI: "hide",
           },
+        },
+        // Disable native fullscreen and controls on iOS
+        techOrder: ['html5'],
+        html5: {
+          nativeControlsForTouch: false,
+          nativeAudioTracks: false,
+          nativeVideoTracks: false,
         },
         // Ensure playback rate menu is always available
         breakpoints: {
@@ -178,12 +188,74 @@ const VideoPlayer = forwardRef(
           pipToggle.hide();
         }
 
+        // iOS-specific: Disable native fullscreen and controls
+        const videoEl = playerRef.current.el().querySelector('video');
+        if (videoEl) {
+          videoEl.setAttribute('playsinline', 'true');
+          videoEl.setAttribute('webkit-playsinline', 'true');
+          videoEl.setAttribute('x-webkit-airplay', 'deny');
+
+          // Prevent iOS native fullscreen
+          videoEl.webkitEnterFullscreen = undefined;
+          videoEl.webkitExitFullscreen = undefined;
+
+          // Override fullscreen API methods
+          if (videoEl.requestFullscreen) {
+            videoEl.requestFullscreen = () => { };
+          }
+          if (videoEl.webkitRequestFullscreen) {
+            videoEl.webkitRequestFullscreen = () => { };
+          }
+          if (videoEl.mozRequestFullScreen) {
+            videoEl.mozRequestFullScreen = () => { };
+          }
+          if (videoEl.msRequestFullscreen) {
+            videoEl.msRequestFullscreen = () => { };
+          }
+        }
+
+        // Disable Video.js fullscreen functionality completely
+        if (playerRef.current.requestFullscreen) {
+          playerRef.current.requestFullscreen = () => { };
+        }
+        if (playerRef.current.exitFullscreen) {
+          playerRef.current.exitFullscreen = () => { };
+        }
+
         // Disable double-click to fullscreen
         playerRef.current.off("dblclick");
         playerRef.current.on("dblclick", (e) => {
           e.preventDefault();
           e.stopPropagation();
         });
+
+        // Prevent iOS fullscreen events
+        const videoElForEvents = playerRef.current.el().querySelector('video');
+        if (videoElForEvents) {
+          videoElForEvents.addEventListener('webkitbeginfullscreen', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }, true);
+
+          videoElForEvents.addEventListener('webkitendfullscreen', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }, true);
+
+          // Prevent fullscreen change events
+          videoElForEvents.addEventListener('fullscreenchange', (e) => {
+            if (document.fullscreenElement === videoElForEvents) {
+              document.exitFullscreen();
+            }
+          });
+
+          videoElForEvents.addEventListener('webkitfullscreenchange', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          });
+        }
 
         // Prevent volume/mute control clicks from bubbling to parent
         const volumePanel = playerRef.current.controlBar.volumePanel;
@@ -755,7 +827,16 @@ const VideoPlayer = forwardRef(
 
     return (
       <div className={className} style={style}>
-        <video ref={videoRef} className="video-js vjs-default-skin" width={width} height={height} data-setup="{}" />
+        <video
+          ref={videoRef}
+          className="video-js vjs-default-skin"
+          width={width}
+          height={height}
+          data-setup="{}"
+          playsInline
+          webkit-playsinline="true"
+          x-webkit-airplay="deny"
+        />
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -942,6 +1023,61 @@ const VideoPlayer = forwardRef(
 
           .video-js .vjs-tech {
             object-fit: cover;
+          }
+
+          /* iOS-specific fixes to prevent fullscreen and native controls */
+          .video-js video {
+            -webkit-playsinline: true !important;
+            playsinline: true !important;
+          }
+
+          /* Force inline playback on iOS Safari */
+          @supports (-webkit-overflow-scrolling: touch) {
+            .video-js video {
+              -webkit-playsinline: true !important;
+              playsinline: true !important;
+            }
+          }
+
+          /* Disable iOS native video controls overlay */
+          .video-js video::-webkit-media-controls {
+            display: none !important;
+          }
+
+          .video-js video::-webkit-media-controls-enclosure {
+            display: none !important;
+          }
+
+          .video-js video::-webkit-media-controls-panel {
+            display: none !important;
+          }
+
+          .video-js video::-webkit-media-controls-play-button {
+            display: none !important;
+          }
+
+          .video-js video::-webkit-media-controls-timeline {
+            display: none !important;
+          }
+
+          .video-js video::-webkit-media-controls-current-time-display {
+            display: none !important;
+          }
+
+          .video-js video::-webkit-media-controls-time-remaining-display {
+            display: none !important;
+          }
+
+          .video-js video::-webkit-media-controls-mute-button {
+            display: none !important;
+          }
+
+          .video-js video::-webkit-media-controls-volume-slider {
+            display: none !important;
+          }
+
+          .video-js video::-webkit-media-controls-fullscreen-button {
+            display: none !important;
           }
 
           /* Hide fullscreen and picture-in-picture buttons */
