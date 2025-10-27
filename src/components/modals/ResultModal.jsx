@@ -9,10 +9,10 @@ import { showFeedbackModal } from "@/store/features/feedbackModalSlice";
 export default function ResultModal({
   isOpen,
   onClose,
-  score,
+  score, // This should be the percentage from API response
   presentationId,
-  totalQuestions,
-  correctAnswers,
+  totalQuestions, // This should be max_score from API
+  correctAnswers, // This should be score from API
   onRetry,
   onRestartTraining,
 }) {
@@ -20,14 +20,22 @@ export default function ResultModal({
   const dispatch = useDispatch();
   const passingScore = process.env.NEXT_PUBLIC_ASSESSMENT_PASSING_SCORE || 100;
 
-  const isPerfectScore = score == passingScore;
+  // Use the actual values from API response
+  const actualTotalQuestions = totalQuestions || 0;
+  const actualCorrectAnswers = correctAnswers || 0;
+  const actualPercentage = score || 0;
+
+  const isPerfectScore = actualPercentage >= passingScore;
 
   // Debug logging
   console.log("ResultModal received props:", {
-    score,
-    totalQuestions,
-    correctAnswers,
-    isPerfectScore,
+    originalProps: { score, totalQuestions, correctAnswers },
+    processedValues: {
+      actualPercentage,
+      actualTotalQuestions,
+      actualCorrectAnswers,
+      isPerfectScore,
+    }
   });
 
   const handleRetry = () => {
@@ -62,7 +70,7 @@ export default function ResultModal({
           {isPerfectScore ? (
             // Perfect Score - Simple Green Circle
             <div className="w-24 h-24 border-4 border-[#00A63E] rounded-full flex items-center justify-center">
-              <span className="text-2xl font-bold text-[#00A63E]">100%</span>
+              <span className="text-2xl font-bold text-[#00A63E]">{Math.round(actualPercentage)}%</span>
             </div>
           ) : (
             // Partial Score - Progress Circle
@@ -78,14 +86,14 @@ export default function ResultModal({
                   fill="none"
                   stroke="#744FFF"
                   strokeWidth="2"
-                  strokeDasharray={`${(score / 100) * 100}, 100`}
+                  strokeDasharray={`${(actualPercentage / 100) * 100}, 100`}
                   strokeLinecap="round"
                   transform="rotate(-90 18 18)"
                 />
               </svg>
               {/* Score text */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl font-bold text-[#744FFF]">{score}%</span>
+                <span className="text-2xl font-bold text-[#744FFF]">{Math.round(actualPercentage)}%</span>
               </div>
             </div>
           )}
@@ -100,7 +108,7 @@ export default function ResultModal({
         <p className="text-[#555] mb-1">
           {isPerfectScore
             ? "You've mastered the training with a perfect score!"
-            : `You correctly answered ${correctAnswers ?? Math.round((score / 100) * (totalQuestions || 2))} out of ${totalQuestions || 2} questions`}
+            : `You correctly answered ${actualCorrectAnswers} out of ${actualTotalQuestions} questions`}
         </p>
 
         {/* Warning message for non-perfect scores */}

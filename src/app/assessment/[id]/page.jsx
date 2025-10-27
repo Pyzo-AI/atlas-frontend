@@ -204,6 +204,9 @@ export default function AssessmentPage() {
 
     try {
       let responseScore = finalScore;
+      let assessmentResponse = null;
+      let calculatedCorrectAnswers = 0;
+      let totalQuestionsCount = 0;
 
       if (assessmentId && submissionId) {
         // Format answers for new assessment API
@@ -212,26 +215,54 @@ export default function AssessmentPage() {
           answer_text: answer
         }));
 
-        const response = await submitAssessment({
-          submissionId,
-          answers: formattedAnswers
-        }).unwrap();
+        try {
+          assessmentResponse = await submitAssessment({
+            submissionId,
+            answers: formattedAnswers
+          }).unwrap();
 
-        responseScore = response.percentage;
+          responseScore = assessmentResponse.percentage;
+          console.log('Assessment submitted successfully:', assessmentResponse);
 
-        // Call completion status API after assessment submission
-        await submitCompletionStatus({
-          presentationId,
-          isPresentationCompleted: response.passed,
-          user_id: userDetails?.sub,
-        }).unwrap();
+          // Try to call completion status API, but don't fail if it errors
+          try {
+            await submitCompletionStatus({
+              presentationId,
+              isPresentationCompleted: assessmentResponse.passed,
+              user_id: userDetails?.sub,
+            }).unwrap();
+          } catch (completionError) {
+            console.warn('Completion status API failed, but assessment was successful:', completionError);
+          }
+
+        } catch (assessmentError) {
+          console.error('Assessment submission failed:', assessmentError);
+          toast.error("Failed to submit assessment. Please try again.");
+          return;
+        }
+
       } else {
         // Original completion status API
-        await submitCompletionStatus({
-          presentationId,
-          isPresentationCompleted: passFail === "pass",
-          user_id: userDetails?.sub,
-        }).unwrap();
+        try {
+          await submitCompletionStatus({
+            presentationId,
+            isPresentationCompleted: passFail === "pass",
+            user_id: userDetails?.sub,
+          }).unwrap();
+        } catch (completionError) {
+          console.error('Completion status submission failed:', completionError);
+          toast.error("Failed to submit assessment. Please try again.");
+          return;
+        }
+
+        // Calculate correct answers for display (fallback for old API)
+        const questions = currentData?.questions || [];
+        questions.forEach((question) => {
+          if (answers[question.question_id] === question.correct_answer) {
+            calculatedCorrectAnswers++;
+          }
+        });
+        totalQuestionsCount = questions.length;
       }
 
       // Track assessment submission event
@@ -251,39 +282,29 @@ export default function AssessmentPage() {
         score: responseScore,
       });
 
-      // Calculate correct answers for display
-      let correctAnswers = 0;
-      const questions = currentData?.questions || [];
-
-      questions.forEach((question) => {
-        if (answers[question.question_id] === question.correct_answer) {
-          correctAnswers++;
-        }
-      });
-
-      console.log('Assessment results:', {
-        totalQuestions: questions.length,
-        correctAnswers,
-        score: responseScore,
-        questions: questions.map(q => ({
-          id: q.question_id,
-          userAnswer: answers[q.question_id],
-          correctAnswer: q.correct_answer,
-          isCorrect: answers[q.question_id] === q.correct_answer
-        }))
-      });
-
-      // Show result modal instead of redirecting
-      dispatch(showResultModal({
+      // Prepare data for result modal
+      const resultData = {
         score: responseScore,
         presentationId,
         assessmentId,
-        totalQuestions: questions.length,
-        correctAnswers
-      }));
+        totalQuestions: assessmentResponse ? assessmentResponse.max_score : totalQuestionsCount,
+        correctAnswers: assessmentResponse ? assessmentResponse.score : calculatedCorrectAnswers
+      };
+
+      console.log('Assessment results:', {
+        totalQuestions: resultData.totalQuestions,
+        correctAnswers: resultData.correctAnswers,
+        score: resultData.score,
+        apiResponse: assessmentResponse
+      });
+
+      // Show result modal with correct data
+      console.log('Dispatching showResultModal with data:', resultData);
+      dispatch(showResultModal(resultData));
+
     } catch (error) {
-      console.log('Error submitting assessment:', error);
-      toast.error("Failed to submit assessment. Please try again.");
+      console.error('Unexpected error in assessment submission:', error);
+      toast.error("An unexpected error occurred. Please try again.");
     }
   };
 

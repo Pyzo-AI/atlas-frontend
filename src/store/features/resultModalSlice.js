@@ -5,6 +5,8 @@ const initialState = {
   score: null,
   presentationId: null,
   assessmentId: null,
+  totalQuestions: null,
+  correctAnswers: null,
 };
 
 const resultModalSlice = createSlice({
@@ -12,12 +14,14 @@ const resultModalSlice = createSlice({
   initialState,
   reducers: {
     showResultModal: (state, action) => {
-      const { score, presentationId, assessmentId } = action.payload;
+      const { score, presentationId, assessmentId, totalQuestions, correctAnswers } = action.payload;
       state.isOpen = true;
       state.score = score;
       state.presentationId = presentationId;
       state.assessmentId = assessmentId;
-      
+      state.totalQuestions = totalQuestions;
+      state.correctAnswers = correctAnswers;
+
       // Persist to localStorage for refresh handling
       if (typeof window !== 'undefined') {
         localStorage.setItem('resultModalState', JSON.stringify({
@@ -25,6 +29,8 @@ const resultModalSlice = createSlice({
           score,
           presentationId,
           assessmentId,
+          totalQuestions,
+          correctAnswers,
         }));
       }
     },
@@ -33,7 +39,9 @@ const resultModalSlice = createSlice({
       state.score = null;
       state.presentationId = null;
       state.assessmentId = null;
-      
+      state.totalQuestions = null;
+      state.correctAnswers = null;
+
       // Clear from localStorage
       if (typeof window !== 'undefined') {
         localStorage.removeItem('resultModalState');
@@ -49,6 +57,8 @@ const resultModalSlice = createSlice({
           state.score = parsedState.score;
           state.presentationId = parsedState.presentationId;
           state.assessmentId = parsedState.assessmentId;
+          state.totalQuestions = parsedState.totalQuestions;
+          state.correctAnswers = parsedState.correctAnswers;
         }
       }
     },
