@@ -1253,8 +1253,8 @@ const VideoPlayer = forwardRef(
           /* Mobile landscape mode - Desktop-like menu styling */
           @media (max-width: 768px) and (orientation: landscape) {
             .video-js .vjs-menu li {
-              font-size: 13px;
-              padding: 6px 12px !important;
+              font-size: 11px;
+              padding: 4px 10px !important;
               min-height: 1.5em !important;
               white-space: nowrap;
             }
@@ -1263,6 +1263,12 @@ const VideoPlayer = forwardRef(
               background-color: rgba(0, 0, 0, 0.9) !important;
               border-radius: 4px !important;
               box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+            }
+            
+            /* Fix menu positioning for tiny and x-small layouts in landscape */
+            .video-js.vjs-layout-tiny .vjs-menu-button-popup .vjs-menu .vjs-menu-content,
+            .video-js.vjs-layout-x-small .vjs-menu-button-popup .vjs-menu .vjs-menu-content {
+              bottom: -10px !important;
             }
           }
           
