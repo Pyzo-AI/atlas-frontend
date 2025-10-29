@@ -7,20 +7,11 @@ import {
   setAnswerPptIndex,
   setIsQuestionMode,
 } from "@/store/features/videoSlice";
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useConversation } from "@elevenlabs/react";
-import {
-  CONVERSATION_CONFIG,
-  cleanExpiredMessages,
-} from "@/config/conversationConfig";
+import { CONVERSATION_CONFIG, cleanExpiredMessages } from "@/config/conversationConfig";
 import AILearningAssistant from "./AILearningAssistant";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
@@ -28,6 +19,9 @@ import ChatUI from "./ChatUI";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
 import { updateVideoProgress, startVideoSession } from "@/utils/videoProgress";
+import redirecting_logo from "@/assets/svg/redirecting.svg";
+import Image from "next/image";
+import VideoPlayer from "@/components/VideoPlayer";
 
 // Conversation history management for VideoPanel
 const {
@@ -64,10 +58,7 @@ const saveConversationHistory = (history) => {
   try {
     // Keep only the most recent messages to prevent localStorage bloat
     const trimmedHistory = history.slice(-MAX_HISTORY_MESSAGES);
-    localStorage.setItem(
-      CONVERSATION_STORAGE_KEY,
-      JSON.stringify(trimmedHistory)
-    );
+    localStorage.setItem(CONVERSATION_STORAGE_KEY, JSON.stringify(trimmedHistory));
   } catch (error) {
     console.error("Error saving conversation history:", error);
   }
@@ -101,10 +92,7 @@ const VideoPanel = forwardRef(
       isConnected: false,
       isAudioPlaying: false,
     });
-    const [
-      isJumpedOnChatFromInteractionMode,
-      setIsJumpedOnChatFromInteractionMode,
-    ] = useState(false);
+    const [isJumpedOnChatFromInteractionMode, setIsJumpedOnChatFromInteractionMode] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
@@ -122,6 +110,7 @@ const VideoPanel = forwardRef(
     // When we programmatically restore the time to block a user seek we mark this ref
     // so we can ignore the resulting seek events.
     const blockedSeekRef = useRef(false);
+    const skipBackwardRef = useRef(false);
     // Slide view tracking
     const [slideViewStartTime, setSlideViewStartTime] = useState("");
     const [videoStartTime, setVideoStartTime] = useState(0);
@@ -144,8 +133,7 @@ const VideoPanel = forwardRef(
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
     const [showChat, setShowChat] = useState(false);
-    const [persistentConversationHistory, setPersistentConversationHistory] =
-      useState([]);
+    const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
     const [contextSent, setContextSent] = useState(false);
     // Keep ref updated with current isQuestionMode value
     useEffect(() => {
@@ -164,12 +152,7 @@ const VideoPanel = forwardRef(
 
       // Get the last N meaningful messages for context (configurable)
       const recentMessages = persistentConversationHistory
-        .filter(
-          (msg) =>
-            msg.message &&
-            msg.message.trim() &&
-            !msg.message.includes("audioData")
-        )
+        .filter((msg) => msg.message && msg.message.trim() && !msg.message.includes("audioData"))
         .slice(-MAX_CONTEXT_MESSAGES)
         .map((msg) => {
           const source = msg.source === "user" ? "User" : "AI";
@@ -261,15 +244,9 @@ const VideoPanel = forwardRef(
             timestamp: new Date().toISOString(),
           });
 
-          setConversationHistory((prev) => [
-            ...prev,
-            { type: "question", content },
-          ]);
+          setConversationHistory((prev) => [...prev, { type: "question", content }]);
         } else {
-          setConversationHistory((prev) => [
-            ...prev,
-            { type: "answer", content: message.message },
-          ]);
+          setConversationHistory((prev) => [...prev, { type: "answer", content: message.message }]);
         }
 
         // Send context after AI's first message (only if not already sent)
@@ -296,11 +273,7 @@ const VideoPanel = forwardRef(
         }
 
         // Store in persistent history (for context continuity)
-        if (
-          message.message &&
-          message.message.trim() &&
-          !message.message.includes("audioData")
-        ) {
+        if (message.message && message.message.trim() && !message.message.includes("audioData")) {
           const newMessage = {
             id: Date.now() + Math.random(),
             timestamp: new Date().toISOString(),
@@ -381,6 +354,8 @@ const VideoPanel = forwardRef(
     const [showRedirectPopup, setShowRedirectPopup] = useState(false);
     const [countdown, setCountdown] = useState(10);
     const [preloadedVideoIndex, setPreloadedVideoIndex] = useState(-1);
+    const [initialVideoTime, setInitialVideoTime] = useState(0);
+    const [isSkippingBackward, setIsSkippingBackward] = useState(false);
 
     // Function to stop conversation
     const stopAnswerAudio = () => {
@@ -460,14 +435,7 @@ const VideoPanel = forwardRef(
       pauseVideo,
     }));
 
-    // Apply persistent video settings when video loads
-    const applyVideoSettings = (videoElement) => {
-      if (videoElement) {
-        videoElement.muted = videoSettings.muted;
-        videoElement.playbackRate = videoSettings.playbackRate;
-        videoElement.volume = videoSettings.volume;
-      }
-    };
+    // Note: Video settings are now handled by VideoPlayer component props
 
     // Handle video index changes (only when actually changing)
     useEffect(() => {
@@ -477,16 +445,10 @@ const VideoPanel = forwardRef(
 
         // Save progress for previous video when switching
         if (newSrc && newSrc !== lastVideoSrc && lastVideoSrc) {
-          const prevVideoIndex = videos.findIndex(
-            (v) => v.trainer_video === lastVideoSrc
-          );
+          const prevVideoIndex = videos.findIndex((v) => v.trainer_video === lastVideoSrc);
           if (prevVideoIndex !== -1) {
             const prevVideo = videos[prevVideoIndex];
-            updateVideoProgress(
-              presentationId,
-              prevVideo.slide,
-              Math.floor(currentTime - videoStartTime)
-            );
+            updateVideoProgress(presentationId, prevVideo.slide, Math.floor(currentTime - videoStartTime));
           }
         }
 
@@ -495,36 +457,29 @@ const VideoPanel = forwardRef(
           setLastVideoSrc(newSrc);
           console.log(`Switching to video ${currentVideoIndex}...`);
 
-          // Check if we have a preloaded video for this index
+          // Calculate initial time for new video
+          let startTime = 0;
+          if (typeof reduxCurrentVideoTime === "number" && reduxCurrentVideoTime > 0) {
+            startTime = reduxCurrentVideoTime;
+          } else if (currentVideo && typeof currentVideo.duration_viewed === "number") {
+            startTime = currentVideo.duration_viewed;
+          }
+
           if (
-            preloadedVideoIndex === currentVideoIndex &&
-            preloadVideoRef.current &&
-            preloadVideoRef.current.readyState >= 2
+            currentVideo &&
+            typeof currentVideo.duration === "number" &&
+            typeof currentVideo.duration_viewed === "number" &&
+            Math.abs(currentVideo.duration - currentVideo.duration_viewed) <= 1e-6
           ) {
-            console.log(`Using preloaded video for index ${currentVideoIndex}`);
+            startTime = 0;
+          }
 
-            try {
-              // Copy the preloaded video source to main video
-              videoRef.current.src = preloadVideoRef.current.src;
-              videoRef.current.load();
+          setInitialVideoTime(startTime);
 
-              // Clean up the preloaded video
-              preloadVideoRef.current.src = "";
-              setPreloadedVideoIndex(-1);
-            } catch (error) {
-              console.log(
-                "Error using preloaded video, falling back to normal load:",
-                error
-              );
-              videoRef.current.load();
-              setPreloadedVideoIndex(-1);
-            }
-          } else {
-            // Load video normally if not preloaded or preload failed
-            videoRef.current.load();
-            if (preloadedVideoIndex === currentVideoIndex) {
-              setPreloadedVideoIndex(-1); // Reset if preload was attempted but failed
-            }
+          // VideoPlayer component handles loading automatically via src prop change
+          // Preloading is handled internally by Video.js
+          if (preloadedVideoIndex === currentVideoIndex) {
+            setPreloadedVideoIndex(-1); // Reset preload tracking
           }
 
           // Update slide when video changes
@@ -568,21 +523,22 @@ const VideoPanel = forwardRef(
               onPauseAnswerAudio();
             }
 
-            videoRef.current.play().catch((error) => {
-              console.log("Error playing video:", error);
-            });
+            // Wait for video to be ready before playing to avoid play/pause conflicts
+            setTimeout(() => {
+              if (videoRef.current && videoRef.current.play) {
+                const playPromise = videoRef.current.play();
+                if (playPromise !== undefined) {
+                  playPromise.catch(error => {
+                    console.log("Auto-play was prevented:", error);
+                    // Auto-play was prevented, this is normal behavior
+                  });
+                }
+              }
+            }, 100);
           }
         }
       }
-    }, [
-      currentVideoIndex,
-      videos,
-      dispatch,
-      preloadedVideoIndex,
-      hasInitialized,
-      autoPlayEnabled,
-      videoSettings,
-    ]);
+    }, [currentVideoIndex, videos, dispatch, preloadedVideoIndex, hasInitialized, autoPlayEnabled]);
 
     // Add effect to scroll active video into view
     useEffect(() => {
@@ -611,35 +567,13 @@ const VideoPanel = forwardRef(
         ) {
           console.log(`Preloading video ${nextVideoIndex}...`);
 
-          // Create preload video element if it doesn't exist
-          if (!preloadVideoRef.current) {
-            preloadVideoRef.current = document.createElement("video");
-            preloadVideoRef.current.preload = "auto";
-            preloadVideoRef.current.style.display = "none";
-            document.body.appendChild(preloadVideoRef.current);
-          }
-
-          // Set source and start preloading
-          preloadVideoRef.current.src = videos[nextVideoIndex].trainer_video;
-          preloadVideoRef.current.onerror = (e) => {
-            // console.log(`Failed to preload video ${nextVideoIndex}:`, e);
-            setPreloadedVideoIndex(-1);
-          };
-          preloadVideoRef.current.oncanplaythrough = () => {
-            console.log(`Video ${nextVideoIndex} preloaded successfully`);
-            // Apply persistent settings to preloaded video
-            applyVideoSettings(preloadVideoRef.current);
-          };
-          preloadVideoRef.current.onloadedmetadata = () => {
-            // Apply persistent settings when preloaded video metadata is loaded
-            applyVideoSettings(preloadVideoRef.current);
-          };
-          preloadVideoRef.current.load();
+          // Video.js handles preloading internally, just track the index
+          console.log(`Next video ${nextVideoIndex} will be preloaded by Video.js`);
           setPreloadedVideoIndex(nextVideoIndex);
 
           // Optional: Preload poster/thumbnail
           if (videos[nextVideoIndex]?.thumbnail) {
-            const img = new Image();
+            const img = new window.Image();
             img.src = videos[nextVideoIndex].thumbnail;
             // console.log("Preloading thumbnail:", videos[nextVideoIndex]?.thumbnail);
             // img.src =
@@ -647,23 +581,14 @@ const VideoPanel = forwardRef(
           }
         }
       }
-    }, [
-      currentTime,
-      duration,
-      currentVideoIndex,
-      videos,
-      preloadedVideoIndex,
-      videoSettings,
-    ]);
+    }, [currentTime, duration, currentVideoIndex, videos, preloadedVideoIndex]);
 
     // Sync PPT to video panel when video starts playing
     useEffect(() => {
       if (isPlaying) {
         // When video panel starts playing, sync PPT to the same video
         dispatch(syncPptToVideoPanel());
-        console.log(
-          `Syncing PPT to video panel's current video: ${currentVideoIndex + 1}`
-        );
+        console.log(`Syncing PPT to video panel's current video: ${currentVideoIndex + 1}`);
       }
     }, [isPlaying, currentVideoIndex, dispatch]);
 
@@ -674,26 +599,14 @@ const VideoPanel = forwardRef(
       }
     }, [isQuestionMode]);
 
-    // Cleanup preload video element on unmount
-    useEffect(() => {
-      return () => {
-        if (preloadVideoRef.current) {
-          document.body.removeChild(preloadVideoRef.current);
-          preloadVideoRef.current = null;
-        }
-      };
-    }, []);
+    // Cleanup is handled by VideoPlayer component
 
     // Handle video end
     const handleVideoEnd = () => {
       // Save progress for completed video
       const currentVideo = videos?.[currentVideoIndex];
       if (currentVideo) {
-        updateVideoProgress(
-          presentationId,
-          currentVideo.slide,
-          Math.floor(currentTime - videoStartTime)
-        );
+        updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
       }
 
       // Track video completion event
@@ -732,6 +645,7 @@ const VideoPanel = forwardRef(
           ) {
             startTime = 0;
           }
+          setInitialVideoTime(startTime || 0);
           dispatch(setCurrentVideoTime(startTime || 0));
         } catch (err) {
           // ignore
@@ -766,6 +680,10 @@ const VideoPanel = forwardRef(
       setCountdown(10);
     };
 
+    const handleRedirectToHomePage = () => {
+      router.push("/");
+    };
+
     // Format time in MM:SS
     const formatTime = (timeInSeconds) => {
       const minutes = Math.floor(timeInSeconds / 60);
@@ -779,11 +697,7 @@ const VideoPanel = forwardRef(
         // Save progress for current video before switching
         const currentVideo = videos[currentVideoIndex];
         if (currentVideo) {
-          updateVideoProgress(
-            presentationId,
-            currentVideo.slide,
-            Math.floor(currentTime - videoStartTime)
-          );
+          updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
         }
 
         setAutoPlayEnabled(true); // Enable autoplay when selecting from playlist
@@ -791,8 +705,7 @@ const VideoPanel = forwardRef(
         try {
           const target = videos?.[index];
           let startTime = 0;
-          if (target && typeof target.duration_viewed === "number")
-            startTime = target.duration_viewed;
+          if (target && typeof target.duration_viewed === "number") startTime = target.duration_viewed;
           if (
             target &&
             typeof target.duration === "number" &&
@@ -801,8 +714,9 @@ const VideoPanel = forwardRef(
           ) {
             startTime = 0;
           }
+          setInitialVideoTime(startTime || 0);
           dispatch(setCurrentVideoTime(startTime || 0));
-        } catch (err) {}
+        } catch (err) { }
         dispatch(setCurrentVideoIndex(index));
         setIsPlaying(false);
       }
@@ -814,8 +728,7 @@ const VideoPanel = forwardRef(
       try {
         const target = videos?.[index];
         let startTime = 0;
-        if (target && typeof target.duration_viewed === "number")
-          startTime = target.duration_viewed;
+        if (target && typeof target.duration_viewed === "number") startTime = target.duration_viewed;
         if (
           target &&
           typeof target.duration === "number" &&
@@ -824,8 +737,9 @@ const VideoPanel = forwardRef(
         ) {
           startTime = 0;
         }
+        setInitialVideoTime(startTime || 0);
         dispatch(setCurrentVideoTime(startTime || 0));
-      } catch (err) {}
+      } catch (err) { }
       dispatch(setCurrentVideoIndex(index));
       setIsPlaying(false);
     };
@@ -835,6 +749,7 @@ const VideoPanel = forwardRef(
       if (videoRef.current) {
         if (isPlaying) {
           videoRef.current.pause();
+          setIsPlaying(false);
         } else {
           // Reset answerPptIndex when video starts playing
           dispatch(setAnswerPptIndex(null));
@@ -844,11 +759,20 @@ const VideoPanel = forwardRef(
             onPauseAnswerAudio();
           }
 
-          videoRef.current.play().catch((error) => {
-            console.log("Error playing video:", error);
-          });
+          const playPromise = videoRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                setIsPlaying(true);
+              })
+              .catch(error => {
+                console.log("Play was prevented:", error);
+                setIsPlaying(false);
+              });
+          } else {
+            setIsPlaying(true);
+          }
         }
-        setIsPlaying(!isPlaying);
       }
     };
 
@@ -861,618 +785,101 @@ const VideoPanel = forwardRef(
       setShowChat(false);
     };
 
-    // Global redirect path
+    // Global redirect path - always go to assessment first
     const getRedirectPath = () => {
       const currentPath = window.location.pathname;
       const presentationId = currentPath.split("/lectures/")[1];
-      return isPresentationQuizPassed
-        ? `/review/${presentationId}?showDisclaimer=true`
-        : assessmentId
+      return assessmentId
         ? `/assessment/${presentationId}?assessment-id=${assessmentId}`
         : `/assessment/${presentationId}`;
     };
-    // Phone view - optimized for 30% width with very compact layout
-    if (isMobileView && isPhoneView) {
-      return (
-        <div className="flex flex-col h-full gap-1">
-          {/* Redirect Popup */}
-          {showRedirectPopup && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-                <h3 className="text-xl font-semibold mb-4">
-                  Training Complete!
-                </h3>
-                <p className="mb-6">
-                  Redirecting to{" "}
-                  {isPresentationQuizPassed ? "Review" : "Assessment"} in{" "}
-                  {countdown} seconds...
-                </p>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-blue-600 h-2.5 rounded-full"
-                    style={{ width: `${(10 - countdown) * 10}%` }}
-                  ></div>
-                </div>
-                <div className="mt-6 flex justify-end space-x-3">
-                  <button
-                    onClick={handleClosePopup}
-                    className="cursor-pointer px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => {
-                      router.push(getRedirectPath());
-                    }}
-                    className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
-                  >
-                    Go to {isPresentationQuizPassed ? "Review" : "Assessment"}{" "}
-                    Now
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Video Section - Very compact for phones */}
-          {!isQuestionMode && !showChat ? (
-            <div
-              className="cursor-pointer p-1 md:p-[6px] lg:p-3 bg-white rounded border border-[#E5E7EB] flex-shrink-0"
-              onClick={togglePlayPause}
-            >
-              <div className="relative w-full pt-[25%] h-32 bg-black rounded overflow-hidden">
-                {/* Very small aspect ratio for phones */}
-                <video
-                  key={`trainer-video-${currentVideoIndex}`}
-                  ref={videoRef}
-                  src={videos?.[currentVideoIndex]?.trainer_video}
-                  className="absolute top-0 left-0 w-full h-full object-cover"
-                  onEnded={handleVideoEnd}
-                  onTimeUpdate={(e) => {
-                    const time = e.target.currentTime;
-                    setCurrentTime(time);
-                    dispatch(setCurrentVideoTime(time));
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime: time,
-                        isPlaying: !e.target.paused,
-                        currentVideoIndex,
-                        duration: e.target.duration || duration,
-                      });
-                    }
-                  }}
-                  onLoadedMetadata={(e) => {
-                    const newDuration = e.target.duration;
-                    setDuration(newDuration);
-                    applyVideoSettings(e.target);
-
-                    // Determine start time priority:
-                    // 1) Redux stored currentVideoTime (if > 0)
-                    // 2) Slide's duration_viewed from API
-                    // If slide.duration === duration_viewed then start at 0
-                    try {
-                      const slideObj = videos?.[currentVideoIndex];
-                      let startTime = 0;
-
-                      if (
-                        typeof reduxCurrentVideoTime === "number" &&
-                        reduxCurrentVideoTime > 0
-                      ) {
-                        startTime = reduxCurrentVideoTime;
-                      } else if (
-                        slideObj &&
-                        typeof slideObj.duration_viewed === "number"
-                      ) {
-                        startTime = slideObj.duration_viewed;
-                      }
-
-                      if (
-                        slideObj &&
-                        typeof slideObj.duration === "number" &&
-                        typeof slideObj.duration_viewed === "number" &&
-                        Math.abs(
-                          slideObj.duration - slideObj.duration_viewed
-                        ) <= 1e-6
-                      ) {
-                        startTime = 0;
-                      }
-
-                      if (
-                        startTime &&
-                        typeof startTime === "number" &&
-                        !isNaN(startTime)
-                      ) {
-                        // Clamp to duration
-                        const safeStart = Math.min(
-                          startTime,
-                          newDuration || startTime
-                        );
-                        try {
-                          e.target.currentTime = safeStart;
-                        } catch (err) {
-                          // ignore if browser disallows; we'll try again on canplay
-                        }
-                        dispatch(setCurrentVideoTime(safeStart));
-                        setCurrentTime(safeStart);
-                      }
-                    } catch (err) {
-                      console.error(
-                        "Error applying start time on metadata load",
-                        err
-                      );
-                    }
-
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying,
-                        currentVideoIndex,
-                        duration: newDuration,
-                      });
-                    }
-                  }}
-                  onCanPlay={(e) => {
-                    applyVideoSettings(e.target);
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onPlay={() => {
-                    setIsPlaying(true);
-                    dispatch(setIsVideoPlaying(true));
-                    dispatch(setAnswerPptIndex(null));
-                    if (onPauseAnswerAudio) {
-                      onPauseAnswerAudio();
-                    }
-                    const userDetails = getUserDetailsFromToken();
-                    const currentVideo = videos?.[currentVideoIndex];
-                    if (currentVideo) {
-                      capture("video_play", {
-                        user_id: userDetails?.sub,
-                        module_id: presentationId,
-                        video_id: currentVideo.slide,
-                        timestamp: new Date().toISOString(),
-                      });
-                    }
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying: true,
-                        currentVideoIndex,
-                        duration,
-                      });
-                    }
-                  }}
-                  onPause={() => {
-                    setIsPlaying(false);
-                    dispatch(setIsVideoPlaying(false));
-                    const userDetails = getUserDetailsFromToken();
-                    const currentVideo = videos?.[currentVideoIndex];
-                    if (currentVideo) {
-                      capture("video_pause", {
-                        user_id: userDetails?.sub,
-                        video_id: currentVideo.slide,
-                        current_time: currentTime,
-                        timestamp: new Date().toISOString(),
-                      });
-                    }
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying: false,
-                        currentVideoIndex,
-                        duration,
-                      });
-                    }
-                  }}
-                  poster={videos?.[currentVideoIndex]?.thumbnail}
-                  autoPlay={autoPlayEnabled}
-                  controls={true}
-                  controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplaybook" : "nodownload"}
-                  style={!canSkipVideo ? { pointerEvents: 'none' } : undefined}
-                  disablePictureInPicture
-                />
-              </div>
-              {/* Time display - very small for phones */}
-              <div className="px-1 flex justify-between mt-1 text-[8px] leading-3 tracking-normal font-normal text-center text-gray-600 font-lato">
-                <span>
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
-                <span>
-                  {currentVideoIndex + 1}/{videos?.length}
-                </span>
-              </div>
-            </div>
-          ) : null}
-
-          {/* AI Learning Assistant - Compact for phones */}
-          {!isQuestionMode && !showChat && (
-            <div className="flex-1 min-h-0">
-              <AILearningAssistant
-                setShowChat={setShowChat}
-                showChat={showChat}
-                onStartConversation={startConversation}
-                onStopConversation={stopConversation}
-                isMobileView={true}
-                agentId={agentId}
-              />
-            </div>
-          )}
-
-          {/* Question Mode - Compact */}
-          {isQuestionMode && (
-            <QuestionModeAI
-              isLoading={!conversationState.isConnected}
-              isAudioPlaying={conversation.isSpeaking}
-              isConnected={conversationState.isConnected}
-              isMobile={true}
-              avatarUrl={avatarUrl}
-            />
-          )}
-
-          {/* Chat UI - Compact */}
-          {showChat && (
-            <ChatUI
-              onClose={handleCloseChatUI}
-              conversation={conversationHistory}
-              onStartConversation={startConversation}
-              onStopConversation={stopConversation}
-              isConnected={conversationState.isConnected}
-              setShowChat={setShowChat}
-              setIsJumpedOnChatFromInteractionMode={
-                setIsJumpedOnChatFromInteractionMode
-              }
-              isMobile={true}
-              agentId={agentId}
-            />
-          )}
-
-          {/* Question Mode User - Compact */}
-          {isQuestionMode && !showChat && (
-            <QuestionModeUser
-              onPauseVideo={pauseVideo}
-              onStartConversation={startConversation}
-              onStopConversation={stopConversation}
-              setShowChat={setShowChat}
-              onPauseAnswerAudio={stopAnswerAudio}
-              isAudioPlaying={conversationState.isAudioPlaying}
-              isAudioLoading={isListening}
-              isConnected={conversationState.isConnected}
-              setIsJumpedOnChatFromInteractionMode={
-                setIsJumpedOnChatFromInteractionMode
-              }
-              isMobile={true}
-            />
-          )}
-        </div>
-      );
-    }
-
-    // Tablet view - optimize video size to show AI Learning Assistant
-    if (isMobileView) {
-      return (
-        <div className="flex flex-col h-full gap-3">
-          {/* Redirect Popup */}
-          {showRedirectPopup && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-                <h3 className="text-xl font-semibold mb-4">
-                  Training Complete!
-                </h3>
-                <p className="mb-6">
-                  Redirecting to{" "}
-                  {isPresentationQuizPassed ? "Review" : "Assessment"} in{" "}
-                  {countdown} seconds...
-                </p>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-blue-600 h-2.5 rounded-full"
-                    style={{ width: `${(10 - countdown) * 10}%` }}
-                  ></div>
-                </div>
-                <div className="mt-6 flex justify-end space-x-3">
-                  <button
-                    onClick={handleClosePopup}
-                    className="cursor-pointer px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => {
-                      router.push(getRedirectPath());
-                    }}
-                    className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
-                  >
-                    Go to {isPresentationQuizPassed ? "Review" : "Assessment"}{" "}
-                    Now
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Video Section - Smaller height to fit AI Assistant */}
-          {!isQuestionMode && !showChat ? (
-            <div
-              className="cursor-pointer p-2 pb-1 bg-white rounded-lg border border-[#E5E7EB]"
-              onClick={togglePlayPause}
-            >
-              <div className="relative w-full pt-[40%] h-50 bg-black rounded-lg overflow-hidden">
-                {/* Reduced aspect ratio for mobile */}
-                <video
-                  key={`trainer-video-${currentVideoIndex}`}
-                  ref={videoRef}
-                  src={videos?.[currentVideoIndex]?.trainer_video}
-                  className="absolute top-0 left-0 w-full h-full object-cover"
-                  onEnded={handleVideoEnd}
-                  onTimeUpdate={(e) => {
-                    const time = e.target.currentTime;
-                    setCurrentTime(time);
-                    dispatch(setCurrentVideoTime(time));
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime: time,
-                        isPlaying: !e.target.paused,
-                        currentVideoIndex,
-                        duration: e.target.duration || duration,
-                      });
-                    }
-                  }}
-                  onLoadedMetadata={(e) => {
-                    const newDuration = e.target.duration;
-                    setDuration(newDuration);
-                    applyVideoSettings(e.target);
-
-                    try {
-                      const slideObj = videos?.[currentVideoIndex];
-                      let startTime = 0;
-
-                      if (
-                        typeof reduxCurrentVideoTime === "number" &&
-                        reduxCurrentVideoTime > 0
-                      ) {
-                        startTime = reduxCurrentVideoTime;
-                      } else if (
-                        slideObj &&
-                        typeof slideObj.duration_viewed === "number"
-                      ) {
-                        startTime = slideObj.duration_viewed;
-                      }
-
-                      if (
-                        slideObj &&
-                        typeof slideObj.duration === "number" &&
-                        typeof slideObj.duration_viewed === "number" &&
-                        Math.abs(
-                          slideObj.duration - slideObj.duration_viewed
-                        ) <= 1e-6
-                      ) {
-                        startTime = 0;
-                      }
-
-                      if (
-                        startTime &&
-                        typeof startTime === "number" &&
-                        !isNaN(startTime)
-                      ) {
-                        const safeStart = Math.min(
-                          startTime,
-                          newDuration || startTime
-                        );
-                        try {
-                          e.target.currentTime = safeStart;
-                        } catch (err) {}
-                        dispatch(setCurrentVideoTime(safeStart));
-                        setCurrentTime(safeStart);
-                      }
-                    } catch (err) {
-                      console.error(
-                        "Error applying start time on metadata load",
-                        err
-                      );
-                    }
-
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying,
-                        currentVideoIndex,
-                        duration: newDuration,
-                      });
-                    }
-                  }}
-                  onCanPlay={(e) => {
-                    applyVideoSettings(e.target);
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onPlay={() => {
-                    setIsPlaying(true);
-                    dispatch(setIsVideoPlaying(true));
-                    dispatch(setAnswerPptIndex(null));
-                    if (onPauseAnswerAudio) {
-                      onPauseAnswerAudio();
-                    }
-                    const userDetails = getUserDetailsFromToken();
-                    const currentVideo = videos?.[currentVideoIndex];
-                    if (currentVideo) {
-                      capture("video_play", {
-                        user_id: userDetails?.sub,
-                        module_id: presentationId,
-                        video_id: currentVideo.slide,
-                        timestamp: new Date().toISOString(),
-                      });
-                    }
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying: true,
-                        currentVideoIndex,
-                        duration,
-                      });
-                    }
-                  }}
-                  onPause={() => {
-                    setIsPlaying(false);
-                    dispatch(setIsVideoPlaying(false));
-                    const userDetails = getUserDetailsFromToken();
-                    const currentVideo = videos?.[currentVideoIndex];
-                    if (currentVideo) {
-                      capture("video_pause", {
-                        user_id: userDetails?.sub,
-                        video_id: currentVideo.slide,
-                        current_time: currentTime,
-                        timestamp: new Date().toISOString(),
-                      });
-                    }
-                    if (onVideoStateChange) {
-                      onVideoStateChange({
-                        currentTime,
-                        isPlaying: false,
-                        currentVideoIndex,
-                        duration,
-                      });
-                    }
-                  }}
-                  poster={videos?.[currentVideoIndex]?.thumbnail}
-                  autoPlay={autoPlayEnabled}
-                  controls={true}
-                  controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplaybook" : "nodownload"}
-                  style={!canSkipVideo ? { pointerEvents: 'none' } : undefined}
-                  disablePictureInPicture
-                />
-              </div>
-              {/* Time display below video - smaller text */}
-              <div className="px-1 flex justify-between mt-1 text-[10px] leading-4 tracking-normal font-normal text-center text-gray-600 font-lato">
-                <span>
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
-                <span>
-                  {currentVideoIndex + 1}/{videos?.length}
-                </span>
-              </div>
-            </div>
-          ) : null}
-
-          {/* AI Learning Assistant - Always visible in mobile */}
-          {!isQuestionMode && !showChat && (
-            <AILearningAssistant
-              setShowChat={setShowChat}
-              showChat={showChat}
-              onStartConversation={startConversation}
-              onStopConversation={stopConversation}
-              agentId={agentId}
-            />
-          )}
-
-          {/* Question Mode */}
-          {isQuestionMode && (
-            <QuestionModeAI
-              isLoading={!conversationState.isConnected}
-              isAudioPlaying={conversation.isSpeaking}
-              isConnected={conversationState.isConnected}
-              avatarUrl={avatarUrl}
-            />
-          )}
-
-          {/* Chat UI */}
-          {showChat && (
-            <ChatUI
-              onClose={handleCloseChatUI}
-              conversation={conversationHistory}
-              onStartConversation={startConversation}
-              onStopConversation={stopConversation}
-              isConnected={conversationState.isConnected}
-              setShowChat={setShowChat}
-              setIsJumpedOnChatFromInteractionMode={
-                setIsJumpedOnChatFromInteractionMode
-              }
-              agentId={agentId}
-            />
-          )}
-
-          {/* Question Mode User */}
-          {isQuestionMode && !showChat && (
-            <QuestionModeUser
-              onPauseVideo={pauseVideo}
-              onStartConversation={startConversation}
-              onStopConversation={stopConversation}
-              setShowChat={setShowChat}
-              onPauseAnswerAudio={stopAnswerAudio}
-              isAudioPlaying={conversationState.isAudioPlaying}
-              isAudioLoading={isListening}
-              isConnected={conversationState.isConnected}
-              setIsJumpedOnChatFromInteractionMode={
-                setIsJumpedOnChatFromInteractionMode
-              }
-            />
-          )}
-        </div>
-      );
-    }
+    // Determine device type for responsive styling
+    const isPhone = isPhoneView;
+    const isMobile = isMobileView;
 
     return (
       <div
-        className="flex flex-col h-full relative gap-4 flex-shrink-0 pl-4"
-        style={{ width }}
-      >
-        {/* Redirect Popup */}
+        className={`flex flex-col h-full ${isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
+          }`}
+        style={!isMobile ? { width } : undefined}>
+        {/* Redirect Popup - Unified for both mobile and desktop */}
         {showRedirectPopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-              <h3 className="text-xl font-semibold mb-4">Training Complete!</h3>
-              <p className="mb-6">
-                Redirecting to{" "}
-                {isPresentationQuizPassed ? "Review" : "Assessment"} in{" "}
-                {countdown} seconds...
-              </p>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className="bg-[#744FFF] h-2.5 rounded-full"
-                  style={{ width: `${(10 - countdown) * 10}%` }}
-                ></div>
-              </div>
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={handleClosePopup}
-                  className="cursor-pointer px-4 py-2 rounded-md text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    router.push(getRedirectPath());
-                  }}
-                  className="cursor-pointer px-4 py-2 bg-[#744FFF] text-white rounded-md hover:bg-[#5B3FDD]"
-                >
-                  Go to {isPresentationQuizPassed ? "Review" : "Assessment"} Now
-                </button>
+          <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
+            <div
+              className={`relative flex flex-col items-center gap-5 w-96 bg-white rounded-2xl ${isPhone ? "p-5" : "p-6"
+                }`}>
+              {/* Content Container */}
+              <div className="flex flex-col items-center gap-6 w-[336px]">
+                {/* Icon */}
+                <div className="flex flex-col items-center gap-5 w-[336px]">
+                  <Image
+                    src={redirecting_logo}
+                    alt="Training Completed"
+                    width={80}
+                    height={80}
+                    className="w-[50px] h-[50px]"
+                  />
+
+                  {/* Text Content */}
+                  <div className="flex flex-col items-center gap-2 w-[336px] h-[70px]">
+                    <h3 className="font-lato font-bold text-xl leading-6 text-[#1A1C29]">Training Completed!</h3>
+                    <div className="flex flex-col items-center gap-1 w-[336px] h-[38px]">
+                      <p className="font-lato font-normal text-sm leading-[17px] text-center text-[rgba(26,28,41,0.8)]">
+                        You'll be redirected to the assessment in
+                      </p>
+                      <span className="font-lato font-bold text-sm leading-[17px] text-[#744FFF]">
+                        {countdown} seconds.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex flex-row items-center gap-3 w-[336px] h-10">
+                  <button
+                    onClick={handleRedirectToHomePage}
+                    className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[rgba(116,79,255,0.12)] rounded-[73.75px] cursor-pointer">
+                    <span className="font-lato font-semibold text-base leading-4 text-center text-[#744FFF]">
+                      Do It Later
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => router.push(getRedirectPath())}
+                    className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[#744FFF] rounded-[73.75px] cursor-pointer">
+                    <span className="font-lato font-semibold text-base leading-4 text-center text-white">
+                      Start Now
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
-        {!isQuestionMode && !showChat ? (
+
+        {/* Video Section - Responsive for both mobile and desktop */}
+        <div
+          className={`cursor-pointer bg-white border border-[#E5E7EB] ${isMobile
+            ? isPhone
+              ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
+              : "p-2 pb-1 rounded-lg"
+            : "p-3 pb-2 rounded-xl"
+            } ${showChat || isQuestionMode ? 'hidden' : ''}`}
+          onClick={togglePlayPause}>
           <div
-            className="cursor-pointer p-3 pb-2 bg-white rounded-xl border border-[#E5E7EB]"
-            onClick={togglePlayPause}
-          >
-            <div className="relative w-full pt-[56.25%] bg-black rounded-lg overflow-hidden">
-              {" "}
-              {/* 16:9 Aspect Ratio */}
-              <video
-                key={`trainer-video-${currentVideoIndex}`}
-                ref={videoRef}
-                src={videos?.[currentVideoIndex]?.trainer_video}
-                className={`absolute top-0 left-0 w-full h-full object-cover ${
-                  !canSkipVideo ? "no-skip-controls" : ""
-                }`}
-                controlsList={!canSkipVideo ? "nodownload nofullscreen noremoteplayback" : undefined}
-                style={!canSkipVideo ? { pointerEvents: 'none' } : undefined}
-                onEnded={handleVideoEnd}
-                onTimeUpdate={(e) => {
-                  const time = e.target.currentTime;
-                  // Save time samples for the last few updates (used to infer pre-seek time)
+            className={`relative w-full bg-black overflow-hidden ${isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
+              }`}>
+            <VideoPlayer
+              key={`trainer-video-${currentVideoIndex}-${videos?.[currentVideoIndex]?.trainer_video}`}
+              ref={videoRef}
+              src={videos?.[currentVideoIndex]?.trainer_video}
+              className="absolute top-0 left-0 w-full h-full"
+              canSkipVideo={canSkipVideo}
+              onEnded={handleVideoEnd}
+              onTimeUpdate={(e) => {
+                const time = e.target.currentTime;
+
+                // Desktop-specific time tracking logic
+                if (!isMobile) {
                   try {
                     const samples = timeSamplesRef.current;
                     samples.push(time);
@@ -1482,253 +889,91 @@ const VideoPanel = forwardRef(
                     timeSamplesRef.current = [time];
                   }
 
-                  // Only update previousTime when not in the middle of a user seek
                   if (!isSeekingRef.current) {
                     previousTimeRef.current = currentTime;
                     setPreviousTime(currentTime);
                   }
-                  setCurrentTime(time);
-                  dispatch(setCurrentVideoTime(time));
+                }
 
-                  // Update video progress with current video position
+                setCurrentTime(time);
+                dispatch(setCurrentVideoTime(time));
+
+                // Update video progress for desktop
+                if (!isMobile) {
                   const currentVideo = videos?.[currentVideoIndex];
                   if (currentVideo && !e.target.paused) {
-                    updateVideoProgress(
-                      presentationId,
-                      currentVideo.slide,
-                      Math.floor(time)
-                    );
+                    updateVideoProgress(presentationId, currentVideo.slide, Math.floor(time));
+                  }
+                }
+
+                onVideoStateChange?.({
+                  currentTime: time,
+                  isPlaying: !e.target.paused,
+                  currentVideoIndex,
+                  duration: e.target.duration || duration,
+                });
+              }}
+              onSeeking={() => {
+                console.log('Seeking event triggered, isSkippingBackward:', isSkippingBackward);
+
+                // Desktop-specific seeking logic
+                if (!isMobile) {
+                  // Don't interfere with skip backward operations
+                  if (isSkippingBackward || skipBackwardRef.current) {
+                    console.log('Allowing seek for skip backward operation');
+                    isSeekingRef.current = true;
+                    return;
                   }
 
-                  // Pass video state to parent for PPT synchronization
-                  if (onVideoStateChange) {
-                    onVideoStateChange({
-                      currentTime: time,
-                      isPlaying: !e.target.paused,
-                      currentVideoIndex,
-                      duration: e.target.duration || duration,
-                    });
-                  }
-                }}
-                onSeeking={() => {
-                  // If skipping is disabled, revert any user-initiated seek immediately
                   if (!canSkipVideo) {
+                    console.log('Preventing seek - canSkipVideo is false');
                     const prev = previousTimeRef.current ?? currentTime;
                     blockedSeekRef.current = true;
-                    // Use requestAnimationFrame to avoid interfering with the browser's
-                    // internal seek handling and to prevent a tight event loop.
                     requestAnimationFrame(() => {
-                      if (
-                        videoRef.current &&
-                        Math.abs(videoRef.current.currentTime - prev) > 0.01
-                      ) {
+                      if (videoRef.current && Math.abs(videoRef.current.currentTime - prev) > 0.01) {
                         try {
+                          console.log('Resetting video time from', videoRef.current.currentTime, 'to', prev);
                           videoRef.current.currentTime = prev;
                         } catch (err) {
                           // ignore
                         }
                       }
-                      // keep blocked flag for a short time; it will be cleared in onSeeked
                     });
                     return;
                   }
 
-                  // When user starts seeking, capture the current time as the "from" time
                   isSeekingRef.current = true;
-                  previousTimeRef.current =
-                    videoRef.current?.currentTime || currentTime;
+                  previousTimeRef.current = videoRef.current?.currentTime || currentTime;
                   setPreviousTime(previousTimeRef.current);
-                }}
-                onLoadedMetadata={(e) => {
-                  const newDuration = e.target.duration;
-                  setDuration(newDuration);
-                  // Apply persistent settings when metadata is loaded
-                  applyVideoSettings(e.target);
+                }
+              }}
+              onSeeked={(e) => {
+                console.log('Seeked event triggered');
 
-                  try {
-                    const slideObj = videos?.[currentVideoIndex];
-                    let startTime = 0;
-
-                    if (
-                      typeof reduxCurrentVideoTime === "number" &&
-                      reduxCurrentVideoTime > 0
-                    ) {
-                      startTime = reduxCurrentVideoTime;
-                    } else if (
-                      slideObj &&
-                      typeof slideObj.duration_viewed === "number"
-                    ) {
-                      startTime = slideObj.duration_viewed;
-                    }
-
-                    if (
-                      slideObj &&
-                      typeof slideObj.duration === "number" &&
-                      typeof slideObj.duration_viewed === "number" &&
-                      Math.abs(slideObj.duration - slideObj.duration_viewed) <=
-                        1e-6
-                    ) {
-                      startTime = 0;
-                    }
-
-                    if (
-                      startTime &&
-                      typeof startTime === "number" &&
-                      !isNaN(startTime)
-                    ) {
-                      const safeStart = Math.min(
-                        startTime,
-                        newDuration || startTime
-                      );
-                      try {
-                        e.target.currentTime = safeStart;
-                      } catch (err) {}
-                      dispatch(setCurrentVideoTime(safeStart));
-                      setCurrentTime(safeStart);
-                    }
-                  } catch (err) {
-                    console.error(
-                      "Error applying start time on metadata load",
-                      err
-                    );
-                  }
-
-                  // Notify parent about duration
-                  if (onVideoStateChange) {
-                    onVideoStateChange({
-                      currentTime,
-                      isPlaying,
-                      currentVideoIndex,
-                      duration: newDuration,
-                    });
-                  }
-                }}
-                onCanPlay={(e) => {
-                  console.log("Trainer video can play");
-                  // Apply persistent settings when video can play
-                  applyVideoSettings(e.target);
-                }}
-                onClick={(e) => {
-                  // Prevent event bubbling to avoid double-triggering the parent's onClick
-                  e.stopPropagation();
-                }}
-                onPlay={() => {
-                  setIsPlaying(true);
-                  dispatch(setIsVideoPlaying(true));
-
-                  // Reset answerPptIndex when video starts playing
-                  dispatch(setAnswerPptIndex(null));
-
-                  // Pause any playing answer audio when video starts
-                  if (onPauseAnswerAudio) {
-                    onPauseAnswerAudio();
-                  }
-
-                  // Set video start time for progress tracking
-                  setVideoStartTime(currentTime);
-
-                  // Track video play event
-                  const userDetails = getUserDetailsFromToken();
-                  const currentVideo = videos?.[currentVideoIndex];
-                  if (currentVideo) {
-                    // const watchedPercentage =
-                    //   duration > 0
-                    //     ? Math.round((currentTime / duration) * 100)
-                    //     : 0;
-
-                    capture("video_play", {
-                      user_id: userDetails?.sub,
-                      module_id: presentationId,
-                      video_id: currentVideo.slide,
-                      timestamp: new Date().toISOString(),
-                      // engagement_percentage: watchedPercentage,
-                    });
-                  }
-
-                  // Notify parent about play state change
-                  if (onVideoStateChange) {
-                    onVideoStateChange({
-                      currentTime,
-                      isPlaying: true,
-                      currentVideoIndex,
-                      duration,
-                    });
-                  }
-                }}
-                onPause={() => {
-                  setIsPlaying(false);
-                  dispatch(setIsVideoPlaying(false));
-
-                  // Track video pause event
-                  const userDetails = getUserDetailsFromToken();
-                  const currentVideo = videos?.[currentVideoIndex];
-                  if (currentVideo) {
-                    capture("video_pause", {
-                      user_id: userDetails?.sub,
-                      video_id: currentVideo.slide,
-                      current_time: currentTime,
-                      timestamp: new Date().toISOString(),
-                    });
-                  }
-
-                  // Notify parent about pause state change
-                  if (onVideoStateChange) {
-                    onVideoStateChange({
-                      currentTime,
-                      isPlaying: false,
-                      currentVideoIndex,
-                      duration,
-                    });
-                  }
-                }}
-                onLoadStart={() => {
-                  console.log("Trainer video loading started...");
-                }}
-                onVolumeChange={(e) => {
-                  // Track mute state and volume changes
-                  const newMuted = e.target.muted;
-                  const newVolume = e.target.volume;
-
-                  if (
-                    newMuted !== videoSettings.muted ||
-                    newVolume !== videoSettings.volume
-                  ) {
-                    setVideoSettings((prev) => ({
-                      ...prev,
-                      muted: newMuted,
-                      volume: newVolume,
-                    }));
-                  }
-                }}
-                onRateChange={(e) => {
-                  // Track playback rate changes
-                  const newRate = e.target.playbackRate;
-                  if (newRate !== videoSettings.playbackRate) {
-                    setVideoSettings((prev) => ({
-                      ...prev,
-                      playbackRate: newRate,
-                    }));
-                  }
-                }}
-                onSeeked={(e) => {
+                // Desktop-specific seeked logic
+                if (!isMobile) {
                   const newTime = e.target.currentTime;
-                  // If this seek was blocked (we restored time programmatically), ignore it
+
+                  // Handle skip backward operations properly
+                  if (isSkippingBackward || skipBackwardRef.current) {
+                    console.log('Completing skip backward operation to:', newTime);
+                    isSeekingRef.current = false;
+                    previousTimeRef.current = newTime;
+                    setPreviousTime(newTime);
+                    return;
+                  }
+
                   if (blockedSeekRef.current) {
-                    // Clear the flag and ensure previousTime reflects actual playhead
                     blockedSeekRef.current = false;
                     previousTimeRef.current = newTime;
                     setPreviousTime(newTime);
-                    // Do not send skip analytics
                     return;
                   }
 
-                  // Mark seeking finished
                   isSeekingRef.current = false;
 
-                  // Infer pre-seek time from the recent time samples buffer.
-                  // We look backwards for the most recent sample that differs from newTime by > threshold.
                   const samples = timeSamplesRef.current || [];
-                  const THRESHOLD = 0.3; // seconds: treat tiny differences as not a seek
+                  const THRESHOLD = 0.3;
                   let inferredFrom = previousTimeRef.current ?? previousTime;
                   for (let i = samples.length - 1; i >= 0; i--) {
                     const sample = samples[i];
@@ -1739,8 +984,6 @@ const VideoPanel = forwardRef(
                   }
 
                   const fromTime = inferredFrom;
-
-                  // Update previousTime state/ref to the new time after seek
                   previousTimeRef.current = newTime;
                   setPreviousTime(newTime);
 
@@ -1756,68 +999,215 @@ const VideoPanel = forwardRef(
                       });
                     }
                   }
-                }}
-                // onClick={togglePlayPause}
-                poster={videos?.[currentVideoIndex]?.thumbnail}
-                autoPlay={autoPlayEnabled}
-                controls={true}
-                disablePictureInPicture
-              />
-              {/* Global styles to disable pointer events on native timeline/control elements
-                  for both desktop and mobile browsers when skipping is disabled. */}
-              <style jsx global>{`
-                /* WebKit browsers (Safari, Chrome) */
-                .no-skip-controls::-webkit-media-controls-timeline,
-                .no-skip-controls::-webkit-media-controls-seek-back-button,
-                .no-skip-controls::-webkit-media-controls-seek-forward-button,
-                .no-skip-controls::-webkit-media-controls-current-time-display,
-                .no-skip-controls::-webkit-media-controls-time-remaining-display,
-                .no-skip-controls::-webkit-media-controls-slider {
-                  pointer-events: none !important;
-                  cursor: not-allowed !important;
                 }
-                
-                /* Mobile-specific: Disable touch interactions */
-                .no-skip-controls {
-                  -webkit-touch-callout: none !important;
-                  -webkit-user-select: none !important;
-                  -khtml-user-select: none !important;
-                  -moz-user-select: none !important;
-                  -ms-user-select: none !important;
-                  user-select: none !important;
+              }}
+              onLoadedMetadata={(e) => {
+                const newDuration = e.target.duration;
+                setDuration(newDuration);
+
+                // Reset initial time after it's been used
+                if (initialVideoTime > 0) {
+                  setCurrentTime(initialVideoTime);
+                  dispatch(setCurrentVideoTime(initialVideoTime));
+                  setInitialVideoTime(0); // Reset to prevent further interference
                 }
-                
-                /* Additional mobile browser support */
-                @media (max-width: 1024px) {
-                  .no-skip-controls {
-                    pointer-events: none !important;
+
+                onVideoStateChange?.({
+                  currentTime: initialVideoTime || 0,
+                  isPlaying,
+                  currentVideoIndex,
+                  duration: newDuration,
+                });
+              }}
+              onCanPlay={(e) => {
+                if (!isMobile) {
+                  console.log("Trainer video can play");
+                }
+              }}
+
+              onPlay={() => {
+                setIsPlaying(true);
+                dispatch(setIsVideoPlaying(true));
+                dispatch(setAnswerPptIndex(null));
+                onPauseAnswerAudio?.();
+
+                if (!isMobile) {
+                  setVideoStartTime(currentTime);
+                }
+
+                const userDetails = getUserDetailsFromToken();
+                const currentVideo = videos?.[currentVideoIndex];
+                if (currentVideo) {
+                  capture("video_play", {
+                    user_id: userDetails?.sub,
+                    module_id: presentationId,
+                    video_id: currentVideo.slide,
+                    timestamp: new Date().toISOString(),
+                  });
+                }
+
+                onVideoStateChange?.({
+                  currentTime,
+                  isPlaying: true,
+                  currentVideoIndex,
+                  duration,
+                });
+              }}
+              onPause={() => {
+                setIsPlaying(false);
+                dispatch(setIsVideoPlaying(false));
+
+                const userDetails = getUserDetailsFromToken();
+                const currentVideo = videos?.[currentVideoIndex];
+                if (currentVideo) {
+                  capture("video_pause", {
+                    user_id: userDetails?.sub,
+                    video_id: currentVideo.slide,
+                    current_time: currentTime,
+                    timestamp: new Date().toISOString(),
+                  });
+                }
+
+                onVideoStateChange?.({
+                  currentTime,
+                  isPlaying: false,
+                  currentVideoIndex,
+                  duration,
+                });
+              }}
+              onLoadStart={() => {
+                if (!isMobile) {
+                  console.log("Trainer video loading started...");
+                }
+              }}
+              onVolumeChange={(e) => {
+                if (!isMobile) {
+                  const newMuted = e.target.muted;
+                  const newVolume = e.target.volume;
+
+                  if (newMuted !== videoSettings.muted || newVolume !== videoSettings.volume) {
+                    setVideoSettings((prev) => ({
+                      ...prev,
+                      muted: newMuted,
+                      volume: newVolume,
+                    }));
                   }
-                  .no-skip-controls::-webkit-media-controls {
-                    pointer-events: none !important;
-                  }
                 }
-              `}</style>
-            </div>
-            {/* Time display below video */}
-            <div className="px-1 flex justify-between mt-2 text-[12px] leading-4 tracking-normal font-normal text-center text-gray-600 font-lato">
-              <span>
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </span>
-              <span>
-                {(videos ?? [])?.[currentVideoIndex]?.slide}/{videos?.length}
-              </span>
-            </div>
+              }}
+              onRateChange={(e) => {
+                const newRate = e.target.playbackRate;
+
+                // Update video settings with new playback rate
+                if (newRate !== videoSettings.playbackRate) {
+                  setVideoSettings((prev) => ({
+                    ...prev,
+                    playbackRate: newRate,
+                  }));
+                }
+
+                // Track playback rate change event
+                const userDetails = getUserDetailsFromToken();
+                const currentVideo = videos?.[currentVideoIndex];
+                if (currentVideo) {
+                  capture("video_speed_change", {
+                    user_id: userDetails?.sub,
+                    video_id: currentVideo.slide,
+                    new_speed: newRate,
+                    timestamp: new Date().toISOString(),
+                  });
+                }
+              }}
+              poster={videos?.[currentVideoIndex]?.thumbnail}
+              autoPlay={autoPlayEnabled}
+              controls={true}
+              disablePictureInPicture={true}
+              muted={videoSettings.muted}
+              volume={videoSettings.volume}
+              playbackRate={videoSettings.playbackRate}
+              currentTime={initialVideoTime}
+              onSkipBackward={(data) => {
+                console.log('Skip backward triggered:', data);
+
+                // Set flags BEFORE the video time change to prevent seeking interference
+                setIsSkippingBackward(true);
+                skipBackwardRef.current = true;
+
+                // Immediately update the previous time reference to the new position
+                // This prevents the seeking logic from trying to restore the old position
+                previousTimeRef.current = data.to;
+                setPreviousTime(data.to);
+
+                // Update current time state
+                setCurrentTime(data.to);
+                dispatch(setCurrentVideoTime(data.to));
+
+                // Reset flags after seeking events are complete
+                setTimeout(() => {
+                  setIsSkippingBackward(false);
+                  skipBackwardRef.current = false;
+                  console.log('Skip backward flags reset');
+                }, 500); // Reduced timeout since we're handling it better
+
+                // Track skip backward analytics
+                const userDetails = getUserDetailsFromToken();
+                const currentVideo = videos?.[currentVideoIndex];
+                if (currentVideo) {
+                  capture("video_skip_backward", {
+                    user_id: userDetails?.sub,
+                    video_id: currentVideo.slide,
+                    from_time: formatSeconds(data.from),
+                    to_time: formatSeconds(data.to),
+                  });
+                }
+              }}
+            />
+
+            {/* Custom styles are now handled by VideoPlayer component */}
           </div>
-        ) : null}
+
+          {/* Time display - Responsive styling */}
+          <div
+            className={`px-1 flex justify-between font-lato text-gray-600 ${isMobile
+              ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
+              : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
+              }`}>
+            <span>
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
+            <span>
+              {isMobile
+                ? `${currentVideoIndex + 1}/${videos?.length}`
+                : `${(videos ?? [])?.[currentVideoIndex]?.slide}/${videos?.length}`}
+            </span>
+          </div>
+        </div>
+
+        {/* AI Assistant Section - Responsive */}
+        <div className={`${isMobile && isPhone ? "flex-1 min-h-0" : "h-full"} ${showChat || isQuestionMode ? 'hidden' : ''}`}>
+          <AILearningAssistant
+            setShowChat={setShowChat}
+            showChat={showChat}
+            onStartConversation={startConversation}
+            onStopConversation={stopConversation}
+            onPauseVideo={pauseVideo}
+            agentId={agentId}
+            isMobileView={isMobile && isPhone}
+          />
+        </div>
+
+        {/* Question Mode AI - Responsive */}
         {isQuestionMode && (
           <QuestionModeAI
             isLoading={!conversationState.isConnected}
             isAudioPlaying={conversation.isSpeaking}
             isConnected={conversationState.isConnected}
             avatarUrl={avatarUrl}
+            isMobile={isMobile && isPhone}
           />
         )}
-        {showChat ? (
+
+        {/* Chat UI - Responsive */}
+        {showChat && (
           <ChatUI
             onClose={handleCloseChatUI}
             conversation={conversationHistory}
@@ -1825,12 +1215,14 @@ const VideoPanel = forwardRef(
             onStopConversation={stopConversation}
             isConnected={conversationState.isConnected}
             setShowChat={setShowChat}
-            setIsJumpedOnChatFromInteractionMode={
-              setIsJumpedOnChatFromInteractionMode
-            }
+            setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
             agentId={agentId}
+            isMobile={isMobile && isPhone}
           />
-        ) : isQuestionMode ? (
+        )}
+
+        {/* Question Mode User - Responsive */}
+        {isQuestionMode && !showChat && (
           <QuestionModeUser
             onPauseVideo={pauseVideo}
             onStartConversation={startConversation}
@@ -1840,17 +1232,8 @@ const VideoPanel = forwardRef(
             isAudioPlaying={conversationState.isAudioPlaying}
             isAudioLoading={isListening}
             isConnected={conversationState.isConnected}
-            setIsJumpedOnChatFromInteractionMode={
-              setIsJumpedOnChatFromInteractionMode
-            }
-          />
-        ) : (
-          <AILearningAssistant
-            setShowChat={setShowChat}
-            showChat={showChat}
-            onStartConversation={startConversation}
-            onStopConversation={stopConversation}
-            agentId={agentId}
+            setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+            isMobile={isMobile && isPhone}
           />
         )}
       </div>
