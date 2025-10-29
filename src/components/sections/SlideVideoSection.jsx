@@ -17,7 +17,7 @@ const SlideVideoSection = ({
   const [canPlay, setCanPlay] = useState(false);
   const [isLoadingNewVideo, setIsLoadingNewVideo] = useState(false);
   const playPromiseRef = useRef(null);
-  const answerPptIndex = useSelector((state) => state.video.answerPptIndex);
+  const { answerPptIndex, selectedAssessmentId } = useSelector((state) => state.video);
 
   // Sync slide video with trainer video time
   useEffect(() => {
@@ -243,9 +243,9 @@ const SlideVideoSection = ({
 
   const videoIndex = answerPptIndex !== null ? answerPptIndex : currentVideoIndex;
 
-  if (true) {
+  if (selectedAssessmentId) {
     return (
-      <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">
+      <div className="w-full bg-white rounded-xl flex flex-col overflow-hidden">
         {/* Scrollable Assessment Container */}
         <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
           <div className="flex flex-col justify-center items-center p-3 sm:p-4 md:p-6 min-h-full">
@@ -290,7 +290,7 @@ const SlideVideoSection = ({
               </div>
 
               {/* Navigation Buttons */}
-              <div className="flex justify-between items-center mt-auto">
+              <div className="flex justify-between items-center mt-8">
                 <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-200 text-gray-600 rounded-lg font-medium text-xs sm:text-sm hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                   Previous
                 </button>

@@ -12,6 +12,7 @@ const initialState = {
   currentVideoTime: 0,
   isVideoPlaying: false,
   answerPptIndex: null,
+  selectedAssessmentId: null, // For tracking selected assessment
 };
 
 const videoSlice = createSlice({
@@ -49,6 +50,9 @@ const videoSlice = createSlice({
     setAnswerPptIndex: (state, action) => {
       state.answerPptIndex = action.payload;
     },
+    setSelectedAssessmentId: (state, action) => {
+      state.selectedAssessmentId = action.payload;
+    },
     syncPptToVideoPanel: (state) => {
       state.pptVideoIndex = state.currentVideoIndex;
     },
@@ -66,6 +70,7 @@ export const {
   setCurrentVideoTime,
   setIsVideoPlaying,
   setAnswerPptIndex,
+  setSelectedAssessmentId,
   syncPptToVideoPanel,
 } = videoSlice.actions;
 export default videoSlice.reducer;

@@ -129,6 +129,7 @@ const VideoPanel = forwardRef(
       currentVideoIndex,
       isQuestionMode,
       currentVideoTime: reduxCurrentVideoTime,
+      selectedAssessmentId
     } = useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
@@ -800,7 +801,7 @@ const VideoPanel = forwardRef(
     return (
       <div
         className={`flex flex-col h-full ${isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
-          }`}
+          } ${selectedAssessmentId ? 'pointer-events-none blur-[1px]' : ''}`}
         style={!isMobile ? { width } : undefined}>
         {/* Redirect Popup - Unified for both mobile and desktop */}
         {showRedirectPopup && (
