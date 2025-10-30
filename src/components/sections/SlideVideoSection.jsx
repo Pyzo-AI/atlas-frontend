@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import InModuleAssessment from "./InModuleAssessment";
 
 const SlideVideoSection = ({
   videos,
@@ -244,103 +245,7 @@ const SlideVideoSection = ({
   const videoIndex = answerPptIndex !== null ? answerPptIndex : currentVideoIndex;
 
   if (selectedAssessmentId) {
-    return (
-      <div className="w-full bg-white rounded-xl flex flex-col overflow-hidden">
-        {/* Scrollable Assessment Container */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
-          <div className="flex flex-col justify-center items-center p-3 sm:p-4 md:p-6 min-h-full">
-            {/* Header */}
-            <div className="w-full max-w-2xl text-center mb-1">
-              <h1 className="text-base sm:text-base md:text-lg font-bold text-gray-800 mb-2">
-                Final Assessment for Corporate Finance
-              </h1>
-              <p className="text-xs text-left text-gray-600 mt-4">Question 1 of 12</p>
-            </div>
-
-            {/* Question Section */}
-            <div className="w-full max-w-2xl flex-1 flex flex-col">
-              <div className="flex-1 mb-2">
-                <h2 className="text-xs sm:text-sm md:text-sm font-semibold text-gray-800 mb-3 leading-relaxed">
-                  What is the key update to the Work From Home policy effective January 1st, 2025?
-                </h2>
-
-                {/* Options */}
-                <div className="space-y-1 sm:space-y-2">
-                  {[
-                    "A. WFH days are reduced.",
-                    "B. WFH days are now allocated monthly.",
-                    "C. Unused WFH days can now be carried over and accumulated.",
-                    "D. The WFH policy is eliminated.",
-                  ].map((option, index) => (
-                    <div key={option} className="group">
-                      <label className="flex items-start cursor-pointer p-1 sm:p-2 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
-                        <input
-                          type="radio"
-                          name="question1"
-                          value={option}
-                          className="mt-0.5 mr-2 sm:mr-3 w-3 h-3 sm:w-4 sm:h-4 text-blue-600 border-gray-300 focus:ring-blue-500 focus:ring-1"
-                        />
-                        <span className="text-xs sm:text-sm md:text-sm text-gray-700 leading-relaxed flex-1">
-                          {option}
-                        </span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Navigation Buttons */}
-              <div className="flex justify-between items-center mt-8">
-                <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-200 text-gray-600 rounded-lg font-medium text-xs sm:text-sm hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                  Previous
-                </button>
-                <button className="px-4 sm:px-6 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg font-medium text-xs sm:text-sm hover:bg-blue-700 transition-colors duration-200">
-                  Next
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Custom Scrollbar Styles */}
-        <style jsx>{`
-          .scrollbar-thin::-webkit-scrollbar {
-            width: 4px;
-          }
-
-          .scrollbar-thin::-webkit-scrollbar-track {
-            background: transparent;
-          }
-
-          .scrollbar-thin::-webkit-scrollbar-thumb {
-            background-color: rgba(156, 163, 175, 0.5);
-            border-radius: 2px;
-          }
-
-          .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-            background-color: rgba(156, 163, 175, 0.8);
-          }
-
-          /* For Firefox */
-          .scrollbar-thin {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
-          }
-
-          /* Hide scrollbar completely on mobile */
-          @media (max-width: 768px) {
-            .scrollbar-thin::-webkit-scrollbar {
-              display: none;
-            }
-
-            .scrollbar-thin {
-              -ms-overflow-style: none;
-              scrollbar-width: none;
-            }
-          }
-        `}</style>
-      </div>
-    );
+    return <InModuleAssessment />
   }
 
   if (!videos?.[videoIndex]?.slide_video) {
