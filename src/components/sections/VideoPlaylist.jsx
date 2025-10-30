@@ -250,7 +250,7 @@ const VideoPlaylist = ({
             // Add assessment items if they exist for this video
             if (video.slide_assessments && video.slide_assessments.length > 0) {
               video.slide_assessments.forEach((assessment, assessmentIndex) => {
-                const isAssessmentCompleted = assessment.attempts_used > 0;
+                const isAssessmentCompleted = assessment.passed;
                 const assessmentId = assessment.id; // Use the actual assessment ID from the data
                 const isAssessmentSelected = selectedAssessmentId === assessmentId;
 
