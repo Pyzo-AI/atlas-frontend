@@ -2,14 +2,16 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useGetAssessmentQuery, useSubmitAssessmentMutation } from "@/store/api/questionsApi";
 import { showResultModal } from "@/store/features/resultModalSlice";
-import { setSelectedAssessmentId } from "@/store/features/videoSlice";
+import { setSelectedAssessmentId, setCurrentVideoIndex, setCurrentSlide, setCurrentVideoTime } from "@/store/features/videoSlice";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { toast } from "react-toastify";
+import { useParams } from "next/navigation";
 
-const InModuleAssessment = () => {
+const InModuleAssessment = ({ videos = [] }) => {
   const dispatch = useDispatch();
-  const { selectedAssessmentId } = useSelector((state) => state.video);
+  const { selectedAssessmentId, currentVideoIndex } = useSelector((state) => state.video);
+  const presentationId = useParams().id;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [assessmentStartTime, setAssessmentStartTime] = useState(null);
@@ -209,7 +211,55 @@ const InModuleAssessment = () => {
       // Clear selected assessment
       dispatch(setSelectedAssessmentId(null));
 
-      toast.success("Assessment submitted successfully!");
+      // Auto-progress to next video (similar to VideoPanel logic)
+      if (videos && videos.length > 0) {
+        const nextVideoIndex = currentVideoIndex + 1;
+
+        if (nextVideoIndex < videos.length) {
+          const nextVideo = videos[nextVideoIndex];
+          console.log('Assessment completed, moving to next video:', nextVideo);
+
+          // Set start time for next video based on its duration_viewed
+          let startTime = 0;
+          if (nextVideo && typeof nextVideo.duration_viewed === "number") {
+            startTime = nextVideo.duration_viewed;
+          }
+          if (
+            nextVideo &&
+            typeof nextVideo.duration === "number" &&
+            typeof nextVideo.duration_viewed === "number" &&
+            Math.abs(nextVideo.duration - nextVideo.duration_viewed) <= 1e-6
+          ) {
+            startTime = 0;
+          }
+
+          // Update video index and related state
+          dispatch(setCurrentVideoIndex(nextVideoIndex));
+          dispatch(setCurrentSlide(nextVideo?.slide));
+          dispatch(setCurrentVideoTime(startTime || 0));
+
+          // Track slide view for auto-advanced video
+          if (nextVideo?.slide) {
+            const userDetails = getUserDetailsFromToken();
+            const currentTime = new Date().toISOString();
+
+            capture("slide_view", {
+              user_id: userDetails?.sub,
+              module_id: presentationId,
+              slide_id: nextVideo.slide,
+              slide_title: nextVideo.title,
+              timestamp: currentTime,
+            });
+          }
+
+          toast.success("Assessment completed! Moving to next video.");
+        } else {
+          // If this was the last video, just show success message
+          toast.success("Assessment submitted successfully! Training completed.");
+        }
+      } else {
+        toast.success("Assessment submitted successfully!");
+      }
 
     } catch (error) {
       console.error('Assessment submission failed:', error);

@@ -245,7 +245,7 @@ const SlideVideoSection = ({
   const videoIndex = answerPptIndex !== null ? answerPptIndex : currentVideoIndex;
 
   if (selectedAssessmentId) {
-    return <InModuleAssessment />
+    return <InModuleAssessment videos={videos} />
   }
 
   if (!videos?.[videoIndex]?.slide_video) {
