@@ -17,6 +17,7 @@ const PPTSection = ({
   isMobileView = false,
   isPhoneView = false,
   canSkipVideo = true,
+  assessmentDetails = [],
 }) => {
   return (
     <div
@@ -94,6 +95,7 @@ const PPTSection = ({
           onVideoSelect={onVideoSelect}
           canSkipVideo={canSkipVideo}
           isMobile={isPhoneView}
+          assessmentDetails={assessmentDetails}
         />
       </div>
     </div>

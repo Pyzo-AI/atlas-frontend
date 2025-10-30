@@ -85,6 +85,7 @@ const CombinedPPTSection = React.memo(({
       isMobileView={isMobile}
       isPhoneView={isPhone}
       canSkipVideo={canSkipVideo}
+      assessmentDetails={data?.assessment_details || []}
     />
   );
 })
