@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import InModuleAssessment from "./InModuleAssessment";
 
 const SlideVideoSection = ({
   videos,
@@ -7,6 +8,7 @@ const SlideVideoSection = ({
   currentVideoTime = 0,
   isVideoPlaying = false,
   videoDuration = 0,
+  assessmentDetails = [],
 }) => {
   const slideVideoRef = useRef(null);
   const preloadSlideVideoRef = useRef(null); // For preloading next slide video
@@ -17,7 +19,7 @@ const SlideVideoSection = ({
   const [canPlay, setCanPlay] = useState(false);
   const [isLoadingNewVideo, setIsLoadingNewVideo] = useState(false);
   const playPromiseRef = useRef(null);
-  const answerPptIndex = useSelector((state) => state.video.answerPptIndex);
+  const { answerPptIndex, selectedAssessmentId } = useSelector((state) => state.video);
 
   // Sync slide video with trainer video time
   useEffect(() => {
@@ -28,9 +30,7 @@ const SlideVideoSection = ({
 
     if (slideVideoRef.current && videos?.[currentVideoIndex]?.slide_video) {
       const slideVideo = slideVideoRef.current;
-      const timeDifference = Math.abs(
-        slideVideo.currentTime - currentVideoTime
-      );
+      const timeDifference = Math.abs(slideVideo.currentTime - currentVideoTime);
 
       // Only sync if there's a significant time difference (more than 0.1 seconds)
       // and the video is loaded and ready
@@ -101,8 +101,7 @@ const SlideVideoSection = ({
   useEffect(() => {
     if (slideVideoRef.current && hasSlideInitialized && videos?.length > 0) {
       const slideVideo = slideVideoRef.current;
-      const videoIndex =
-        answerPptIndex !== null ? answerPptIndex : currentVideoIndex;
+      const videoIndex = answerPptIndex !== null ? answerPptIndex : currentVideoIndex;
       const videoData = videos[videoIndex];
 
       if (!videoData?.slide_video) {
@@ -141,10 +140,7 @@ const SlideVideoSection = ({
             preloadSlideVideoRef.current.src = "";
             setPreloadedSlideIndex(-1);
           } catch (error) {
-            console.log(
-              "Error using preloaded slide video, falling back to normal load:",
-              error
-            );
+            console.log("Error using preloaded slide video, falling back to normal load:", error);
             slideVideo.load();
             setPreloadedSlideIndex(-1);
           }
@@ -166,24 +162,13 @@ const SlideVideoSection = ({
         }
       }
     }
-  }, [
-    currentVideoIndex,
-    videos,
-    preloadedSlideIndex,
-    hasSlideInitialized,
-    answerPptIndex,
-  ]);
+  }, [currentVideoIndex, videos, preloadedSlideIndex, hasSlideInitialized, answerPptIndex]);
 
   // Preload next slide video based on trainer video progress
   useEffect(() => {
     const preloadThreshold = 10; // Start preloading 10 seconds before video ends
 
-    if (
-      videoDuration > 0 &&
-      currentVideoTime > 0 &&
-      videos &&
-      videos.length > 0
-    ) {
+    if (videoDuration > 0 && currentVideoTime > 0 && videos && videos.length > 0) {
       const timeRemaining = videoDuration - currentVideoTime;
       const nextVideoIndex = currentVideoIndex + 1;
 
@@ -213,11 +198,7 @@ const SlideVideoSection = ({
           const nextVideoUrl = videos[nextVideoIndex].slide_video;
 
           // Validate URL before setting
-          if (
-            nextVideoUrl &&
-            typeof nextVideoUrl === "string" &&
-            nextVideoUrl.startsWith("http")
-          ) {
+          if (nextVideoUrl && typeof nextVideoUrl === "string" && nextVideoUrl.startsWith("http")) {
             preloadSlideVideoRef.current.src = nextVideoUrl;
             preloadSlideVideoRef.current.onerror = (e) => {
               console.warn(`Failed to preload slide video ${nextVideoIndex}:`, {
@@ -227,35 +208,21 @@ const SlideVideoSection = ({
               setPreloadedSlideIndex(-1);
             };
             preloadSlideVideoRef.current.oncanplaythrough = () => {
-              console.log(
-                `Slide video ${nextVideoIndex} preloaded successfully`
-              );
+              console.log(`Slide video ${nextVideoIndex} preloaded successfully`);
             };
             preloadSlideVideoRef.current.load();
             setPreloadedSlideIndex(nextVideoIndex);
           } else {
-            console.warn(
-              `Invalid slide video URL for index ${nextVideoIndex}:`,
-              nextVideoUrl
-            );
+            console.warn(`Invalid slide video URL for index ${nextVideoIndex}:`, nextVideoUrl);
             setPreloadedSlideIndex(-1);
           }
         } catch (error) {
-          console.warn(
-            `Error setting up preload for slide video ${nextVideoIndex}:`,
-            error
-          );
+          console.warn(`Error setting up preload for slide video ${nextVideoIndex}:`, error);
           setPreloadedSlideIndex(-1);
         }
       }
     }
-  }, [
-    currentVideoTime,
-    currentVideoIndex,
-    videos,
-    preloadedSlideIndex,
-    videoDuration,
-  ]);
+  }, [currentVideoTime, currentVideoIndex, videos, preloadedSlideIndex, videoDuration]);
 
   // Cleanup preload slide video element on unmount
   useEffect(() => {
@@ -276,8 +243,11 @@ const SlideVideoSection = ({
     };
   }, []);
 
-  const videoIndex =
-    answerPptIndex !== null ? answerPptIndex : currentVideoIndex;
+  const videoIndex = answerPptIndex !== null ? answerPptIndex : currentVideoIndex;
+console.log(selectedAssessmentId,"selectedAssessmentId")
+  if (selectedAssessmentId) {
+    return <InModuleAssessment videos={videos} assessmentDetails={assessmentDetails} />
+  }
 
   if (!videos?.[videoIndex]?.slide_video) {
     return (

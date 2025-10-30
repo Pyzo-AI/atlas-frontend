@@ -5,7 +5,13 @@ import PPTSection from "@/components/sections/PPTSection";
 import FloatingChatbot from "@/components/chat/FloatingChatbot";
 import { useGetAllVideoQuery, useSubmitVideoProgressMutation } from "@/store/api/questionsApi";
 import { useDispatch, useSelector } from "react-redux";
-import { setIsPlaying, setCurrentVideoIndex, setCurrentVideoTime, setIsVideoPlaying } from "@/store/features/videoSlice";
+import {
+  setIsPlaying,
+  setCurrentVideoIndex,
+  setCurrentVideoTime,
+  setIsVideoPlaying,
+  setSelectedAssessmentId,
+} from "@/store/features/videoSlice";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import BreadCrumb from "@/components/common/BreadCrumb";
 import PageSkeleton from "@/components/common/PageSkeleton";
@@ -20,20 +26,13 @@ const RotationPrompt = () => {
     <div className="absolute top-16 inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
       <div className="text-center text-white px-6">
         <div className="mb-6">
-          <svg
-            className="w-16 h-16 mx-auto mb-4 animate-bounce"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-16 h-16 mx-auto mb-4 animate-bounce" fill="currentColor" viewBox="0 0 24 24">
             <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l6.36 6.36c.59.59 1.54.59 2.12 0L16.59 10.23c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.72 14.72h1.5c-.36 3.76-2.7 6.93-5.97 8.48L9.15 23.38l1.33-1.32-3.81-3.81L7.33 24c6.29-.44 11.44-5.28 11.95-11.53z" />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold mb-2">
-          Better Experience Awaits!
-        </h2>
+        <h2 className="text-xl font-semibold mb-2">Better Experience Awaits!</h2>
         <p className="text-gray-300 mb-4">
-          Turn on auto-rotate and rotate your device to landscape mode. This web
-          app works best in Chrome browser.
+          Turn on auto-rotate and rotate your device to landscape mode. This web app works best in Chrome browser.
         </p>
         <div className="flex items-center justify-center space-x-2">
           <div className="w-8 h-12 border-2 border-white rounded-sm"></div>
@@ -47,6 +46,92 @@ const RotationPrompt = () => {
   );
 };
 
+// Combined components moved outside to prevent re-creation on every render
+const CombinedBreadCrumb = React.memo(({ data }) => {
+  return <BreadCrumb
+    paths={[
+      { path: "/", label: "All Courses" },
+      {
+        path: "/lectures/123",
+        label: data?.presentation_name || "Untitled Presentation",
+      },
+    ]}
+  />
+})
+
+const CombinedPPTSection = React.memo(({
+  isMobile = false,
+  isPhone = false,
+  videos,
+  isLoading,
+  pptVideoIndex,
+  pptSyncState,
+  videoState,
+  data,
+  canSkipVideo
+}) => {
+  const width = isMobile ? "100%" : "70%";
+
+  return (
+    <PPTSection
+      videos={videos}
+      loading={isLoading}
+      currentVideoIndex={pptVideoIndex}
+      currentVideoTime={pptSyncState.currentTime}
+      isVideoPlaying={pptSyncState.isPlaying}
+      videoDuration={videoState.duration}
+      width={width}
+      title={data?.presentation_name || "Untitled Presentation"}
+      author={data?.presentation_author || "Unknown"}
+      isMobileView={isMobile}
+      isPhoneView={isPhone}
+      canSkipVideo={canSkipVideo}
+      assessmentDetails={data?.assessment_details || []}
+    />
+  );
+})
+
+const CombinedVideoPanel = React.memo(({
+  isMobile = false,
+  isPhone = false,
+  videoPanelRef,
+  videos,
+  isLoading,
+  handleVideoStateChange,
+  handlePauseVideo,
+  handlePauseAnswerAudio,
+  presentationId,
+  data,
+  conversationHistory,
+  setConversationHistory,
+  canSkipVideo,
+  assessmentId
+}) => {
+  const width = isMobile ? "100%" : "30%";
+
+  return (
+    <VideoPanel
+      ref={videoPanelRef}
+      videos={videos}
+      loading={isLoading}
+      onVideoStateChange={handleVideoStateChange}
+      onPauseVideo={handlePauseVideo}
+      onPauseAnswerAudio={handlePauseAnswerAudio}
+      width={width}
+      presentationId={presentationId}
+      isMobileView={isMobile}
+      isPhoneView={isPhone}
+      agentId={data?.presentation_agent_id}
+      avatarUrl={data?.presentation_trainer_image}
+      conversationHistory={conversationHistory}
+      setConversationHistory={setConversationHistory}
+      isPresentationQuizPassed={data?.is_presentation_quiz_passed || false}
+      canSkipVideo={canSkipVideo}
+      assessmentId={assessmentId}
+    />
+  );
+})
+
 const Home = () => {
   const params = useParams();
   const router = useRouter();
@@ -54,17 +139,14 @@ const Home = () => {
   const { data, isLoading } = useGetAllVideoQuery(presentationId, {
     refetchOnMountOrArgChange: true,
   });
-  const videos = data?.data?.filter(
-    (video) => video?.trainer_video && video?.trainer_video?.trim() !== ""
-  );
+  const videos = data?.data?.filter((video) => video?.trainer_video && video?.trainer_video?.trim() !== "");
   const userName = getUserDetailsFromToken()?.preferred_username;
-  const assessmentId = data?.assessment_details?.[0]?.id; 
-  console.log("Assessment ID from API:", assessmentId);
+  const assessmentId = data?.assessment_details?.[0]?.id;
 
-  const canSkipVideo = data?.hasOwnProperty("is_skippable")
-    ? data.is_skippable
-    : !userName?.includes("jeenaseekho");
-  
+
+
+  const canSkipVideo = data?.hasOwnProperty("is_skippable") ? data.is_skippable : !userName?.includes("jeenaseekho");
+
   const pathname = usePathname();
   const videoPanelRef = useRef(null);
   const dispatch = useDispatch();
@@ -73,10 +155,7 @@ const Home = () => {
 
   // Device detection for different layouts
   const isPhone = typeof window !== "undefined" && window.innerWidth <= 956;
-  const isTablet =
-    typeof window !== "undefined" &&
-    window.innerWidth > 956 &&
-    window.innerWidth <= 1024;
+  const isTablet = typeof window !== "undefined" && window.innerWidth > 956 && window.innerWidth <= 1024;
   const isMobileDevice = isPhone || isTablet;
   const isLandscape = !isPortrait && isMobileDevice;
 
@@ -135,13 +214,13 @@ const Home = () => {
       if (progressData && progressData.slide_data.length > 0) {
         await submitVideoProgress({
           presentation_id: parseInt(presentationId),
-          slide_data: progressData.slide_data
+          slide_data: progressData.slide_data,
         });
         clearVideoProgress(presentationId);
-        console.log('Video progress submitted successfully');
+        console.log("Video progress submitted successfully");
       }
     } catch (error) {
-      console.error('Failed to submit video progress:', error);
+      console.error("Failed to submit video progress:", error);
     }
   };
 
@@ -158,9 +237,12 @@ const Home = () => {
 
   // 5-minute interval tracking
   useEffect(() => {
-    const interval = setInterval(() => {
-      submitProgressToAPI();
-    }, 5 * 60 * 1000);
+    const interval = setInterval(
+      () => {
+        submitProgressToAPI();
+      },
+      5 * 60 * 1000
+    );
 
     return () => clearInterval(interval);
   }, [presentationId]);
@@ -170,11 +252,11 @@ const Home = () => {
     const handleBeforeUnload = (e) => {
       submitProgressToAPI();
       // For some browsers, we need to set returnValue
-      e.returnValue = '';
+      e.returnValue = "";
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
+      if (document.visibilityState === "hidden") {
         submitProgressToAPI();
       }
     };
@@ -187,16 +269,16 @@ const Home = () => {
       submitProgressToAPI();
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handlePageHide);
-    window.addEventListener('unload', handleUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("unload", handleUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handlePageHide);
-      window.removeEventListener('unload', handleUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("unload", handleUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [presentationId]);
 
@@ -251,26 +333,26 @@ const Home = () => {
   // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = (e) => {
-      console.log('Browser back/forward detected');
+      console.log("Browser back/forward detected");
       submitProgressToAPI();
     };
 
     // Track initial history length
     const initialHistoryLength = window.history.length;
-    
+
     // Listen for popstate (browser back/forward)
-    window.addEventListener('popstate', handlePopState, true);
-    
+    window.addEventListener("popstate", handlePopState, true);
+
     // Periodically check if history length changed (additional safety)
     const historyCheck = setInterval(() => {
       if (window.history.length < initialHistoryLength) {
-        console.log('History length decreased - likely back navigation');
+        console.log("History length decreased - likely back navigation");
         submitProgressToAPI();
       }
     }, 1000);
 
     return () => {
-      window.removeEventListener('popstate', handlePopState, true);
+      window.removeEventListener("popstate", handlePopState, true);
       clearInterval(historyCheck);
     };
   }, [presentationId]);
@@ -283,21 +365,20 @@ const Home = () => {
       const apiCurrentSlideDuration = data.current_slide_duration;
 
       // Find the index in the filtered videos list that matches the API current slide
-      const allVideos = data.data.filter(
-        (video) => video?.trainer_video && video?.trainer_video?.trim() !== ""
-      );
+      const allVideos = data.data.filter((video) => video?.trainer_video && video?.trainer_video?.trim() !== "");
 
       const idx = allVideos.findIndex((v) => v.slide === apiCurrentSlide);
 
       if (idx !== -1) {
+        const slideObj = allVideos[idx];
+
         // Decide initial start time: use apiCurrentSlideDuration but if it equals the
         // slide duration then start from 0 (apply the same equal->0 rule)
-        const slideObj = allVideos[idx];
-        let startTime = typeof apiCurrentSlideDuration === 'number' ? apiCurrentSlideDuration : 0;
+        let startTime = typeof apiCurrentSlideDuration === "number" ? apiCurrentSlideDuration : 0;
 
         if (
-          typeof slideObj?.duration === 'number' &&
-          typeof startTime === 'number' &&
+          typeof slideObj?.duration === "number" &&
+          typeof startTime === "number" &&
           Math.abs(slideObj.duration - startTime) <= 1e-6
         ) {
           startTime = 0;
@@ -305,9 +386,25 @@ const Home = () => {
 
         dispatch(setCurrentVideoIndex(idx));
         dispatch(setCurrentVideoTime(startTime || 0));
+
+        // Auto-select assessment if video is completed and has assessments
+        if (slideObj?.is_completed) {
+          // Check for middle assessments (slide_assessments)
+          if (slideObj?.slide_assessments && slideObj.slide_assessments.length > 0) {
+            const firstAssessment = slideObj.slide_assessments[0];
+            console.log('Auto-selecting middle assessment for completed video:', firstAssessment.id);
+            dispatch(setSelectedAssessmentId(firstAssessment.id));
+          }
+          // Check if this is the last video and there's a final assessment
+          else if (idx === allVideos.length - 1 && data.assessment_details && data.assessment_details.length > 0) {
+            const finalAssessment = data.assessment_details[0];
+            console.log('Auto-selecting final assessment for completed training:', finalAssessment.id);
+            dispatch(setSelectedAssessmentId(finalAssessment.id));
+          }
+        }
       }
     } catch (err) {
-      console.error('Failed to init current video from API data', err);
+      console.error("Failed to init current video from API data", err);
     }
   }, [data, dispatch]);
 
@@ -315,132 +412,59 @@ const Home = () => {
     return <PageSkeleton />;
   }
 
-  // Phone landscape layout - 70/30 split for optimal phone experience
-  if (isLandscape && isPhone) {
+
+
+
+  if (isLandscape && (isPhone || isTablet)) {
+    // Dynamic width ratios
+    const leftWidth = isPhone ? "w-[70%]" : "w-[60%]";
+    const rightWidth = isPhone ? "w-[30%]" : "w-[40%]";
+    const paddingX = isPhone ? "px-2" : "px-4";
+    const paddingY = isPhone ? "py-2" : "py-3";
+    const marginX = isPhone ? "mx-2" : "mx-4";
+    const marginY = isPhone ? "mb-2" : "mb-4";
+    const rightPadding = isPhone ? "px-1" : "px-3";
+
     return (
       <FullscreenController enableAutoFullscreen={true}>
         <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0 flex-col">
           {/* Breadcrumb Navigation */}
-          <div className="px-2 py-2 bg-[#F9F9F9]">
-            <BreadCrumb
-              paths={[
-                { path: "/", label: "All Course" },
-                {
-                  path: "/lectures/123",
-                  label: data?.presentation_name || "Corporate Finance",
-                },
-              ]}
-            />
-          </div>
-
-          {/* Main Content Area - Phone optimized */}
-          <div className="flex flex-1 bg-white mx-2 mb-2 rounded-lg overflow-hidden">
-            {/* Left Side - Slides/PPT Section (70% width for phones) */}
-            <div className="w-[70%] overflow-hidden">
-              <PPTSection
-                videos={videos}
-                loading={isLoading}
-                currentVideoIndex={pptVideoIndex}
-                currentVideoTime={pptSyncState.currentTime}
-                isVideoPlaying={pptSyncState.isPlaying}
-                videoDuration={videoState.duration}
-                width="100%"
-                title={data?.presentation_name || "Corporate Finance"}
-                author={data?.presentation_author || "Giri Prathap"}
-                isMobileView={true}
-                isPhoneView={true}
-                canSkipVideo={canSkipVideo}
-              />
-            </div>
-
-            {/* Right Side - Video Panel (30% width for phones) */}
-            <div className="w-[30%] bg-[#F9F9F9] px-1 overflow-hidden">
-              <VideoPanel
-                ref={videoPanelRef}
-                videos={videos}
-                loading={isLoading}
-                onVideoStateChange={handleVideoStateChange}
-                onPauseVideo={handlePauseVideo}
-                onPauseAnswerAudio={handlePauseAnswerAudio}
-                width="100%"
-                presentationId={presentationId}
-                isMobileView={true}
-                isPhoneView={true}
-                agentId={data?.presentation_agent_id}
-                avatarUrl={data?.presentation_trainer_image}
-                conversationHistory={conversationHistory}
-                setConversationHistory={setConversationHistory}
-                isPresentationQuizPassed={
-                  data?.is_presentation_quiz_passed || false
-                }
-                canSkipVideo={canSkipVideo}
-                assessmentId={assessmentId}
-              />
-            </div>
-          </div>
-        </div>
-      </FullscreenController>
-    );
-  }
-
-  // Tablet landscape layout - 60/40 split for tablets
-  if (isLandscape && isTablet) {
-    return (
-      <FullscreenController enableAutoFullscreen={true}>
-        <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0 flex-col">
-          {/* Breadcrumb Navigation */}
-          <div className="px-4 py-3 bg-[#F9F9F9]">
-            <BreadCrumb
-              paths={[
-                { path: "/", label: "All Course" },
-                {
-                  path: "/lectures/123",
-                  label: data?.presentation_name || "Corporate Finance",
-                },
-              ]}
-            />
+          <div className={`${paddingX} ${paddingY} bg-[#F9F9F9]`}>
+            <CombinedBreadCrumb data={data} />
           </div>
 
           {/* Main Content Area */}
-          <div className="flex flex-1 bg-white mx-4 mb-4 rounded-lg overflow-hidden">
-            {/* Left Side - Slides/PPT Section (60% width for tablets) */}
-            <div className="w-[60%] overflow-hidden">
-              <PPTSection
+          <div className={`flex flex-1 bg-white ${marginX} ${marginY} rounded-lg overflow-hidden`}>
+            {/* Left Side - Slides/PPT Section */}
+            <div className={`${leftWidth} overflow-hidden`}>
+              <CombinedPPTSection
+                isMobile={true}
+                isPhone={isPhone}
                 videos={videos}
-                loading={isLoading}
-                currentVideoIndex={pptVideoIndex}
-                currentVideoTime={pptSyncState.currentTime}
-                isVideoPlaying={pptSyncState.isPlaying}
-                videoDuration={videoState.duration}
-                width="100%"
-                title={data?.presentation_name || "Corporate Finance"}
-                author={data?.presentation_author || "Giri Prathap"}
-                isMobileView={true}
-                isPhoneView={false}
+                isLoading={isLoading}
+                pptVideoIndex={pptVideoIndex}
+                pptSyncState={pptSyncState}
+                videoState={videoState}
+                data={data}
                 canSkipVideo={canSkipVideo}
               />
             </div>
 
-            {/* Right Side - Video Panel (40% width for tablets) */}
-            <div className="w-[40%] bg-[#F9F9F9] px-3 overflow-hidden">
-              <VideoPanel
-                ref={videoPanelRef}
+            {/* Right Side - Video Panel */}
+            <div className={`${rightWidth} bg-[#F9F9F9] ${rightPadding} overflow-hidden`}>
+              <CombinedVideoPanel
+                isMobile={true}
+                isPhone={isPhone}
+                videoPanelRef={videoPanelRef}
                 videos={videos}
-                loading={isLoading}
-                onVideoStateChange={handleVideoStateChange}
-                onPauseVideo={handlePauseVideo}
-                onPauseAnswerAudio={handlePauseAnswerAudio}
-                width="100%"
+                isLoading={isLoading}
+                handleVideoStateChange={handleVideoStateChange}
+                handlePauseVideo={handlePauseVideo}
+                handlePauseAnswerAudio={handlePauseAnswerAudio}
                 presentationId={presentationId}
-                isMobileView={true}
-                isPhoneView={false}
-                agentId={data?.presentation_agent_id}
-                avatarUrl={data?.presentation_trainer_image}
+                data={data}
                 conversationHistory={conversationHistory}
                 setConversationHistory={setConversationHistory}
-                isPresentationQuizPassed={
-                  data?.is_presentation_quiz_passed || false
-                }
                 canSkipVideo={canSkipVideo}
                 assessmentId={assessmentId}
               />
@@ -448,7 +472,7 @@ const Home = () => {
           </div>
         </div>
       </FullscreenController>
-    );
+    )
   }
 
   return (
@@ -459,45 +483,28 @@ const Home = () => {
       <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-[#F9F9F9] overflow-x-hidden">
         <div className="layout-container flex h-full grow flex-col">
           <div className=" px-6 py-5 overflow-hidden">
-            <BreadCrumb
-              paths={[
-                { path: "/", label: "All Courses" },
-                {
-                  path: "/lectures/123",
-                  label: data?.presentation_name || "Untitled Presentation",
-                },
-              ]}
-            />
-
+            <CombinedBreadCrumb data={data} />
             <div className="flex w-full h-[calc(100%-36px)] min-w-0 bg-white py-4 px-5">
-              <PPTSection
+              <CombinedPPTSection
                 videos={videos}
-                loading={isLoading}
-                currentVideoIndex={pptVideoIndex}
-                currentVideoTime={pptSyncState.currentTime}
-                isVideoPlaying={pptSyncState.isPlaying}
-                videoDuration={videoState.duration}
-                width="70%"
-                title={data?.presentation_name || "Untitled Presentation"}
-                author={data?.presentation_author || "Unknown"}
+                isLoading={isLoading}
+                pptVideoIndex={pptVideoIndex}
+                pptSyncState={pptSyncState}
+                videoState={videoState}
+                data={data}
                 canSkipVideo={canSkipVideo}
               />
-              <VideoPanel
-                ref={videoPanelRef}
+              <CombinedVideoPanel
+                videoPanelRef={videoPanelRef}
                 videos={videos}
-                loading={isLoading}
-                onVideoStateChange={handleVideoStateChange}
-                onPauseVideo={handlePauseVideo}
-                onPauseAnswerAudio={handlePauseAnswerAudio}
-                width="30%"
+                isLoading={isLoading}
+                handleVideoStateChange={handleVideoStateChange}
+                handlePauseVideo={handlePauseVideo}
+                handlePauseAnswerAudio={handlePauseAnswerAudio}
                 presentationId={presentationId}
-                agentId={data?.presentation_agent_id}
-                avatarUrl={data?.presentation_trainer_image}
+                data={data}
                 conversationHistory={conversationHistory}
                 setConversationHistory={setConversationHistory}
-                isPresentationQuizPassed={
-                  data?.is_presentation_quiz_passed || false
-                }
                 canSkipVideo={canSkipVideo}
                 assessmentId={assessmentId}
               />
