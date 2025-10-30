@@ -11,8 +11,8 @@ import BreadCrumb from "@/components/common/BreadCrumb";
 function ResultContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-    const assessmentId = searchParams.get('assessment-id');
-    console.log(assessmentId,"Assessment ID in Result Page");
+  const assessmentId = searchParams.get('assessment-id');
+  console.log(assessmentId, "Assessment ID in Result Page");
   const [score, setScore] = useState(null);
   const dispatch = useDispatch();
   const presentationId = searchParams.get("id");
@@ -95,15 +95,14 @@ function ResultContent() {
               </svg>
 
               {/* Status Icon */}
-          
+
             </div>
 
             {/* Result Content */}
             <div className="text-center space-y-4 sm:space-y-6">
               <h1
-                className={`text-xl sm:text-[24px] font-lato font-bold ${
-                  isPerfectScore ? "text-green-600" : "text-[#744FFF]"
-                }`}
+                className={`text-xl sm:text-[24px] font-lato font-bold ${isPerfectScore ? "text-green-600" : "text-[#744FFF]"
+                  }`}
               >
                 {isPerfectScore ? "Congratulations! 🎉" : "Almost There!"}
               </h1>
@@ -146,11 +145,10 @@ function ResultContent() {
                     isPerfectScore ? navigateToReview : handleRestartTraining
                   }
                   variant={"primary"}
-                  className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-[8px] font-lato font-medium text-sm sm:text-[14px] w-full sm:w-auto ${
-                    isPerfectScore
-                      ? "bg-green-600 hover:bg-green-700 text-white"
-                      : "bg-[#744FFF] hover:bg-[#6B46E5] text-white"
-                  }`}
+                  className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-[8px] font-lato font-medium text-sm sm:text-[14px] w-full sm:w-auto ${isPerfectScore
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : "bg-[#744FFF] hover:bg-[#6B46E5] text-white"
+                    }`}
                 >
                   {isPerfectScore ? "Ok" : "Restart Training"}
                 </Button>

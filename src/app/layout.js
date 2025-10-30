@@ -8,6 +8,8 @@ import PostHogProvider from "@/providers/PostHogProvider";
 import PrivateRoute from "@/components/auth/PrivateRoute";
 import Header from "@/components/layout/Header";
 import ResponsiveContainer from "@/components/layout/ResponsiveContainer";
+import ResultModalProvider from "@/components/providers/ResultModalProvider";
+import FeedbackModalProvider from "@/components/providers/FeedbackModalProvider";
 import { ToastContainer } from "react-toastify";
 
 const geistSans = Geist({
@@ -57,21 +59,25 @@ export default function RootLayout({ children }) {
         <PostHogProvider>
           <ReduxProvider>
             <ElevenLabsProviderWrapper>
-              <PrivateRoute>
-                <ResponsiveContainer>{children}</ResponsiveContainer>
-              </PrivateRoute>
-              <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="light"
-              />
+              <ResultModalProvider>
+                <FeedbackModalProvider>
+                  <PrivateRoute>
+                    <ResponsiveContainer>{children}</ResponsiveContainer>
+                  </PrivateRoute>
+                  <ToastContainer
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="light"
+                  />
+                </FeedbackModalProvider>
+              </ResultModalProvider>
             </ElevenLabsProviderWrapper>
           </ReduxProvider>
         </PostHogProvider>

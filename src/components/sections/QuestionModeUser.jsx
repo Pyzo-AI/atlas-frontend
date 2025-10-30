@@ -65,6 +65,7 @@ const QuestionModeUser = ({
   }
 
   const handleChatHistory = () => {
+    onPauseVideo() // Pause the video when opening chat
     setShowChat(true)
     dispatch(setIsQuestionMode(false))
     setIsJumpedOnChatFromInteractionMode(true)
@@ -81,9 +82,8 @@ const QuestionModeUser = ({
         <div className="flex flex-col items-center gap-[30px] max-w-[275px]">
           {/* Avatar/Tap to Speak */}
           <div
-            className={`w-[120px] ${
-              isMobile ? 'h-[20px]' : 'h-[120px]'
-            } flex items-center justify-center`}
+            className={`w-[120px] ${isMobile ? 'h-[20px]' : 'h-[120px]'
+              } flex items-center justify-center`}
           >
             {isAudioLoading ? (
               <Lottie
