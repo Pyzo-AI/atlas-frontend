@@ -73,6 +73,12 @@ export const questionsApi = createApi({
         body: feedbackData,
       }),
     }),
+
+    // Get assessment summary
+    getAssessmentSummary: builder.query({
+      query: (presentationId) => `presentations/${presentationId}/assessments/summary`,
+      providesTags: ['Question'],
+    }),
   }),
 });
 
@@ -86,4 +92,5 @@ export const {
   useGetAssessmentQuery,
   useSubmitAssessmentMutation,
   useSubmitFeedbackMutation,
+  useGetAssessmentSummaryQuery,
 } = questionsApi;

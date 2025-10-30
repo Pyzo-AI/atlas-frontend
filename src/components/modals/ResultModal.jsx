@@ -15,6 +15,7 @@ export default function ResultModal({
   correctAnswers, // This should be score from API
   onRetry,
   onRestartTraining,
+  onShowFeedback,
 }) {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -51,9 +52,8 @@ export default function ResultModal({
   };
 
   const showFeedback = () => {
-    // Close result modal and show feedback modal
-    onClose();
-    dispatch(showFeedbackModal({ presentationId }));
+    // Use local callback instead of Redux
+    onShowFeedback?.();
   };
 
   return (
@@ -66,7 +66,7 @@ export default function ResultModal({
       className="overflow-hidden mx-4 sm:mx-0 rounded-3xl">
       <div className="p-8 bg-white text-center">
         {/* Score Circle */}
-        <div className="relative w-32 h-32 mx-auto">
+        <div className="relative flex justify-center w-32 h-32 mx-auto">
           {isPerfectScore ? (
             // Perfect Score - Simple Green Circle
             <div className="w-24 h-24 border-4 border-[#00A63E] rounded-full flex items-center justify-center">
@@ -136,9 +136,9 @@ export default function ResultModal({
                 Restart Training
               </button>
               <button
-                onClick={handleRetry}
+                onClick={showFeedback}
                 className="w-full bg-[#744FFF] hover:bg-[#6B46E5] text-white py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg">
-                Try Again
+                Give Feedback
               </button>
             </div>
           )}

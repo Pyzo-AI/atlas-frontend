@@ -6,6 +6,7 @@ import {
   syncPptToVideoPanel,
   setAnswerPptIndex,
   setIsQuestionMode,
+  setSelectedAssessmentId,
 } from "@/store/features/videoSlice";
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -129,6 +130,7 @@ const VideoPanel = forwardRef(
       currentVideoIndex,
       isQuestionMode,
       currentVideoTime: reduxCurrentVideoTime,
+      selectedAssessmentId,
     } = useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
@@ -528,7 +530,7 @@ const VideoPanel = forwardRef(
               if (videoRef.current && videoRef.current.play) {
                 const playPromise = videoRef.current.play();
                 if (playPromise !== undefined) {
-                  playPromise.catch(error => {
+                  playPromise.catch((error) => {
                     console.log("Auto-play was prevented:", error);
                     // Auto-play was prevented, this is normal behavior
                   });
@@ -629,7 +631,14 @@ const VideoPanel = forwardRef(
       if (currentVideoIndex < videos?.length - 1) {
         const nextVideoIndex = currentVideoIndex + 1;
         const nextVideo = videos[nextVideoIndex];
-        console.log(nextVideo, "nextVideo");
+        const currentVideo = videos[currentVideoIndex];
+        const currentVideoAssessmentId = currentVideo?.slide_assessments?.[0]?.id;
+        if (currentVideoAssessmentId) {
+          console.log(currentVideoAssessmentId, "currentVideoAssessmentId");
+          dispatch(setSelectedAssessmentId(currentVideoAssessmentId));
+          return;
+        }
+        console.log(nextVideo?.slide_assessments !== null, "nextVideo");
         setAutoPlayEnabled(true); // Enable autoplay for next video
         // Set start time for next video based on its duration_viewed (unless duration equals duration_viewed)
         try {
@@ -669,8 +678,9 @@ const VideoPanel = forwardRef(
           setSlideViewStartTime(currentTime);
         }
       } else {
-        setShowRedirectPopup(true);
+        // setShowRedirectPopup(true);
         setAutoPlayEnabled(false);
+        dispatch(setSelectedAssessmentId(assessmentId));
       }
     };
 
@@ -716,7 +726,7 @@ const VideoPanel = forwardRef(
           }
           setInitialVideoTime(startTime || 0);
           dispatch(setCurrentVideoTime(startTime || 0));
-        } catch (err) { }
+        } catch (err) {}
         dispatch(setCurrentVideoIndex(index));
         setIsPlaying(false);
       }
@@ -739,7 +749,7 @@ const VideoPanel = forwardRef(
         }
         setInitialVideoTime(startTime || 0);
         dispatch(setCurrentVideoTime(startTime || 0));
-      } catch (err) { }
+      } catch (err) {}
       dispatch(setCurrentVideoIndex(index));
       setIsPlaying(false);
     };
@@ -765,7 +775,7 @@ const VideoPanel = forwardRef(
               .then(() => {
                 setIsPlaying(true);
               })
-              .catch(error => {
+              .catch((error) => {
                 console.log("Play was prevented:", error);
                 setIsPlaying(false);
               });
@@ -799,15 +809,17 @@ const VideoPanel = forwardRef(
 
     return (
       <div
-        className={`flex flex-col h-full ${isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
-          }`}
+        className={`flex flex-col h-full ${
+          isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
+        } ${selectedAssessmentId ? "pointer-events-none blur-[1px]" : ""}`}
         style={!isMobile ? { width } : undefined}>
         {/* Redirect Popup - Unified for both mobile and desktop */}
         {showRedirectPopup && (
           <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
             <div
-              className={`relative flex flex-col items-center gap-5 w-96 bg-white rounded-2xl ${isPhone ? "p-5" : "p-6"
-                }`}>
+              className={`relative flex flex-col items-center gap-5 w-96 bg-white rounded-2xl ${
+                isPhone ? "p-5" : "p-6"
+              }`}>
               {/* Content Container */}
               <div className="flex flex-col items-center gap-6 w-[336px]">
                 {/* Icon */}
@@ -858,16 +870,18 @@ const VideoPanel = forwardRef(
 
         {/* Video Section - Responsive for both mobile and desktop */}
         <div
-          className={`cursor-pointer bg-white border border-[#E5E7EB] ${isMobile
-            ? isPhone
-              ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
-              : "p-2 pb-1 rounded-lg"
-            : "p-3 pb-2 rounded-xl"
-            } ${showChat || isQuestionMode ? 'hidden' : ''}`}
+          className={`cursor-pointer bg-white border border-[#E5E7EB] ${
+            isMobile
+              ? isPhone
+                ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
+                : "p-2 pb-1 rounded-lg"
+              : "p-3 pb-2 rounded-xl"
+          } ${showChat || isQuestionMode ? "hidden" : ""}`}
           onClick={togglePlayPause}>
           <div
-            className={`relative w-full bg-black overflow-hidden ${isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
-              }`}>
+            className={`relative w-full bg-black overflow-hidden ${
+              isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
+            }`}>
             <VideoPlayer
               key={`trainer-video-${currentVideoIndex}-${videos?.[currentVideoIndex]?.trainer_video}`}
               ref={videoRef}
@@ -914,25 +928,25 @@ const VideoPanel = forwardRef(
                 });
               }}
               onSeeking={() => {
-                console.log('Seeking event triggered, isSkippingBackward:', isSkippingBackward);
+                console.log("Seeking event triggered, isSkippingBackward:", isSkippingBackward);
 
                 // Desktop-specific seeking logic
                 if (!isMobile) {
                   // Don't interfere with skip backward operations
                   if (isSkippingBackward || skipBackwardRef.current) {
-                    console.log('Allowing seek for skip backward operation');
+                    console.log("Allowing seek for skip backward operation");
                     isSeekingRef.current = true;
                     return;
                   }
 
                   if (!canSkipVideo) {
-                    console.log('Preventing seek - canSkipVideo is false');
+                    console.log("Preventing seek - canSkipVideo is false");
                     const prev = previousTimeRef.current ?? currentTime;
                     blockedSeekRef.current = true;
                     requestAnimationFrame(() => {
                       if (videoRef.current && Math.abs(videoRef.current.currentTime - prev) > 0.01) {
                         try {
-                          console.log('Resetting video time from', videoRef.current.currentTime, 'to', prev);
+                          console.log("Resetting video time from", videoRef.current.currentTime, "to", prev);
                           videoRef.current.currentTime = prev;
                         } catch (err) {
                           // ignore
@@ -948,7 +962,7 @@ const VideoPanel = forwardRef(
                 }
               }}
               onSeeked={(e) => {
-                console.log('Seeked event triggered');
+                console.log("Seeked event triggered");
 
                 // Desktop-specific seeked logic
                 if (!isMobile) {
@@ -956,7 +970,7 @@ const VideoPanel = forwardRef(
 
                   // Handle skip backward operations properly
                   if (isSkippingBackward || skipBackwardRef.current) {
-                    console.log('Completing skip backward operation to:', newTime);
+                    console.log("Completing skip backward operation to:", newTime);
                     isSeekingRef.current = false;
                     previousTimeRef.current = newTime;
                     setPreviousTime(newTime);
@@ -1024,7 +1038,6 @@ const VideoPanel = forwardRef(
                   console.log("Trainer video can play");
                 }
               }}
-
               onPlay={() => {
                 setIsPlaying(true);
                 dispatch(setIsVideoPlaying(true));
@@ -1126,7 +1139,7 @@ const VideoPanel = forwardRef(
               playbackRate={videoSettings.playbackRate}
               currentTime={initialVideoTime}
               onSkipBackward={(data) => {
-                console.log('Skip backward triggered:', data);
+                console.log("Skip backward triggered:", data);
 
                 // Set flags BEFORE the video time change to prevent seeking interference
                 setIsSkippingBackward(true);
@@ -1145,7 +1158,7 @@ const VideoPanel = forwardRef(
                 setTimeout(() => {
                   setIsSkippingBackward(false);
                   skipBackwardRef.current = false;
-                  console.log('Skip backward flags reset');
+                  console.log("Skip backward flags reset");
                 }, 500); // Reduced timeout since we're handling it better
 
                 // Track skip backward analytics
@@ -1167,10 +1180,11 @@ const VideoPanel = forwardRef(
 
           {/* Time display - Responsive styling */}
           <div
-            className={`px-1 flex justify-between font-lato text-gray-600 ${isMobile
-              ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
-              : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
-              }`}>
+            className={`px-1 flex justify-between font-lato text-gray-600 ${
+              isMobile
+                ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
+                : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
+            }`}>
             <span>
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
@@ -1183,7 +1197,8 @@ const VideoPanel = forwardRef(
         </div>
 
         {/* AI Assistant Section - Responsive */}
-        <div className={`${isMobile && isPhone ? "flex-1 min-h-0" : "h-full"} ${showChat || isQuestionMode ? 'hidden' : ''}`}>
+        <div
+          className={`${isMobile && isPhone ? "flex-1 min-h-0" : "h-full"} ${showChat || isQuestionMode ? "hidden" : ""}`}>
           <AILearningAssistant
             setShowChat={setShowChat}
             showChat={showChat}

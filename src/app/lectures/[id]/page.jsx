@@ -10,6 +10,7 @@ import {
   setCurrentVideoIndex,
   setCurrentVideoTime,
   setIsVideoPlaying,
+  setSelectedAssessmentId,
 } from "@/store/features/videoSlice";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import BreadCrumb from "@/components/common/BreadCrumb";
@@ -85,6 +86,7 @@ const CombinedPPTSection = React.memo(({
       isMobileView={isMobile}
       isPhoneView={isPhone}
       canSkipVideo={canSkipVideo}
+      assessmentDetails={data?.assessment_details || []}
     />
   );
 })
@@ -368,9 +370,10 @@ const Home = () => {
       const idx = allVideos.findIndex((v) => v.slide === apiCurrentSlide);
 
       if (idx !== -1) {
+        const slideObj = allVideos[idx];
+
         // Decide initial start time: use apiCurrentSlideDuration but if it equals the
         // slide duration then start from 0 (apply the same equal->0 rule)
-        const slideObj = allVideos[idx];
         let startTime = typeof apiCurrentSlideDuration === "number" ? apiCurrentSlideDuration : 0;
 
         if (
@@ -383,6 +386,22 @@ const Home = () => {
 
         dispatch(setCurrentVideoIndex(idx));
         dispatch(setCurrentVideoTime(startTime || 0));
+
+        // Auto-select assessment if video is completed and has assessments
+        if (slideObj?.is_completed) {
+          // Check for middle assessments (slide_assessments)
+          if (slideObj?.slide_assessments && slideObj.slide_assessments.length > 0) {
+            const firstAssessment = slideObj.slide_assessments[0];
+            console.log('Auto-selecting middle assessment for completed video:', firstAssessment.id);
+            dispatch(setSelectedAssessmentId(firstAssessment.id));
+          }
+          // Check if this is the last video and there's a final assessment
+          else if (idx === allVideos.length - 1 && data.assessment_details && data.assessment_details.length > 0) {
+            const finalAssessment = data.assessment_details[0];
+            console.log('Auto-selecting final assessment for completed training:', finalAssessment.id);
+            dispatch(setSelectedAssessmentId(finalAssessment.id));
+          }
+        }
       }
     } catch (err) {
       console.error("Failed to init current video from API data", err);
