@@ -258,16 +258,23 @@ const VideoPlaylist = ({
                   <div
                     key={`assessment-${index}-${assessmentIndex}`}
                     onClick={() => {
-                      // Handle assessment click - always clickable now
+                      if (!canSkipVideo && hasLocalProgress(video.slide) === 0) {
+                        return;
+                      }
+                      // Handle assessment click
                       console.log('Assessment clicked:', assessment);
                       // Dispatch action to select this assessment and clear video selection
                       dispatch(setSelectedAssessmentId(assessmentId));
                       handleVideoSelect(index, false); // Clear video selection when assessment is selected
                     }}
                     className={`relative flex-shrink-0 ${isMobile ? "w-[150px] h-[45px]" : "w-[119px] h-[68px]"
-                      } rounded-lg transition-all duration-200 overflow-visible scroll-ml-4 cursor-pointer ${isAssessmentSelected
+                      } rounded-lg transition-all duration-200 overflow-visible scroll-ml-4 ${isAssessmentSelected
                         ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
                         : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
+                      }
+                    ${!canSkipVideo && hasLocalProgress(video.slide) === 0
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
                       }`}
                   >
                     {/* Assessment Info Container */}
