@@ -12,6 +12,8 @@ import unlocked from "../../assets/svg/unlocked.svg";
 import completed from "../../assets/svg/completed.svg";
 import dueSoon from "../../assets/svg/due-soon.svg";
 import FeedbackSuccessModal from "../modals/FeedbackSuccessModal";
+import { useDispatch } from "react-redux";
+import { setSelectedAssessmentId } from "@/store/features/videoSlice";
 
 // Course data matching Figma design
 const presentations = {
@@ -252,6 +254,7 @@ const Home = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const { capture } = usePostHog();
+  const dispatch = useDispatch();
 
   // Check for feedback success parameter
   useEffect(() => {
@@ -274,7 +277,7 @@ const Home = () => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-
+    dispatch(setSelectedAssessmentId(null));
     return () => clearInterval(timer);
   }, []);
   const {
