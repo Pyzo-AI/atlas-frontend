@@ -244,7 +244,7 @@ const SlideVideoSection = ({
   }, []);
 
   const videoIndex = answerPptIndex !== null ? answerPptIndex : currentVideoIndex;
-
+console.log(selectedAssessmentId,"selectedAssessmentId")
   if (selectedAssessmentId) {
     return <InModuleAssessment videos={videos} assessmentDetails={assessmentDetails} />
   }
