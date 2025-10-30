@@ -1,21 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useGetAssessmentQuery, useSubmitAssessmentMutation } from "@/store/api/questionsApi";
-import { showResultModal } from "@/store/features/resultModalSlice";
 import { setSelectedAssessmentId, setCurrentVideoIndex, setCurrentSlide, setCurrentVideoTime } from "@/store/features/videoSlice";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { toast } from "react-toastify";
 import { useParams } from "next/navigation";
+import ResultModal from "@/components/modals/ResultModal";
 
-const InModuleAssessment = ({ videos = [] }) => {
+const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
   const dispatch = useDispatch();
   const { selectedAssessmentId, currentVideoIndex } = useSelector((state) => state.video);
   const presentationId = useParams().id;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [assessmentStartTime, setAssessmentStartTime] = useState(null);
+  const [showResultModalLocal, setShowResultModalLocal] = useState(false);
+  const [resultData, setResultData] = useState(null);
   const { capture } = usePostHog();
+
+  // Check if this is a final assessment (from assessment_details)
+  const isFinalAssessment = assessmentDetails.some(assessment => assessment.id === selectedAssessmentId);
+
+  // Debug logging to verify detection
+  console.log('Assessment Detection Debug:', {
+    selectedAssessmentId,
+    assessmentDetails,
+    isFinalAssessment,
+    assessmentDetailsIds: assessmentDetails.map(a => a.id)
+  });
 
   // Fetch assessment data
   const {
@@ -205,14 +218,29 @@ const InModuleAssessment = ({ videos = [] }) => {
 
       console.log('Assessment results:', resultData);
 
-      // Show result modal
-      dispatch(showResultModal(resultData));
+      // Show result modal only for final assessments
+      if (isFinalAssessment) {
+        console.log('Showing ResultModal for final assessment:', selectedAssessmentId);
+        // Use actual values from API response instead of dummy values
+        const modalData = {
+          score: assessmentResponse.percentage,
+          presentationId: presentationId,
+          assessmentId: selectedAssessmentId,
+          totalQuestions: assessmentResponse.max_score,
+          correctAnswers: assessmentResponse.score
+        };
+        setResultData(modalData);
+        setShowResultModalLocal(true);
+      } else {
+        console.log('Skipping ResultModal for middle assessment:', selectedAssessmentId);
+        dispatch(setSelectedAssessmentId(null));
+      }
+
 
       // Clear selected assessment
-      dispatch(setSelectedAssessmentId(null));
 
       // Auto-progress to next video (similar to VideoPanel logic)
-      if (videos && videos.length > 0) {
+      if (!isFinalAssessment && videos && videos.length > 0) {
         const nextVideoIndex = currentVideoIndex + 1;
 
         if (nextVideoIndex < videos.length) {
@@ -399,6 +427,42 @@ const InModuleAssessment = ({ videos = [] }) => {
           }
         }
       `}</style>
+
+      {/* Result Modal - Only for final assessments */}
+      {isFinalAssessment && showResultModalLocal && resultData && (
+        <ResultModal
+          isOpen={showResultModalLocal}
+          onClose={() => {
+            console.log('Closing ResultModal');
+            setShowResultModalLocal(false);
+            setResultData(null);
+          }}
+          score={resultData?.score}
+          presentationId={resultData?.presentationId}
+          assessmentId={resultData?.assessmentId}
+          totalQuestions={resultData?.totalQuestions}
+          correctAnswers={resultData?.correctAnswers}
+          onRetry={() => {
+            // Handle retry logic
+            console.log('Retrying assessment');
+            setShowResultModalLocal(false);
+            setResultData(null);
+            setCurrentQuestionIndex(0);
+            setAnswers({});
+            setAssessmentStartTime(null);
+            toast.info("Assessment reset. You can try again.");
+          }}
+          onRestartTraining={() => {
+            // Handle restart training logic
+            console.log('Restarting training');
+            setShowResultModalLocal(false);
+            setResultData(null);
+            dispatch(setSelectedAssessmentId(null));
+            dispatch(setCurrentVideoIndex(0));
+            toast.info("Restarting training from the beginning.");
+          }}
+        />
+      )}
     </div>
   );
 };

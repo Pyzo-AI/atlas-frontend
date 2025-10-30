@@ -45,6 +45,7 @@ const PPTSection = ({
           currentVideoTime={currentVideoTime + 0.1}
           isVideoPlaying={isVideoPlaying}
           videoDuration={videoDuration}
+          assessmentDetails={assessmentDetails}
         />
       </div>
 

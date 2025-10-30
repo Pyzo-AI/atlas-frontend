@@ -8,6 +8,7 @@ const SlideVideoSection = ({
   currentVideoTime = 0,
   isVideoPlaying = false,
   videoDuration = 0,
+  assessmentDetails = [],
 }) => {
   const slideVideoRef = useRef(null);
   const preloadSlideVideoRef = useRef(null); // For preloading next slide video
@@ -245,7 +246,7 @@ const SlideVideoSection = ({
   const videoIndex = answerPptIndex !== null ? answerPptIndex : currentVideoIndex;
 
   if (selectedAssessmentId) {
-    return <InModuleAssessment videos={videos} />
+    return <InModuleAssessment videos={videos} assessmentDetails={assessmentDetails} />
   }
 
   if (!videos?.[videoIndex]?.slide_video) {
