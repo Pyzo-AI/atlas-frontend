@@ -88,6 +88,16 @@ const presentations = {
 };
 
 const PresentationCard = ({ presentation, onClick, currentTime }) => {
+  const formatDuration = (seconds) => {
+    const totalMinutes = Math.floor(seconds / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    if (hours > 0) {
+      return `${hours}hr ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
   const getUnlockMessage = (targetTime) => {
     const target = new Date(targetTime);
     const diff = target - currentTime;
@@ -220,6 +230,13 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
             <h3 className="font-lato font-semibold text-sm sm:text-[16px] leading-tight sm:leading-[19px] text-[#1D1F2C] flex-grow">
               {presentation?.title || "Unknown Title"}
             </h3>
+           {presentation?.presentation_duration > 0 && presentation?.presentation_duration && (
+              <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-[#744FFF]">
+                <span className="font-lato font-medium text-[11px] leading-4 text-white">
+                  {formatDuration(presentation.presentation_duration)}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between items-start gap-2 sm:gap-[8px] w-full">
