@@ -1,15 +1,23 @@
 import React, { useRef, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setSelectedAssessmentId } from "@/store/features/videoSlice";
 import InModuleAssessment from "./InModuleAssessment";
+import VideoPlayerContainer from "../VideoPlayerContainer";
 
 const SlideVideoSection = ({
   videos,
-  currentVideoIndex,
   currentVideoTime = 0,
   isVideoPlaying = false,
   videoDuration = 0,
   assessmentDetails = [],
+  isOnlyVideoMode = false,
+  onVideoIndexChange,
+  presentationId,
+  canSkipVideo,
+  assessmentId
 }) => {
+  const dispatch = useDispatch();
+  const { currentVideoIndex } = useSelector((state) => state.video);
   const slideVideoRef = useRef(null);
   const preloadSlideVideoRef = useRef(null); // For preloading next slide video
   const [isVideoLoading, setIsVideoLoading] = useState(true);
@@ -20,7 +28,6 @@ const SlideVideoSection = ({
   const [isLoadingNewVideo, setIsLoadingNewVideo] = useState(false);
   const playPromiseRef = useRef(null);
   const { answerPptIndex, selectedAssessmentId } = useSelector((state) => state.video);
-
   // Sync slide video with trainer video time
   useEffect(() => {
     // Don't sync timing when answerPptIndex is not null
@@ -244,9 +251,44 @@ const SlideVideoSection = ({
   }, []);
 
   const videoIndex = answerPptIndex !== null ? answerPptIndex : currentVideoIndex;
-console.log(selectedAssessmentId,"selectedAssessmentId")
+
   if (selectedAssessmentId) {
-    return <InModuleAssessment videos={videos} assessmentDetails={assessmentDetails} />
+    return <InModuleAssessment videos={videos} assessmentDetails={assessmentDetails} />;
+  }
+
+  if (isOnlyVideoMode) {
+    // Use VideoPlayerContainer when there's no trainer video
+    return (
+      <div className="w-full h-full bg-black rounded-xl overflow-hidden flex justify-center">
+        <VideoPlayerContainer
+          key={`video-player-${currentVideoIndex}`}
+          videos={videos}
+          currentVideoIndex={currentVideoIndex}
+          presentationId={presentationId}
+          canSkipVideo={canSkipVideo}
+          className="w-[calc(100%-230px)] h-full max-w-full"
+          autoPlayEnabled={true}
+          isOnlyVideoMode={true}
+          onVideoEnd={() => {
+            const currentVideo = videos[currentVideoIndex];
+            const currentVideoAssessmentId = currentVideo?.slide_assessments?.[0]?.id;
+            if (currentVideoAssessmentId) {
+              console.log(currentVideoAssessmentId, "currentVideoAssessmentId");
+              dispatch(setSelectedAssessmentId(currentVideoAssessmentId));
+              return;
+            }
+            
+            const nextIndex = currentVideoIndex + 1;
+            if (nextIndex < videos.length && onVideoIndexChange) {
+              console.log("Moving to next video:", nextIndex);
+              onVideoIndexChange(nextIndex);
+            } else {
+                 dispatch(setSelectedAssessmentId(assessmentId));
+            }
+          }}
+        />
+      </div>
+    );
   }
 
   if (!videos?.[videoIndex]?.slide_video) {
