@@ -36,7 +36,7 @@ export default function ResultModal({
       actualTotalQuestions,
       actualCorrectAnswers,
       isPerfectScore,
-    }
+    },
   });
 
   const handleRetry = () => {
@@ -62,19 +62,19 @@ export default function ResultModal({
       onClose={onClose}
       closeOnOverlayClick={false}
       closeOnEscape={false}
-      size="md"
-      className="overflow-hidden mx-4 sm:mx-0 rounded-3xl">
-      <div className="p-8 bg-white text-center">
+      size="custom"
+      className="overflow-hidden mx-4 sm:mx-0 rounded-3xl w-[398px] bg-white">
+      <div className="p-6 bg-white text-center">
         {/* Score Circle */}
-        <div className="relative flex justify-center w-32 h-32 mx-auto">
+        <div className="relative flex justify-center mx-auto mb-5">
           {isPerfectScore ? (
             // Perfect Score - Simple Green Circle
-            <div className="w-24 h-24 border-4 border-[#00A63E] rounded-full flex items-center justify-center">
+            <div className="w-20 h-20 border-4 border-[#00A63E] rounded-full flex items-center justify-center">
               <span className="text-2xl font-bold text-[#00A63E]">{Math.round(actualPercentage)}%</span>
             </div>
           ) : (
             // Partial Score - Progress Circle
-            <div className="relative w-32 h-32">
+            <div className="relative w-20 h-20">
               <svg className="w-full h-full" viewBox="0 0 36 36">
                 {/* Background circle */}
                 <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#E5E7EB" strokeWidth="2" />
@@ -100,22 +100,34 @@ export default function ResultModal({
         </div>
 
         {/* Title */}
-        <h1 className="text-xl font-bold text-[#1A1C29] mb-1">
+        <h1 className="font-lato font-bold text-[20px] leading-[100%] tracking-[0em] text-[#1A1C29] mb-2">
           {isPerfectScore ? "Congratulations! 🎉" : "You're on the right track!"}
         </h1>
 
         {/* Subtitle */}
-        <p className="text-[#555] mb-1">
-          {isPerfectScore
-            ? "You've mastered the training with a perfect score!"
-            : `You correctly answered ${actualCorrectAnswers} out of ${actualTotalQuestions} questions`}
+        <p className="font-lato font-medium text-[14px] leading-[100%] tracking-[0em] text-center text-[#1A1C29CC] mb-2">
+          {isPerfectScore ? (
+            "You've mastered the training with a perfect score!"
+          ) : (
+            <>
+              You correctly answered{" "}
+              <span className="font-lato font-bold text-[14px] leading-[100%] tracking-[0em] text-center text-[#744FFF]">
+                {actualCorrectAnswers}
+              </span>{" "}
+              out of{" "}
+              <span className="font-lato font-bold text-[14px] leading-[100%] tracking-[0em] text-center text-[#744FFF]">
+                {actualTotalQuestions}
+              </span>{" "}
+              questions
+            </>
+          )}
         </p>
 
         {/* Warning message for non-perfect scores */}
         {!isPerfectScore && (
-          <div className="bg-yellow-50  rounded-2xl px-3 py-1 mb-2">
-            <p className="text-[#B69C09] text-sm">
-              Mastery is within reach. A perfect score of 100% is needed to continue.
+          <div className="bg-[#FFFBEA]  rounded-2xl px-1.5 py-2 mb-6">
+            <p className="font-lato font-normal text-[14px] leading-[16px] tracking-[0em] text-center text-[#B69C09]">
+             Mastery is within reach. A perfect score of {passingScore}% is needed to complete the module.
             </p>
           </div>
         )}
@@ -125,20 +137,20 @@ export default function ResultModal({
           {isPerfectScore ? (
             <button
               onClick={showFeedback}
-              className="w-full bg-[#744FFF] hover:bg-[#6B46E5] text-white py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg mt-5">
+              className="cursor-pointer w-full bg-[#744FFF] hover:bg-[#6B46E5] text-white py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg mt-5">
               Continue
             </button>
           ) : (
             <div className="flex gap-3">
               <button
-                onClick={handleRestartTraining}
-                className="w-full bg-purple-100 hover:bg-purple-200 text-[#744FFF] py-2 rounded-4xl font-semibold text-lg transition-all duration-200">
-                Restart Training
+                onClick={showFeedback}
+                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-[rgba(116,79,255,0.12)] hover:bg-[rgba(116,79,255,0.2)] text-[#744FFF] font-semibold text-base rounded-[73.75px] transition-all duration-200 flex-1">
+                Give Feedback
               </button>
               <button
-                onClick={showFeedback}
-                className="w-full bg-[#744FFF] hover:bg-[#6B46E5] text-white py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg">
-                Give Feedback
+                onClick={handleRestartTraining}
+                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-[#744FFF] hover:bg-[#6B46E5] text-white font-semibold text-base rounded-[73.75px] transition-all duration-200 flex-1">
+                Restart Training
               </button>
             </div>
           )}

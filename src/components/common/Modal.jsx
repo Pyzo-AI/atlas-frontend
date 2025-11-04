@@ -52,7 +52,8 @@ export default function Modal({
     "2xl": "max-w-2xl w-full",
     "3xl": "max-w-3xl w-full",
     "4xl": "max-w-4xl w-full",
-    full: "w-full h-full"
+    full: "w-full h-full",
+    custom: "" // No size constraints for custom sizing
   };
 
   return (
@@ -64,7 +65,7 @@ export default function Modal({
       />
 
       {/* Modal Content */}
-      <div className={`relative bg-white rounded-lg shadow-xl ${sizeClasses[size]} ${className}`}>
+      <div className={`relative ${size === 'custom' ? '' : 'bg-white rounded-lg shadow-xl'} ${sizeClasses[size]} ${className}`}>
         {/* Close button */}
         {showCloseButton && (
           <button
