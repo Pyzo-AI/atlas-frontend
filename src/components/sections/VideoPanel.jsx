@@ -725,7 +725,7 @@ const VideoPanel = forwardRef(
             onPauseAnswerAudio();
           }
 
-          const playPromise = videoRef.current.play();
+          const playPromise = videoRef?.current?.play();
           if (playPromise !== undefined) {
             playPromise
               .then(() => {
