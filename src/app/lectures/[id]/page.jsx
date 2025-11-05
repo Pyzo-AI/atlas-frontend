@@ -48,89 +48,105 @@ const RotationPrompt = () => {
 
 // Combined components moved outside to prevent re-creation on every render
 const CombinedBreadCrumb = React.memo(({ data }) => {
-  return <BreadCrumb
-    paths={[
-      { path: "/", label: "All Courses" },
-      {
-        path: "/lectures/123",
-        label: data?.presentation_name || "Untitled Presentation",
-      },
-    ]}
-  />
-})
-
-const CombinedPPTSection = React.memo(({
-  isMobile = false,
-  isPhone = false,
-  videos,
-  isLoading,
-  pptVideoIndex,
-  pptSyncState,
-  videoState,
-  data,
-  canSkipVideo
-}) => {
-  const width = isMobile ? "100%" : "70%";
-
   return (
-    <PPTSection
-      videos={videos}
-      loading={isLoading}
-      currentVideoIndex={pptVideoIndex}
-      currentVideoTime={pptSyncState.currentTime}
-      isVideoPlaying={pptSyncState.isPlaying}
-      videoDuration={videoState.duration}
-      width={width}
-      title={data?.presentation_name || "Untitled Presentation"}
-      author={data?.presentation_author || "Unknown"}
-      isMobileView={isMobile}
-      isPhoneView={isPhone}
-      canSkipVideo={canSkipVideo}
-      assessmentDetails={data?.assessment_details || []}
+    <BreadCrumb
+      paths={[
+        { path: "/", label: "All Courses" },
+        {
+          path: "/lectures/123",
+          label: data?.presentation_name || "Untitled Presentation",
+        },
+      ]}
     />
   );
-})
+});
 
-const CombinedVideoPanel = React.memo(({
-  isMobile = false,
-  isPhone = false,
-  videoPanelRef,
-  videos,
-  isLoading,
-  handleVideoStateChange,
-  handlePauseVideo,
-  handlePauseAnswerAudio,
-  presentationId,
-  data,
-  conversationHistory,
-  setConversationHistory,
-  canSkipVideo,
-  assessmentId
-}) => {
-  const width = isMobile ? "100%" : "30%";
+const CombinedPPTSection = React.memo(
+  ({
+    isMobile = false,
+    isPhone = false,
+    videos,
+    isLoading,
+    pptVideoIndex,
+    pptSyncState,
+    videoState,
+    data,
+    canSkipVideo,
+    presentationId,
+    onVideoIndexChange,
+    isOnlyVideoMode,
+    assessmentId
+  }) => {
+    const width = isMobile ? "100%" : "70%";
 
-  return (
-    <VideoPanel
-      ref={videoPanelRef}
-      videos={videos}
-      loading={isLoading}
-      onVideoStateChange={handleVideoStateChange}
-      onPauseVideo={handlePauseVideo}
-      onPauseAnswerAudio={handlePauseAnswerAudio}
-      width={width}
-      presentationId={presentationId}
-      isMobileView={isMobile}
-      isPhoneView={isPhone}
-      agentId={data?.presentation_agent_id}
-      avatarUrl={data?.presentation_trainer_image}
-      conversationHistory={conversationHistory}
-      setConversationHistory={setConversationHistory}
-      isPresentationQuizPassed={data?.is_presentation_quiz_passed || false}
-      canSkipVideo={canSkipVideo}
-      assessmentId={assessmentId}
-    />
-  );
-})
+    return (
+      <PPTSection
+        videos={videos}
+        loading={isLoading}
+        currentVideoIndex={pptVideoIndex}
+        currentVideoTime={pptSyncState.currentTime}
+        isVideoPlaying={pptSyncState.isPlaying}
+        videoDuration={videoState.duration}
+        width={width}
+        title={data?.presentation_name || "Untitled Presentation"}
+        author={data?.presentation_author || "Unknown"}
+        isMobileView={isMobile}
+        isPhoneView={isPhone}
+        canSkipVideo={canSkipVideo}
+        assessmentDetails={data?.assessment_details || []}
+        presentationId={presentationId}
+        onVideoIndexChange={onVideoIndexChange}
+        isOnlyVideoMode={isOnlyVideoMode}
+        assessmentId={assessmentId}
+      />
+    );
+  }
+);
+
+const CombinedVideoPanel = React.memo(
+  ({
+    isMobile = false,
+    isPhone = false,
+    videoPanelRef,
+    videos,
+    isLoading,
+    handleVideoStateChange,
+    handlePauseVideo,
+    handlePauseAnswerAudio,
+    presentationId,
+    data,
+    conversationHistory,
+    setConversationHistory,
+    canSkipVideo,
+    assessmentId,
+    isOnlyVideoMode,
+  }) => {
+    const width = isMobile ? "100%" : "30%";
+
+    return (
+      <VideoPanel
+        ref={videoPanelRef}
+        videos={videos}
+        loading={isLoading}
+        onVideoStateChange={handleVideoStateChange}
+        onPauseVideo={handlePauseVideo}
+        onPauseAnswerAudio={handlePauseAnswerAudio}
+        width={width}
+        presentationId={presentationId}
+        isMobileView={isMobile}
+        isPhoneView={isPhone}
+        agentId={data?.presentation_agent_id}
+        avatarUrl={data?.presentation_trainer_image}
+        conversationHistory={conversationHistory}
+        setConversationHistory={setConversationHistory}
+        isPresentationQuizPassed={data?.is_presentation_quiz_passed || false}
+        canSkipVideo={canSkipVideo}
+        assessmentId={assessmentId}
+        isOnlyVideoMode={isOnlyVideoMode}
+      />
+    );
+  }
+);
 
 const Home = () => {
   const params = useParams();
@@ -139,18 +155,16 @@ const Home = () => {
   const { data, isLoading } = useGetAllVideoQuery(presentationId, {
     refetchOnMountOrArgChange: true,
   });
-  const videos = data?.data?.filter((video) => video?.trainer_video && video?.trainer_video?.trim() !== "");
+  const videos = data?.data;
   const userName = getUserDetailsFromToken()?.preferred_username;
   const assessmentId = data?.assessment_details?.[0]?.id;
-
-
 
   const canSkipVideo = data?.hasOwnProperty("is_skippable") ? data.is_skippable : !userName?.includes("jeenaseekho");
 
   const pathname = usePathname();
   const videoPanelRef = useRef(null);
   const dispatch = useDispatch();
-  const { pptVideoIndex } = useSelector((state) => state.video);
+  const { pptVideoIndex,currentVideoIndex } = useSelector((state) => state.video);
   const isPortrait = usePortraitMode();
 
   // Device detection for different layouts
@@ -158,7 +172,8 @@ const Home = () => {
   const isTablet = typeof window !== "undefined" && window.innerWidth > 956 && window.innerWidth <= 1024;
   const isMobileDevice = isPhone || isTablet;
   const isLandscape = !isPortrait && isMobileDevice;
-
+  const isOnlyVideoMode = videos?.[currentVideoIndex]?.trainer_video === null;
+ console.log(isOnlyVideoMode ,"isOnlyVideoMode123");
   // Shared video state for synchronization
   const [videoState, setVideoState] = useState({
     currentTime: 0,
@@ -205,6 +220,11 @@ const Home = () => {
         audio.pause();
       }
     });
+  };
+
+  // Handle video index change from PPT section
+  const handleVideoIndexChange = (newIndex) => {
+    dispatch(setCurrentVideoIndex(newIndex));
   };
 
   // Submit video progress to API
@@ -365,7 +385,8 @@ const Home = () => {
       const apiCurrentSlideDuration = data.current_slide_duration;
 
       // Find the index in the filtered videos list that matches the API current slide
-      const allVideos = data.data.filter((video) => video?.trainer_video && video?.trainer_video?.trim() !== "");
+      // const allVideos = data.data.filter((video) => video?.trainer_video && video?.trainer_video?.trim() !== "");
+      const allVideos = data.data;
 
       const idx = allVideos.findIndex((v) => v.slide === apiCurrentSlide);
 
@@ -392,13 +413,13 @@ const Home = () => {
           // Check for middle assessments (slide_assessments)
           if (slideObj?.slide_assessments && slideObj.slide_assessments.length > 0) {
             const firstAssessment = slideObj.slide_assessments[0];
-            console.log('Auto-selecting middle assessment for completed video:', firstAssessment.id);
+            console.log("Auto-selecting middle assessment for completed video:", firstAssessment.id);
             dispatch(setSelectedAssessmentId(firstAssessment.id));
           }
           // Check if this is the last video and there's a final assessment
           else if (idx === allVideos.length - 1 && data.assessment_details && data.assessment_details.length > 0) {
             const finalAssessment = data.assessment_details[0];
-            console.log('Auto-selecting final assessment for completed training:', finalAssessment.id);
+            console.log("Auto-selecting final assessment for completed training:", finalAssessment.id);
             dispatch(setSelectedAssessmentId(finalAssessment.id));
           }
         }
@@ -411,9 +432,6 @@ const Home = () => {
   if (isLoading) {
     return <PageSkeleton />;
   }
-
-
-
 
   if (isLandscape && (isPhone || isTablet)) {
     // Dynamic width ratios
@@ -447,6 +465,10 @@ const Home = () => {
                 videoState={videoState}
                 data={data}
                 canSkipVideo={canSkipVideo}
+                presentationId={presentationId}
+                onVideoIndexChange={handleVideoIndexChange}
+                isOnlyVideoMode={isOnlyVideoMode}
+                assessmentId={assessmentId}
               />
             </div>
 
@@ -467,12 +489,14 @@ const Home = () => {
                 setConversationHistory={setConversationHistory}
                 canSkipVideo={canSkipVideo}
                 assessmentId={assessmentId}
+                onVideoIndexChange={handleVideoIndexChange}
+                isOnlyVideoMode={isOnlyVideoMode}
               />
             </div>
           </div>
         </div>
       </FullscreenController>
-    )
+    );
   }
 
   return (
@@ -493,6 +517,10 @@ const Home = () => {
                 videoState={videoState}
                 data={data}
                 canSkipVideo={canSkipVideo}
+                presentationId={presentationId}
+                onVideoIndexChange={handleVideoIndexChange}
+                isOnlyVideoMode={isOnlyVideoMode}
+                assessmentId={assessmentId}
               />
               <CombinedVideoPanel
                 videoPanelRef={videoPanelRef}
@@ -507,6 +535,8 @@ const Home = () => {
                 setConversationHistory={setConversationHistory}
                 canSkipVideo={canSkipVideo}
                 assessmentId={assessmentId}
+                onVideoIndexChange={handleVideoIndexChange}
+                isOnlyVideoMode={isOnlyVideoMode}
               />
             </div>
           </div>

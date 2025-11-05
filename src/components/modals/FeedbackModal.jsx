@@ -7,6 +7,9 @@ import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
 import { useSubmitFeedbackMutation } from "@/store/api/questionsApi";
 import review_image from "@/assets/svg/review.svg";
+import unrated_start from '@/assets/svg/unrated_start.svg';
+import rated_start from '@/assets/svg/rated_start.svg';
+import half_rated_star from '@/assets/svg/half_rated_star.svg';
 import Image from "next/image";
 
 export default function FeedbackModal({ isOpen, onClose, presentationId }) {
@@ -95,32 +98,29 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
           </div>
 
           {/* Rating Section */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((star) => {
               const currentRating = hoveredStar || rating;
               const isFullStar = star <= currentRating;
               const isHalfStar = star - 0.5 === currentRating;
-
+              
+              let starSrc = unrated_start;
+              if (isFullStar) {
+                starSrc = rated_start;
+              } else if (isHalfStar) {
+                starSrc = half_rated_star;
+              }
+              
               return (
                 <div key={star} className="relative w-8 h-8">
-                  {/* Star SVG */}
-                  <svg
-                    className="w-8 h-8 cursor-pointer transition-colors"
-                    viewBox="0 0 24 24"
-                    fill={isFullStar ? "#FCD34D" : "white"}
-                    stroke={isFullStar || isHalfStar ? "#FCD34D" : "#D1D5DB"}
-                    strokeWidth="1">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    {isHalfStar && (
-                      <defs>
-                        <linearGradient id={`half-${star}`}>
-                          <stop offset="50%" stopColor="#FCD34D" />
-                          <stop offset="50%" stopColor="#D1D5DB" />
-                        </linearGradient>
-                      </defs>
-                    )}
-                  </svg>
-
+                  <Image 
+                    src={starSrc} 
+                    alt={isFullStar ? "Rated star" : isHalfStar ? "Half rated star" : "Unrated star"} 
+                    width={32} 
+                    height={32}
+                    className="w-8 h-8"
+                  />
+                  
                   {/* Left half click area */}
                   <button
                     className="absolute left-0 top-0 w-1/2 h-full focus:outline-none cursor-pointer z-10"
@@ -128,7 +128,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
                     onMouseEnter={() => handleStarHover(star, true)}
                     onMouseLeave={handleStarLeave}
                   />
-
+                  
                   {/* Right half click area */}
                   <button
                     className="absolute right-0 top-0 w-1/2 h-full focus:outline-none cursor-pointer z-10"
@@ -159,7 +159,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
             <button
               onClick={handleSubmit}
               disabled={isSubmitDisabled || isSubmitting}
-              className={`w-1/2 py-2 rounded-4xl font-semibold text-lg transition-all duration-200 ${isSubmitDisabled || isSubmitting
+              className={`cursor-pointer w-1/2 py-2 rounded-4xl font-semibold text-lg transition-all duration-200 ${isSubmitDisabled || isSubmitting
                 ? "bg-gray-300 text-gray-600 cursor-not-allowed"
                 : "bg-[#744FFF] hover:bg-[#6B46E5] text-white shadow-lg"
                 }`}>

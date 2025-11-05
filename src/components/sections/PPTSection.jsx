@@ -18,6 +18,10 @@ const PPTSection = ({
   isPhoneView = false,
   canSkipVideo = true,
   assessmentDetails = [],
+  presentationId,
+  onVideoIndexChange,
+  isOnlyVideoMode,
+  assessmentId
 }) => {
   return (
     <div
@@ -41,11 +45,15 @@ const PPTSection = ({
       >
         <SlideVideoSection
           videos={videos}
-          currentVideoIndex={currentVideoIndex}
           currentVideoTime={currentVideoTime + 0.1}
           isVideoPlaying={isVideoPlaying}
           videoDuration={videoDuration}
           assessmentDetails={assessmentDetails}
+          isOnlyVideoMode={isOnlyVideoMode}
+          presentationId={presentationId}
+          onVideoIndexChange={onVideoIndexChange}
+          canSkipVideo={canSkipVideo}
+          assessmentId = {assessmentId}
         />
       </div>
 
