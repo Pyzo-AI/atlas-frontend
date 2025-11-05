@@ -47,7 +47,7 @@ export default function FeedbackSuccessModal({ isOpen, onClose }) {
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="w-2/3 bg-[#744FFF] hover:bg-[#6B46E5] text-white py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg">
+          className="cursor-pointer w-2/3 bg-[#744FFF] hover:bg-[#6B46E5] text-white py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg">
           Close
         </button>
       </div>

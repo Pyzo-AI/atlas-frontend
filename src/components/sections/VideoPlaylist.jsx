@@ -321,14 +321,22 @@ const VideoPlaylist = ({
             <div
               key="final-assessment"
               onClick={() => {
+                // Check if final assessment should be accessible
+                if (!canSkipVideo && !assessmentDetails[0]?.passed && !isVideoCompleted(videos[videos.length - 1]?.slide)) {
+                  return;
+                }
                 const finalAssessment = assessmentDetails[0]; // Take the first assessment
                 console.log('Final assessment clicked:', finalAssessment);
                 dispatch(setSelectedAssessmentId(finalAssessment.id));
               }}
               className={`relative flex-shrink-0 ${isMobile ? "w-[150px] h-[45px]" : "w-[119px] h-[68px]"
-                } rounded-lg transition-all duration-200 overflow-visible scroll-ml-4 cursor-pointer ${selectedAssessmentId === assessmentDetails[0]?.id
+                } rounded-lg transition-all duration-200 overflow-visible scroll-ml-4 ${selectedAssessmentId === assessmentDetails[0]?.id
                   ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
                   : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
+                }
+              ${!canSkipVideo && !assessmentDetails[0]?.passed && !isVideoCompleted(videos[videos.length - 1]?.slide)
+                  ? "opacity-50 cursor-not-allowed"
+                  : "cursor-pointer"
                 }`}
             >
               {/* Final Assessment Info Container */}

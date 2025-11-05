@@ -22,7 +22,7 @@ import { usePostHog } from "@/hooks/usePostHog";
 import { updateVideoProgress, startVideoSession } from "@/utils/videoProgress";
 import redirecting_logo from "@/assets/svg/redirecting.svg";
 import Image from "next/image";
-import VideoPlayer from "@/components/VideoPlayer";
+import VideoPlayerContainer from "@/components/VideoPlayerContainer";
 
 // Conversation history management for VideoPanel
 const {
@@ -85,6 +85,7 @@ const VideoPanel = forwardRef(
       isPresentationQuizPassed,
       canSkipVideo = false,
       assessmentId,
+      isOnlyVideoMode = false,
     },
     ref
   ) => {
@@ -98,29 +99,11 @@ const VideoPanel = forwardRef(
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
     const [lastVideoSrc, setLastVideoSrc] = useState("");
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
     const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
-    const [previousTime, setPreviousTime] = useState(0);
-    // Use a ref to reliably capture the previous time across event handlers
-    const previousTimeRef = useRef(0);
-    // Track whether a seek is in progress to avoid racing with onTimeUpdate
-    const isSeekingRef = useRef(false);
-    // Keep a short rolling buffer of recent timeupdate values to infer pre-seek time
-    const timeSamplesRef = useRef([]);
-    // When we programmatically restore the time to block a user seek we mark this ref
-    // so we can ignore the resulting seek events.
-    const blockedSeekRef = useRef(false);
-    const skipBackwardRef = useRef(false);
     // Slide view tracking
     const [slideViewStartTime, setSlideViewStartTime] = useState("");
     const [videoStartTime, setVideoStartTime] = useState(0);
-    // Persistent video settings
-    const [videoSettings, setVideoSettings] = useState({
-      muted: false,
-      playbackRate: 1.0,
-      volume: 1.0,
-    });
+
     const videoRef = useRef(null);
     const activeVideoRef = useRef(null);
     const preloadVideoRef = useRef(null); // For preloading next video
@@ -357,7 +340,6 @@ const VideoPanel = forwardRef(
     const [countdown, setCountdown] = useState(10);
     const [preloadedVideoIndex, setPreloadedVideoIndex] = useState(-1);
     const [initialVideoTime, setInitialVideoTime] = useState(0);
-    const [isSkippingBackward, setIsSkippingBackward] = useState(false);
 
     // Function to stop conversation
     const stopAnswerAudio = () => {
@@ -423,18 +405,20 @@ const VideoPanel = forwardRef(
         // Notify parent about pause state change
         if (onVideoStateChange) {
           onVideoStateChange({
-            currentTime,
+            currentTime: videoRef.current?.getCurrentTime() || 0,
             isPlaying: false,
             currentVideoIndex,
-            duration,
+            duration: videoRef.current?.getDuration() || 0,
           });
         }
       }
     };
 
-    // Expose pauseVideo method to parent component
+    // Expose methods to parent component
     useImperativeHandle(ref, () => ({
       pauseVideo,
+      getCurrentTime: () => videoRef.current?.getCurrentTime() || 0,
+      getDuration: () => videoRef.current?.getDuration() || 0,
     }));
 
     // Note: Video settings are now handled by VideoPlayer component props
@@ -450,6 +434,7 @@ const VideoPanel = forwardRef(
           const prevVideoIndex = videos.findIndex((v) => v.trainer_video === lastVideoSrc);
           if (prevVideoIndex !== -1) {
             const prevVideo = videos[prevVideoIndex];
+            const currentTime = videoRef.current?.getCurrentTime() || 0;
             updateVideoProgress(presentationId, prevVideo.slide, Math.floor(currentTime - videoStartTime));
           }
         }
@@ -552,38 +537,7 @@ const VideoPanel = forwardRef(
       }
     }, [currentVideoIndex]);
 
-    // Preload next video when current video is near completion
-    useEffect(() => {
-      const preloadThreshold = 10; // Start preloading 10 seconds before video ends
 
-      if (duration > 0 && currentTime > 0) {
-        const timeRemaining = duration - currentTime;
-        const nextVideoIndex = currentVideoIndex + 1;
-
-        // Check if we should preload the next video
-        if (
-          timeRemaining <= preloadThreshold &&
-          nextVideoIndex < videos.length &&
-          preloadedVideoIndex !== nextVideoIndex &&
-          videos[nextVideoIndex]?.trainer_video
-        ) {
-          console.log(`Preloading video ${nextVideoIndex}...`);
-
-          // Video.js handles preloading internally, just track the index
-          console.log(`Next video ${nextVideoIndex} will be preloaded by Video.js`);
-          setPreloadedVideoIndex(nextVideoIndex);
-
-          // Optional: Preload poster/thumbnail
-          if (videos[nextVideoIndex]?.thumbnail) {
-            const img = new window.Image();
-            img.src = videos[nextVideoIndex].thumbnail;
-            // console.log("Preloading thumbnail:", videos[nextVideoIndex]?.thumbnail);
-            // img.src =
-            //   "https://cdn-api.epic.dev.esmagico.in/trainboost/slides/thumb.png";
-          }
-        }
-      }
-    }, [currentTime, duration, currentVideoIndex, videos, preloadedVideoIndex]);
 
     // Sync PPT to video panel when video starts playing
     useEffect(() => {
@@ -607,6 +561,7 @@ const VideoPanel = forwardRef(
     const handleVideoEnd = () => {
       // Save progress for completed video
       const currentVideo = videos?.[currentVideoIndex];
+      const currentTime = videoRef.current?.getCurrentTime() || 0;
       if (currentVideo) {
         updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
       }
@@ -706,6 +661,7 @@ const VideoPanel = forwardRef(
       if (index !== currentVideoIndex) {
         // Save progress for current video before switching
         const currentVideo = videos[currentVideoIndex];
+        const currentTime = videoRef.current?.getCurrentTime() || 0;
         if (currentVideo) {
           updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
         }
@@ -769,7 +725,7 @@ const VideoPanel = forwardRef(
             onPauseAnswerAudio();
           }
 
-          const playPromise = videoRef.current.play();
+          const playPromise = videoRef?.current?.play();
           if (playPromise !== undefined) {
             playPromise
               .then(() => {
@@ -869,7 +825,7 @@ const VideoPanel = forwardRef(
         )}
 
         {/* Video Section - Responsive for both mobile and desktop */}
-        <div
+     { !isOnlyVideoMode &&  <div
           className={`cursor-pointer bg-white border border-[#E5E7EB] ${
             isMobile
               ? isPhone
@@ -882,286 +838,16 @@ const VideoPanel = forwardRef(
             className={`relative w-full bg-black overflow-hidden ${
               isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
             }`}>
-            <VideoPlayer
-              key={`trainer-video-${currentVideoIndex}-${videos?.[currentVideoIndex]?.trainer_video}`}
+            <VideoPlayerContainer
               ref={videoRef}
-              src={videos?.[currentVideoIndex]?.trainer_video}
-              className="absolute top-0 left-0 w-full h-full"
+              videos={videos}
+              currentVideoIndex={currentVideoIndex}
+              presentationId={presentationId}
               canSkipVideo={canSkipVideo}
-              onEnded={handleVideoEnd}
-              onTimeUpdate={(e) => {
-                const time = e.target.currentTime;
-
-                // Desktop-specific time tracking logic
-                if (!isMobile) {
-                  try {
-                    const samples = timeSamplesRef.current;
-                    samples.push(time);
-                    if (samples.length > 6) samples.shift();
-                    timeSamplesRef.current = samples;
-                  } catch (err) {
-                    timeSamplesRef.current = [time];
-                  }
-
-                  if (!isSeekingRef.current) {
-                    previousTimeRef.current = currentTime;
-                    setPreviousTime(currentTime);
-                  }
-                }
-
-                setCurrentTime(time);
-                dispatch(setCurrentVideoTime(time));
-
-                // Update video progress for desktop
-                if (!isMobile) {
-                  const currentVideo = videos?.[currentVideoIndex];
-                  if (currentVideo && !e.target.paused) {
-                    updateVideoProgress(presentationId, currentVideo.slide, Math.floor(time));
-                  }
-                }
-
-                onVideoStateChange?.({
-                  currentTime: time,
-                  isPlaying: !e.target.paused,
-                  currentVideoIndex,
-                  duration: e.target.duration || duration,
-                });
-              }}
-              onSeeking={() => {
-                console.log("Seeking event triggered, isSkippingBackward:", isSkippingBackward);
-
-                // Desktop-specific seeking logic
-                if (!isMobile) {
-                  // Don't interfere with skip backward operations
-                  if (isSkippingBackward || skipBackwardRef.current) {
-                    console.log("Allowing seek for skip backward operation");
-                    isSeekingRef.current = true;
-                    return;
-                  }
-
-                  if (!canSkipVideo) {
-                    console.log("Preventing seek - canSkipVideo is false");
-                    const prev = previousTimeRef.current ?? currentTime;
-                    blockedSeekRef.current = true;
-                    requestAnimationFrame(() => {
-                      if (videoRef.current && Math.abs(videoRef.current.currentTime - prev) > 0.01) {
-                        try {
-                          console.log("Resetting video time from", videoRef.current.currentTime, "to", prev);
-                          videoRef.current.currentTime = prev;
-                        } catch (err) {
-                          // ignore
-                        }
-                      }
-                    });
-                    return;
-                  }
-
-                  isSeekingRef.current = true;
-                  previousTimeRef.current = videoRef.current?.currentTime || currentTime;
-                  setPreviousTime(previousTimeRef.current);
-                }
-              }}
-              onSeeked={(e) => {
-                console.log("Seeked event triggered");
-
-                // Desktop-specific seeked logic
-                if (!isMobile) {
-                  const newTime = e.target.currentTime;
-
-                  // Handle skip backward operations properly
-                  if (isSkippingBackward || skipBackwardRef.current) {
-                    console.log("Completing skip backward operation to:", newTime);
-                    isSeekingRef.current = false;
-                    previousTimeRef.current = newTime;
-                    setPreviousTime(newTime);
-                    return;
-                  }
-
-                  if (blockedSeekRef.current) {
-                    blockedSeekRef.current = false;
-                    previousTimeRef.current = newTime;
-                    setPreviousTime(newTime);
-                    return;
-                  }
-
-                  isSeekingRef.current = false;
-
-                  const samples = timeSamplesRef.current || [];
-                  const THRESHOLD = 0.3;
-                  let inferredFrom = previousTimeRef.current ?? previousTime;
-                  for (let i = samples.length - 1; i >= 0; i--) {
-                    const sample = samples[i];
-                    if (Math.abs(sample - newTime) > THRESHOLD) {
-                      inferredFrom = sample;
-                      break;
-                    }
-                  }
-
-                  const fromTime = inferredFrom;
-                  previousTimeRef.current = newTime;
-                  setPreviousTime(newTime);
-
-                  if (newTime > fromTime + 0.001) {
-                    const userDetails = getUserDetailsFromToken();
-                    const currentVideo = videos?.[currentVideoIndex];
-                    if (currentVideo) {
-                      capture("video_skip", {
-                        user_id: userDetails?.sub,
-                        video_id: currentVideo.slide,
-                        from_time: formatSeconds(fromTime),
-                        to_time: formatSeconds(newTime),
-                      });
-                    }
-                  }
-                }
-              }}
-              onLoadedMetadata={(e) => {
-                const newDuration = e.target.duration;
-                setDuration(newDuration);
-
-                // Reset initial time after it's been used
-                if (initialVideoTime > 0) {
-                  setCurrentTime(initialVideoTime);
-                  dispatch(setCurrentVideoTime(initialVideoTime));
-                  setInitialVideoTime(0); // Reset to prevent further interference
-                }
-
-                onVideoStateChange?.({
-                  currentTime: initialVideoTime || 0,
-                  isPlaying,
-                  currentVideoIndex,
-                  duration: newDuration,
-                });
-              }}
-              onCanPlay={(e) => {
-                if (!isMobile) {
-                  console.log("Trainer video can play");
-                }
-              }}
-              onPlay={() => {
-                setIsPlaying(true);
-                dispatch(setIsVideoPlaying(true));
-                dispatch(setAnswerPptIndex(null));
-                onPauseAnswerAudio?.();
-
-                if (!isMobile) {
-                  setVideoStartTime(currentTime);
-                }
-
-                const userDetails = getUserDetailsFromToken();
-                const currentVideo = videos?.[currentVideoIndex];
-                if (currentVideo) {
-                  capture("video_play", {
-                    user_id: userDetails?.sub,
-                    module_id: presentationId,
-                    video_id: currentVideo.slide,
-                    timestamp: new Date().toISOString(),
-                  });
-                }
-
-                onVideoStateChange?.({
-                  currentTime,
-                  isPlaying: true,
-                  currentVideoIndex,
-                  duration,
-                });
-              }}
-              onPause={() => {
-                setIsPlaying(false);
-                dispatch(setIsVideoPlaying(false));
-
-                const userDetails = getUserDetailsFromToken();
-                const currentVideo = videos?.[currentVideoIndex];
-                if (currentVideo) {
-                  capture("video_pause", {
-                    user_id: userDetails?.sub,
-                    video_id: currentVideo.slide,
-                    current_time: currentTime,
-                    timestamp: new Date().toISOString(),
-                  });
-                }
-
-                onVideoStateChange?.({
-                  currentTime,
-                  isPlaying: false,
-                  currentVideoIndex,
-                  duration,
-                });
-              }}
-              onLoadStart={() => {
-                if (!isMobile) {
-                  console.log("Trainer video loading started...");
-                }
-              }}
-              onVolumeChange={(e) => {
-                if (!isMobile) {
-                  const newMuted = e.target.muted;
-                  const newVolume = e.target.volume;
-
-                  if (newMuted !== videoSettings.muted || newVolume !== videoSettings.volume) {
-                    setVideoSettings((prev) => ({
-                      ...prev,
-                      muted: newMuted,
-                      volume: newVolume,
-                    }));
-                  }
-                }
-              }}
-              onRateChange={(e) => {
-                const newRate = e.target.playbackRate;
-
-                // Update video settings with new playback rate
-                if (newRate !== videoSettings.playbackRate) {
-                  setVideoSettings((prev) => ({
-                    ...prev,
-                    playbackRate: newRate,
-                  }));
-                }
-
-                // Track playback rate change event
-                const userDetails = getUserDetailsFromToken();
-                const currentVideo = videos?.[currentVideoIndex];
-                if (currentVideo) {
-                  capture("video_speed_change", {
-                    user_id: userDetails?.sub,
-                    video_id: currentVideo.slide,
-                    new_speed: newRate,
-                    timestamp: new Date().toISOString(),
-                  });
-                }
-              }}
-              poster={videos?.[currentVideoIndex]?.thumbnail}
-              autoPlay={autoPlayEnabled}
-              controls={true}
-              disablePictureInPicture={true}
-              muted={videoSettings.muted}
-              volume={videoSettings.volume}
-              playbackRate={videoSettings.playbackRate}
-              currentTime={initialVideoTime}
+              isMobile={isMobile}
+              onVideoStateChange={onVideoStateChange}
+              onVideoEnd={handleVideoEnd}
               onSkipBackward={(data) => {
-                console.log("Skip backward triggered:", data);
-
-                // Set flags BEFORE the video time change to prevent seeking interference
-                setIsSkippingBackward(true);
-                skipBackwardRef.current = true;
-
-                // Immediately update the previous time reference to the new position
-                // This prevents the seeking logic from trying to restore the old position
-                previousTimeRef.current = data.to;
-                setPreviousTime(data.to);
-
-                // Update current time state
-                setCurrentTime(data.to);
-                dispatch(setCurrentVideoTime(data.to));
-
-                // Reset flags after seeking events are complete
-                setTimeout(() => {
-                  setIsSkippingBackward(false);
-                  skipBackwardRef.current = false;
-                  console.log("Skip backward flags reset");
-                }, 500); // Reduced timeout since we're handling it better
-
-                // Track skip backward analytics
                 const userDetails = getUserDetailsFromToken();
                 const currentVideo = videos?.[currentVideoIndex];
                 if (currentVideo) {
@@ -1173,6 +859,9 @@ const VideoPanel = forwardRef(
                   });
                 }
               }}
+              className="absolute top-0 left-0 w-full h-full"
+              initialVideoTime={initialVideoTime}
+              autoPlayEnabled={autoPlayEnabled}
             />
 
             {/* Custom styles are now handled by VideoPlayer component */}
@@ -1186,7 +875,7 @@ const VideoPanel = forwardRef(
                 : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
             }`}>
             <span>
-              {formatTime(currentTime)} / {formatTime(duration)}
+              {formatTime(videoRef.current?.getCurrentTime() || 0)} / {formatTime(videoRef.current?.getDuration() || 0)}
             </span>
             <span>
               {isMobile
@@ -1194,7 +883,7 @@ const VideoPanel = forwardRef(
                 : `${(videos ?? [])?.[currentVideoIndex]?.slide}/${videos?.length}`}
             </span>
           </div>
-        </div>
+        </div>}
 
         {/* AI Assistant Section - Responsive */}
         <div
