@@ -385,7 +385,8 @@ const Home = () => {
       const apiCurrentSlideDuration = data.current_slide_duration;
 
       // Find the index in the filtered videos list that matches the API current slide
-      const allVideos = data.data.filter((video) => video?.trainer_video && video?.trainer_video?.trim() !== "");
+      // const allVideos = data.data.filter((video) => video?.trainer_video && video?.trainer_video?.trim() !== "");
+      const allVideos = data.data;
 
       const idx = allVideos.findIndex((v) => v.slide === apiCurrentSlide);
 

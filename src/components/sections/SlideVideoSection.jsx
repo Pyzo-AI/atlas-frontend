@@ -26,6 +26,7 @@ const SlideVideoSection = ({
   const [lastSlideSrc, setLastSlideSrc] = useState("");
   const [canPlay, setCanPlay] = useState(false);
   const [isLoadingNewVideo, setIsLoadingNewVideo] = useState(false);
+  const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
   const playPromiseRef = useRef(null);
   const { answerPptIndex, selectedAssessmentId } = useSelector((state) => state.video);
   // Sync slide video with trainer video time
@@ -255,7 +256,7 @@ const SlideVideoSection = ({
   if (selectedAssessmentId) {
     return <InModuleAssessment videos={videos} assessmentDetails={assessmentDetails} />;
   }
-
+console.log(currentVideoIndex,"autoPlayEnabled")
   if (isOnlyVideoMode) {
     // Use VideoPlayerContainer when there's no trainer video
     return (
@@ -267,21 +268,21 @@ const SlideVideoSection = ({
           presentationId={presentationId}
           canSkipVideo={canSkipVideo}
           className="w-[calc(100%-230px)] h-full max-w-full"
-          autoPlayEnabled={true}
+          autoPlayEnabled={autoPlayEnabled}
           isOnlyVideoMode={true}
           onVideoEnd={() => {
             const currentVideo = videos[currentVideoIndex];
             const currentVideoAssessmentId = currentVideo?.slide_assessments?.[0]?.id;
             if (currentVideoAssessmentId) {
-              console.log(currentVideoAssessmentId, "currentVideoAssessmentId");
               dispatch(setSelectedAssessmentId(currentVideoAssessmentId));
+               setAutoPlayEnabled(true);
               return;
             }
             
             const nextIndex = currentVideoIndex + 1;
             if (nextIndex < videos.length && onVideoIndexChange) {
-              console.log("Moving to next video:", nextIndex);
               onVideoIndexChange(nextIndex);
+              setAutoPlayEnabled(true);
             } else {
                  dispatch(setSelectedAssessmentId(assessmentId));
             }
