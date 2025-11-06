@@ -73,6 +73,7 @@ const VideoPanel = forwardRef(
       onVideoStateChange,
       onPauseVideo,
       onPauseAnswerAudio,
+      onPauseSlideVideo,
       onVideoEnd,
       presentationId,
       width = "30%",
@@ -894,6 +895,7 @@ const VideoPanel = forwardRef(
             onStartConversation={startConversation}
             onStopConversation={stopConversation}
             onPauseVideo={pauseVideo}
+            onPauseSlideVideo={onPauseSlideVideo}
             agentId={agentId}
             isMobileView={isMobile && isPhone}
           />
@@ -922,6 +924,7 @@ const VideoPanel = forwardRef(
             setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
             agentId={agentId}
             isMobile={isMobile && isPhone}
+            onPauseSlideVideo={onPauseSlideVideo}
           />
         )}
 

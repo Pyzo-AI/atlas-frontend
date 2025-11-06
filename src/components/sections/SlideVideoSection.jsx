@@ -4,7 +4,7 @@ import { setSelectedAssessmentId } from "@/store/features/videoSlice";
 import InModuleAssessment from "./InModuleAssessment";
 import VideoPlayerContainer from "../VideoPlayerContainer";
 
-const SlideVideoSection = ({
+const SlideVideoSection = React.forwardRef(({
   videos,
   currentVideoTime = 0,
   isVideoPlaying = false,
@@ -15,11 +15,12 @@ const SlideVideoSection = ({
   presentationId,
   canSkipVideo,
   assessmentId
-}) => {
+}, ref) => {
   const dispatch = useDispatch();
   const { currentVideoIndex } = useSelector((state) => state.video);
   const slideVideoRef = useRef(null);
-  const preloadSlideVideoRef = useRef(null); // For preloading next slide video
+  const preloadSlideVideoRef = useRef(null);
+  const videoPlayerContainerRef = useRef(null);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [preloadedSlideIndex, setPreloadedSlideIndex] = useState(-1);
   const [hasSlideInitialized, setHasSlideInitialized] = useState(false);
@@ -28,10 +29,21 @@ const SlideVideoSection = ({
   const [isLoadingNewVideo, setIsLoadingNewVideo] = useState(false);
   const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
   const playPromiseRef = useRef(null);
-  const { answerPptIndex, selectedAssessmentId } = useSelector((state) => state.video);
+  const { answerPptIndex, selectedAssessmentId,isQuestionMode } = useSelector((state) => state.video);
+
+  // Expose pause method to parent component
+  React.useImperativeHandle(ref, () => ({
+    pauseSlideVideo: () => {
+      if (isOnlyVideoMode && videoPlayerContainerRef.current) {
+        videoPlayerContainerRef.current.pauseVideo();
+      } else if (slideVideoRef.current && !slideVideoRef.current.paused) {
+        slideVideoRef.current.pause();
+      }
+    }
+  }));
+
   // Sync slide video with trainer video time
   useEffect(() => {
-    // Don't sync timing when answerPptIndex is not null
     if (answerPptIndex !== null) {
       return;
     }
@@ -40,8 +52,6 @@ const SlideVideoSection = ({
       const slideVideo = slideVideoRef.current;
       const timeDifference = Math.abs(slideVideo.currentTime - currentVideoTime);
 
-      // Only sync if there's a significant time difference (more than 0.1 seconds)
-      // and the video is loaded and ready
       if (timeDifference > 0.1 && slideVideo.readyState >= 2) {
         try {
           slideVideo.currentTime = currentVideoTime;
@@ -57,7 +67,6 @@ const SlideVideoSection = ({
     if (slideVideoRef.current && canPlay && !isLoadingNewVideo) {
       const slideVideo = slideVideoRef.current;
 
-      // If answerPptIndex is not null, keep video paused
       if (answerPptIndex !== null) {
         if (!slideVideo.paused) {
           slideVideo.pause();
@@ -66,11 +75,8 @@ const SlideVideoSection = ({
       }
 
       if (isVideoPlaying && slideVideo.paused && slideVideo.readyState >= 3) {
-        // Cancel any pending play promise
         if (playPromiseRef.current) {
-          playPromiseRef.current.catch(() => {
-            // Ignore the error if the promise was cancelled
-          });
+          playPromiseRef.current.catch(() => {});
         }
 
         playPromiseRef.current = slideVideo.play();
@@ -85,11 +91,8 @@ const SlideVideoSection = ({
             }
           });
       } else if (!isVideoPlaying && !slideVideo.paused) {
-        // Cancel any pending play promise before pausing
         if (playPromiseRef.current) {
-          playPromiseRef.current.catch(() => {
-            // Ignore the error if the promise was cancelled
-          });
+          playPromiseRef.current.catch(() => {});
           playPromiseRef.current = null;
         }
         slideVideo.pause();
@@ -105,7 +108,7 @@ const SlideVideoSection = ({
     }
   }, [videos, hasSlideInitialized]);
 
-  // Handle slide video index changes (only when actually changing)
+  // Handle slide video index changes
   useEffect(() => {
     if (slideVideoRef.current && hasSlideInitialized && videos?.length > 0) {
       const slideVideo = slideVideoRef.current;
@@ -118,69 +121,54 @@ const SlideVideoSection = ({
 
       const newSrc = videoData.slide_video;
 
-      // Only reload if the source is actually different
       if (newSrc && newSrc !== lastSlideSrc) {
         setLastSlideSrc(newSrc);
         setIsLoadingNewVideo(true);
         setCanPlay(false);
         console.log(`Switching to slide video ${videoIndex}...`);
-        console.log(`New slide video URL:`, newSrc);
 
-        // Pause current video before switching
         if (!slideVideo.paused) {
           slideVideo.pause();
         }
 
-        // Check if we have a preloaded slide video for this index
         if (
           preloadedSlideIndex === videoIndex &&
           preloadSlideVideoRef.current &&
           preloadSlideVideoRef.current.readyState >= 2
         ) {
-          console.log(`Using preloaded slide video for index ${videoIndex}`);
-
           try {
-            // Copy the preloaded video source to main slide video
             slideVideo.src = preloadSlideVideoRef.current.src;
             slideVideo.load();
-
-            // Clean up the preloaded video
             preloadSlideVideoRef.current.src = "";
             setPreloadedSlideIndex(-1);
           } catch (error) {
-            console.log("Error using preloaded slide video, falling back to normal load:", error);
             slideVideo.load();
             setPreloadedSlideIndex(-1);
           }
         } else {
-          // Load video normally if not preloaded or preload failed
           slideVideo.load();
           if (preloadedSlideIndex === videoIndex) {
-            setPreloadedSlideIndex(-1); // Reset if preload was attempted but failed
+            setPreloadedSlideIndex(-1);
           }
         }
 
-        // Reset time based on mode when loading new video
         if (answerPptIndex !== null) {
-          // When showing answer slide, start from beginning
           slideVideo.currentTime = 0;
         } else {
-          // Normal behavior - reset to 0 for new video
           slideVideo.currentTime = 0;
         }
       }
     }
   }, [currentVideoIndex, videos, preloadedSlideIndex, hasSlideInitialized, answerPptIndex]);
 
-  // Preload next slide video based on trainer video progress
+  // Preload next slide video
   useEffect(() => {
-    const preloadThreshold = 10; // Start preloading 10 seconds before video ends
+    const preloadThreshold = 10;
 
     if (videoDuration > 0 && currentVideoTime > 0 && videos && videos.length > 0) {
       const timeRemaining = videoDuration - currentVideoTime;
       const nextVideoIndex = currentVideoIndex + 1;
 
-      // Check if we should preload the next slide video
       if (
         timeRemaining <= preloadThreshold &&
         nextVideoIndex < videos.length &&
@@ -190,10 +178,7 @@ const SlideVideoSection = ({
         typeof videos[nextVideoIndex].slide_video === "string" &&
         videos[nextVideoIndex].slide_video.trim() !== ""
       ) {
-        console.log(`Preloading slide video ${nextVideoIndex}...`);
-
         try {
-          // Create preload slide video element if it doesn't exist
           if (!preloadSlideVideoRef.current) {
             preloadSlideVideoRef.current = document.createElement("video");
             preloadSlideVideoRef.current.preload = "auto";
@@ -202,48 +187,30 @@ const SlideVideoSection = ({
             document.body.appendChild(preloadSlideVideoRef.current);
           }
 
-          // Set source and start preloading
           const nextVideoUrl = videos[nextVideoIndex].slide_video;
 
-          // Validate URL before setting
           if (nextVideoUrl && typeof nextVideoUrl === "string" && nextVideoUrl.startsWith("http")) {
             preloadSlideVideoRef.current.src = nextVideoUrl;
-            preloadSlideVideoRef.current.onerror = (e) => {
-              console.warn(`Failed to preload slide video ${nextVideoIndex}:`, {
-                url: nextVideoUrl,
-                error: e.type || "unknown error",
-              });
+            preloadSlideVideoRef.current.onerror = () => {
               setPreloadedSlideIndex(-1);
-            };
-            preloadSlideVideoRef.current.oncanplaythrough = () => {
-              console.log(`Slide video ${nextVideoIndex} preloaded successfully`);
             };
             preloadSlideVideoRef.current.load();
             setPreloadedSlideIndex(nextVideoIndex);
-          } else {
-            console.warn(`Invalid slide video URL for index ${nextVideoIndex}:`, nextVideoUrl);
-            setPreloadedSlideIndex(-1);
           }
         } catch (error) {
-          console.warn(`Error setting up preload for slide video ${nextVideoIndex}:`, error);
           setPreloadedSlideIndex(-1);
         }
       }
     }
   }, [currentVideoTime, currentVideoIndex, videos, preloadedSlideIndex, videoDuration]);
 
-  // Cleanup preload slide video element on unmount
+  // Cleanup
   useEffect(() => {
     return () => {
-      // Cancel any pending play promise
       if (playPromiseRef.current) {
-        playPromiseRef.current.catch(() => {
-          // Ignore cleanup errors
-        });
+        playPromiseRef.current.catch(() => {});
         playPromiseRef.current = null;
       }
-
-      // Cleanup preload video element
       if (preloadSlideVideoRef.current) {
         document.body.removeChild(preloadSlideVideoRef.current);
         preloadSlideVideoRef.current = null;
@@ -256,12 +223,30 @@ const SlideVideoSection = ({
   if (selectedAssessmentId) {
     return <InModuleAssessment videos={videos} assessmentDetails={assessmentDetails} />;
   }
-console.log(currentVideoIndex,"autoPlayEnabled")
+
   if (isOnlyVideoMode) {
-    // Use VideoPlayerContainer when there's no trainer video
     return (
       <div className="w-full h-full bg-black rounded-xl overflow-hidden flex justify-center">
+        {/* wrapper on top of slide video to avoid clicks when question mode is enabled */}
+        {isQuestionMode && (
+            <div
+              className="absolute inset-0 z-50 bg-transparent cursor-not-allowed"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            />
+          )}
         <VideoPlayerContainer
+          ref={videoPlayerContainerRef}
           key={`video-player-${currentVideoIndex}`}
           videos={videos}
           currentVideoIndex={currentVideoIndex}
@@ -275,16 +260,15 @@ console.log(currentVideoIndex,"autoPlayEnabled")
             const currentVideoAssessmentId = currentVideo?.slide_assessments?.[0]?.id;
             if (currentVideoAssessmentId) {
               dispatch(setSelectedAssessmentId(currentVideoAssessmentId));
-               setAutoPlayEnabled(true);
+              setAutoPlayEnabled(true);
               return;
             }
-            
             const nextIndex = currentVideoIndex + 1;
             if (nextIndex < videos.length && onVideoIndexChange) {
               onVideoIndexChange(nextIndex);
               setAutoPlayEnabled(true);
             } else {
-                 dispatch(setSelectedAssessmentId(assessmentId));
+              dispatch(setSelectedAssessmentId(assessmentId));
             }
           }}
         />
@@ -302,7 +286,6 @@ console.log(currentVideoIndex,"autoPlayEnabled")
 
   return (
     <div className="w-full h-full bg-black rounded-xl overflow-hidden relative">
-      {/* Loading overlay */}
       {isVideoLoading && (
         <div className="absolute inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-10">
           <div className="text-white text-center">
@@ -311,7 +294,6 @@ console.log(currentVideoIndex,"autoPlayEnabled")
           </div>
         </div>
       )}
-
       <video
         key={`slide-video-${videoIndex}`}
         ref={slideVideoRef}
@@ -321,29 +303,23 @@ console.log(currentVideoIndex,"autoPlayEnabled")
         playsInline
         onLoadStart={() => {
           if (!isVideoLoading) {
-            console.log("Slide video loading started...");
             setIsVideoLoading(true);
             setCanPlay(false);
           }
         }}
         onLoadedData={() => {
           if (isVideoLoading) {
-            console.log("Slide video loaded");
             setIsVideoLoading(false);
             setIsLoadingNewVideo(false);
           }
         }}
         onCanPlay={() => {
           if (!canPlay) {
-            console.log("Slide video can play");
             setCanPlay(true);
-            // Ensure sync when video is ready to play, but only if not in answer mode
             if (slideVideoRef.current) {
               if (answerPptIndex !== null) {
-                // When showing answer slide, start from beginning and pause
                 slideVideoRef.current.currentTime = 0;
               } else {
-                // Normal sync behavior
                 slideVideoRef.current.currentTime = currentVideoTime;
               }
             }
@@ -351,26 +327,17 @@ console.log(currentVideoIndex,"autoPlayEnabled")
         }}
         onCanPlayThrough={() => {
           if (!canPlay) {
-            console.log("Slide video can play through");
             setCanPlay(true);
-            // When video can play through, set appropriate time based on mode
             if (slideVideoRef.current) {
               if (answerPptIndex !== null) {
-                // When showing answer slide, start from beginning
                 slideVideoRef.current.currentTime = 0;
               } else {
-                // Normal sync behavior
                 slideVideoRef.current.currentTime = currentVideoTime;
               }
             }
           }
         }}
-        onError={(e) => {
-          console.warn("Error loading slide video:", {
-            currentIndex: videoIndex,
-            videoUrl: videos[videoIndex]?.slide_video,
-            error: e.type || "unknown error",
-          });
+        onError={() => {
           setIsVideoLoading(false);
           setIsLoadingNewVideo(false);
           setCanPlay(false);
@@ -378,6 +345,8 @@ console.log(currentVideoIndex,"autoPlayEnabled")
       />
     </div>
   );
-};
+});
+
+SlideVideoSection.displayName = "SlideVideoSection";
 
 export default SlideVideoSection;

@@ -13,6 +13,7 @@ const AILearningAssistant = ({
   onStartConversation = () => { },
   onStopConversation = () => { },
   onPauseVideo = () => { },
+  onPauseSlideVideo = () => { },
   isMobileView = false,
   agentId,
 }) => {
@@ -22,6 +23,8 @@ const AILearningAssistant = ({
 
   const handleStartQA = async () => {
     if (!agentId) return;
+
+    onPauseSlideVideo(); // Pause slide video when starting interaction mode
 
     try {
       const permission = await navigator.permissions.query({ name: 'microphone' });

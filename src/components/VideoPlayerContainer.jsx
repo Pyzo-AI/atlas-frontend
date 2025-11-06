@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setCurrentVideoTime, setIsVideoPlaying, setAnswerPptIndex } from "@/store/features/videoSlice";
 import { updateVideoProgress } from "@/utils/videoProgress";
 import { getUserDetailsFromToken } from "@/store/utils/token";
@@ -25,7 +25,7 @@ const VideoPlayerContainer = forwardRef(({
   const dispatch = useDispatch();
   const videoRef = useRef(null);
   const { capture } = usePostHog();
-  
+   const { isQuestionMode } = useSelector((state) => state.video);
   // Internal state
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
