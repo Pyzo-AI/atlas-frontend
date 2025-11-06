@@ -226,7 +226,7 @@ const SlideVideoSection = React.forwardRef(({
 
   if (isOnlyVideoMode) {
     return (
-      <div className="w-full h-full bg-black rounded-xl overflow-hidden flex justify-center">
+      <div className="w-full h-full bg-black rounded-xl overflow-hidden flex justify-center relative">
         {/* wrapper on top of slide video to avoid clicks when question mode is enabled */}
         {isQuestionMode && (
             <div
