@@ -118,7 +118,7 @@ export default function ResultModal({
               <span className="font-lato font-bold text-[14px] leading-[100%] tracking-[0em] text-center text-[#744FFF]">
                 {actualTotalQuestions}
               </span>{" "}
-              questions
+              questions across all assessments.
             </>
           )}
         </p>
