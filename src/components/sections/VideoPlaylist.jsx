@@ -4,6 +4,7 @@ import { setCurrentVideoIndex, setSelectedAssessmentId } from "@/store/features/
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress } from "@/utils/videoProgress";
+import { isAssessmentCompletedLocally } from "@/utils/assessmentProgress";
 import { useParams } from "next/navigation";
 
 const VideoPlaylist = ({
@@ -73,10 +74,7 @@ const VideoPlaylist = ({
     return isCompleted;
   };
 
-  const isAssessmentCompletedLocally = (assessmentId) => {
-    if (!assessmentId) return false;
-    return localStorage.getItem(`assessment_${assessmentId}_completed`) === 'true';
-  };
+
 
   // Auto-scroll to current video when currentVideoIndex changes
   useEffect(() => {
@@ -256,7 +254,7 @@ const VideoPlaylist = ({
             if (video.slide_assessments && video.slide_assessments.length > 0) {
               video.slide_assessments.forEach((assessment, assessmentIndex) => {
                 const assessmentId = assessment.id; // Use the actual assessment ID from the data
-                const isAssessmentCompletedLocal = isAssessmentCompletedLocally(assessmentId) || assessment.attempts_used > 0;
+                const isAssessmentCompletedLocal = isAssessmentCompletedLocally(presentationId, assessmentId) || assessment.attempts_used > 0;
                 const isAssessmentSelected = selectedAssessmentId === assessmentId;
 
                 items.push(
@@ -360,7 +358,7 @@ const VideoPlaylist = ({
               </div>
 
               {/* Final Assessment Status indicator - Show green checkmark if passed */}
-              {(isAssessmentCompletedLocally(assessmentDetails[0]?.id) || assessmentDetails[0]?.passed) && (
+              {(isAssessmentCompletedLocally(presentationId, assessmentDetails[0]?.id) || assessmentDetails[0]?.passed) && (
                 <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
                   <svg
                     className="w-[9.6px] h-[9.6px] text-white"

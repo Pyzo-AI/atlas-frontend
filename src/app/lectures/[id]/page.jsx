@@ -19,6 +19,7 @@ import { usePortraitMode } from "@/hooks/usePortraitMode";
 import FullscreenController from "@/components/ui/FullscreenController";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress, clearVideoProgress } from "@/utils/videoProgress";
+import { clearAssessmentProgress } from "@/utils/assessmentProgress";
 
 // Portrait Mode Rotation Prompt Component
 const RotationPrompt = () => {
@@ -255,6 +256,11 @@ const Home = () => {
     }
   };
 
+  // Clear assessment progress when leaving page
+  const clearAssessmentProgressOnLeave = () => {
+    clearAssessmentProgress(presentationId);
+  };
+
   // Store submit function globally for cleanup
   useEffect(() => {
     window.submitVideoProgressGlobal = submitProgressToAPI;
@@ -263,6 +269,7 @@ const Home = () => {
         window.submitVideoProgressGlobal();
         delete window.submitVideoProgressGlobal;
       }
+      clearAssessmentProgressOnLeave();
     };
   }, [presentationId]);
 
@@ -282,6 +289,7 @@ const Home = () => {
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       submitProgressToAPI();
+      clearAssessmentProgressOnLeave();
       // For some browsers, we need to set returnValue
       e.returnValue = "";
     };
@@ -289,15 +297,18 @@ const Home = () => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         submitProgressToAPI();
+        clearAssessmentProgressOnLeave();
       }
     };
 
     const handlePageHide = (e) => {
       submitProgressToAPI();
+      clearAssessmentProgressOnLeave();
     };
 
     const handleUnload = () => {
       submitProgressToAPI();
+      clearAssessmentProgressOnLeave();
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -317,6 +328,7 @@ const Home = () => {
   useEffect(() => {
     const handleRouteChange = () => {
       submitProgressToAPI();
+      clearAssessmentProgressOnLeave();
     };
 
     // Listen for route changes
@@ -366,6 +378,7 @@ const Home = () => {
     const handlePopState = (e) => {
       console.log("Browser back/forward detected");
       submitProgressToAPI();
+      clearAssessmentProgressOnLeave();
     };
 
     // Track initial history length
@@ -379,6 +392,7 @@ const Home = () => {
       if (window.history.length < initialHistoryLength) {
         console.log("History length decreased - likely back navigation");
         submitProgressToAPI();
+        clearAssessmentProgressOnLeave();
       }
     }, 1000);
 

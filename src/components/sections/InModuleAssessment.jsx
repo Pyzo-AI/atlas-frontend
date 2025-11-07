@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { useParams } from "next/navigation";
 import ResultModal from "@/components/modals/ResultModal";
 import FeedbackModal from "@/components/modals/FeedbackModal";
+import { setAssessmentCompleted } from "@/utils/assessmentProgress";
 
 const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
   const dispatch = useDispatch();
@@ -218,7 +219,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
       });
 
       // Mark assessment as completed in localStorage
-      localStorage.setItem(`assessment_${selectedAssessmentId}_completed`, 'true');
+      setAssessmentCompleted(presentationId, selectedAssessmentId);
 
       // Prepare data for result modal
       const resultData = {
