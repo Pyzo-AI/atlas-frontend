@@ -73,6 +73,7 @@ const VideoPanel = forwardRef(
       onVideoStateChange,
       onPauseVideo,
       onPauseAnswerAudio,
+      onPauseSlideVideo,
       onVideoEnd,
       presentationId,
       width = "30%",
@@ -725,19 +726,7 @@ const VideoPanel = forwardRef(
             onPauseAnswerAudio();
           }
 
-          const playPromise = videoRef?.current?.play();
-          if (playPromise !== undefined) {
-            playPromise
-              .then(() => {
-                setIsPlaying(true);
-              })
-              .catch((error) => {
-                console.log("Play was prevented:", error);
-                setIsPlaying(false);
-              });
-          } else {
-            setIsPlaying(true);
-          }
+          videoRef.current.play();
         }
       }
     };
@@ -862,6 +851,7 @@ const VideoPanel = forwardRef(
               className="absolute top-0 left-0 w-full h-full"
               initialVideoTime={initialVideoTime}
               autoPlayEnabled={autoPlayEnabled}
+              showRemainingDuration={isMobile}
             />
 
             {/* Custom styles are now handled by VideoPlayer component */}
@@ -894,6 +884,7 @@ const VideoPanel = forwardRef(
             onStartConversation={startConversation}
             onStopConversation={stopConversation}
             onPauseVideo={pauseVideo}
+            onPauseSlideVideo={onPauseSlideVideo}
             agentId={agentId}
             isMobileView={isMobile && isPhone}
           />
@@ -922,6 +913,7 @@ const VideoPanel = forwardRef(
             setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
             agentId={agentId}
             isMobile={isMobile && isPhone}
+            onPauseSlideVideo={onPauseSlideVideo}
           />
         )}
 

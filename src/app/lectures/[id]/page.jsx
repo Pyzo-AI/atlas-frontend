@@ -62,7 +62,7 @@ const CombinedBreadCrumb = React.memo(({ data }) => {
 });
 
 const CombinedPPTSection = React.memo(
-  ({
+  React.forwardRef(({
     isMobile = false,
     isPhone = false,
     videos,
@@ -76,11 +76,12 @@ const CombinedPPTSection = React.memo(
     onVideoIndexChange,
     isOnlyVideoMode,
     assessmentId
-  }) => {
+  }, ref) => {
     const width = isMobile ? "100%" : "70%";
 
     return (
       <PPTSection
+        ref={ref}
         videos={videos}
         loading={isLoading}
         currentVideoIndex={pptVideoIndex}
@@ -100,7 +101,7 @@ const CombinedPPTSection = React.memo(
         assessmentId={assessmentId}
       />
     );
-  }
+  })
 );
 
 const CombinedVideoPanel = React.memo(
@@ -113,6 +114,7 @@ const CombinedVideoPanel = React.memo(
     handleVideoStateChange,
     handlePauseVideo,
     handlePauseAnswerAudio,
+    handlePauseSlideVideo,
     presentationId,
     data,
     conversationHistory,
@@ -131,6 +133,7 @@ const CombinedVideoPanel = React.memo(
         onVideoStateChange={handleVideoStateChange}
         onPauseVideo={handlePauseVideo}
         onPauseAnswerAudio={handlePauseAnswerAudio}
+        onPauseSlideVideo={handlePauseSlideVideo}
         width={width}
         presentationId={presentationId}
         isMobileView={isMobile}
@@ -163,6 +166,7 @@ const Home = () => {
 
   const pathname = usePathname();
   const videoPanelRef = useRef(null);
+  const pptSectionRef = useRef(null);
   const dispatch = useDispatch();
   const { pptVideoIndex,currentVideoIndex } = useSelector((state) => state.video);
   const isPortrait = usePortraitMode();
@@ -220,6 +224,13 @@ const Home = () => {
         audio.pause();
       }
     });
+  };
+
+  // Handle pausing slide video
+  const handlePauseSlideVideo = () => {
+    if (pptSectionRef.current && pptSectionRef.current.pauseSlideVideo) {
+      pptSectionRef.current.pauseSlideVideo();
+    }
   };
 
   // Handle video index change from PPT section
@@ -456,6 +467,7 @@ const Home = () => {
             {/* Left Side - Slides/PPT Section */}
             <div className={`${leftWidth} overflow-hidden`}>
               <CombinedPPTSection
+                ref={pptSectionRef}
                 isMobile={true}
                 isPhone={isPhone}
                 videos={videos}
@@ -483,6 +495,7 @@ const Home = () => {
                 handleVideoStateChange={handleVideoStateChange}
                 handlePauseVideo={handlePauseVideo}
                 handlePauseAnswerAudio={handlePauseAnswerAudio}
+                handlePauseSlideVideo={handlePauseSlideVideo}
                 presentationId={presentationId}
                 data={data}
                 conversationHistory={conversationHistory}
@@ -510,6 +523,7 @@ const Home = () => {
             <CombinedBreadCrumb data={data} />
             <div className="flex w-full h-[calc(100%-36px)] min-w-0 bg-white py-4 px-5">
               <CombinedPPTSection
+                ref={pptSectionRef}
                 videos={videos}
                 isLoading={isLoading}
                 pptVideoIndex={pptVideoIndex}
@@ -529,6 +543,7 @@ const Home = () => {
                 handleVideoStateChange={handleVideoStateChange}
                 handlePauseVideo={handlePauseVideo}
                 handlePauseAnswerAudio={handlePauseAnswerAudio}
+                handlePauseSlideVideo={handlePauseSlideVideo}
                 presentationId={presentationId}
                 data={data}
                 conversationHistory={conversationHistory}

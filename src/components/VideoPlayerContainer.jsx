@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setCurrentVideoTime, setIsVideoPlaying, setAnswerPptIndex } from "@/store/features/videoSlice";
 import { updateVideoProgress } from "@/utils/videoProgress";
 import { getUserDetailsFromToken } from "@/store/utils/token";
@@ -21,11 +21,12 @@ const VideoPlayerContainer = forwardRef(({
   initialVideoTime = 0,
   autoPlayEnabled = false,
   isOnlyVideoMode = false,
+  showRemainingDuration = false,
 }, ref) => {
   const dispatch = useDispatch();
   const videoRef = useRef(null);
   const { capture } = usePostHog();
-  
+   const { isQuestionMode } = useSelector((state) => state.video);
   // Internal state
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -55,6 +56,16 @@ const VideoPlayerContainer = forwardRef(({
 
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
+    pause: () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
+    },
+    play: () => {
+      if (videoRef.current) {
+        videoRef.current.play();
+      }
+    },
     pauseVideo: () => {
       if (videoRef.current) {
         videoRef.current.pause();
@@ -67,7 +78,10 @@ const VideoPlayerContainer = forwardRef(({
     },
     getCurrentTime: () => currentTime,
     getDuration: () => duration,
-    isPaused: () => !isPlaying
+    isPaused: () => !isPlaying,
+    get paused() {
+      return !isPlaying;
+    }
   }));
 
   // Reset state when video changes
@@ -334,6 +348,7 @@ const VideoPlayerContainer = forwardRef(({
       volume={videoSettings.volume}
       playbackRate={videoSettings.playbackRate}
       currentTime={initialVideoTime}
+      showRemainingDuration={showRemainingDuration}
       onTimeUpdate={handleTimeUpdate}
       onSeeking={handleSeeking}
       onSeeked={handleSeeked}
