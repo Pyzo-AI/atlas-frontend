@@ -217,6 +217,9 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
         time_taken: timeTaken,
       });
 
+      // Mark assessment as completed in localStorage
+      localStorage.setItem(`assessment_${selectedAssessmentId}_completed`, 'true');
+
       // Prepare data for result modal
       const resultData = {
         score: assessmentResponse.percentage,
