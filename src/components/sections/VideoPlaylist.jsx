@@ -69,8 +69,13 @@ const VideoPlaylist = ({
     )?.is_completed;
     const isCompleted =
       isAlreadyCompleted ||
-      (totalDuration > 0 && viewedDuration >= totalDuration);
-    return viewedDuration >= totalDuration;
+      (totalDuration > 0 && viewedDuration+1 >= totalDuration);
+    return isCompleted;
+  };
+
+  const isAssessmentCompletedLocally = (assessmentId) => {
+    if (!assessmentId) return false;
+    return localStorage.getItem(`assessment_${assessmentId}_completed`) === 'true';
   };
 
   // Auto-scroll to current video when currentVideoIndex changes
@@ -227,7 +232,7 @@ const VideoPlaylist = ({
                     </div>
                   )}
                 </div>
-
+                  
                 {/* Status indicator - keeping absolute position as requested */}
                 {isVideoCompleted(video?.slide) && (
                   <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
@@ -250,8 +255,8 @@ const VideoPlaylist = ({
             // Add assessment items if they exist for this video
             if (video.slide_assessments && video.slide_assessments.length > 0) {
               video.slide_assessments.forEach((assessment, assessmentIndex) => {
-                const isAssessmentCompleted = assessment.attempts_used > 0;
                 const assessmentId = assessment.id; // Use the actual assessment ID from the data
+                const isAssessmentCompletedLocal = isAssessmentCompletedLocally(assessmentId) || assessment.attempts_used > 0;
                 const isAssessmentSelected = selectedAssessmentId === assessmentId;
 
                 items.push(
@@ -272,7 +277,7 @@ const VideoPlaylist = ({
                         ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
                         : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
                       }
-                    ${!canSkipVideo && hasLocalProgress(video.slide) === 0
+                    ${!canSkipVideo && !isVideoCompleted(video?.slide) 
                         ? "opacity-50 cursor-not-allowed"
                         : "cursor-pointer"
                       }`}
@@ -293,7 +298,7 @@ const VideoPlaylist = ({
                     </div>
 
                     {/* Assessment Status indicator - Only show green checkmark if completed */}
-                    {isAssessmentCompleted && (
+                    {isAssessmentCompletedLocal && (
                       <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
                         <svg
                           className="w-[9.6px] h-[9.6px] text-white"
@@ -355,7 +360,7 @@ const VideoPlaylist = ({
               </div>
 
               {/* Final Assessment Status indicator - Show green checkmark if passed */}
-              {assessmentDetails[0]?.passed && (
+              {(isAssessmentCompletedLocally(assessmentDetails[0]?.id) || assessmentDetails[0]?.passed) && (
                 <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
                   <svg
                     className="w-[9.6px] h-[9.6px] text-white"
