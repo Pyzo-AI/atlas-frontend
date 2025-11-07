@@ -21,6 +21,7 @@ const VideoPlayerContainer = forwardRef(({
   initialVideoTime = 0,
   autoPlayEnabled = false,
   isOnlyVideoMode = false,
+  showRemainingDuration = false,
 }, ref) => {
   const dispatch = useDispatch();
   const videoRef = useRef(null);
@@ -55,6 +56,16 @@ const VideoPlayerContainer = forwardRef(({
 
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
+    pause: () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
+    },
+    play: () => {
+      if (videoRef.current) {
+        videoRef.current.play();
+      }
+    },
     pauseVideo: () => {
       if (videoRef.current) {
         videoRef.current.pause();
@@ -67,7 +78,10 @@ const VideoPlayerContainer = forwardRef(({
     },
     getCurrentTime: () => currentTime,
     getDuration: () => duration,
-    isPaused: () => !isPlaying
+    isPaused: () => !isPlaying,
+    get paused() {
+      return !isPlaying;
+    }
   }));
 
   // Reset state when video changes
@@ -334,6 +348,7 @@ const VideoPlayerContainer = forwardRef(({
       volume={videoSettings.volume}
       playbackRate={videoSettings.playbackRate}
       currentTime={initialVideoTime}
+      showRemainingDuration={showRemainingDuration}
       onTimeUpdate={handleTimeUpdate}
       onSeeking={handleSeeking}
       onSeeked={handleSeeked}

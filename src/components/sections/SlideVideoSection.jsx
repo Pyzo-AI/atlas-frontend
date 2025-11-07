@@ -255,6 +255,7 @@ const SlideVideoSection = React.forwardRef(({
           className="w-[calc(100%-230px)] h-full max-w-full"
           autoPlayEnabled={autoPlayEnabled}
           isOnlyVideoMode={true}
+          showRemainingDuration={true}
           onVideoEnd={() => {
             const currentVideo = videos[currentVideoIndex];
             const currentVideoAssessmentId = currentVideo?.slide_assessments?.[0]?.id;

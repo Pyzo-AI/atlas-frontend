@@ -726,19 +726,7 @@ const VideoPanel = forwardRef(
             onPauseAnswerAudio();
           }
 
-          const playPromise = videoRef?.current?.play();
-          if (playPromise !== undefined) {
-            playPromise
-              .then(() => {
-                setIsPlaying(true);
-              })
-              .catch((error) => {
-                console.log("Play was prevented:", error);
-                setIsPlaying(false);
-              });
-          } else {
-            setIsPlaying(true);
-          }
+          videoRef.current.play();
         }
       }
     };
@@ -863,6 +851,7 @@ const VideoPanel = forwardRef(
               className="absolute top-0 left-0 w-full h-full"
               initialVideoTime={initialVideoTime}
               autoPlayEnabled={autoPlayEnabled}
+              showRemainingDuration={isMobile}
             />
 
             {/* Custom styles are now handled by VideoPlayer component */}
