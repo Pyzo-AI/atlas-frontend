@@ -125,7 +125,7 @@ const VideoPanel = forwardRef(
     useEffect(() => {
       isQuestionModeRef.current = isQuestionMode;
     }, [isQuestionMode]);
-
+console.log(isQuestionMode,"isQuestionMode")
     // Load conversation history on component mount
     useEffect(() => {
       const storedHistory = getStoredConversationHistory();
