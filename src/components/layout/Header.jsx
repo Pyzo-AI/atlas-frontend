@@ -2,10 +2,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import trainBoostLogo from "@/assets/svg/train-boost-logo.svg";
+import logo from "@/assets/svg/pyzo-logo.svg";
 import { decodeJWT } from "@/utils/jwt";
 import userIcon from "@/assets/svg/user.svg";
 import { trackLogout } from "@/utils/authTracking";
+import Image from "next/image";
 
 const navigation = [
   // { name: "Home", href: "/" },
@@ -100,7 +101,7 @@ const Header = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f1f2f4] px-4 md:px-10 py-2 bg-white/80 backdrop-blur-sm z-50">
+    <header className={`fixed top-0 right-0 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f1f2f4] px-4 md:px-5 py-2 bg-white backdrop-blur-sm z-50 ${shouldHideMenuButton ? 'left-0' : 'left-0 md:left-[200px]'}`}>
       <div className="flex items-center gap-3">
         {/* Mobile Menu Button - Hidden on certain routes */}
         {!shouldHideMenuButton && (
@@ -126,17 +127,10 @@ const Header = ({ onMenuClick }) => {
         )}
 
         <div
-          className="flex items-center gap-1 text-[#121416] cursor-pointer"
+          className=" cursor-pointer"
           onClick={() => router.push("/")}
         >
-          <img
-            className="w-6 h-6"
-            src={trainBoostLogo.src}
-            alt="trainBoostLogo"
-          />
-          <h2 className="text-[16px] font-lato font-bold leading-[100%] tracking-[0.02em]">
-            Upskillr
-          </h2>
+          <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
         </div>
       </div>
       <div className="flex flex-1 justify-end gap-10">
@@ -167,7 +161,7 @@ const Header = ({ onMenuClick }) => {
         </button> */}
         <div className="relative" ref={dropdownRef}>
           <img
-            className="cursor-pointer w-10 h-10 rounded-full"
+            className="cursor-pointer w-8 h-8 rounded-full"
             src={userIcon.src}
             alt="User"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
