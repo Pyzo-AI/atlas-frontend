@@ -21,7 +21,7 @@ const ResponsiveContainer = ({ children }) => {
   return (
     <>
       {showHeader && <Header onMenuClick={toggleSidebar} />}
-      <div className={`min-h-screen ${shouldShowPadding ? 'pt-[44px]' : ''}`}>
+      <div className={`min-h-screen ${shouldShowPadding ? 'pt-[45px]' : ''}`}>
         {children}
       </div>
     </>

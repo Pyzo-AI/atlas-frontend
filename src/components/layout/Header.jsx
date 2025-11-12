@@ -101,7 +101,7 @@ const Header = ({ onMenuClick }) => {
   };
 
   return (
-    <header className={`fixed top-0 right-0 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f1f2f4] px-4 md:px-5 py-2 bg-white backdrop-blur-sm z-50 ${shouldHideMenuButton ? 'left-0' : 'left-0 md:left-[200px]'}`}>
+    <header className={`fixed top-0 right-0 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f1f2f4] px-4 md:px-6 py-2 bg-white backdrop-blur-sm z-50 ${shouldHideMenuButton ? 'left-0' : 'left-0 md:left-[200px]'}`}>
       <div className="flex items-center gap-3">
         {/* Mobile Menu Button - Hidden on certain routes */}
         {!shouldHideMenuButton && (
@@ -127,7 +127,7 @@ const Header = ({ onMenuClick }) => {
         )}
 
         <div
-          className=" cursor-pointer"
+          className={`cursor-pointer ${pathname.includes('/lectures/') ? 'block' : 'md:hidden'}`}
           onClick={() => router.push("/")}
         >
           <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
