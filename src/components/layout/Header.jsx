@@ -7,6 +7,7 @@ import { decodeJWT } from "@/utils/jwt";
 import userIcon from "@/assets/svg/user.svg";
 import { trackLogout } from "@/utils/authTracking";
 import Image from "next/image";
+import hamburger from "@/assets/svg/hamburger.svg";
 
 const navigation = [
   // { name: "Home", href: "/" },
@@ -101,8 +102,9 @@ const Header = ({ onMenuClick }) => {
   };
 
   return (
-    <header className={`fixed top-0 right-0 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f1f2f4] px-4 md:px-6 py-2 bg-white backdrop-blur-sm z-50 ${shouldHideMenuButton ? 'left-0' : 'left-0 md:left-[200px]'}`}>
-      <div className="flex items-center gap-3">
+    <header className={`fixed top-0 right-0 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f1f2f4] px-4 md:px-6 py-2 bg-white backdrop-blur-sm z-50 ${shouldHideMenuButton ? 'left-0' : 'left-0 md:left-[200px]'} ${pathname.startsWith("/lectures")?"hidden lg:flex":""}`}>
+      {/* Left side - Menu button */}
+      <div className="flex items-center gap-3 md:flex-1">
         {/* Mobile Menu Button - Hidden on certain routes */}
         {!shouldHideMenuButton && (
           <button
@@ -110,30 +112,31 @@ const Header = ({ onMenuClick }) => {
             className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
             aria-label="Toggle menu"
           >
-            <svg
-              className="w-6 h-6 text-gray-700"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
+            <Image src={hamburger} alt="Menu" width={24} height={24} />
           </button>
         )}
 
-        <div
-          className={`cursor-pointer ${pathname.includes('/lectures/') ? 'block' : 'md:hidden'}`}
-          onClick={() => router.push("/")}
-        >
-          <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
-        </div>
+        {/* Logo - Only visible on desktop for /lectures page */}
+        {pathname.includes('/lectures/') && (
+          <div
+            className="hidden md:block cursor-pointer"
+            onClick={() => router.push("/")}
+          >
+            <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
+          </div>
+        )}
       </div>
-      <div className="flex flex-1 justify-end gap-10">
+
+      {/* Center - Logo on mobile only */}
+      <div
+        className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+        onClick={() => router.push("/")}
+      >
+        <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
+      </div>
+
+      {/* Right side */}
+      <div className="flex items-center gap-10">
         <nav className="flex items-center gap-5">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
