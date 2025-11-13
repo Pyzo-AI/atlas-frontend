@@ -23,6 +23,7 @@ import { updateVideoProgress, startVideoSession } from "@/utils/videoProgress";
 import redirecting_logo from "@/assets/svg/redirecting.svg";
 import Image from "next/image";
 import VideoPlayerContainer from "@/components/VideoPlayerContainer";
+import FeedbackModal from "../modals/FeedbackModal";
 
 // Conversation history management for VideoPanel
 const {
@@ -87,6 +88,7 @@ const VideoPanel = forwardRef(
       canSkipVideo = false,
       assessmentId,
       isOnlyVideoMode = false,
+      isFinalAssessmentPresent = false,
     },
     ref
   ) => {
@@ -104,7 +106,7 @@ const VideoPanel = forwardRef(
     // Slide view tracking
     const [slideViewStartTime, setSlideViewStartTime] = useState("");
     const [videoStartTime, setVideoStartTime] = useState(0);
-
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const videoRef = useRef(null);
     const activeVideoRef = useRef(null);
     const preloadVideoRef = useRef(null); // For preloading next video
@@ -635,6 +637,9 @@ console.log(isQuestionMode,"isQuestionMode")
         }
       } else {
         // setShowRedirectPopup(true);
+        if(!isFinalAssessmentPresent){
+          setShowFeedbackModal(true);
+        }
         setAutoPlayEnabled(false);
         dispatch(setSelectedAssessmentId(assessmentId));
       }
@@ -932,6 +937,11 @@ console.log(isQuestionMode,"isQuestionMode")
             isMobile={isMobile && isPhone}
           />
         )}
+         <FeedbackModal
+                  isOpen={showFeedbackModal}
+                  onClose={() => setShowFeedbackModal(false)}
+                  presentationId={presentationId}
+                />
       </div>
     );
   }
