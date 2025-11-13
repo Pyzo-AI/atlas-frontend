@@ -123,6 +123,7 @@ const CombinedVideoPanel = React.memo(
     canSkipVideo,
     assessmentId,
     isOnlyVideoMode,
+    isFinalAssessmentPresent
   }) => {
     const width = isMobile ? "100%" : "30%";
 
@@ -147,6 +148,7 @@ const CombinedVideoPanel = React.memo(
         canSkipVideo={canSkipVideo}
         assessmentId={assessmentId}
         isOnlyVideoMode={isOnlyVideoMode}
+        isFinalAssessmentPresent={isFinalAssessmentPresent}
       />
     );
   }
@@ -178,7 +180,8 @@ const Home = () => {
   const isMobileDevice = isPhone || isTablet;
   const isLandscape = !isPortrait && isMobileDevice;
   const isOnlyVideoMode = videos?.[currentVideoIndex]?.trainer_video === null;
- console.log(isOnlyVideoMode ,"isOnlyVideoMode123");
+  const isFinalAssessmentPresent = data?.assessment_details && data.assessment_details.length > 0 && data.assessment_details[0].id ? true : false;
+
   // Shared video state for synchronization
   const [videoState, setVideoState] = useState({
     currentTime: 0,
@@ -518,6 +521,7 @@ const Home = () => {
                 assessmentId={assessmentId}
                 onVideoIndexChange={handleVideoIndexChange}
                 isOnlyVideoMode={isOnlyVideoMode}
+                isFinalAssessmentPresent={isFinalAssessmentPresent}
               />
             </div>
           </div>
@@ -566,6 +570,7 @@ const Home = () => {
                 assessmentId={assessmentId}
                 onVideoIndexChange={handleVideoIndexChange}
                 isOnlyVideoMode={isOnlyVideoMode}
+                isFinalAssessmentPresent={isFinalAssessmentPresent}
               />
             </div>
           </div>
