@@ -163,7 +163,7 @@ export default function Analytics() {
             <h2 className="font-lato font-bold text-[16px] md:text-[20px] leading-[100%] tracking-[0.01em] text-[#111827]">
               Analytics
             </h2>
-            <p className="font-lato font-normal text-[12px] leading-[15px] tracking-[0em] text-[#4B5563]">
+            <p className="font-lato font-normal text-[12px] leading-[15px] md:leading-[100%] tracking-[0em] text-[#4B5563]">
               Track user progress and achievements
             </p>
           </div>
