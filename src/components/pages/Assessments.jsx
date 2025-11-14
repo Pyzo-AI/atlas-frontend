@@ -19,7 +19,6 @@ export default function Assessments({
                 key={index}
                 title={item.title}
                 value={item.value}
-                onClick={item.onClick}
               />
             ))}
       </div>

@@ -9,7 +9,7 @@ export default function Learning({ isLoading, analyticsData }) {
         {isLoading
           ? Array.from({ length: 4 }).map((_, index) => <AnalyticsCardSkeleton key={index} />)
           : analyticsData.map((item, index) => (
-              <AnalyticsCard key={index} title={item.title} value={item.value} onClick={item.onClick} />
+              <AnalyticsCard key={index} title={item.title} value={item.value} />
             ))}
       </div>
     </div>
