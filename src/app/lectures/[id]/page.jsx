@@ -425,7 +425,10 @@ const Home = () => {
         // slide duration then start from 0 (apply the same equal->0 rule)
         let startTime = typeof apiCurrentSlideDuration === "number" ? apiCurrentSlideDuration : 0;
 
-        if (
+        // If video is completed, always start from 0
+        if (slideObj?.is_completed) {
+          startTime = 0;
+        } else if (
           typeof slideObj?.duration === "number" &&
           typeof startTime === "number" &&
           Math.abs(slideObj.duration - startTime) <= 1e-6
