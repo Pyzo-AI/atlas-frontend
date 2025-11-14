@@ -125,7 +125,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center bg-[#FEFBFF] overflow-hidden mt-[-52px] px-4 sm:px-6">
+    <div className="relative min-h-screen w-full flex items-center justify-center bg-[#FEFBFF] overflow-hidden mt-[-44px] px-4 sm:px-6">
       {/* Background blur effects */}
       <div
         className="absolute w-[819px] h-[819px] left-[-318px] top-[221px] bg-[rgba(158,59,213,0.7)] rounded-full"

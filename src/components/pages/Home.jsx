@@ -205,7 +205,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
     >
       {/* badge */}
       {badgeInfo.subtitle && (
-        <div className="absolute top-4.5 right-4.5 flex flex-col items-end p-1 gap-0.5 bg-[#744FFF] rounded-[5px] z-10">
+        <div className="absolute top-4.5 right-4.5 flex flex-col items-end p-1 gap-0.5 bg-[#2762EA] rounded-[5px] z-10">
           <p className="font-lato font-medium text-[10px] leading-[10px] text-[#fff]">
             {badgeInfo.subtitle}
           </p>
@@ -231,7 +231,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
               {presentation?.title || "Unknown Title"}
             </h3>
            {presentation?.presentation_duration > 0 && presentation?.presentation_duration && (
-              <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-[#744FFF]">
+              <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-[#2762EA]">
                 <span className="font-lato font-medium text-[11px] leading-4 text-white">
                   {formatDuration(presentation.presentation_duration)}
                 </span>
@@ -356,13 +356,13 @@ const Home = () => {
     return (
       <div className="w-full min-h-screen bg-[#F9F9F9] animate-pulse">
         {/* Purple Header Section Skeleton */}
-        <div className="w-full h-[112px] bg-gray-300 relative mt-1">
+        <div className="w-full bg-gray-300 relative mt-1">
           {/* User Profile Skeleton */}
-          <div className="absolute flex items-center gap-3 sm:gap-[12px] w-[150px] h-[48px] left-4 sm:left-[40px] top-[32px]">
-            <div className="w-10 h-10 sm:w-[48px] sm:h-[48px] bg-gray-400 rounded-[60px]"></div>
-            <div className="flex flex-col justify-center items-start gap-1 sm:gap-[4px] w-[90px] h-[38px]">
-              <div className="w-[70px] h-[12px] bg-gray-400 rounded"></div>
-              <div className="w-[60px] h-[17px] bg-gray-400 rounded"></div>
+          <div className="flex items-center gap-3 sm:gap-[12px] px-4 sm:px-5 py-4 sm:py-6">
+            <div className="w-10 h-10 sm:w-[48px] sm:h-[48px] bg-gray-400 rounded-[60px] flex-shrink-0"></div>
+            <div className="flex flex-col justify-center items-start gap-1 sm:gap-[4px] min-w-0 flex-1">
+              <div className="w-[120px] h-[17px] bg-gray-400 rounded"></div>
+              <div className="w-[200px] h-[12px] bg-gray-400 rounded opacity-70"></div>
             </div>
           </div>
         </div>
@@ -414,9 +414,9 @@ const Home = () => {
     <>
       <div className="w-full min-h-screen bg-[#F9F9F9]">
         {/* Purple Header Section */}
-        <div className="w-full h-auto min-h-[112px] bg-[#744FFF] relative mt-1">
+        <div className="w-full bg-[#2762EA] relative mt-1">
           {/* User Profile */}
-          <div className="flex items-center gap-3 sm:gap-[12px] px-4 sm:px-[40px] py-6 sm:py-8">
+          <div className="flex items-center gap-3 sm:gap-[12px] px-4 sm:px-5 py-4 sm:py-6">
             <Image
               className="w-10 h-10 sm:w-[48px] sm:h-[48px] bg-[#F1F2F4] rounded-[60px] flex-shrink-0"
               src={chat_star}
@@ -434,15 +434,15 @@ const Home = () => {
           </div>
 
           {/* Learning Overview - Hidden by default as per Figma */}
-          <div className="absolute flex flex-col items-start gap-3 sm:gap-[12px] w-full h-[138px] px-4 sm:px-[40px] top-[104px] invisible">
+          {/* <div className="absolute flex flex-col items-start gap-3 sm:gap-[12px] w-full h-[138px] px-4 sm:px-[40px] top-[104px] invisible">
             <h3 className="w-full h-[17px] font-lato font-semibold text-sm sm:text-[14px] leading-[17px] text-white">
               Learning Overview
             </h3>
-          </div>
+          </div> */}
         </div>
 
         {/* Course Section */}
-        <div className="flex flex-col items-start gap-4 sm:gap-[16px] w-full px-4 sm:px-[40px] py-4 sm:py-[20px]">
+        <div className="flex flex-col items-start gap-4 sm:gap-[16px] w-full px-4 sm:px-5 py-4 sm:py-4">
           {/* Header with tabs */}
           <div className="flex justify-between items-center gap-4 sm:gap-[16px] w-full">
             <h2 className="font-lato font-bold text-base sm:text-[16px] leading-tight sm:leading-[19px] text-[#1A1C29]">
@@ -456,7 +456,7 @@ const Home = () => {
                   <button
                     key={tab}
                     onClick={() => setFilter(tab)}
-                    className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${filter === tab ? "bg-[#744FFF]" : ""
+                    className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${filter === tab ? "bg-[#2762EA]" : ""
                       }`}
                   >
                     <span
@@ -464,7 +464,7 @@ const Home = () => {
                         }`}
                     >
                       {tab === "all"
-                        ? `All (${counts.all})`
+                        ? `All`
                         : tab === "locked"
                           ? `Locked`
                           : tab === "in-progress"
@@ -486,7 +486,7 @@ const Home = () => {
               >
                 <span className="font-lato font-medium text-[12px] text-[#667085]">
                   {filter === "all"
-                    ? `All (${counts.all})`
+                    ? `All`
                     : filter === "locked"
                       ? `Locked`
                       : filter === "in-progress"
@@ -520,12 +520,12 @@ const Home = () => {
                           setIsDropdownOpen(false);
                         }}
                         className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${filter === tab
-                          ? "bg-[#744FFF] text-white"
+                          ? "bg-[#2762EA] text-white"
                           : "text-[#667085]"
                           }`}
                       >
                         {tab === "all"
-                          ? `All (${counts.all})`
+                          ? `All`
                           : tab === "locked"
                             ? `Locked`
                             : tab === "in-progress"
@@ -565,7 +565,7 @@ const Home = () => {
                   <div className="flex flex-col items-center justify-center w-full min-h-[50vh]">
                     <div className="flex flex-col items-center gap-4 text-center">
                       <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#F3EDFF] rounded-full flex items-center justify-center">
-                        <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#744FFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#2762EA]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
                       </div>
