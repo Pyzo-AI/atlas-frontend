@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useRef } from "react";
 import VideoPlaylist from "./VideoPlaylist";
 import SlideVideoSection from "./SlideVideoSection";
 
-const PPTSection = ({
+const PPTSection = React.forwardRef(({
   videos = [],
   loading = false,
   height = "calc(100vh - 240px)",
@@ -22,7 +22,17 @@ const PPTSection = ({
   onVideoIndexChange,
   isOnlyVideoMode,
   assessmentId
-}) => {
+}, ref) => {
+  const slideVideoRef = useRef(null);
+
+  // Expose pause method to parent component
+  React.useImperativeHandle(ref, () => ({
+    pauseSlideVideo: () => {
+      if (slideVideoRef.current) {
+        slideVideoRef.current.pauseSlideVideo();
+      }
+    }
+  }));
   return (
     <div
       className={`flex flex-col ${isPhoneView
@@ -44,6 +54,7 @@ const PPTSection = ({
         style={{ height: isPhoneView ? 'auto' : isMobileView ? 'auto' : height }}
       >
         <SlideVideoSection
+          ref={slideVideoRef}
           videos={videos}
           currentVideoTime={currentVideoTime + 0.1}
           isVideoPlaying={isVideoPlaying}
@@ -109,6 +120,8 @@ const PPTSection = ({
       </div>
     </div>
   );
-};
+});
+
+PPTSection.displayName = "PPTSection";
 
 export default PPTSection;

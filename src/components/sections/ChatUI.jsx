@@ -18,12 +18,14 @@ const ChatUI = ({
   setIsJumpedOnChatFromInteractionMode,
   isMobile = false,
   agentId,
+  onPauseSlideVideo
 }) => {
   const dispatch = useDispatch()
   const [showMicPopup, setShowMicPopup] = useState(false)
 
   const handleInteractionMode = async () => {
     if (!agentId) return;
+    onPauseSlideVideo(); 
     
     try {
       // Check microphone permission first

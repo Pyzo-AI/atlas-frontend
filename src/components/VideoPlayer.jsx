@@ -33,6 +33,7 @@ const VideoPlayer = forwardRef(
       currentTime = 0,
       disablePictureInPicture = true,
       controlsList = "nodownload",
+      showRemainingDuration = false,
     },
     ref
   ) => {
@@ -130,6 +131,9 @@ const VideoPlayer = forwardRef(
         autoplay: autoPlay,
         playbackRates: [0.5, 1, 1.5, 2],
         disablePictureInPicture: true,
+        controlBar: {
+          remainingTimeDisplay: showRemainingDuration,
+        },
         // iOS-specific configurations to prevent fullscreen
         playsinline: true,
         webkit_playsinline: true,
@@ -176,6 +180,21 @@ const VideoPlayer = forwardRef(
       }
 
       playerRef.current.ready(() => {
+        // Show/hide remaining time based on prop
+        if (showRemainingDuration) {
+          playerRef.current.addClass('vjs-show-remaining-time');
+          const remainingTimeDisplay = playerRef.current.controlBar.remainingTimeDisplay;
+          if (remainingTimeDisplay) {
+            remainingTimeDisplay.show();
+          }
+        } else {
+          playerRef.current.removeClass('vjs-show-remaining-time');
+          const remainingTimeDisplay = playerRef.current.controlBar.remainingTimeDisplay;
+          if (remainingTimeDisplay) {
+            remainingTimeDisplay.hide();
+          }
+        }
+
         // Disable fullscreen functionality
         const fullscreenToggle = playerRef.current.controlBar.fullscreenToggle;
         if (fullscreenToggle) {
@@ -1084,6 +1103,21 @@ const VideoPlayer = forwardRef(
           .video-js .vjs-fullscreen-control,
           .video-js .vjs-picture-in-picture-control {
             display: none !important;
+          }
+
+          /* Show remaining time when enabled */
+          .video-js.vjs-show-remaining-time .vjs-remaining-time {
+            display: block !important;
+          }
+
+          /* Ensure remaining time is visible on mobile */
+          .video-js .vjs-remaining-time {
+            display: none;
+          }
+
+          .video-js.vjs-show-remaining-time .vjs-remaining-time {
+            display: block !important;
+            order: 3;
           }
 
           /* Style playback rate menu to look more like default HTML video */

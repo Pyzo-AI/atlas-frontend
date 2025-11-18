@@ -19,6 +19,7 @@ import { usePortraitMode } from "@/hooks/usePortraitMode";
 import FullscreenController from "@/components/ui/FullscreenController";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress, clearVideoProgress } from "@/utils/videoProgress";
+import { clearAssessmentProgress } from "@/utils/assessmentProgress";
 
 // Portrait Mode Rotation Prompt Component
 const RotationPrompt = () => {
@@ -62,7 +63,7 @@ const CombinedBreadCrumb = React.memo(({ data }) => {
 });
 
 const CombinedPPTSection = React.memo(
-  ({
+  React.forwardRef(({
     isMobile = false,
     isPhone = false,
     videos,
@@ -76,11 +77,12 @@ const CombinedPPTSection = React.memo(
     onVideoIndexChange,
     isOnlyVideoMode,
     assessmentId
-  }) => {
+  }, ref) => {
     const width = isMobile ? "100%" : "70%";
 
     return (
       <PPTSection
+        ref={ref}
         videos={videos}
         loading={isLoading}
         currentVideoIndex={pptVideoIndex}
@@ -100,7 +102,7 @@ const CombinedPPTSection = React.memo(
         assessmentId={assessmentId}
       />
     );
-  }
+  })
 );
 
 const CombinedVideoPanel = React.memo(
@@ -113,6 +115,7 @@ const CombinedVideoPanel = React.memo(
     handleVideoStateChange,
     handlePauseVideo,
     handlePauseAnswerAudio,
+    handlePauseSlideVideo,
     presentationId,
     data,
     conversationHistory,
@@ -131,6 +134,7 @@ const CombinedVideoPanel = React.memo(
         onVideoStateChange={handleVideoStateChange}
         onPauseVideo={handlePauseVideo}
         onPauseAnswerAudio={handlePauseAnswerAudio}
+        onPauseSlideVideo={handlePauseSlideVideo}
         width={width}
         presentationId={presentationId}
         isMobileView={isMobile}
@@ -163,6 +167,7 @@ const Home = () => {
 
   const pathname = usePathname();
   const videoPanelRef = useRef(null);
+  const pptSectionRef = useRef(null);
   const dispatch = useDispatch();
   const { pptVideoIndex,currentVideoIndex } = useSelector((state) => state.video);
   const isPortrait = usePortraitMode();
@@ -222,6 +227,13 @@ const Home = () => {
     });
   };
 
+  // Handle pausing slide video
+  const handlePauseSlideVideo = () => {
+    if (pptSectionRef.current && pptSectionRef.current.pauseSlideVideo) {
+      pptSectionRef.current.pauseSlideVideo();
+    }
+  };
+
   // Handle video index change from PPT section
   const handleVideoIndexChange = (newIndex) => {
     dispatch(setCurrentVideoIndex(newIndex));
@@ -244,6 +256,11 @@ const Home = () => {
     }
   };
 
+  // Clear assessment progress when leaving page
+  const clearAssessmentProgressOnLeave = () => {
+    clearAssessmentProgress(presentationId);
+  };
+
   // Store submit function globally for cleanup
   useEffect(() => {
     window.submitVideoProgressGlobal = submitProgressToAPI;
@@ -252,6 +269,7 @@ const Home = () => {
         window.submitVideoProgressGlobal();
         delete window.submitVideoProgressGlobal;
       }
+      clearAssessmentProgressOnLeave();
     };
   }, [presentationId]);
 
@@ -271,6 +289,7 @@ const Home = () => {
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       submitProgressToAPI();
+      clearAssessmentProgressOnLeave();
       // For some browsers, we need to set returnValue
       e.returnValue = "";
     };
@@ -278,15 +297,18 @@ const Home = () => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         submitProgressToAPI();
+        clearAssessmentProgressOnLeave();
       }
     };
 
     const handlePageHide = (e) => {
       submitProgressToAPI();
+      clearAssessmentProgressOnLeave();
     };
 
     const handleUnload = () => {
       submitProgressToAPI();
+      clearAssessmentProgressOnLeave();
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -306,6 +328,7 @@ const Home = () => {
   useEffect(() => {
     const handleRouteChange = () => {
       submitProgressToAPI();
+      clearAssessmentProgressOnLeave();
     };
 
     // Listen for route changes
@@ -355,6 +378,7 @@ const Home = () => {
     const handlePopState = (e) => {
       console.log("Browser back/forward detected");
       submitProgressToAPI();
+      clearAssessmentProgressOnLeave();
     };
 
     // Track initial history length
@@ -368,6 +392,7 @@ const Home = () => {
       if (window.history.length < initialHistoryLength) {
         console.log("History length decreased - likely back navigation");
         submitProgressToAPI();
+        clearAssessmentProgressOnLeave();
       }
     }, 1000);
 
@@ -456,6 +481,7 @@ const Home = () => {
             {/* Left Side - Slides/PPT Section */}
             <div className={`${leftWidth} overflow-hidden`}>
               <CombinedPPTSection
+                ref={pptSectionRef}
                 isMobile={true}
                 isPhone={isPhone}
                 videos={videos}
@@ -483,6 +509,7 @@ const Home = () => {
                 handleVideoStateChange={handleVideoStateChange}
                 handlePauseVideo={handlePauseVideo}
                 handlePauseAnswerAudio={handlePauseAnswerAudio}
+                handlePauseSlideVideo={handlePauseSlideVideo}
                 presentationId={presentationId}
                 data={data}
                 conversationHistory={conversationHistory}
@@ -510,6 +537,7 @@ const Home = () => {
             <CombinedBreadCrumb data={data} />
             <div className="flex w-full h-[calc(100%-36px)] min-w-0 bg-white py-4 px-5">
               <CombinedPPTSection
+                ref={pptSectionRef}
                 videos={videos}
                 isLoading={isLoading}
                 pptVideoIndex={pptVideoIndex}
@@ -529,6 +557,7 @@ const Home = () => {
                 handleVideoStateChange={handleVideoStateChange}
                 handlePauseVideo={handlePauseVideo}
                 handlePauseAnswerAudio={handlePauseAnswerAudio}
+                handlePauseSlideVideo={handlePauseSlideVideo}
                 presentationId={presentationId}
                 data={data}
                 conversationHistory={conversationHistory}
