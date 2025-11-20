@@ -131,6 +131,9 @@ const VideoPlayer = forwardRef(
         autoplay: autoPlay,
         playbackRates: [0.5, 1, 1.5, 2],
         disablePictureInPicture: true,
+        userActions: {
+          click: false,
+        },
         controlBar: {
           remainingTimeDisplay: showRemainingDuration,
         },
@@ -247,6 +250,38 @@ const VideoPlayer = forwardRef(
           e.preventDefault();
           e.stopPropagation();
         });
+
+        // Add click to play/pause on video element
+        const videoElement = playerRef.current.el().querySelector('video');
+        if (videoElement) {
+          videoElement.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (playerRef.current.paused()) {
+              playerRef.current.play();
+            } else {
+              playerRef.current.pause();
+            }
+          }, true);
+        }
+
+        // Add spacebar to play/pause
+        const handleKeyDown = (e) => {
+          if (e.code === 'Space') {
+            e.preventDefault();
+            if (playerRef.current.paused()) {
+              playerRef.current.play();
+            } else {
+              playerRef.current.pause();
+            }
+          }
+        };
+        
+        document.addEventListener('keydown', handleKeyDown);
+        
+        // Store cleanup function
+        playerRef.current.spacebarCleanup = () => {
+          document.removeEventListener('keydown', handleKeyDown);
+        };
 
         // Prevent iOS fullscreen events
         const videoElForEvents = playerRef.current.el().querySelector('video');
@@ -789,6 +824,9 @@ const VideoPlayer = forwardRef(
 
       return () => {
         if (playerRef.current) {
+          if (playerRef.current.spacebarCleanup) {
+            playerRef.current.spacebarCleanup();
+          }
           playerRef.current.dispose();
           playerRef.current = null;
         }
