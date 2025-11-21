@@ -23,6 +23,7 @@ import { updateVideoProgress, startVideoSession } from "@/utils/videoProgress";
 import redirecting_logo from "@/assets/svg/redirecting.svg";
 import Image from "next/image";
 import VideoPlayerContainer from "@/components/VideoPlayerContainer";
+import FeedbackModal from "../modals/FeedbackModal";
 
 // Conversation history management for VideoPanel
 const {
@@ -87,6 +88,7 @@ const VideoPanel = forwardRef(
       canSkipVideo = false,
       assessmentId,
       isOnlyVideoMode = false,
+      isFinalAssessmentPresent = false,
     },
     ref
   ) => {
@@ -104,7 +106,7 @@ const VideoPanel = forwardRef(
     // Slide view tracking
     const [slideViewStartTime, setSlideViewStartTime] = useState("");
     const [videoStartTime, setVideoStartTime] = useState(0);
-
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const videoRef = useRef(null);
     const activeVideoRef = useRef(null);
     const preloadVideoRef = useRef(null); // For preloading next video
@@ -449,6 +451,9 @@ console.log(isQuestionMode,"isQuestionMode")
           let startTime = 0;
           if (typeof reduxCurrentVideoTime === "number" && reduxCurrentVideoTime > 0) {
             startTime = reduxCurrentVideoTime;
+          } else if (currentVideo?.is_completed) {
+            // If video is completed, always start from 0
+            startTime = 0;
           } else if (currentVideo && typeof currentVideo.duration_viewed === "number") {
             startTime = currentVideo.duration_viewed;
           }
@@ -556,6 +561,16 @@ console.log(isQuestionMode,"isQuestionMode")
       }
     }, [isQuestionMode]);
 
+    // Pause video when assessment is selected
+    useEffect(() => {
+      if (selectedAssessmentId && videoRef.current && !videoRef.current.paused) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+        dispatch(setIsVideoPlaying(false));
+        setAutoPlayEnabled(false);
+      }
+    }, [selectedAssessmentId, dispatch]);
+
     // Cleanup is handled by VideoPlayer component
 
     // Handle video end
@@ -599,7 +614,10 @@ console.log(isQuestionMode,"isQuestionMode")
         // Set start time for next video based on its duration_viewed (unless duration equals duration_viewed)
         try {
           let startTime = 0;
-          if (nextVideo && typeof nextVideo.duration_viewed === "number") {
+          // If next video is completed, always start from 0
+          if (nextVideo?.is_completed) {
+            startTime = 0;
+          } else if (nextVideo && typeof nextVideo.duration_viewed === "number") {
             startTime = nextVideo.duration_viewed;
           }
           if (
@@ -635,6 +653,9 @@ console.log(isQuestionMode,"isQuestionMode")
         }
       } else {
         // setShowRedirectPopup(true);
+        if(!isFinalAssessmentPresent){
+          setShowFeedbackModal(true);
+        }
         setAutoPlayEnabled(false);
         dispatch(setSelectedAssessmentId(assessmentId));
       }
@@ -672,7 +693,12 @@ console.log(isQuestionMode,"isQuestionMode")
         try {
           const target = videos?.[index];
           let startTime = 0;
-          if (target && typeof target.duration_viewed === "number") startTime = target.duration_viewed;
+          // If video is completed, always start from 0
+          if (target?.is_completed) {
+            startTime = 0;
+          } else if (target && typeof target.duration_viewed === "number") {
+            startTime = target.duration_viewed;
+          }
           if (
             target &&
             typeof target.duration === "number" &&
@@ -695,7 +721,12 @@ console.log(isQuestionMode,"isQuestionMode")
       try {
         const target = videos?.[index];
         let startTime = 0;
-        if (target && typeof target.duration_viewed === "number") startTime = target.duration_viewed;
+        // If video is completed, always start from 0
+        if (target?.is_completed) {
+          startTime = 0;
+        } else if (target && typeof target.duration_viewed === "number") {
+          startTime = target.duration_viewed;
+        }
         if (
           target &&
           typeof target.duration === "number" &&
@@ -932,6 +963,11 @@ console.log(isQuestionMode,"isQuestionMode")
             isMobile={isMobile && isPhone}
           />
         )}
+         <FeedbackModal
+                  isOpen={showFeedbackModal}
+                  onClose={() => setShowFeedbackModal(false)}
+                  presentationId={presentationId}
+                />
       </div>
     );
   }

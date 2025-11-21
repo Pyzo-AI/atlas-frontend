@@ -123,6 +123,7 @@ const CombinedVideoPanel = React.memo(
     canSkipVideo,
     assessmentId,
     isOnlyVideoMode,
+    isFinalAssessmentPresent
   }) => {
     const width = isMobile ? "100%" : "30%";
 
@@ -147,6 +148,7 @@ const CombinedVideoPanel = React.memo(
         canSkipVideo={canSkipVideo}
         assessmentId={assessmentId}
         isOnlyVideoMode={isOnlyVideoMode}
+        isFinalAssessmentPresent={isFinalAssessmentPresent}
       />
     );
   }
@@ -178,7 +180,8 @@ const Home = () => {
   const isMobileDevice = isPhone || isTablet;
   const isLandscape = !isPortrait && isMobileDevice;
   const isOnlyVideoMode = videos?.[currentVideoIndex]?.trainer_video === null;
- console.log(isOnlyVideoMode ,"isOnlyVideoMode123");
+  const isFinalAssessmentPresent = data?.assessment_details && data.assessment_details.length > 0 && data.assessment_details[0].id ? true : false;
+
   // Shared video state for synchronization
   const [videoState, setVideoState] = useState({
     currentTime: 0,
@@ -422,7 +425,10 @@ const Home = () => {
         // slide duration then start from 0 (apply the same equal->0 rule)
         let startTime = typeof apiCurrentSlideDuration === "number" ? apiCurrentSlideDuration : 0;
 
-        if (
+        // If video is completed, always start from 0
+        if (slideObj?.is_completed) {
+          startTime = 0;
+        } else if (
           typeof slideObj?.duration === "number" &&
           typeof startTime === "number" &&
           Math.abs(slideObj.duration - startTime) <= 1e-6
@@ -518,6 +524,7 @@ const Home = () => {
                 assessmentId={assessmentId}
                 onVideoIndexChange={handleVideoIndexChange}
                 isOnlyVideoMode={isOnlyVideoMode}
+                isFinalAssessmentPresent={isFinalAssessmentPresent}
               />
             </div>
           </div>
@@ -566,6 +573,7 @@ const Home = () => {
                 assessmentId={assessmentId}
                 onVideoIndexChange={handleVideoIndexChange}
                 isOnlyVideoMode={isOnlyVideoMode}
+                isFinalAssessmentPresent={isFinalAssessmentPresent}
               />
             </div>
           </div>
