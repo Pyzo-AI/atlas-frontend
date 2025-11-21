@@ -96,6 +96,30 @@ const VideoPlayerContainer = forwardRef(
       }
     }, [currentVideoIndex, initialVideoTime, dispatch]);
 
+    // Add direct event listener to video element for volume changes
+    useEffect(() => {
+      const videoElement = videoRef.current?.el?.()?.querySelector('video');
+      if (videoElement) {
+        const handleDirectVolumeChange = () => {
+          const newMuted = videoElement.muted;
+          const newVolume = videoElement.volume;
+          
+          if (newMuted !== videoSettings.muted || newVolume !== videoSettings.volume) {
+            setVideoSettings(prev => ({
+              ...prev,
+              muted: newMuted,
+              volume: newVolume,
+            }));
+          }
+        };
+        
+        videoElement.addEventListener('volumechange', handleDirectVolumeChange);
+        return () => videoElement.removeEventListener('volumechange', handleDirectVolumeChange);
+      }
+    }, [videoRef.current, videoSettings.muted, videoSettings.volume]);
+
+
+
     const handleTimeUpdate = (e) => {
       const time = e.target.currentTime;
 
@@ -315,18 +339,13 @@ const VideoPlayerContainer = forwardRef(
     };
 
     const handleVolumeChange = (e) => {
-      if (!isMobile) {
-        const newMuted = e.target.muted;
-        const newVolume = e.target.volume;
-
-        if (newMuted !== videoSettings.muted || newVolume !== videoSettings.volume) {
-          setVideoSettings((prev) => ({
-            ...prev,
-            muted: newMuted,
-            volume: newVolume,
-          }));
-        }
-      }
+      const newMuted = e.target.muted;
+      const newVolume = e.target.volume;
+      setVideoSettings({
+        ...videoSettings,
+        muted: newMuted,
+        volume: newVolume,
+      });
     };
 
     if ((isOnlyVideoMode && !currentVideo?.slide_video) || (!isOnlyVideoMode && !currentVideo?.trainer_video)) {
