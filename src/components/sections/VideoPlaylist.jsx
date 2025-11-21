@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setCurrentVideoIndex, setSelectedAssessmentId } from "@/store/features/videoSlice";
+import { setAutoPlayEnabled, setCurrentVideoIndex, setSelectedAssessmentId } from "@/store/features/videoSlice";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress } from "@/utils/videoProgress";
@@ -10,7 +10,6 @@ import { useParams } from "next/navigation";
 const VideoPlaylist = ({
   videos = [],
   loading = false,
-  onVideoSelect,
   isMobile = false,
   canSkipVideo = false,
   assessmentDetails = [],
@@ -126,6 +125,8 @@ const VideoPlaylist = ({
     if (markAssementNull) {
       dispatch(setSelectedAssessmentId(null));
     }
+
+    // posthog tracking
     if (index !== currentVideoIndex) {
       // Track slide view when manually selecting from playlist
       const selectedVideo = videos[index];
@@ -151,15 +152,11 @@ const VideoPlaylist = ({
       }
     }
 
-    if (onVideoSelect) {
-      // Use the callback from VideoPanel if provided
-      onVideoSelect(index);
-    } else {
-      // Fallback to direct dispatch if no callback provided
       if (index !== currentVideoIndex) {
         dispatch(setCurrentVideoIndex(index));
+        dispatch(setAutoPlayEnabled(true));
       }
-    }
+ 
   };
 
   if (loading) {

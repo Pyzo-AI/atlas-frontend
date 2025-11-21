@@ -12,7 +12,8 @@ const initialState = {
   currentVideoTime: 0,
   isVideoPlaying: false,
   answerPptIndex: null,
-  selectedAssessmentId: null, // For tracking selected assessment
+  selectedAssessmentId: null,
+  autoPlayEnabled: false,
 };
 
 const videoSlice = createSlice({
@@ -56,6 +57,9 @@ const videoSlice = createSlice({
     syncPptToVideoPanel: (state) => {
       state.pptVideoIndex = state.currentVideoIndex;
     },
+    setAutoPlayEnabled: (state, action) => {
+      state.autoPlayEnabled = action.payload;
+    },
   },
 });
 
@@ -72,5 +76,6 @@ export const {
   setAnswerPptIndex,
   setSelectedAssessmentId,
   syncPptToVideoPanel,
+  setAutoPlayEnabled,
 } = videoSlice.actions;
 export default videoSlice.reducer;

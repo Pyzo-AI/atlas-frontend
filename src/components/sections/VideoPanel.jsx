@@ -7,6 +7,7 @@ import {
   setAnswerPptIndex,
   setIsQuestionMode,
   setSelectedAssessmentId,
+  setAutoPlayEnabled,
 } from "@/store/features/videoSlice";
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -102,7 +103,6 @@ const VideoPanel = forwardRef(
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
     const [lastVideoSrc, setLastVideoSrc] = useState("");
-    const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
     // Slide view tracking
     const [slideViewStartTime, setSlideViewStartTime] = useState("");
     const [videoStartTime, setVideoStartTime] = useState(0);
@@ -117,6 +117,7 @@ const VideoPanel = forwardRef(
       isQuestionMode,
       currentVideoTime: reduxCurrentVideoTime,
       selectedAssessmentId,
+      autoPlayEnabled
     } = useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
@@ -127,7 +128,6 @@ const VideoPanel = forwardRef(
     useEffect(() => {
       isQuestionModeRef.current = isQuestionMode;
     }, [isQuestionMode]);
-console.log(isQuestionMode,"isQuestionMode")
     // Load conversation history on component mount
     useEffect(() => {
       const storedHistory = getStoredConversationHistory();
@@ -567,7 +567,7 @@ console.log(isQuestionMode,"isQuestionMode")
         videoRef.current.pause();
         setIsPlaying(false);
         dispatch(setIsVideoPlaying(false));
-        setAutoPlayEnabled(false);
+        dispatch(setAutoPlayEnabled(false));
       }
     }, [selectedAssessmentId, dispatch]);
 
@@ -610,7 +610,7 @@ console.log(isQuestionMode,"isQuestionMode")
           return;
         }
         console.log(nextVideo?.slide_assessments !== null, "nextVideo");
-        setAutoPlayEnabled(true); // Enable autoplay for next video
+        dispatch(setAutoPlayEnabled(true)); // Enable autoplay for next video
         // Set start time for next video based on its duration_viewed (unless duration equals duration_viewed)
         try {
           let startTime = 0;
@@ -656,7 +656,7 @@ console.log(isQuestionMode,"isQuestionMode")
         if(!isFinalAssessmentPresent){
           setShowFeedbackModal(true);
         }
-        setAutoPlayEnabled(false);
+        dispatch(setAutoPlayEnabled(false));
         dispatch(setSelectedAssessmentId(assessmentId));
       }
     };
@@ -676,70 +676,6 @@ console.log(isQuestionMode,"isQuestionMode")
       const minutes = Math.floor(timeInSeconds / 60);
       const seconds = Math.floor(timeInSeconds % 60);
       return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-    };
-
-    // Handle video selection from playlist
-    const handleVideoSelect = (index) => {
-      if (index !== currentVideoIndex) {
-        // Save progress for current video before switching
-        const currentVideo = videos[currentVideoIndex];
-        const currentTime = videoRef.current?.getCurrentTime() || 0;
-        if (currentVideo) {
-          updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
-        }
-
-        setAutoPlayEnabled(true); // Enable autoplay when selecting from playlist
-        // Set the new video's start time from its duration_viewed
-        try {
-          const target = videos?.[index];
-          let startTime = 0;
-          // If video is completed, always start from 0
-          if (target?.is_completed) {
-            startTime = 0;
-          } else if (target && typeof target.duration_viewed === "number") {
-            startTime = target.duration_viewed;
-          }
-          if (
-            target &&
-            typeof target.duration === "number" &&
-            typeof target.duration_viewed === "number" &&
-            Math.abs(target.duration - target.duration_viewed) <= 1e-6
-          ) {
-            startTime = 0;
-          }
-          setInitialVideoTime(startTime || 0);
-          dispatch(setCurrentVideoTime(startTime || 0));
-        } catch (err) {}
-        dispatch(setCurrentVideoIndex(index));
-        setIsPlaying(false);
-      }
-    };
-
-    // Handle transcript item click
-    const handleTranscriptClick = (index) => {
-      setAutoPlayEnabled(true);
-      try {
-        const target = videos?.[index];
-        let startTime = 0;
-        // If video is completed, always start from 0
-        if (target?.is_completed) {
-          startTime = 0;
-        } else if (target && typeof target.duration_viewed === "number") {
-          startTime = target.duration_viewed;
-        }
-        if (
-          target &&
-          typeof target.duration === "number" &&
-          typeof target.duration_viewed === "number" &&
-          Math.abs(target.duration - target.duration_viewed) <= 1e-6
-        ) {
-          startTime = 0;
-        }
-        setInitialVideoTime(startTime || 0);
-        dispatch(setCurrentVideoTime(startTime || 0));
-      } catch (err) {}
-      dispatch(setCurrentVideoIndex(index));
-      setIsPlaying(false);
     };
 
     // Toggle play/pause

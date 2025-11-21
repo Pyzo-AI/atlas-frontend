@@ -11,7 +11,6 @@ const PPTSection = React.forwardRef(({
   currentVideoTime = 0,
   isVideoPlaying = false,
   videoDuration = 0,
-  onVideoSelect,
   title,
   author,
   isMobileView = false,
@@ -112,7 +111,6 @@ const PPTSection = React.forwardRef(({
         <VideoPlaylist
           videos={videos}
           loading={loading}
-          onVideoSelect={onVideoSelect}
           canSkipVideo={canSkipVideo}
           isMobile={isPhoneView}
           assessmentDetails={assessmentDetails}
