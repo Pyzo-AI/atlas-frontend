@@ -156,7 +156,6 @@ const VideoPlaylist = ({
         //setCurrentVideoTime is used to reset video time to 0 when selecting a new video
         dispatch(setCurrentVideoTime(0));
         dispatch(setCurrentVideoIndex(index));
-        dispatch(setAutoPlayEnabled(true));
       }
  
   };
@@ -204,6 +203,7 @@ const VideoPlaylist = ({
                     return;
                   }
                   handleVideoSelect(index, true);
+                  dispatch(setAutoPlayEnabled(true));
                 }}
                 className={`relative flex-shrink-0  ${isMobile ? "w-[150px] h-[45px]" : "w-[119px] h-[68px]"
                   } rounded-lg transition-all duration-200 overflow-visible scroll-ml-4 ${!selectedAssessmentId && currentVideoIndex === index
@@ -267,6 +267,7 @@ const VideoPlaylist = ({
                       console.log('Assessment clicked:', assessment);
                       // Dispatch action to select this assessment and clear video selection
                       dispatch(setSelectedAssessmentId(assessmentId));
+                      dispatch(setAutoPlayEnabled(false));
                       handleVideoSelect(index, false); // Clear video selection when assessment is selected
                     }}
                     className={`relative flex-shrink-0 ${isMobile ? "w-[150px] h-[45px]" : "w-[119px] h-[68px]"

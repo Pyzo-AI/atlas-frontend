@@ -6,6 +6,7 @@ import {
   setCurrentVideoIndex,
   setCurrentSlide,
   setCurrentVideoTime,
+  setAutoPlayEnabled,
 } from "@/store/features/videoSlice";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
@@ -256,6 +257,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
       } else {
         console.log("Skipping ResultModal for middle assessment:", selectedAssessmentId);
         dispatch(setSelectedAssessmentId(null));
+        dispatch(setAutoPlayEnabled(true));
       }
 
       // Clear selected assessment
