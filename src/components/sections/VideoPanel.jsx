@@ -118,7 +118,7 @@ const VideoPanel = forwardRef(
       currentVideoTime: reduxCurrentVideoTime,
       selectedAssessmentId,
       autoPlayEnabled,
-      currentVideoTime
+      currentVideoTime,
     } = useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
@@ -468,7 +468,9 @@ const VideoPanel = forwardRef(
             startTime = 0;
           }
 
-          setInitialVideoTime(startTime);
+          // setInitialVideoTime(startTime);
+          // as quick fix it is set to 0 sec upper commented code is correct one
+          setInitialVideoTime(0);
 
           // VideoPlayer component handles loading automatically via src prop change
           // Preloading is handled internally by Video.js
@@ -543,8 +545,6 @@ const VideoPanel = forwardRef(
         });
       }
     }, [currentVideoIndex]);
-
-
 
     // Sync PPT to video panel when video starts playing
     useEffect(() => {
@@ -629,8 +629,12 @@ const VideoPanel = forwardRef(
           ) {
             startTime = 0;
           }
-          setInitialVideoTime(startTime || 0);
-          dispatch(setCurrentVideoTime(startTime || 0));
+          // setInitialVideoTime(startTime || 0);
+          // dispatch(setCurrentVideoTime(startTime || 0));
+
+          // as quick fix it is set to 0 sec upper commented code is correct one
+          setInitialVideoTime(0);
+          dispatch(setCurrentVideoTime(0));
         } catch (err) {
           // ignore
         }
@@ -654,7 +658,7 @@ const VideoPanel = forwardRef(
         }
       } else {
         // setShowRedirectPopup(true);
-        if(!isFinalAssessmentPresent){
+        if (!isFinalAssessmentPresent) {
           setShowFeedbackModal(true);
         }
         dispatch(setAutoPlayEnabled(false));
@@ -782,67 +786,69 @@ const VideoPanel = forwardRef(
         )}
 
         {/* Video Section - Responsive for both mobile and desktop */}
-     { !isOnlyVideoMode &&  <div
-          className={`cursor-pointer bg-white border border-[#E5E7EB] ${
-            isMobile
-              ? isPhone
-                ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
-                : "p-2 pb-1 rounded-lg"
-              : "p-3 pb-2 rounded-xl"
-          } ${showChat || isQuestionMode ? "hidden" : ""}`}
-          onClick={togglePlayPause}>
+        {!isOnlyVideoMode && (
           <div
-            className={`relative w-full bg-black overflow-hidden ${
-              isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
-            }`}>
-            <VideoPlayerContainer
-              ref={videoRef}
-              videos={videos}
-              currentVideoIndex={currentVideoIndex}
-              presentationId={presentationId}
-              canSkipVideo={canSkipVideo}
-              isMobile={isMobile}
-              onVideoStateChange={onVideoStateChange}
-              onVideoEnd={handleVideoEnd}
-              onSkipBackward={(data) => {
-                const userDetails = getUserDetailsFromToken();
-                const currentVideo = videos?.[currentVideoIndex];
-                if (currentVideo) {
-                  capture("video_skip_backward", {
-                    user_id: userDetails?.sub,
-                    video_id: currentVideo.slide,
-                    from_time: formatSeconds(data.from),
-                    to_time: formatSeconds(data.to),
-                  });
-                }
-              }}
-              className="absolute top-0 left-0 w-full h-full"
-              initialVideoTime={initialVideoTime}
-              autoPlayEnabled={autoPlayEnabled}
-              showRemainingDuration={isMobile}
-            />
-
-            {/* Custom styles are now handled by VideoPlayer component */}
-          </div>
-
-          {/* Time display - Responsive styling */}
-          <div
-            className={`px-1 flex justify-between font-lato text-gray-600 ${
+            className={`cursor-pointer bg-white border border-[#E5E7EB] ${
               isMobile
-                ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
-                : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
-            }`}>
-            <span>
-               {/* {formatTime(videoRef.current?.getCurrentTime() || 0)} / {formatTime(videoRef.current?.getDuration() || 0)} */}
-              {formatTime(currentVideoTime || 0)} / {formatTime(videos?.[currentVideoIndex]?.duration || 0)}
-            </span>
-            <span>
-              {isMobile
-                ? `${currentVideoIndex + 1}/${videos?.length}`
-                : `${(videos ?? [])?.[currentVideoIndex]?.slide}/${videos?.length}`}
-            </span>
+                ? isPhone
+                  ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
+                  : "p-2 pb-1 rounded-lg"
+                : "p-3 pb-2 rounded-xl"
+            } ${showChat || isQuestionMode ? "hidden" : ""}`}
+            onClick={togglePlayPause}>
+            <div
+              className={`relative w-full bg-black overflow-hidden ${
+                isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
+              }`}>
+              <VideoPlayerContainer
+                ref={videoRef}
+                videos={videos}
+                currentVideoIndex={currentVideoIndex}
+                presentationId={presentationId}
+                canSkipVideo={canSkipVideo}
+                isMobile={isMobile}
+                onVideoStateChange={onVideoStateChange}
+                onVideoEnd={handleVideoEnd}
+                onSkipBackward={(data) => {
+                  const userDetails = getUserDetailsFromToken();
+                  const currentVideo = videos?.[currentVideoIndex];
+                  if (currentVideo) {
+                    capture("video_skip_backward", {
+                      user_id: userDetails?.sub,
+                      video_id: currentVideo.slide,
+                      from_time: formatSeconds(data.from),
+                      to_time: formatSeconds(data.to),
+                    });
+                  }
+                }}
+                className="absolute top-0 left-0 w-full h-full"
+                initialVideoTime={initialVideoTime}
+                autoPlayEnabled={autoPlayEnabled}
+                showRemainingDuration={isMobile}
+              />
+
+              {/* Custom styles are now handled by VideoPlayer component */}
+            </div>
+
+            {/* Time display - Responsive styling */}
+            <div
+              className={`px-1 flex justify-between font-lato text-gray-600 ${
+                isMobile
+                  ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
+                  : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
+              }`}>
+              <span>
+                {/* {formatTime(videoRef.current?.getCurrentTime() || 0)} / {formatTime(videoRef.current?.getDuration() || 0)} */}
+                {formatTime(currentVideoTime || 0)} / {formatTime(videos?.[currentVideoIndex]?.duration || 0)}
+              </span>
+              <span>
+                {isMobile
+                  ? `${currentVideoIndex + 1}/${videos?.length}`
+                  : `${(videos ?? [])?.[currentVideoIndex]?.slide}/${videos?.length}`}
+              </span>
+            </div>
           </div>
-        </div>}
+        )}
 
         {/* AI Assistant Section - Responsive */}
         <div
@@ -901,11 +907,11 @@ const VideoPanel = forwardRef(
             isMobile={isMobile && isPhone}
           />
         )}
-         <FeedbackModal
-                  isOpen={showFeedbackModal}
-                  onClose={() => setShowFeedbackModal(false)}
-                  presentationId={presentationId}
-                />
+        <FeedbackModal
+          isOpen={showFeedbackModal}
+          onClose={() => setShowFeedbackModal(false)}
+          presentationId={presentationId}
+        />
       </div>
     );
   }
