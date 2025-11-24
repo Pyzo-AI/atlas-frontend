@@ -834,7 +834,7 @@ const VideoPanel = forwardRef(
             }`}>
             <span>
                {/* {formatTime(videoRef.current?.getCurrentTime() || 0)} / {formatTime(videoRef.current?.getDuration() || 0)} */}
-              {formatTime(currentVideoTime || 0)} / {formatTime(videoRef.current?.getDuration() || 0)}
+              {formatTime(currentVideoTime || 0)} / {formatTime(videos?.[currentVideoIndex]?.duration || 0)}
             </span>
             <span>
               {isMobile
