@@ -337,39 +337,49 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
                 {currentQuestion?.question_text}
               </h2>
 
-              {/* Options */}
-              <div className="space-y-1 sm:space-y-2">
-                {Object.entries(
-                  typeof currentQuestion?.options === "string"
-                    ? JSON.parse(currentQuestion.options.replace(/'/g, '"'))
-                    : currentQuestion?.options || {}
-                ).map(([option, text]) => (
-                  <div key={option} className="group">
-                    <label
-                      className={`flex items-start cursor-pointer p-1 sm:p-2 rounded-lg border transition-all duration-200 ${
-                        answers[currentQuestion.question_id] === option
-                          ? "border-[#744FFF] bg-[rgba(116,79,255,0.12)]"
-                          : "border-gray-200 hover:border-[#744FFF] hover:bg-[rgba(116,79,255,0.12)]"
-                      }`}
-                      onClick={() => handleAnswer(currentQuestion.question_id, option)}>
-                      <input
-                        type="radio"
-                        name={`question-${currentQuestion.question_id}`}
-                        value={option}
-                        checked={answers[currentQuestion.question_id] === option}
-                        onChange={() => handleAnswer(currentQuestion.question_id, option)}
-                        className="mt-0.5 mr-2 sm:mr-3 w-3 h-3 sm:w-4 sm:h-4 text-[#744FFF] accent-[#744FFF]"
-                        style={{
-                          accentColor: "#744FFF",
-                        }}
-                      />
-                      <span className="text-xs sm:text-sm md:text-sm text-gray-700 leading-relaxed flex-1">
-                        {option}. {text}
-                      </span>
-                    </label>
-                  </div>
-                ))}
-              </div>
+              {/* Render based on question type */}
+              {currentQuestion?.question_type === "SUBJECTIVE" ? (
+                <textarea
+                  value={answers[currentQuestion.question_id] || ""}
+                  onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
+                  placeholder="Type your answer here..."
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:border-[#744FFF] focus:outline-none resize-none transition-colors duration-200"
+                  rows={6}
+                />
+              ) : (
+                <div className="space-y-1 sm:space-y-2">
+                  {Object.entries(
+                    typeof currentQuestion?.options === "string"
+                      ? JSON.parse(currentQuestion.options.replace(/'/g, '"'))
+                      : currentQuestion?.options || {}
+                  ).map(([option, text]) => (
+                    <div key={option} className="group">
+                      <label
+                        className={`flex items-start cursor-pointer p-1 sm:p-2 rounded-lg border transition-all duration-200 ${
+                          answers[currentQuestion.question_id] === option
+                            ? "border-[#744FFF] bg-[rgba(116,79,255,0.12)]"
+                            : "border-gray-200 hover:border-[#744FFF] hover:bg-[rgba(116,79,255,0.12)]"
+                        }`}
+                        onClick={() => handleAnswer(currentQuestion.question_id, option)}>
+                        <input
+                          type="radio"
+                          name={`question-${currentQuestion.question_id}`}
+                          value={option}
+                          checked={answers[currentQuestion.question_id] === option}
+                          onChange={() => handleAnswer(currentQuestion.question_id, option)}
+                          className="mt-0.5 mr-2 sm:mr-3 w-3 h-3 sm:w-4 sm:h-4 text-[#744FFF] accent-[#744FFF]"
+                          style={{
+                            accentColor: "#744FFF",
+                          }}
+                        />
+                        <span className="text-xs sm:text-sm md:text-sm text-gray-700 leading-relaxed flex-1">
+                          {option}. {text}
+                        </span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Navigation Buttons */}
@@ -388,7 +398,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
               {isLastQuestion ? (
                 <button
                   onClick={handleSubmit}
-                  disabled={!answers[currentQuestion?.question_id] || isSubmitting}
+                  disabled={!answers[currentQuestion?.question_id]?.trim() || isSubmitting}
                   className={`px-6 sm:px-8 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-colors duration-200 ${
                     !answers[currentQuestion?.question_id] || isSubmitting
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
@@ -399,7 +409,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
               ) : (
                 <button
                   onClick={handleNext}
-                  disabled={!answers[currentQuestion?.question_id]}
+                  disabled={!answers[currentQuestion?.question_id]?.trim()}
                   className={`px-6 sm:px-8 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-colors duration-200 ${
                     !answers[currentQuestion?.question_id]
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
