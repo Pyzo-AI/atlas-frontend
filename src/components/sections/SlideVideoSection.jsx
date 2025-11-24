@@ -299,7 +299,8 @@ const SlideVideoSection = React.forwardRef(({
         key={`slide-video-${videoIndex}`}
         ref={slideVideoRef}
         src={videos[videoIndex].slide_video}
-        className="w-full h-full object-contain"
+        className="w-full h-full object-contain" 
+        style={{ aspectRatio: '16/9' }}
         muted
         playsInline
         onLoadStart={() => {
