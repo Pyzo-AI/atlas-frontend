@@ -117,7 +117,8 @@ const VideoPanel = forwardRef(
       isQuestionMode,
       currentVideoTime: reduxCurrentVideoTime,
       selectedAssessmentId,
-      autoPlayEnabled
+      autoPlayEnabled,
+      currentVideoTime
     } = useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
@@ -832,7 +833,8 @@ const VideoPanel = forwardRef(
                 : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
             }`}>
             <span>
-              {formatTime(videoRef.current?.getCurrentTime() || 0)} / {formatTime(videoRef.current?.getDuration() || 0)}
+               {/* {formatTime(videoRef.current?.getCurrentTime() || 0)} / {formatTime(videoRef.current?.getDuration() || 0)} */}
+              {formatTime(currentVideoTime || 0)} / {formatTime(videoRef.current?.getDuration() || 0)}
             </span>
             <span>
               {isMobile

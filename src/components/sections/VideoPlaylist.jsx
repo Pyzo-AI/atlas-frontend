@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setAutoPlayEnabled, setCurrentVideoIndex, setSelectedAssessmentId } from "@/store/features/videoSlice";
+import { setAutoPlayEnabled, setCurrentVideoIndex, setCurrentVideoTime, setSelectedAssessmentId } from "@/store/features/videoSlice";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress } from "@/utils/videoProgress";
@@ -153,6 +153,8 @@ const VideoPlaylist = ({
     }
 
       if (index !== currentVideoIndex) {
+        //setCurrentVideoTime is used to reset video time to 0 when selecting a new video
+        dispatch(setCurrentVideoTime(0));
         dispatch(setCurrentVideoIndex(index));
         dispatch(setAutoPlayEnabled(true));
       }
