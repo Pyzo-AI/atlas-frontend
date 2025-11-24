@@ -1517,19 +1517,6 @@ const VideoPlayer = forwardRef(
             width: auto !important;
             min-width: 4em !important;
           }
-          /* PC/Desktop - bottom 0 */
-          @media (min-height: 480px) {
-            .video-js .vjs-control-bar {
-              bottom: 0 !important;
-            }
-          }
-
-          /* Mobile/Tablet - bottom 13px */
-          @media (max-height: 479px) {
-            .video-js .vjs-control-bar {
-              bottom: 13px !important;
-            }
-          }
 
           /* Make sure other controls don't expand but have minimum space */
           .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
