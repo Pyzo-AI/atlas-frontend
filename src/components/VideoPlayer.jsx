@@ -672,16 +672,47 @@ const VideoPlayer = forwardRef(
                   }, 50);
 
                   showSkipAnimation();
+                  e.preventDefault();
+                  e.stopPropagation();
+                } else {
+                  // Single tap - toggle play/pause
+                  if (playerRef.current.paused()) {
+                    playerRef.current.play();
+                  } else {
+                    playerRef.current.pause();
+                  }
                 }
                 tapCount = 0;
               }, 300);
-
-              e.preventDefault();
-              e.stopPropagation();
+            } else {
+              // Right side tap - toggle play/pause
+              if (playerRef.current.paused()) {
+                playerRef.current.play();
+              } else {
+                playerRef.current.pause();
+              }
             }
           };
 
-          videoElement.addEventListener("touchend", handleVideoTap, { passive: false });
+          const actualVideo = videoElement.querySelector('video');
+          if (actualVideo) {
+            actualVideo.addEventListener("touchend", handleVideoTap, { passive: false });
+          }
+        } else {
+          // When seeking is allowed, add simple mobile touch handler
+          const videoElementForTouch = playerRef.current.el();
+          const handleMobileTouch = (e) => {
+            if (playerRef.current.paused()) {
+              playerRef.current.play();
+            } else {
+              playerRef.current.pause();
+            }
+          };
+          
+          const actualVideoForTouch = videoElementForTouch.querySelector('video');
+          if (actualVideoForTouch) {
+            actualVideoForTouch.addEventListener("touchend", handleMobileTouch, { passive: true });
+          }
         }
       });
 
