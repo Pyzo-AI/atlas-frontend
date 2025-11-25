@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { setSelectedAssessmentId } from "@/store/features/videoSlice";
 import InModuleAssessment from "./InModuleAssessment";
 import VideoPlayerContainer from "../VideoPlayerContainer";
+import Image from "next/image";
 
 const SlideVideoSection = React.forwardRef(({
   videos,
@@ -30,6 +31,7 @@ const SlideVideoSection = React.forwardRef(({
   const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
   const playPromiseRef = useRef(null);
   const { answerPptIndex, selectedAssessmentId,isQuestionMode } = useSelector((state) => state.video);
+  const { overlayImageUrl, isImageLoading } = useSelector((state) => state.image);
 
   // Expose pause method to parent component
   React.useImperativeHandle(ref, () => ({
@@ -245,6 +247,24 @@ const SlideVideoSection = React.forwardRef(({
               }}
             />
           )}
+        {/* Overlay Image */}
+        {isQuestionMode && (isImageLoading || overlayImageUrl) && (
+          <div className="absolute inset-0 z-30 bg-black bg-opacity-50 flex items-center justify-center">
+            {isImageLoading ? (
+              <div className="text-white text-center">
+                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-sm">Generating image...</p>
+              </div>
+            ) : (
+              <Image
+                src={overlayImageUrl}
+                alt="Generated overlay"
+                fill
+                className="object-fill"
+              />
+            )}
+          </div>
+        )}
         <VideoPlayerContainer
           ref={videoPlayerContainerRef}
           key={`video-player-${currentVideoIndex}`}
@@ -293,6 +313,24 @@ const SlideVideoSection = React.forwardRef(({
             <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
             <p className="text-sm">Loading slide video...</p>
           </div>
+        </div>
+      )}
+      {/* Overlay Image */}
+      {isQuestionMode && (isImageLoading || overlayImageUrl) && (
+        <div className="absolute inset-0 z-20 bg-black bg-opacity-50 flex items-center justify-center">
+          {isImageLoading ? (
+            <div className="text-white text-center">
+              <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+              <p className="text-sm">Generating image...</p>
+            </div>
+          ) : (
+            <Image
+              src={overlayImageUrl}
+              alt="Generated overlay"
+              fill
+              className="object-fill"
+            />
+          )}
         </div>
       )}
       <video

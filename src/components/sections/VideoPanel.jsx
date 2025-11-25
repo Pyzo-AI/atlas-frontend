@@ -25,6 +25,8 @@ import redirecting_logo from "@/assets/svg/redirecting.svg";
 import Image from "next/image";
 import VideoPlayerContainer from "@/components/VideoPlayerContainer";
 import FeedbackModal from "../modals/FeedbackModal";
+import { useGenerateImageMutation } from "@/store/api/questionsApi";
+import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
 
 // Conversation history management for VideoPanel
 const {
@@ -112,6 +114,7 @@ const VideoPanel = forwardRef(
     const preloadVideoRef = useRef(null); // For preloading next video
     const router = useRouter();
     const dispatch = useDispatch();
+    const [generateImage, { isLoading: isImageLoading }] = useGenerateImageMutation();
     const {
       currentVideoIndex,
       isQuestionMode,
@@ -219,8 +222,17 @@ const VideoPanel = forwardRef(
         }));
       },
       onMessage: (message) => {
+        console.log(message.message,"message")
         // Store in current session history (for ChatUI)
         if (message.source === "user") {
+          // Trigger dummy API call for image generation
+          dispatch(setImageLoading(true));
+          generateImage({ userMessage: message.message }).unwrap().then((response) => {
+            dispatch(setOverlayImage(response.imageUrl));
+          }).catch((error) => {
+            console.error('Failed to generate image:', error);
+            dispatch(setImageLoading(false));
+          });
           const content = message.message;
           if (content.trim() === "") return;
 
