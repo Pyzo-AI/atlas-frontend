@@ -80,16 +80,17 @@ export const questionsApi = createApi({
       providesTags: ['Question'],
     }),
 
-    // Dummy API call for image generation
+    // Generate image from presentation query
     generateImage: builder.mutation({
-      queryFn: async (userMessage) => {
-        await new Promise(resolve => setTimeout(resolve, 400));
-        return {
-          data: {
-            imageUrl: 'https://api.assets.uat.trainboost.esmagico.com/slide-recordings/8_b36fbbd6-3de8-43f2-b6fa-2a8f342bed97_complete_slide_image.png'
-          }
-        };
-      },
+      query: ({ presentationId, currentSlideId, userMessage }) => ({
+        url: 'api/presentations/query',
+        method: 'POST',
+        body: {
+          presentation_id: presentationId,
+          current_slide_id: currentSlideId,
+          query: userMessage,
+        },
+      }),
     }),
   }),
 });

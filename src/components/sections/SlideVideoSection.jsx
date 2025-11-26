@@ -15,7 +15,8 @@ const SlideVideoSection = React.forwardRef(({
   onVideoIndexChange,
   presentationId,
   canSkipVideo,
-  assessmentId
+  assessmentId,
+  showQueryRelatedSlides = false
 }, ref) => {
   const dispatch = useDispatch();
   const { currentVideoIndex ,currentVideoTime} = useSelector((state) => state.video);
@@ -248,7 +249,7 @@ const SlideVideoSection = React.forwardRef(({
             />
           )}
         {/* Overlay Image */}
-        {isQuestionMode && (isImageLoading || overlayImageUrl) && (
+        {showQueryRelatedSlides && isQuestionMode && (isImageLoading || overlayImageUrl) && (
           <div className="absolute inset-0 z-30 bg-black bg-opacity-50 flex items-center justify-center">
             {isImageLoading ? (
               <div className="text-white text-center">
@@ -316,7 +317,7 @@ const SlideVideoSection = React.forwardRef(({
         </div>
       )}
       {/* Overlay Image */}
-      {isQuestionMode && (isImageLoading || overlayImageUrl) && (
+      {showQueryRelatedSlides && isQuestionMode && (isImageLoading || overlayImageUrl) && (
         <div className="absolute inset-0 z-20 bg-black bg-opacity-50 flex items-center justify-center">
           {isImageLoading ? (
             <div className="text-white text-center">

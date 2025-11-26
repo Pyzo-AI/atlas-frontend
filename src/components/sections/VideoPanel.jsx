@@ -92,6 +92,7 @@ const VideoPanel = forwardRef(
       assessmentId,
       isOnlyVideoMode = false,
       isFinalAssessmentPresent = false,
+      showQueryRelatedSlides = false,
     },
     ref
   ) => {
@@ -222,18 +223,25 @@ const VideoPanel = forwardRef(
         }));
       },
       onMessage: (message) => {
-        console.log(message.message,"message")
+         const content = message.message;
         // Store in current session history (for ChatUI)
         if (message.source === "user") {
-          // Trigger dummy API call for image generation
-          dispatch(setImageLoading(true));
-          generateImage({ userMessage: message.message }).unwrap().then((response) => {
-            dispatch(setOverlayImage(response.imageUrl));
-          }).catch((error) => {
-            console.error('Failed to generate image:', error);
-            dispatch(setImageLoading(false));
-          });
-          const content = message.message;
+          // Trigger API call for image generation only if showQueryRelatedSlides is true
+          if (showQueryRelatedSlides) {
+            dispatch(setImageLoading(true));
+            const currentVideo = videos[currentVideoIndex];
+            generateImage({ 
+              presentationId: parseInt(presentationId),
+              currentSlideId: currentVideo?.slide,
+              userMessage: content, 
+            }).unwrap().then((response) => {
+              dispatch(setOverlayImage(response.imageUrl));
+            }).catch((error) => {
+              console.log('Failed to generate image:', error);
+              dispatch(setImageLoading(false));
+            });
+          }
+        
           if (content.trim() === "") return;
 
           // Track QnA interaction when user asks a question
