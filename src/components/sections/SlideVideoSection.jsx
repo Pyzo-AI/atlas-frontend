@@ -6,7 +6,7 @@ import VideoPlayerContainer from "../VideoPlayerContainer";
 
 const SlideVideoSection = React.forwardRef(({
   videos,
-  currentVideoTime = 0,
+  // currentVideoTime = 0,
   isVideoPlaying = false,
   videoDuration = 0,
   assessmentDetails = [],
@@ -17,7 +17,7 @@ const SlideVideoSection = React.forwardRef(({
   assessmentId
 }, ref) => {
   const dispatch = useDispatch();
-  const { currentVideoIndex } = useSelector((state) => state.video);
+  const { currentVideoIndex ,currentVideoTime} = useSelector((state) => state.video);
   const slideVideoRef = useRef(null);
   const preloadSlideVideoRef = useRef(null);
   const videoPlayerContainerRef = useRef(null);
@@ -299,7 +299,7 @@ const SlideVideoSection = React.forwardRef(({
         key={`slide-video-${videoIndex}`}
         ref={slideVideoRef}
         src={videos[videoIndex].slide_video}
-        className="w-full h-full object-contain"
+        className="w-full h-full object-fill" 
         muted
         playsInline
         onLoadStart={() => {

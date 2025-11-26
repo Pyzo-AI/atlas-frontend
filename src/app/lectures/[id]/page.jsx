@@ -437,7 +437,9 @@ const Home = () => {
         }
 
         dispatch(setCurrentVideoIndex(idx));
-        dispatch(setCurrentVideoTime(startTime || 0));
+        // dispatch(setCurrentVideoTime(startTime || 0));
+        // as quick fix it is set to 0 sec upper commented code is correct one
+        dispatch(setCurrentVideoTime(0));
 
         // Auto-select assessment if video is completed and has assessments
         if (slideObj?.is_completed) {
