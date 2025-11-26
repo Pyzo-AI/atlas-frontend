@@ -14,6 +14,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useConversation } from "@elevenlabs/react";
 import { CONVERSATION_CONFIG, cleanExpiredMessages } from "@/config/conversationConfig";
+import { liveKitService } from "@/lib/livekit";
+import { apiService } from "@/lib/api";
 import AILearningAssistant from "./AILearningAssistant";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
@@ -90,6 +92,7 @@ const VideoPanel = forwardRef(
       assessmentId,
       isOnlyVideoMode = false,
       isFinalAssessmentPresent = false,
+      liveKitAgentEnabled = true,
     },
     ref
   ) => {
@@ -125,6 +128,7 @@ const VideoPanel = forwardRef(
     const [showChat, setShowChat] = useState(false);
     const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
     const [contextSent, setContextSent] = useState(false);
+    const [liveKitRoom, setLiveKitRoom] = useState(null);
     // Keep ref updated with current isQuestionMode value
     useEffect(() => {
       isQuestionModeRef.current = isQuestionMode;
@@ -158,6 +162,23 @@ const VideoPanel = forwardRef(
     const formatSeconds = (sec) => {
       if (typeof sec !== "number") return sec;
       return Math.round(sec * 10) / 10;
+    };
+
+    // LiveKit connection state handler
+    const handleLiveKitStateChange = (state) => {
+      setConversationState({
+        isLoading: state.isConnecting,
+        isConnected: state.isConnected,
+        isAudioPlaying: liveKitService.isSpeaking(),
+      });
+      
+      if (state.isConnected) {
+        setIsListening(false);
+      }
+      
+      if (!state.isConnected && state.error) {
+        console.error('LiveKit connection error:', state.error);
+      }
     };
 
     // ElevenLabs Conversational AI
@@ -294,34 +315,52 @@ const VideoPanel = forwardRef(
           onPauseVideo();
         }
 
-        // Reset context sent flag for new conversation
-        setContextSent(false);
+        if (liveKitAgentEnabled) {
+          // LiveKit flow
+          setConversationState((prev) => ({ ...prev, isLoading: true }));
+          await navigator.mediaDevices.getUserMedia({ audio: true });
+          
+          // Create session and connect
+          const sessionResponse = await apiService.createSession(agentId);
+          
+          liveKitService.onConnectionStateChanged = handleLiveKitStateChange;
+          
+          await liveKitService.connect({
+            url: sessionResponse.livekit_url,
+            token: sessionResponse.token,
+            roomName: sessionResponse.room_name,
+          });
+          
+          setLiveKitRoom(sessionResponse.room_name);
+        } else {
+          // ElevenLabs flow
+          setContextSent(false);
+          setConversationState((prev) => ({ ...prev, isLoading: true }));
+          await navigator.mediaDevices.getUserMedia({ audio: true });
+          await conversation.startSession({
+            agentId: agentId,
+            userId: getUserDetailsFromToken()?.email,
+          });
 
-        setConversationState((prev) => ({ ...prev, isLoading: true }));
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        await conversation.startSession({
-          agentId: agentId,
-          userId: getUserDetailsFromToken()?.email,
-        });
-
-        // Send context immediately after connection is established
-        setTimeout(() => {
-          try {
-            const contextSummary = generateContextSummary();
-            if (contextSummary) {
-              try {
-                conversation.sendContextualUpdate(
-                  `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
-                );
-                setContextSent(true);
-              } catch (error) {
-                console.error("Error sending initial context:", error);
+          // Send context immediately after connection is established
+          setTimeout(() => {
+            try {
+              const contextSummary = generateContextSummary();
+              if (contextSummary) {
+                try {
+                  conversation.sendContextualUpdate(
+                    `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
+                  );
+                  setContextSent(true);
+                } catch (error) {
+                  console.error("Error sending initial context:", error);
+                }
               }
+            } catch (error) {
+              console.error("Could not send initial context:", error.message);
             }
-          } catch (error) {
-            console.error("Could not send initial context:", error.message);
-          }
-        }, 1500);
+          }, 1500);
+        }
       } catch (error) {
         console.log("Failed to start conversation:", error);
         setConversationState((prev) => ({ ...prev, isLoading: false }));
@@ -330,7 +369,12 @@ const VideoPanel = forwardRef(
 
     const stopConversation = async () => {
       try {
-        await conversation.endSession();
+        if (liveKitAgentEnabled) {
+          await liveKitService.disconnect();
+          setLiveKitRoom(null);
+        } else {
+          await conversation.endSession();
+        }
         setConversationState((prev) => ({
           ...prev,
           isConnected: false,
@@ -869,7 +913,7 @@ const VideoPanel = forwardRef(
         {isQuestionMode && (
           <QuestionModeAI
             isLoading={!conversationState.isConnected}
-            isAudioPlaying={conversation.isSpeaking}
+            isAudioPlaying={liveKitAgentEnabled ? liveKitService.isSpeaking() : conversation.isSpeaking}
             isConnected={conversationState.isConnected}
             avatarUrl={avatarUrl}
             isMobile={isMobile && isPhone}
