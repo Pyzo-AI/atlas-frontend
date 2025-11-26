@@ -7,6 +7,7 @@ import ai_answer_icon from '@/assets/svg/ai_answer_icon.svg'
 import close_icon from '@/assets/svg/close.svg'
 import Image from 'next/image'
 import MicrophonePermissionPopup from '@/components/ui/MicrophonePermissionPopup'
+import { clearOverlayImage } from '@/store/features/imageSlice'
 
 const ChatUI = ({
   onClose,
@@ -66,6 +67,8 @@ const ChatUI = ({
     if (isConnected && onStopConversation) {
       onStopConversation()
     }
+    // Clear overlay image state (query based slide image)
+    dispatch(clearOverlayImage())
   }
 
   return (
