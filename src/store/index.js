@@ -5,6 +5,7 @@ import { analyticsApi } from './api/analyticsApi';
 import videoReducer from './features/videoSlice';
 import resultModalReducer from './features/resultModalSlice';
 import feedbackModalReducer from './features/feedbackModalSlice';
+import imageReducer from './features/imageSlice';
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     video: videoReducer,
     resultModal: resultModalReducer,
     feedbackModal: feedbackModalReducer,
+    image: imageReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(questionsApi.middleware, analyticsApi.middleware),

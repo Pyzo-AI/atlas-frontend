@@ -25,6 +25,8 @@ import redirecting_logo from "@/assets/svg/redirecting.svg";
 import Image from "next/image";
 import VideoPlayerContainer from "@/components/VideoPlayerContainer";
 import FeedbackModal from "../modals/FeedbackModal";
+import { useGenerateImageMutation } from "@/store/api/questionsApi";
+import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
 
 // Conversation history management for VideoPanel
 const {
@@ -90,6 +92,7 @@ const VideoPanel = forwardRef(
       assessmentId,
       isOnlyVideoMode = false,
       isFinalAssessmentPresent = false,
+      showQueryRelatedSlides = false,
     },
     ref
   ) => {
@@ -112,6 +115,7 @@ const VideoPanel = forwardRef(
     const preloadVideoRef = useRef(null); // For preloading next video
     const router = useRouter();
     const dispatch = useDispatch();
+    const [generateImage, { isLoading: isImageLoading }] = useGenerateImageMutation();
     const {
       currentVideoIndex,
       isQuestionMode,
@@ -219,9 +223,25 @@ const VideoPanel = forwardRef(
         }));
       },
       onMessage: (message) => {
+         const content = message.message;
         // Store in current session history (for ChatUI)
         if (message.source === "user") {
-          const content = message.message;
+          // Trigger API call for image generation only if showQueryRelatedSlides is true
+          if (showQueryRelatedSlides) {
+            dispatch(setImageLoading(true));
+            const currentVideo = videos[currentVideoIndex];
+            generateImage({ 
+              presentationId: parseInt(presentationId),
+              currentSlideId: currentVideo?.slide,
+              userMessage: content, 
+            }).unwrap().then((response) => {
+              dispatch(setOverlayImage(response.slide_image_url));
+            }).catch((error) => {
+              console.log('Failed to generate image:', error);
+              dispatch(setImageLoading(false));
+            });
+          }
+        
           if (content.trim() === "") return;
 
           // Track QnA interaction when user asks a question
