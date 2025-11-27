@@ -83,7 +83,7 @@ export const questionsApi = createApi({
     // Generate image from presentation query
     generateImage: builder.mutation({
       query: ({ presentationId, currentSlideId, userMessage }) => ({
-        url: 'api/presentations/query',
+        url: 'presentations/query',
         method: 'POST',
         body: {
           presentation_id: presentationId,

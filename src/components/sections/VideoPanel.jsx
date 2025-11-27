@@ -235,7 +235,7 @@ const VideoPanel = forwardRef(
               currentSlideId: currentVideo?.slide,
               userMessage: content, 
             }).unwrap().then((response) => {
-              dispatch(setOverlayImage(response.imageUrl));
+              dispatch(setOverlayImage(response.slide_image_url));
             }).catch((error) => {
               console.log('Failed to generate image:', error);
               dispatch(setImageLoading(false));
