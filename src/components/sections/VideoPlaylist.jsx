@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setCurrentVideoIndex, setSelectedAssessmentId } from "@/store/features/videoSlice";
+import { setAutoPlayEnabled, setCurrentVideoIndex, setCurrentVideoTime, setSelectedAssessmentId } from "@/store/features/videoSlice";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress } from "@/utils/videoProgress";
@@ -10,7 +10,6 @@ import { useParams } from "next/navigation";
 const VideoPlaylist = ({
   videos = [],
   loading = false,
-  onVideoSelect,
   isMobile = false,
   canSkipVideo = false,
   assessmentDetails = [],
@@ -126,6 +125,8 @@ const VideoPlaylist = ({
     if (markAssementNull) {
       dispatch(setSelectedAssessmentId(null));
     }
+
+    // posthog tracking
     if (index !== currentVideoIndex) {
       // Track slide view when manually selecting from playlist
       const selectedVideo = videos[index];
@@ -151,15 +152,12 @@ const VideoPlaylist = ({
       }
     }
 
-    if (onVideoSelect) {
-      // Use the callback from VideoPanel if provided
-      onVideoSelect(index);
-    } else {
-      // Fallback to direct dispatch if no callback provided
       if (index !== currentVideoIndex) {
+        //setCurrentVideoTime is used to reset video time to 0 when selecting a new video
+        dispatch(setCurrentVideoTime(0));
         dispatch(setCurrentVideoIndex(index));
       }
-    }
+ 
   };
 
   if (loading) {
@@ -205,6 +203,7 @@ const VideoPlaylist = ({
                     return;
                   }
                   handleVideoSelect(index, true);
+                  dispatch(setAutoPlayEnabled(true));
                 }}
                 className={`relative flex-shrink-0  ${isMobile ? "w-[150px] h-[45px]" : "w-[119px] h-[68px]"
                   } rounded-lg transition-all duration-200 overflow-visible scroll-ml-4 ${!selectedAssessmentId && currentVideoIndex === index
@@ -268,6 +267,7 @@ const VideoPlaylist = ({
                       console.log('Assessment clicked:', assessment);
                       // Dispatch action to select this assessment and clear video selection
                       dispatch(setSelectedAssessmentId(assessmentId));
+                      dispatch(setAutoPlayEnabled(false));
                       handleVideoSelect(index, false); // Clear video selection when assessment is selected
                     }}
                     className={`relative flex-shrink-0 ${isMobile ? "w-[150px] h-[45px]" : "w-[119px] h-[68px]"

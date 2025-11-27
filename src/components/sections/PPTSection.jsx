@@ -11,7 +11,6 @@ const PPTSection = React.forwardRef(({
   currentVideoTime = 0,
   isVideoPlaying = false,
   videoDuration = 0,
-  onVideoSelect,
   title,
   author,
   isMobileView = false,
@@ -21,7 +20,8 @@ const PPTSection = React.forwardRef(({
   presentationId,
   onVideoIndexChange,
   isOnlyVideoMode,
-  assessmentId
+  assessmentId,
+  showQueryRelatedSlides = false
 }, ref) => {
   const slideVideoRef = useRef(null);
 
@@ -64,7 +64,8 @@ const PPTSection = React.forwardRef(({
           presentationId={presentationId}
           onVideoIndexChange={onVideoIndexChange}
           canSkipVideo={canSkipVideo}
-          assessmentId = {assessmentId}
+          assessmentId={assessmentId}
+          showQueryRelatedSlides={showQueryRelatedSlides}
         />
       </div>
 
@@ -112,7 +113,6 @@ const PPTSection = React.forwardRef(({
         <VideoPlaylist
           videos={videos}
           loading={loading}
-          onVideoSelect={onVideoSelect}
           canSkipVideo={canSkipVideo}
           isMobile={isPhoneView}
           assessmentDetails={assessmentDetails}

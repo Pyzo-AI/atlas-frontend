@@ -79,6 +79,19 @@ export const questionsApi = createApi({
       query: (presentationId) => `presentations/${presentationId}/assessments/summary`,
       providesTags: ['Question'],
     }),
+
+    // Generate image from presentation query
+    generateImage: builder.mutation({
+      query: ({ presentationId, currentSlideId, userMessage }) => ({
+        url: 'presentations/query',
+        method: 'POST',
+        body: {
+          presentation_id: presentationId,
+          current_slide_id: currentSlideId,
+          query: userMessage,
+        },
+      }),
+    }),
   }),
 });
 
@@ -93,4 +106,5 @@ export const {
   useSubmitAssessmentMutation,
   useSubmitFeedbackMutation,
   useGetAssessmentSummaryQuery,
+  useGenerateImageMutation,
 } = questionsApi;

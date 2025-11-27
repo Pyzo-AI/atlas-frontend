@@ -7,6 +7,7 @@ import {
   setAnswerPptIndex,
   setIsQuestionMode,
   setSelectedAssessmentId,
+  setAutoPlayEnabled,
 } from "@/store/features/videoSlice";
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,6 +25,8 @@ import redirecting_logo from "@/assets/svg/redirecting.svg";
 import Image from "next/image";
 import VideoPlayerContainer from "@/components/VideoPlayerContainer";
 import FeedbackModal from "../modals/FeedbackModal";
+import { useGenerateImageMutation } from "@/store/api/questionsApi";
+import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
 
 // Conversation history management for VideoPanel
 const {
@@ -89,6 +92,7 @@ const VideoPanel = forwardRef(
       assessmentId,
       isOnlyVideoMode = false,
       isFinalAssessmentPresent = false,
+      showQueryRelatedSlides = false,
     },
     ref
   ) => {
@@ -102,7 +106,6 @@ const VideoPanel = forwardRef(
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
     const [lastVideoSrc, setLastVideoSrc] = useState("");
-    const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
     // Slide view tracking
     const [slideViewStartTime, setSlideViewStartTime] = useState("");
     const [videoStartTime, setVideoStartTime] = useState(0);
@@ -112,11 +115,14 @@ const VideoPanel = forwardRef(
     const preloadVideoRef = useRef(null); // For preloading next video
     const router = useRouter();
     const dispatch = useDispatch();
+    const [generateImage, { isLoading: isImageLoading }] = useGenerateImageMutation();
     const {
       currentVideoIndex,
       isQuestionMode,
       currentVideoTime: reduxCurrentVideoTime,
       selectedAssessmentId,
+      autoPlayEnabled,
+      currentVideoTime,
     } = useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
@@ -127,7 +133,6 @@ const VideoPanel = forwardRef(
     useEffect(() => {
       isQuestionModeRef.current = isQuestionMode;
     }, [isQuestionMode]);
-console.log(isQuestionMode,"isQuestionMode")
     // Load conversation history on component mount
     useEffect(() => {
       const storedHistory = getStoredConversationHistory();
@@ -218,9 +223,25 @@ console.log(isQuestionMode,"isQuestionMode")
         }));
       },
       onMessage: (message) => {
+         const content = message.message;
         // Store in current session history (for ChatUI)
         if (message.source === "user") {
-          const content = message.message;
+          // Trigger API call for image generation only if showQueryRelatedSlides is true
+          if (showQueryRelatedSlides) {
+            dispatch(setImageLoading(true));
+            const currentVideo = videos[currentVideoIndex];
+            generateImage({ 
+              presentationId: parseInt(presentationId),
+              currentSlideId: currentVideo?.slide,
+              userMessage: content, 
+            }).unwrap().then((response) => {
+              dispatch(setOverlayImage(response.slide_image_url));
+            }).catch((error) => {
+              console.log('Failed to generate image:', error);
+              dispatch(setImageLoading(false));
+            });
+          }
+        
           if (content.trim() === "") return;
 
           // Track QnA interaction when user asks a question
@@ -467,7 +488,9 @@ console.log(isQuestionMode,"isQuestionMode")
             startTime = 0;
           }
 
-          setInitialVideoTime(startTime);
+          // setInitialVideoTime(startTime);
+          // as quick fix it is set to 0 sec upper commented code is correct one
+          setInitialVideoTime(0);
 
           // VideoPlayer component handles loading automatically via src prop change
           // Preloading is handled internally by Video.js
@@ -543,8 +566,6 @@ console.log(isQuestionMode,"isQuestionMode")
       }
     }, [currentVideoIndex]);
 
-
-
     // Sync PPT to video panel when video starts playing
     useEffect(() => {
       if (isPlaying) {
@@ -567,7 +588,7 @@ console.log(isQuestionMode,"isQuestionMode")
         videoRef.current.pause();
         setIsPlaying(false);
         dispatch(setIsVideoPlaying(false));
-        setAutoPlayEnabled(false);
+        dispatch(setAutoPlayEnabled(false));
       }
     }, [selectedAssessmentId, dispatch]);
 
@@ -610,7 +631,7 @@ console.log(isQuestionMode,"isQuestionMode")
           return;
         }
         console.log(nextVideo?.slide_assessments !== null, "nextVideo");
-        setAutoPlayEnabled(true); // Enable autoplay for next video
+        dispatch(setAutoPlayEnabled(true)); // Enable autoplay for next video
         // Set start time for next video based on its duration_viewed (unless duration equals duration_viewed)
         try {
           let startTime = 0;
@@ -628,8 +649,12 @@ console.log(isQuestionMode,"isQuestionMode")
           ) {
             startTime = 0;
           }
-          setInitialVideoTime(startTime || 0);
-          dispatch(setCurrentVideoTime(startTime || 0));
+          // setInitialVideoTime(startTime || 0);
+          // dispatch(setCurrentVideoTime(startTime || 0));
+
+          // as quick fix it is set to 0 sec upper commented code is correct one
+          setInitialVideoTime(0);
+          dispatch(setCurrentVideoTime(0));
         } catch (err) {
           // ignore
         }
@@ -653,10 +678,10 @@ console.log(isQuestionMode,"isQuestionMode")
         }
       } else {
         // setShowRedirectPopup(true);
-        if(!isFinalAssessmentPresent){
+        if (!isFinalAssessmentPresent) {
           setShowFeedbackModal(true);
         }
-        setAutoPlayEnabled(false);
+        dispatch(setAutoPlayEnabled(false));
         dispatch(setSelectedAssessmentId(assessmentId));
       }
     };
@@ -676,70 +701,6 @@ console.log(isQuestionMode,"isQuestionMode")
       const minutes = Math.floor(timeInSeconds / 60);
       const seconds = Math.floor(timeInSeconds % 60);
       return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-    };
-
-    // Handle video selection from playlist
-    const handleVideoSelect = (index) => {
-      if (index !== currentVideoIndex) {
-        // Save progress for current video before switching
-        const currentVideo = videos[currentVideoIndex];
-        const currentTime = videoRef.current?.getCurrentTime() || 0;
-        if (currentVideo) {
-          updateVideoProgress(presentationId, currentVideo.slide, Math.floor(currentTime - videoStartTime));
-        }
-
-        setAutoPlayEnabled(true); // Enable autoplay when selecting from playlist
-        // Set the new video's start time from its duration_viewed
-        try {
-          const target = videos?.[index];
-          let startTime = 0;
-          // If video is completed, always start from 0
-          if (target?.is_completed) {
-            startTime = 0;
-          } else if (target && typeof target.duration_viewed === "number") {
-            startTime = target.duration_viewed;
-          }
-          if (
-            target &&
-            typeof target.duration === "number" &&
-            typeof target.duration_viewed === "number" &&
-            Math.abs(target.duration - target.duration_viewed) <= 1e-6
-          ) {
-            startTime = 0;
-          }
-          setInitialVideoTime(startTime || 0);
-          dispatch(setCurrentVideoTime(startTime || 0));
-        } catch (err) {}
-        dispatch(setCurrentVideoIndex(index));
-        setIsPlaying(false);
-      }
-    };
-
-    // Handle transcript item click
-    const handleTranscriptClick = (index) => {
-      setAutoPlayEnabled(true);
-      try {
-        const target = videos?.[index];
-        let startTime = 0;
-        // If video is completed, always start from 0
-        if (target?.is_completed) {
-          startTime = 0;
-        } else if (target && typeof target.duration_viewed === "number") {
-          startTime = target.duration_viewed;
-        }
-        if (
-          target &&
-          typeof target.duration === "number" &&
-          typeof target.duration_viewed === "number" &&
-          Math.abs(target.duration - target.duration_viewed) <= 1e-6
-        ) {
-          startTime = 0;
-        }
-        setInitialVideoTime(startTime || 0);
-        dispatch(setCurrentVideoTime(startTime || 0));
-      } catch (err) {}
-      dispatch(setCurrentVideoIndex(index));
-      setIsPlaying(false);
     };
 
     // Toggle play/pause
@@ -845,66 +806,69 @@ console.log(isQuestionMode,"isQuestionMode")
         )}
 
         {/* Video Section - Responsive for both mobile and desktop */}
-     { !isOnlyVideoMode &&  <div
-          className={`cursor-pointer bg-white border border-[#E5E7EB] ${
-            isMobile
-              ? isPhone
-                ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
-                : "p-2 pb-1 rounded-lg"
-              : "p-3 pb-2 rounded-xl"
-          } ${showChat || isQuestionMode ? "hidden" : ""}`}
-          onClick={togglePlayPause}>
+        {!isOnlyVideoMode && (
           <div
-            className={`relative w-full bg-black overflow-hidden ${
-              isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
-            }`}>
-            <VideoPlayerContainer
-              ref={videoRef}
-              videos={videos}
-              currentVideoIndex={currentVideoIndex}
-              presentationId={presentationId}
-              canSkipVideo={canSkipVideo}
-              isMobile={isMobile}
-              onVideoStateChange={onVideoStateChange}
-              onVideoEnd={handleVideoEnd}
-              onSkipBackward={(data) => {
-                const userDetails = getUserDetailsFromToken();
-                const currentVideo = videos?.[currentVideoIndex];
-                if (currentVideo) {
-                  capture("video_skip_backward", {
-                    user_id: userDetails?.sub,
-                    video_id: currentVideo.slide,
-                    from_time: formatSeconds(data.from),
-                    to_time: formatSeconds(data.to),
-                  });
-                }
-              }}
-              className="absolute top-0 left-0 w-full h-full"
-              initialVideoTime={initialVideoTime}
-              autoPlayEnabled={autoPlayEnabled}
-              showRemainingDuration={isMobile}
-            />
-
-            {/* Custom styles are now handled by VideoPlayer component */}
-          </div>
-
-          {/* Time display - Responsive styling */}
-          <div
-            className={`px-1 flex justify-between font-lato text-gray-600 ${
+            className={`cursor-pointer bg-white border border-[#E5E7EB] ${
               isMobile
-                ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
-                : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
-            }`}>
-            <span>
-              {formatTime(videoRef.current?.getCurrentTime() || 0)} / {formatTime(videoRef.current?.getDuration() || 0)}
-            </span>
-            <span>
-              {isMobile
-                ? `${currentVideoIndex + 1}/${videos?.length}`
-                : `${(videos ?? [])?.[currentVideoIndex]?.slide}/${videos?.length}`}
-            </span>
+                ? isPhone
+                  ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
+                  : "p-2 pb-1 rounded-lg"
+                : "p-3 pb-2 rounded-xl"
+            } ${showChat || isQuestionMode ? "hidden" : ""}`}
+            onClick={togglePlayPause}>
+            <div
+              className={`relative w-full bg-black overflow-hidden ${
+                isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
+              }`}>
+              <VideoPlayerContainer
+                ref={videoRef}
+                videos={videos}
+                currentVideoIndex={currentVideoIndex}
+                presentationId={presentationId}
+                canSkipVideo={canSkipVideo}
+                isMobile={isMobile}
+                onVideoStateChange={onVideoStateChange}
+                onVideoEnd={handleVideoEnd}
+                onSkipBackward={(data) => {
+                  const userDetails = getUserDetailsFromToken();
+                  const currentVideo = videos?.[currentVideoIndex];
+                  if (currentVideo) {
+                    capture("video_skip_backward", {
+                      user_id: userDetails?.sub,
+                      video_id: currentVideo.slide,
+                      from_time: formatSeconds(data.from),
+                      to_time: formatSeconds(data.to),
+                    });
+                  }
+                }}
+                className="absolute top-0 left-0 w-full h-full"
+                initialVideoTime={initialVideoTime}
+                autoPlayEnabled={autoPlayEnabled}
+                showRemainingDuration={isMobile}
+              />
+
+              {/* Custom styles are now handled by VideoPlayer component */}
+            </div>
+
+            {/* Time display - Responsive styling */}
+            <div
+              className={`px-1 flex justify-between font-lato text-gray-600 ${
+                isMobile
+                  ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
+                  : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
+              }`}>
+              <span>
+                {/* {formatTime(videoRef.current?.getCurrentTime() || 0)} / {formatTime(videoRef.current?.getDuration() || 0)} */}
+                {formatTime(currentVideoTime || 0)} / {formatTime(videos?.[currentVideoIndex]?.duration || 0)}
+              </span>
+              <span>
+                {isMobile
+                  ? `${currentVideoIndex + 1}/${videos?.length}`
+                  : `${(videos ?? [])?.[currentVideoIndex]?.slide}/${videos?.length}`}
+              </span>
+            </div>
           </div>
-        </div>}
+        )}
 
         {/* AI Assistant Section - Responsive */}
         <div
@@ -963,11 +927,11 @@ console.log(isQuestionMode,"isQuestionMode")
             isMobile={isMobile && isPhone}
           />
         )}
-         <FeedbackModal
-                  isOpen={showFeedbackModal}
-                  onClose={() => setShowFeedbackModal(false)}
-                  presentationId={presentationId}
-                />
+        <FeedbackModal
+          isOpen={showFeedbackModal}
+          onClose={() => setShowFeedbackModal(false)}
+          presentationId={presentationId}
+        />
       </div>
     );
   }

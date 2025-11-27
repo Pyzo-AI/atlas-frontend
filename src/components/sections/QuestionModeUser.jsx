@@ -11,6 +11,7 @@ import {
   setQuestion,
   setAnswerPptIndex,
 } from '@/store/features/videoSlice'
+import { clearOverlayImage } from '@/store/features/imageSlice'
 
 const QuestionModeUser = ({
   onPauseVideo,
@@ -62,6 +63,8 @@ const QuestionModeUser = ({
     // Clear state
     dispatch(setQuestion(''))
     dispatch(setIsQuestionMode(false))
+    // Clear overlay image state (query based slide image)
+    dispatch(clearOverlayImage())
   }
 
   const handleChatHistory = () => {

@@ -146,7 +146,7 @@ const VideoPlayer = forwardRef(
           },
         },
         // Disable native fullscreen and controls on iOS
-        techOrder: ['html5'],
+        techOrder: ["html5"],
         html5: {
           nativeControlsForTouch: false,
           nativeAudioTracks: false,
@@ -185,13 +185,13 @@ const VideoPlayer = forwardRef(
       playerRef.current.ready(() => {
         // Show/hide remaining time based on prop
         if (showRemainingDuration) {
-          playerRef.current.addClass('vjs-show-remaining-time');
+          playerRef.current.addClass("vjs-show-remaining-time");
           const remainingTimeDisplay = playerRef.current.controlBar.remainingTimeDisplay;
           if (remainingTimeDisplay) {
             remainingTimeDisplay.show();
           }
         } else {
-          playerRef.current.removeClass('vjs-show-remaining-time');
+          playerRef.current.removeClass("vjs-show-remaining-time");
           const remainingTimeDisplay = playerRef.current.controlBar.remainingTimeDisplay;
           if (remainingTimeDisplay) {
             remainingTimeDisplay.hide();
@@ -211,11 +211,11 @@ const VideoPlayer = forwardRef(
         }
 
         // iOS-specific: Disable native fullscreen and controls
-        const videoEl = playerRef.current.el().querySelector('video');
+        const videoEl = playerRef.current.el().querySelector("video");
         if (videoEl) {
-          videoEl.setAttribute('playsinline', 'true');
-          videoEl.setAttribute('webkit-playsinline', 'true');
-          videoEl.setAttribute('x-webkit-airplay', 'deny');
+          videoEl.setAttribute("playsinline", "true");
+          videoEl.setAttribute("webkit-playsinline", "true");
+          videoEl.setAttribute("x-webkit-airplay", "deny");
 
           // Prevent iOS native fullscreen
           videoEl.webkitEnterFullscreen = undefined;
@@ -223,25 +223,25 @@ const VideoPlayer = forwardRef(
 
           // Override fullscreen API methods
           if (videoEl.requestFullscreen) {
-            videoEl.requestFullscreen = () => { };
+            videoEl.requestFullscreen = () => {};
           }
           if (videoEl.webkitRequestFullscreen) {
-            videoEl.webkitRequestFullscreen = () => { };
+            videoEl.webkitRequestFullscreen = () => {};
           }
           if (videoEl.mozRequestFullScreen) {
-            videoEl.mozRequestFullScreen = () => { };
+            videoEl.mozRequestFullScreen = () => {};
           }
           if (videoEl.msRequestFullscreen) {
-            videoEl.msRequestFullscreen = () => { };
+            videoEl.msRequestFullscreen = () => {};
           }
         }
 
         // Disable Video.js fullscreen functionality completely
         if (playerRef.current.requestFullscreen) {
-          playerRef.current.requestFullscreen = () => { };
+          playerRef.current.requestFullscreen = () => {};
         }
         if (playerRef.current.exitFullscreen) {
-          playerRef.current.exitFullscreen = () => { };
+          playerRef.current.exitFullscreen = () => {};
         }
 
         // Disable double-click to fullscreen
@@ -252,21 +252,25 @@ const VideoPlayer = forwardRef(
         });
 
         // Add click to play/pause on video element
-        const videoElement = playerRef.current.el().querySelector('video');
+        const videoElement = playerRef.current.el().querySelector("video");
         if (videoElement) {
-          videoElement.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (playerRef.current.paused()) {
-              playerRef.current.play();
-            } else {
-              playerRef.current.pause();
-            }
-          }, true);
+          videoElement.addEventListener(
+            "click",
+            (e) => {
+              e.stopPropagation();
+              if (playerRef.current.paused()) {
+                playerRef.current.play();
+              } else {
+                playerRef.current.pause();
+              }
+            },
+            true
+          );
         }
 
         // Add spacebar to play/pause
         const handleKeyDown = (e) => {
-          if (e.code === 'Space') {
+          if (e.code === "Space") {
             e.preventDefault();
             if (playerRef.current.paused()) {
               playerRef.current.play();
@@ -275,37 +279,45 @@ const VideoPlayer = forwardRef(
             }
           }
         };
-        
-        document.addEventListener('keydown', handleKeyDown);
-        
+
+        document.addEventListener("keydown", handleKeyDown);
+
         // Store cleanup function
         playerRef.current.spacebarCleanup = () => {
-          document.removeEventListener('keydown', handleKeyDown);
+          document.removeEventListener("keydown", handleKeyDown);
         };
 
         // Prevent iOS fullscreen events
-        const videoElForEvents = playerRef.current.el().querySelector('video');
+        const videoElForEvents = playerRef.current.el().querySelector("video");
         if (videoElForEvents) {
-          videoElForEvents.addEventListener('webkitbeginfullscreen', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-          }, true);
+          videoElForEvents.addEventListener(
+            "webkitbeginfullscreen",
+            (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            },
+            true
+          );
 
-          videoElForEvents.addEventListener('webkitendfullscreen', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-          }, true);
+          videoElForEvents.addEventListener(
+            "webkitendfullscreen",
+            (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            },
+            true
+          );
 
           // Prevent fullscreen change events
-          videoElForEvents.addEventListener('fullscreenchange', (e) => {
+          videoElForEvents.addEventListener("fullscreenchange", (e) => {
             if (document.fullscreenElement === videoElForEvents) {
               document.exitFullscreen();
             }
           });
 
-          videoElForEvents.addEventListener('webkitfullscreenchange', (e) => {
+          videoElForEvents.addEventListener("webkitfullscreenchange", (e) => {
             e.preventDefault();
             e.stopPropagation();
           });
@@ -316,9 +328,13 @@ const VideoPlayer = forwardRef(
         if (volumePanel) {
           const volumePanelEl = volumePanel.el();
           if (volumePanelEl) {
-            volumePanelEl.addEventListener('click', (e) => {
-              e.stopPropagation();
-            }, false);
+            volumePanelEl.addEventListener(
+              "click",
+              (e) => {
+                e.stopPropagation();
+              },
+              false
+            );
           }
         }
 
@@ -327,9 +343,13 @@ const VideoPlayer = forwardRef(
         if (playToggle) {
           const playToggleEl = playToggle.el();
           if (playToggleEl) {
-            playToggleEl.addEventListener('click', (e) => {
-              e.stopPropagation();
-            }, false);
+            playToggleEl.addEventListener(
+              "click",
+              (e) => {
+                e.stopPropagation();
+              },
+              false
+            );
           }
         }
 
@@ -353,9 +373,13 @@ const VideoPlayer = forwardRef(
             menuButton.setAttribute("data-mobile-visible", "true");
 
             // Prevent playback rate menu clicks from bubbling to parent
-            menuButton.addEventListener('click', (e) => {
-              e.stopPropagation();
-            }, false);
+            menuButton.addEventListener(
+              "click",
+              (e) => {
+                e.stopPropagation();
+              },
+              false
+            );
           }
         }
 
@@ -413,55 +437,55 @@ const VideoPlayer = forwardRef(
             };
 
             // Add event listeners with capture for iOS compatibility
-            progressControlEl.addEventListener('click', preventSeekEvents, true);
-            progressControlEl.addEventListener('mousedown', preventSeekEvents, true);
-            progressControlEl.addEventListener('mouseup', preventSeekEvents, true);
-            progressControlEl.addEventListener('touchstart', preventSeekEvents, true);
-            progressControlEl.addEventListener('touchend', preventSeekEvents, true);
-            progressControlEl.addEventListener('touchmove', preventSeekEvents, true);
+            progressControlEl.addEventListener("click", preventSeekEvents, true);
+            progressControlEl.addEventListener("mousedown", preventSeekEvents, true);
+            progressControlEl.addEventListener("mouseup", preventSeekEvents, true);
+            progressControlEl.addEventListener("touchstart", preventSeekEvents, true);
+            progressControlEl.addEventListener("touchend", preventSeekEvents, true);
+            progressControlEl.addEventListener("touchmove", preventSeekEvents, true);
 
             // Also prevent on child elements for iOS
             if (progressHolder) {
-              progressHolder.addEventListener('click', preventSeekEvents, true);
-              progressHolder.addEventListener('mousedown', preventSeekEvents, true);
-              progressHolder.addEventListener('touchstart', preventSeekEvents, true);
-              progressHolder.addEventListener('touchend', preventSeekEvents, true);
-              progressHolder.addEventListener('touchmove', preventSeekEvents, true);
+              progressHolder.addEventListener("click", preventSeekEvents, true);
+              progressHolder.addEventListener("mousedown", preventSeekEvents, true);
+              progressHolder.addEventListener("touchstart", preventSeekEvents, true);
+              progressHolder.addEventListener("touchend", preventSeekEvents, true);
+              progressHolder.addEventListener("touchmove", preventSeekEvents, true);
             }
 
             // Add event listeners to the CSS overlay elements for iOS Safari
             setTimeout(() => {
-              const overlayEl = progressControlEl.querySelector('::before');
-              const holderOverlayEl = progressHolder?.querySelector('::before');
+              const overlayEl = progressControlEl.querySelector("::before");
+              const holderOverlayEl = progressHolder?.querySelector("::before");
 
               // Since we can't directly access pseudo-elements, we'll add a real overlay
               const createOverlay = (parent) => {
-                const overlay = document.createElement('div');
-                overlay.style.position = 'absolute';
-                overlay.style.top = '-10px';
-                overlay.style.left = '0';
-                overlay.style.right = '0';
-                overlay.style.bottom = '-10px';
-                overlay.style.zIndex = '999999';
-                overlay.style.background = 'transparent';
-                overlay.style.pointerEvents = 'auto';
-                overlay.style.touchAction = 'none';
+                const overlay = document.createElement("div");
+                overlay.style.position = "absolute";
+                overlay.style.top = "-10px";
+                overlay.style.left = "0";
+                overlay.style.right = "0";
+                overlay.style.bottom = "-10px";
+                overlay.style.zIndex = "999999";
+                overlay.style.background = "transparent";
+                overlay.style.pointerEvents = "auto";
+                overlay.style.touchAction = "none";
 
-                overlay.addEventListener('click', preventSeekEvents, true);
-                overlay.addEventListener('mousedown', preventSeekEvents, true);
-                overlay.addEventListener('touchstart', preventSeekEvents, true);
-                overlay.addEventListener('touchend', preventSeekEvents, true);
-                overlay.addEventListener('touchmove', preventSeekEvents, true);
+                overlay.addEventListener("click", preventSeekEvents, true);
+                overlay.addEventListener("mousedown", preventSeekEvents, true);
+                overlay.addEventListener("touchstart", preventSeekEvents, true);
+                overlay.addEventListener("touchend", preventSeekEvents, true);
+                overlay.addEventListener("touchmove", preventSeekEvents, true);
 
-                parent.style.position = 'relative';
+                parent.style.position = "relative";
                 parent.appendChild(overlay);
                 return overlay;
               };
 
               // Create overlays for better iOS Safari blocking
-              if (progressControlEl && !progressControlEl.querySelector('.seek-block-overlay')) {
+              if (progressControlEl && !progressControlEl.querySelector(".seek-block-overlay")) {
                 const overlay = createOverlay(progressControlEl);
-                overlay.classList.add('seek-block-overlay');
+                overlay.classList.add("seek-block-overlay");
               }
             }, 100);
           }
@@ -469,7 +493,6 @@ const VideoPlayer = forwardRef(
 
         // Handle keyboard shortcuts
         if (!canSkipVideo) {
-
           // Disable keyboard shortcuts for seeking (but allow J for skip backward)
           playerRef.current.off("keydown");
           playerRef.current.on("keydown", (e) => {
@@ -649,16 +672,47 @@ const VideoPlayer = forwardRef(
                   }, 50);
 
                   showSkipAnimation();
+                  e.preventDefault();
+                  e.stopPropagation();
+                } else {
+                  // Single tap - toggle play/pause
+                  if (playerRef.current.paused()) {
+                    playerRef.current.play();
+                  } else {
+                    playerRef.current.pause();
+                  }
                 }
                 tapCount = 0;
               }, 300);
-
-              e.preventDefault();
-              e.stopPropagation();
+            } else {
+              // Right side tap - toggle play/pause
+              if (playerRef.current.paused()) {
+                playerRef.current.play();
+              } else {
+                playerRef.current.pause();
+              }
             }
           };
 
-          videoElement.addEventListener("touchend", handleVideoTap, { passive: false });
+          const actualVideo = videoElement.querySelector('video');
+          if (actualVideo) {
+            actualVideo.addEventListener("touchend", handleVideoTap, { passive: false });
+          }
+        } else {
+          // When seeking is allowed, add simple mobile touch handler
+          const videoElementForTouch = playerRef.current.el();
+          const handleMobileTouch = (e) => {
+            if (playerRef.current.paused()) {
+              playerRef.current.play();
+            } else {
+              playerRef.current.pause();
+            }
+          };
+          
+          const actualVideoForTouch = videoElementForTouch.querySelector('video');
+          if (actualVideoForTouch) {
+            actualVideoForTouch.addEventListener("touchend", handleMobileTouch, { passive: true });
+          }
         }
       });
 
@@ -727,7 +781,7 @@ const VideoPlayer = forwardRef(
           const currentTime = playerRef.current.currentTime();
           const previousTime = playerRef.current.previousTime || 0;
 
-          console.log('VideoPlayer seeking - blocking seek, restoring to:', previousTime);
+          console.log("VideoPlayer seeking - blocking seek, restoring to:", previousTime);
           // Restore to previous time to block seeking
           setTimeout(() => {
             if (playerRef.current && Math.abs(playerRef.current.currentTime() - currentTime) > 0.1) {
@@ -796,7 +850,7 @@ const VideoPlayer = forwardRef(
 
       // Additional iOS Safari seek prevention
       if (!canSkipVideo) {
-        const videoElement = playerRef.current.el().querySelector('video');
+        const videoElement = playerRef.current.el().querySelector("video");
         if (videoElement) {
           let lastValidTime = 0;
 
@@ -807,18 +861,22 @@ const VideoPlayer = forwardRef(
           };
 
           const restoreTimeOnSeek = () => {
-            if (seekingRef.current && Math.abs(videoElement.currentTime - lastValidTime) > 1 && !skipBackwardInProgressRef.current) {
-              console.log('Native video - blocking seek, restoring to:', lastValidTime);
+            if (
+              seekingRef.current &&
+              Math.abs(videoElement.currentTime - lastValidTime) > 1 &&
+              !skipBackwardInProgressRef.current
+            ) {
+              console.log("Native video - blocking seek, restoring to:", lastValidTime);
               videoElement.currentTime = lastValidTime;
             } else if (skipBackwardInProgressRef.current) {
-              console.log('Native video - allowing skip backward to:', videoElement.currentTime);
+              console.log("Native video - allowing skip backward to:", videoElement.currentTime);
               lastValidTime = videoElement.currentTime;
             }
           };
 
-          videoElement.addEventListener('timeupdate', preventSeekOnVideo);
-          videoElement.addEventListener('seeking', restoreTimeOnSeek);
-          videoElement.addEventListener('seeked', restoreTimeOnSeek);
+          videoElement.addEventListener("timeupdate", preventSeekOnVideo);
+          videoElement.addEventListener("seeking", restoreTimeOnSeek);
+          videoElement.addEventListener("seeked", restoreTimeOnSeek);
         }
       }
 
@@ -1145,18 +1203,13 @@ const VideoPlayer = forwardRef(
 
           /* Show remaining time when enabled */
           .video-js.vjs-show-remaining-time .vjs-remaining-time {
-            display: block !important;
+            display: none !important;
           }
 
-          /* Ensure remaining time is visible on mobile */
-          .video-js .vjs-remaining-time {
-            display: none;
-          }
-
-          .video-js.vjs-show-remaining-time .vjs-remaining-time {
-            display: block !important;
-            order: 3;
-          }
+          // /* Ensure remaining time is visible on mobile */
+          // .video-js .vjs-remaining-time {
+          //   display: none;
+          // }
 
           /* Style playback rate menu to look more like default HTML video */
           .video-js .vjs-playback-rate .vjs-playback-rate-value {
