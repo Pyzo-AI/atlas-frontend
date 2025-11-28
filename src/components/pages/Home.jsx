@@ -122,7 +122,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
   const getBadgeInfo = () => {
     if (presentation.isPresentationCompleted) {
       const completedDate = presentation.presentationCompletedDate
-        ? new Date(presentation.presentationCompletedDate).toLocaleDateString()
+        ? new Date(presentation.presentationCompletedDate).toLocaleDateString('en-GB')
         : "Unknown date";
       return {
         icon: completed,

@@ -8,6 +8,7 @@ import {
   setIsQuestionMode,
   setSelectedAssessmentId,
   setAutoPlayEnabled,
+  setShowChat,
 } from "@/store/features/videoSlice";
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -123,10 +124,11 @@ const VideoPanel = forwardRef(
       selectedAssessmentId,
       autoPlayEnabled,
       currentVideoTime,
+      showChat,
     } = useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
-    const [showChat, setShowChat] = useState(false);
+
     const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
     const [contextSent, setContextSent] = useState(false);
     // Keep ref updated with current isQuestionMode value
@@ -729,7 +731,7 @@ const VideoPanel = forwardRef(
         setIsJumpedOnChatFromInteractionMode(false);
         startConversation();
       }
-      setShowChat(false);
+      dispatch(setShowChat(false));
     };
 
     // Global redirect path - always go to assessment first
@@ -874,8 +876,6 @@ const VideoPanel = forwardRef(
         <div
           className={`${isMobile && isPhone ? "flex-1 min-h-0" : "h-full"} ${showChat || isQuestionMode ? "hidden" : ""}`}>
           <AILearningAssistant
-            setShowChat={setShowChat}
-            showChat={showChat}
             onStartConversation={startConversation}
             onStopConversation={stopConversation}
             onPauseVideo={pauseVideo}
@@ -904,7 +904,6 @@ const VideoPanel = forwardRef(
             onStartConversation={startConversation}
             onStopConversation={stopConversation}
             isConnected={conversationState.isConnected}
-            setShowChat={setShowChat}
             setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
             agentId={agentId}
             isMobile={isMobile && isPhone}
@@ -918,7 +917,6 @@ const VideoPanel = forwardRef(
             onPauseVideo={pauseVideo}
             onStartConversation={startConversation}
             onStopConversation={stopConversation}
-            setShowChat={setShowChat}
             onPauseAnswerAudio={stopAnswerAudio}
             isAudioPlaying={conversationState.isAudioPlaying}
             isAudioLoading={isListening}
