@@ -14,6 +14,7 @@ const initialState = {
   answerPptIndex: null,
   selectedAssessmentId: null,
   autoPlayEnabled: false,
+  showChat: false,
 };
 
 const videoSlice = createSlice({
@@ -60,6 +61,9 @@ const videoSlice = createSlice({
     setAutoPlayEnabled: (state, action) => {
       state.autoPlayEnabled = action.payload;
     },
+    setShowChat: (state, action) => {
+      state.showChat = action.payload;
+    },
   },
 });
 
@@ -77,5 +81,6 @@ export const {
   setSelectedAssessmentId,
   syncPptToVideoPanel,
   setAutoPlayEnabled,
+  setShowChat,
 } = videoSlice.actions;
 export default videoSlice.reducer;

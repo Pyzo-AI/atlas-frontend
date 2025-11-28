@@ -15,7 +15,7 @@ const VideoPlaylist = ({
   assessmentDetails = [],
 }) => {
   const dispatch = useDispatch();
-  const { currentVideoIndex, selectedAssessmentId , isQuestionMode} = useSelector((state) => state.video);
+  const { currentVideoIndex, selectedAssessmentId , isQuestionMode , showChat} = useSelector((state) => state.video);
   const scrollContainerRef = useRef(null);
   const videoItemRefs = useRef([]);
   const [showFade, setShowFade] = useState(false);
@@ -199,7 +199,7 @@ const VideoPlaylist = ({
                 key={`video-${index}`}
                 ref={(el) => (videoItemRefs.current[index] = el)}
                 onClick={() => {
-                  if (isQuestionMode || (!canSkipVideo && hasLocalProgress(video.slide) === 0)) {
+                  if (isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)) {
                     return;
                   }
                   handleVideoSelect(index, true);
@@ -210,7 +210,7 @@ const VideoPlaylist = ({
                     ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
                     : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
                   }
-                ${isQuestionMode || (!canSkipVideo && hasLocalProgress(video.slide) === 0)
+                ${isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)
                     ? "opacity-50 cursor-not-allowed"
                     : "cursor-pointer"
                   }`}
@@ -260,7 +260,7 @@ const VideoPlaylist = ({
                   <div
                     key={`assessment-${index}-${assessmentIndex}`}
                     onClick={() => {
-                      if (isQuestionMode || (!canSkipVideo && hasLocalProgress(video.slide) === 0)) {
+                      if (isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)) {
                         return;
                       }
                       // Handle assessment click
@@ -275,7 +275,7 @@ const VideoPlaylist = ({
                         ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
                         : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
                       }
-                    ${isQuestionMode || (!canSkipVideo && !isVideoCompleted(video?.slide))
+                    ${isQuestionMode || showChat || (!canSkipVideo && !isVideoCompleted(video?.slide))
                         ? "opacity-50 cursor-not-allowed"
                         : "cursor-pointer"
                       }`}
@@ -325,7 +325,7 @@ const VideoPlaylist = ({
               key="final-assessment"
               onClick={() => {
                 // Check if final assessment should be accessible
-                if (isQuestionMode || (!canSkipVideo && !assessmentDetails[0]?.passed && !isVideoCompleted(videos[videos.length - 1]?.slide))) {
+                if (isQuestionMode || showChat || (!canSkipVideo && !assessmentDetails[0]?.passed && !isVideoCompleted(videos[videos.length - 1]?.slide))) {
                   return;
                 }
                 const finalAssessment = assessmentDetails[0]; // Take the first assessment
@@ -337,7 +337,7 @@ const VideoPlaylist = ({
                   ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
                   : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
                 }
-              ${isQuestionMode || (!canSkipVideo && !assessmentDetails[0]?.passed && !isVideoCompleted(videos[videos.length - 1]?.slide))
+              ${isQuestionMode || showChat || (!canSkipVideo && !assessmentDetails[0]?.passed && !isVideoCompleted(videos[videos.length - 1]?.slide))
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
                 }`}

@@ -10,6 +10,7 @@ import {
   setIsQuestionMode,
   setQuestion,
   setAnswerPptIndex,
+  setShowChat,
 } from '@/store/features/videoSlice'
 import { clearOverlayImage } from '@/store/features/imageSlice'
 
@@ -17,7 +18,6 @@ const QuestionModeUser = ({
   onPauseVideo,
   onStartConversation,
   onStopConversation,
-  setShowChat,
   onPauseAnswerAudio,
   isAudioPlaying,
   isAudioLoading,
@@ -69,7 +69,7 @@ const QuestionModeUser = ({
 
   const handleChatHistory = () => {
     onPauseVideo() // Pause the video when opening chat
-    setShowChat(true)
+    dispatch(setShowChat(true))
     dispatch(setIsQuestionMode(false))
     setIsJumpedOnChatFromInteractionMode(true)
     if (isConnected && onStopConversation) {
