@@ -128,7 +128,7 @@ const VideoPanel = forwardRef(
     } = useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
-
+console.log(conversationHistory,"conversationHistory")
     const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
     const [contextSent, setContextSent] = useState(false);
     // Keep ref updated with current isQuestionMode value
@@ -228,22 +228,6 @@ const VideoPanel = forwardRef(
          const content = message.message;
         // Store in current session history (for ChatUI)
         if (message.source === "user") {
-          // Trigger API call for image generation only if showQueryRelatedSlides is true
-          if (showQueryRelatedSlides) {
-            dispatch(setImageLoading(true));
-            const currentVideo = videos[currentVideoIndex];
-            generateImage({ 
-              presentationId: parseInt(presentationId),
-              currentSlideId: currentVideo?.slide,
-              userMessage: content, 
-            }).unwrap().then((response) => {
-              dispatch(setOverlayImage(response.slide_image_url));
-            }).catch((error) => {
-              console.log('Failed to generate image:', error);
-              dispatch(setImageLoading(false));
-            });
-          }
-        
           if (content.trim() === "") return;
 
           // Track QnA interaction when user asks a question
@@ -258,6 +242,21 @@ const VideoPanel = forwardRef(
           setConversationHistory((prev) => [...prev, { type: "question", content }]);
         } else {
           setConversationHistory((prev) => [...prev, { type: "answer", content: message.message }]);
+               // Trigger API call for image generation only if showQueryRelatedSlides is true
+          if (showQueryRelatedSlides) {
+            dispatch(setImageLoading(true));
+            const currentVideo = videos[currentVideoIndex];
+            generateImage({ 
+              presentationId: parseInt(presentationId),
+              currentSlideId: currentVideo?.slide,
+              userMessage: content, 
+            }).unwrap().then((response) => {
+              dispatch(setOverlayImage(response.slide_image_url));
+            }).catch((error) => {
+              console.log('Failed to generate image:', error);
+              dispatch(setImageLoading(false));
+            });
+          }
         }
 
         // Send context after AI's first message (only if not already sent)
