@@ -814,7 +814,7 @@ const VideoPanel = forwardRef(
           <div className={`bg-white border border-[#E5E7EB] overflow-y-auto ${
             isMobile
               ? isPhone
-                ? "p-2 rounded flex-shrink-0"
+                ? "p-2 rounded-lg flex-shrink-0"
                 : "p-3 rounded-lg"
               : "p-3 rounded-xl"
           } ${showChat || isQuestionMode ? "hidden" : ""}`} style={{ height: '50vh' }}>
@@ -832,7 +832,7 @@ const VideoPanel = forwardRef(
             className={`cursor-pointer bg-white border border-[#E5E7EB] ${
               isMobile
                 ? isPhone
-                  ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
+                  ? "p-1 md:p-[6px] lg:p-3 rounded-lg flex-shrink-0"
                   : "p-2 pb-1 rounded-lg"
                 : "p-3 pb-2 rounded-xl"
             } ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "pointer-events-none blur-[1px]" : ""}`}
