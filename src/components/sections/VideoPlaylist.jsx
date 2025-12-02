@@ -214,7 +214,7 @@ const VideoPlaylist = ({
                         : "h-[68px]"
                       : isMobile
                         ? "w-[150px] h-[45px]"
-                        : "w-[119px] h-[68px]"
+                        : "w-[238px] h-[68px]"
                   } rounded-lg transition-all duration-200 overflow-visible ${isGridLayout ? "" : "scroll-ml-4"} ${
                     !selectedAssessmentId && currentVideoIndex === index
                       ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
@@ -287,7 +287,7 @@ const VideoPlaylist = ({
                             : "h-[68px]"
                           : isMobile
                             ? "w-[150px] h-[45px]"
-                            : "w-[119px] h-[68px]"
+                            : "w-[238px] h-[68px]"
                       } rounded-lg transition-all duration-200 overflow-visible ${isGridLayout ? "" : "scroll-ml-4"} ${
                         isAssessmentSelected
                           ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
@@ -363,7 +363,7 @@ const VideoPlaylist = ({
                     : "h-[68px]"
                   : isMobile
                     ? "w-[150px] h-[45px]"
-                    : "w-[119px] h-[68px]"
+                    : "w-[238px] h-[68px]"
               } rounded-lg transition-all duration-200 overflow-visible ${isGridLayout ? "" : "scroll-ml-4"} ${
                 selectedAssessmentId === assessmentDetails[0]?.id
                   ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
