@@ -24,6 +24,7 @@ const VideoPlaylist = ({
   const { currentVideoIndex, selectedAssessmentId, isQuestionMode, showChat } = useSelector((state) => state.video);
   const scrollContainerRef = useRef(null);
   const videoItemRefs = useRef([]);
+  const itemRefs = useRef({});
   const [showFade, setShowFade] = useState(false);
   const { capture } = usePostHog();
   const presentationId = useParams().id;
@@ -65,9 +66,9 @@ const VideoPlaylist = ({
     return isCompleted;
   };
 
-  // Auto-scroll to current video when currentVideoIndex changes
+  // Auto-scroll to current video when currentVideoIndex changes (horizontal layout)
   useEffect(() => {
-    if (videoItemRefs.current[currentVideoIndex] && scrollContainerRef.current) {
+    if (!isGridLayout && videoItemRefs.current[currentVideoIndex] && scrollContainerRef.current) {
       const currentVideoElement = videoItemRefs.current[currentVideoIndex];
       const container = scrollContainerRef.current;
 
@@ -90,7 +91,21 @@ const VideoPlaylist = ({
         });
       }
     }
-  }, [currentVideoIndex]);
+  }, [currentVideoIndex, isGridLayout]);
+
+  // Auto-scroll for grid layout
+  useEffect(() => {
+    if (isGridLayout) {
+      const selectedKey = selectedAssessmentId ? `assessment-${selectedAssessmentId}` : `video-${currentVideoIndex}`;
+      const selectedElement = itemRefs.current[selectedKey];
+      if (selectedElement) {
+        selectedElement.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      }
+    }
+  }, [currentVideoIndex, selectedAssessmentId, isGridLayout]);
 
   // Check scroll position on mount and when videos change
   useEffect(() => {
@@ -146,7 +161,7 @@ const VideoPlaylist = ({
 
   if (loading) {
     return (
-      <div className="mt-3 bg-white rounded-xl border border-[#E5E7EB]">
+      <div className="mt-3 bg-white rounded-xl border border-[#E5E7EB]" style={isGridLayout&&{paddingBottom:"10px"}}>
         <div className="px-5 py-4">
           <div className="flex overflow-x-auto gap-2 pb-2 pt-1 pr-1">
             {[1, 2, 3, 4].map((i) => (
@@ -181,7 +196,10 @@ const VideoPlaylist = ({
               items.push(
                 <div
                   key={`video-${index}`}
-                  ref={(el) => (videoItemRefs.current[index] = el)}
+                  ref={(el) => {
+                    videoItemRefs.current[index] = el;
+                    if (isGridLayout) itemRefs.current[`video-${index}`] = el;
+                  }}
                   onClick={() => {
                     if (isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)) {
                       return;
@@ -248,6 +266,9 @@ const VideoPlaylist = ({
                   items.push(
                     <div
                       key={`assessment-${index}-${assessmentIndex}`}
+                      ref={(el) => {
+                        if (isGridLayout) itemRefs.current[`assessment-${assessmentId}`] = el;
+                      }}
                       onClick={() => {
                         if (isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)) {
                           return;
@@ -317,6 +338,9 @@ const VideoPlaylist = ({
           {assessmentDetails && assessmentDetails.length > 0 && (
             <div
               key="final-assessment"
+              ref={(el) => {
+                if (isGridLayout) itemRefs.current[`assessment-${assessmentDetails[0]?.id}`] = el;
+              }}
               onClick={() => {
                 // Check if final assessment should be accessible
                 if (
