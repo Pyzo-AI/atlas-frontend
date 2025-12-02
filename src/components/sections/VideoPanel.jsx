@@ -243,7 +243,7 @@ console.log(conversationHistory,"conversationHistory")
         } else {
           setConversationHistory((prev) => [...prev, { type: "answer", content: message.message }]);
                // Trigger API call for image generation only if showQueryRelatedSlides is true
-          if (showQueryRelatedSlides) {
+          if (showQueryRelatedSlides && !content.includes("Hey Tell me")) {
             dispatch(setImageLoading(true));
             const currentVideo = videos[currentVideoIndex];
             generateImage({ 
