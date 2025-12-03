@@ -1,6 +1,11 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setAutoPlayEnabled, setCurrentVideoIndex, setCurrentVideoTime, setSelectedAssessmentId } from "@/store/features/videoSlice";
+import {
+  setAutoPlayEnabled,
+  setCurrentVideoIndex,
+  setCurrentVideoTime,
+  setSelectedAssessmentId,
+} from "@/store/features/videoSlice";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress } from "@/utils/videoProgress";
@@ -13,11 +18,13 @@ const VideoPlaylist = ({
   isMobile = false,
   canSkipVideo = false,
   assessmentDetails = [],
+  isGridLayout = false,
 }) => {
   const dispatch = useDispatch();
-  const { currentVideoIndex, selectedAssessmentId , isQuestionMode , showChat} = useSelector((state) => state.video);
+  const { currentVideoIndex, selectedAssessmentId, isQuestionMode, showChat } = useSelector((state) => state.video);
   const scrollContainerRef = useRef(null);
   const videoItemRefs = useRef([]);
+  const itemRefs = useRef({});
   const [showFade, setShowFade] = useState(false);
   const { capture } = usePostHog();
   const presentationId = useParams().id;
@@ -33,9 +40,7 @@ const VideoPlaylist = ({
   const checkScrollPosition = () => {
     if (scrollContainerRef.current) {
       const container = scrollContainerRef.current;
-      const isScrolledToEnd =
-        container.scrollLeft + container.clientWidth >=
-        container.scrollWidth - 10; // 10px threshold
+      const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 10; // 10px threshold
       setShowFade(!isScrolledToEnd);
     }
   };
@@ -43,16 +48,10 @@ const VideoPlaylist = ({
   const hasLocalProgress = (slideId) => {
     try {
       const progressData = getVideoProgress(presentationId);
-      const slideEntries =
-        progressData?.slide_data?.filter(
-          (entry) => entry.slide_id === slideId
-        ) || [];
+      const slideEntries = progressData?.slide_data?.filter((entry) => entry.slide_id === slideId) || [];
       const maxLocalDuration =
-        slideEntries.length > 0
-          ? Math.max(...slideEntries.map((entry) => entry.duration_seconds))
-          : 0;
-      const apiDuration =
-        videos.find((video) => video.slide === slideId)?.duration_viewed || 0;
+        slideEntries.length > 0 ? Math.max(...slideEntries.map((entry) => entry.duration_seconds)) : 0;
+      const apiDuration = videos.find((video) => video.slide === slideId)?.duration_viewed || 0;
       return Math.max(maxLocalDuration, apiDuration);
     } catch {
       return 0;
@@ -61,26 +60,15 @@ const VideoPlaylist = ({
 
   const isVideoCompleted = (slideId) => {
     const viewedDuration = Math.floor(hasLocalProgress(slideId));
-    const totalDuration = Math.floor(
-      videos.find((video) => video.slide === slideId)?.duration || 0
-    );
-    const isAlreadyCompleted = videos.find(
-      (video) => video.slide === slideId
-    )?.is_completed;
-    const isCompleted =
-      isAlreadyCompleted ||
-      (totalDuration > 0 && viewedDuration+1 >= totalDuration);
+    const totalDuration = Math.floor(videos.find((video) => video.slide === slideId)?.duration || 0);
+    const isAlreadyCompleted = videos.find((video) => video.slide === slideId)?.is_completed;
+    const isCompleted = isAlreadyCompleted || (totalDuration > 0 && viewedDuration + 1 >= totalDuration);
     return isCompleted;
   };
 
-
-
-  // Auto-scroll to current video when currentVideoIndex changes
+  // Auto-scroll to current video when currentVideoIndex changes (horizontal layout)
   useEffect(() => {
-    if (
-      videoItemRefs.current[currentVideoIndex] &&
-      scrollContainerRef.current
-    ) {
+    if (!isGridLayout && videoItemRefs.current[currentVideoIndex] && scrollContainerRef.current) {
       const currentVideoElement = videoItemRefs.current[currentVideoIndex];
       const container = scrollContainerRef.current;
 
@@ -96,15 +84,28 @@ const VideoPlaylist = ({
 
       // Calculate scroll position to center the item
       if (isOutOfViewLeft || isOutOfViewRight) {
-        const scrollTo =
-          itemOffsetLeft - container.clientWidth / 2 + itemRect.width / 2;
+        const scrollTo = itemOffsetLeft - container.clientWidth / 2 + itemRect.width / 2;
         container.scrollTo({
           left: scrollTo,
           behavior: "smooth",
         });
       }
     }
-  }, [currentVideoIndex]);
+  }, [currentVideoIndex, isGridLayout]);
+
+  // Auto-scroll for grid layout
+  useEffect(() => {
+    if (isGridLayout) {
+      const selectedKey = selectedAssessmentId ? `assessment-${selectedAssessmentId}` : `video-${currentVideoIndex}`;
+      const selectedElement = itemRefs.current[selectedKey];
+      if (selectedElement) {
+        selectedElement.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      }
+    }
+  }, [currentVideoIndex, selectedAssessmentId, isGridLayout]);
 
   // Check scroll position on mount and when videos change
   useEffect(() => {
@@ -121,7 +122,6 @@ const VideoPlaylist = ({
   }, []);
 
   const handleVideoSelect = (index, markAssementNull) => {
-
     if (markAssementNull) {
       dispatch(setSelectedAssessmentId(null));
     }
@@ -152,24 +152,22 @@ const VideoPlaylist = ({
       }
     }
 
-      if (index !== currentVideoIndex) {
-        //setCurrentVideoTime is used to reset video time to 0 when selecting a new video
-        dispatch(setCurrentVideoTime(0));
-        dispatch(setCurrentVideoIndex(index));
-      }
- 
+    if (index !== currentVideoIndex) {
+      //setCurrentVideoTime is used to reset video time to 0 when selecting a new video
+      dispatch(setCurrentVideoTime(0));
+      dispatch(setCurrentVideoIndex(index));
+    }
   };
 
   if (loading) {
     return (
-      <div className="mt-3 bg-white rounded-xl border border-[#E5E7EB]">
+      <div className="mt-3 bg-white rounded-xl border border-[#E5E7EB]" style={isGridLayout&&{paddingBottom:"10px"}}>
         <div className="px-5 py-4">
           <div className="flex overflow-x-auto gap-2 pb-2 pt-1 pr-1">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="flex-shrink-0 w-[119px] h-[68px] bg-white border border-[#E5E7EB] rounded-lg animate-pulse"
-              >
+                className="flex-shrink-0 w-[119px] h-[68px] bg-white border border-[#E5E7EB] rounded-lg animate-pulse">
                 <div className="p-2 flex flex-col gap-1.5">
                   <div className="h-7 bg-gray-200 rounded w-full"></div>
                   <div className="h-3 bg-gray-100 rounded w-1/2"></div>
@@ -186,168 +184,204 @@ const VideoPlaylist = ({
     <div className="w-full rounded-xl relative">
       <div
         ref={scrollContainerRef}
-        className="overflow-x-auto overflow-y-visible"
-        style={{ scrollBehavior: "smooth" }}
-      >
-        <div className="flex gap-2 pb-1.5 pt-2 lg:pt-5 overflow-y-visible">
-          {videos.map((video, index) => {
-            const items = [];
+        className={isGridLayout ? "overflow-y-auto h-full" : "overflow-x-auto overflow-y-visible"}
+        style={{ scrollBehavior: "smooth" }}>
+        <div
+          className={isGridLayout ? "grid grid-cols-1 gap-2 p-2" : "flex gap-2 pb-1.5 pt-2 lg:pt-5 overflow-y-visible"}>
+          {videos
+            .map((video, index) => {
+              const items = [];
 
-            // Add the video item
-            items.push(
-              <div
-                key={`video-${index}`}
-                ref={(el) => (videoItemRefs.current[index] = el)}
-                onClick={() => {
-                  if (isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)) {
-                    return;
+              // Add the video item
+              items.push(
+                <div
+                  key={`video-${index}`}
+                  ref={(el) => {
+                    videoItemRefs.current[index] = el;
+                    if (isGridLayout) itemRefs.current[`video-${index}`] = el;
+                  }}
+                  onClick={() => {
+                    if (isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)) {
+                      return;
+                    }
+                    handleVideoSelect(index, true);
+                    dispatch(setAutoPlayEnabled(true));
+                  }}
+                  className={`relative ${isGridLayout ? "w-full" : "flex-shrink-0"} ${
+                    isGridLayout
+                      ? isMobile
+                        ? "h-[45px]"
+                        : "h-[68px]"
+                      : isMobile
+                        ? "w-[150px] h-[45px]"
+                        : "w-[238px] h-[68px]"
+                  } rounded-lg transition-all duration-200 overflow-visible ${isGridLayout ? "" : "scroll-ml-4"} ${
+                    !selectedAssessmentId && currentVideoIndex === index
+                      ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
+                      : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
                   }
-                  handleVideoSelect(index, true);
-                  dispatch(setAutoPlayEnabled(true));
-                }}
-                className={`relative flex-shrink-0  ${isMobile ? "w-[150px] h-[45px]" : "w-[119px] h-[68px]"
-                  } rounded-lg transition-all duration-200 overflow-visible scroll-ml-4 ${!selectedAssessmentId && currentVideoIndex === index
-                    ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
-                    : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
-                  }
-                ${isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)
+                ${
+                  isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)
                     ? "opacity-50 cursor-not-allowed"
                     : "cursor-pointer"
-                  }`}
-              >
-                {/* Video Info Container - using padding instead of absolute positioning */}
-                <div className="p-2 flex flex-col gap-1.5">
-                  <h4
-                    className={`font-lato font-medium ${isMobile ? "text-[9px] text-600" : "text-[12px]"
-                      } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}
-                  >
-                    {video.title || "Untitled Video"}
-                  </h4>
-                  {!isMobile && (
-                    <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
-                      {formatDuration(video.duration) || "0:00"}
-                    </div>
-                  )}
-                </div>
-                  
-                {/* Status indicator - keeping absolute position as requested */}
-                {isVideoCompleted(video?.slide) && (
-                  <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
-                    <svg
-                      className="w-[9.6px] h-[9.6px] text-white"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                )}
-              </div>
-            );
-
-            // Add assessment items if they exist for this video
-            if (video.slide_assessments && video.slide_assessments.length > 0) {
-              video.slide_assessments.forEach((assessment, assessmentIndex) => {
-                const assessmentId = assessment.id; // Use the actual assessment ID from the data
-                const isAssessmentCompletedLocal = isAssessmentCompletedLocally(presentationId, assessmentId) || assessment.attempts_used > 0;
-                const isAssessmentSelected = selectedAssessmentId === assessmentId;
-
-                items.push(
-                  <div
-                    key={`assessment-${index}-${assessmentIndex}`}
-                    onClick={() => {
-                      if (isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)) {
-                        return;
-                      }
-                      // Handle assessment click
-                      console.log('Assessment clicked:', assessment);
-                      // Dispatch action to select this assessment and clear video selection
-                      dispatch(setSelectedAssessmentId(assessmentId));
-                      dispatch(setAutoPlayEnabled(false));
-                      handleVideoSelect(index, false); // Clear video selection when assessment is selected
-                    }}
-                    className={`relative flex-shrink-0 ${isMobile ? "w-[150px] h-[45px]" : "w-[119px] h-[68px]"
-                      } rounded-lg transition-all duration-200 overflow-visible scroll-ml-4 ${isAssessmentSelected
-                        ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
-                        : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
-                      }
-                    ${isQuestionMode || showChat || (!canSkipVideo && !isVideoCompleted(video?.slide))
-                        ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer"
-                      }`}
-                  >
-                    {/* Assessment Info Container */}
-                    <div className="p-2 flex flex-col gap-1.5">
-                      <h4
-                        className={`font-lato font-medium ${isMobile ? "text-[9px]" : "text-[12px]"
-                          } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}
-                      >
-                        Quiz - {assessment.question_count} Questions
-                      </h4>
-                      {!isMobile && (
-                        <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
-                          {assessment.type || "Assessment"}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Assessment Status indicator - Only show green checkmark if completed */}
-                    {isAssessmentCompletedLocal && (
-                      <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
-                        <svg
-                          className="w-[9.6px] h-[9.6px] text-white"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                }`}>
+                  {/* Video Info Container - using padding instead of absolute positioning */}
+                  <div className="p-2 flex flex-col gap-1.5">
+                    <h4
+                      className={`font-lato font-medium ${
+                        isMobile ? "text-[9px] text-600" : "text-[12px]"
+                      } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}>
+                      {video.title || "Untitled Video"}
+                    </h4>
+                    {!isMobile && (
+                      <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
+                        {formatDuration(video.duration) || "0:00"}
                       </div>
                     )}
                   </div>
-                );
-              });
-            }
 
-            return items;
-          }).flat()}
+                  {/* Status indicator - keeping absolute position as requested */}
+                  {isVideoCompleted(video?.slide) && (
+                    <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
+                      <svg className="w-[9.6px] h-[9.6px] text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              );
+
+              // Add assessment items if they exist for this video
+              if (video.slide_assessments && video.slide_assessments.length > 0) {
+                video.slide_assessments.forEach((assessment, assessmentIndex) => {
+                  const assessmentId = assessment.id; // Use the actual assessment ID from the data
+                  const isAssessmentCompletedLocal =
+                    isAssessmentCompletedLocally(presentationId, assessmentId) || assessment.attempts_used > 0;
+                  const isAssessmentSelected = selectedAssessmentId === assessmentId;
+
+                  items.push(
+                    <div
+                      key={`assessment-${index}-${assessmentIndex}`}
+                      ref={(el) => {
+                        if (isGridLayout) itemRefs.current[`assessment-${assessmentId}`] = el;
+                      }}
+                      onClick={() => {
+                        if (isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)) {
+                          return;
+                        }
+                        // Handle assessment click
+                        console.log("Assessment clicked:", assessment);
+                        // Dispatch action to select this assessment and clear video selection
+                        dispatch(setSelectedAssessmentId(assessmentId));
+                        dispatch(setAutoPlayEnabled(false));
+                        handleVideoSelect(index, false); // Clear video selection when assessment is selected
+                      }}
+                      className={`relative ${isGridLayout ? "w-full" : "flex-shrink-0"} ${
+                        isGridLayout
+                          ? isMobile
+                            ? "h-[45px]"
+                            : "h-[68px]"
+                          : isMobile
+                            ? "w-[150px] h-[45px]"
+                            : "w-[238px] h-[68px]"
+                      } rounded-lg transition-all duration-200 overflow-visible ${isGridLayout ? "" : "scroll-ml-4"} ${
+                        isAssessmentSelected
+                          ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
+                          : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
+                      }
+                    ${
+                      isQuestionMode || showChat || (!canSkipVideo && !isVideoCompleted(video?.slide))
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
+                    }`}>
+                      {/* Assessment Info Container */}
+                      <div className="p-2 flex flex-col gap-1.5">
+                        <h4
+                          className={`font-lato font-medium ${
+                            isMobile ? "text-[9px]" : "text-[12px]"
+                          } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}>
+                          Quiz - {assessment.question_count} Questions
+                        </h4>
+                        {!isMobile && (
+                          <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
+                            {assessment.type || "Assessment"}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Assessment Status indicator - Only show green checkmark if completed */}
+                      {isAssessmentCompletedLocal && (
+                        <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
+                          <svg className="w-[9.6px] h-[9.6px] text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              }
+
+              return items;
+            })
+            .flat()}
 
           {/* Add final assessment from assessment_details if present */}
           {assessmentDetails && assessmentDetails.length > 0 && (
             <div
               key="final-assessment"
+              ref={(el) => {
+                if (isGridLayout) itemRefs.current[`assessment-${assessmentDetails[0]?.id}`] = el;
+              }}
               onClick={() => {
                 // Check if final assessment should be accessible
-                if (isQuestionMode || showChat || (!canSkipVideo && !assessmentDetails[0]?.passed && !isVideoCompleted(videos[videos.length - 1]?.slide))) {
+                if (
+                  isQuestionMode ||
+                  showChat ||
+                  (!canSkipVideo &&
+                    !assessmentDetails[0]?.passed &&
+                    !isVideoCompleted(videos[videos.length - 1]?.slide))
+                ) {
                   return;
                 }
                 const finalAssessment = assessmentDetails[0]; // Take the first assessment
-                console.log('Final assessment clicked:', finalAssessment);
+                console.log("Final assessment clicked:", finalAssessment);
                 dispatch(setSelectedAssessmentId(finalAssessment.id));
               }}
-              className={`relative flex-shrink-0 ${isMobile ? "w-[150px] h-[45px]" : "w-[119px] h-[68px]"
-                } rounded-lg transition-all duration-200 overflow-visible scroll-ml-4 ${selectedAssessmentId === assessmentDetails[0]?.id
+              className={`relative ${isGridLayout ? "w-full" : "flex-shrink-0"} ${
+                isGridLayout
+                  ? isMobile
+                    ? "h-[45px]"
+                    : "h-[68px]"
+                  : isMobile
+                    ? "w-[150px] h-[45px]"
+                    : "w-[238px] h-[68px]"
+              } rounded-lg transition-all duration-200 overflow-visible ${isGridLayout ? "" : "scroll-ml-4"} ${
+                selectedAssessmentId === assessmentDetails[0]?.id
                   ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
                   : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
-                }
-              ${isQuestionMode || showChat || (!canSkipVideo && !assessmentDetails[0]?.passed && !isVideoCompleted(videos[videos.length - 1]?.slide))
+              }
+              ${
+                isQuestionMode ||
+                showChat ||
+                (!canSkipVideo && !assessmentDetails[0]?.passed && !isVideoCompleted(videos[videos.length - 1]?.slide))
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
-                }`}
-            >
+              }`}>
               {/* Final Assessment Info Container */}
               <div className="p-2 flex flex-col gap-1.5">
                 <h4
-                  className={`font-lato font-medium ${isMobile ? "text-[9px]" : "text-[12px]"
-                    } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}
-                >
+                  className={`font-lato font-medium ${
+                    isMobile ? "text-[9px]" : "text-[12px]"
+                  } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}>
                   Final Assessment - {assessmentDetails[0]?.question_count || 0} Questions
                 </h4>
                 {!isMobile && (
@@ -358,13 +392,10 @@ const VideoPlaylist = ({
               </div>
 
               {/* Final Assessment Status indicator - Show green checkmark if passed */}
-              {(isAssessmentCompletedLocally(presentationId, assessmentDetails[0]?.id) || assessmentDetails[0]?.passed) && (
+              {(isAssessmentCompletedLocally(presentationId, assessmentDetails[0]?.id) ||
+                assessmentDetails[0]?.passed) && (
                 <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
-                  <svg
-                    className="w-[9.6px] h-[9.6px] text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
+                  <svg className="w-[9.6px] h-[9.6px] text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -378,7 +409,7 @@ const VideoPlaylist = ({
         </div>
       </div>
       {/* Conditional fade effect - only show when there are more videos to scroll to */}
-      {showFade && (
+      {!isGridLayout && showFade && (
         <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-white pointer-events-none"></div>
       )}
     </div>

@@ -28,6 +28,7 @@ import VideoPlayerContainer from "@/components/VideoPlayerContainer";
 import FeedbackModal from "../modals/FeedbackModal";
 import { useGenerateImageMutation } from "@/store/api/questionsApi";
 import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
+import VideoPlaylist from "./VideoPlaylist";
 
 // Conversation history management for VideoPanel
 const {
@@ -94,6 +95,7 @@ const VideoPanel = forwardRef(
       isOnlyVideoMode = false,
       isFinalAssessmentPresent = false,
       showQueryRelatedSlides = false,
+      assessmentDetails = [],
     },
     ref
   ) => {
@@ -750,7 +752,7 @@ const VideoPanel = forwardRef(
       <div
         className={`flex flex-col h-full ${
           isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
-        } ${selectedAssessmentId ? "pointer-events-none blur-[1px]" : ""}`}
+        }`}
         style={!isMobile ? { width } : undefined}>
         {/* Redirect Popup - Unified for both mobile and desktop */}
         {showRedirectPopup && (
@@ -807,17 +809,34 @@ const VideoPanel = forwardRef(
           </div>
         )}
 
-        {/* Video Section - Responsive for both mobile and desktop */}
-        {!isOnlyVideoMode && (
+        {/* Video Section or Grid Playlist - Responsive for both mobile and desktop */}
+        {isOnlyVideoMode ? (
+          <div className={`bg-white border border-[#E5E7EB] overflow-y-auto ${
+            isMobile
+              ? isPhone
+                ? "p-2 rounded-lg flex-shrink-0"
+                : "p-3 rounded-lg"
+              : "p-3 rounded-xl"
+          } ${showChat || isQuestionMode ? "hidden" : ""}`} style={{ height: '50vh' }}>
+            <VideoPlaylist
+              videos={videos}
+              loading={loading}
+              canSkipVideo={canSkipVideo}
+              isMobile={isMobile}
+              assessmentDetails={assessmentDetails}
+              isGridLayout={true}
+            />
+          </div>
+        ) : (
           <div
-            className={`cursor-pointer bg-white border border-[#E5E7EB] ${
+            className={`${selectedAssessmentId ? "" : "cursor-pointer"} bg-white border border-[#E5E7EB] ${
               isMobile
                 ? isPhone
-                  ? "p-1 md:p-[6px] lg:p-3 rounded flex-shrink-0"
+                  ? "p-1 md:p-[6px] lg:p-3 rounded-lg flex-shrink-0"
                   : "p-2 pb-1 rounded-lg"
                 : "p-3 pb-2 rounded-xl"
-            } ${showChat || isQuestionMode ? "hidden" : ""}`}
-            onClick={togglePlayPause}>
+            } ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "blur-[1px] relative" : ""}`}
+            onClick={selectedAssessmentId ? undefined : togglePlayPause}>
             <div
               className={`relative w-full bg-black overflow-hidden ${
                 isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
@@ -848,8 +867,9 @@ const VideoPanel = forwardRef(
                 autoPlayEnabled={autoPlayEnabled}
                 showRemainingDuration={isMobile}
               />
-
-              {/* Custom styles are now handled by VideoPlayer component */}
+              {selectedAssessmentId && (
+                <div className="absolute inset-0 z-10" />
+              )}
             </div>
 
             {/* Time display - Responsive styling */}
@@ -874,7 +894,7 @@ const VideoPanel = forwardRef(
 
         {/* AI Assistant Section - Responsive */}
         <div
-          className={`${isMobile && isPhone ? "flex-1 min-h-0" : "h-full"} ${showChat || isQuestionMode ? "hidden" : ""}`}>
+          className={`${isMobile && isPhone ? "flex-1 min-h-0" : "h-full"} ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "pointer-events-none blur-[1px]" : ""}`}>
           <AILearningAssistant
             onStartConversation={startConversation}
             onStopConversation={stopConversation}
