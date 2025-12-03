@@ -24,7 +24,6 @@ const PPTSection = React.forwardRef(({
   showQueryRelatedSlides = false
 }, ref) => {
   const slideVideoRef = useRef(null);
-
   // Expose pause method to parent component
   React.useImperativeHandle(ref, () => ({
     pauseSlideVideo: () => {
@@ -45,13 +44,19 @@ const PPTSection = React.forwardRef(({
     >
       {/* Video Section */}
       <div
-        className={`bg-white  ${isPhoneView
-          ? "flex-1 overflow-hidden mb-2"
-          : isMobileView
-            ? "flex-1 overflow-hidden mb-3"
-            : "rounded-xl border border-[#E5E7EB] min-h-[400px] relative"
+        className={`bg-white  ${isOnlyVideoMode
+          ? (isPhoneView
+            ? "flex-shrink-0 overflow-hidden mb-2 aspect-video"
+            : isMobileView
+              ? "flex-shrink-0 overflow-hidden mb-3 aspect-video"
+              : "rounded-xl border border-[#E5E7EB] flex-shrink-0 aspect-video relative")
+          : (isPhoneView
+            ? "flex-1 overflow-hidden mb-2"
+            : isMobileView
+              ? "flex-1 overflow-hidden mb-3"
+              : "rounded-xl border border-[#E5E7EB] min-h-[400px] relative")
           }`}
-        style={{ height: isPhoneView ? 'auto' : isMobileView ? 'auto' : height }}
+        style={!isOnlyVideoMode ? { height: isPhoneView ? 'auto' : isMobileView ? 'auto' : height } : undefined}
       >
         <SlideVideoSection
           ref={slideVideoRef}
@@ -101,14 +106,14 @@ const PPTSection = React.forwardRef(({
       </div>
 
       {/* Video Playlist Section */}
-      <div
-        className={
+  {  !isOnlyVideoMode &&  <div
+        className={`${isOnlyVideoMode ? "flex-1 min-h-0 overflow-y-auto" : ""} ${
           isPhoneView
             ? "mt-0"
             : isMobileView
               ? "mt-2"
               : ""
-        }
+        }`}
       >
         <VideoPlaylist
           videos={videos}
@@ -117,7 +122,7 @@ const PPTSection = React.forwardRef(({
           isMobile={isPhoneView}
           assessmentDetails={assessmentDetails}
         />
-      </div>
+      </div>}
     </div>
   );
 });
