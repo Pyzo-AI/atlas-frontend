@@ -34,7 +34,7 @@ const PPTSection = React.forwardRef(({
   }));
   return (
     <div
-      className={`flex flex-col ${isPhoneView
+      className={`flex flex-col ${isOnlyVideoMode ? "overflow-y-auto" : ""} ${isPhoneView
         ? "h-full p-2"
         : isMobileView
           ? "h-full p-4"
