@@ -174,17 +174,15 @@ const VideoPanel = forwardRef(
 
     // LiveKit connection state handler
     const handleLiveKitStateChange = (state) => {
+      console.log(state,"isSpeaking")
       setConversationState({
         isLoading: state.isConnecting,
         isConnected: state.isConnected,
-        isAudioPlaying: liveKitService.isSpeaking(),
+        isAudioPlaying: state.isAudioPlaying || false,
       });
       
-      if (state.isConnected) {
-        setIsListening(false);
-      }
-      
-      if (!state.isConnected && state.error) {
+      // Only log actual errors, not normal disconnections
+      if (!state.isConnected && state.error && !state.error.includes('Disconnected:')) {
         console.error('LiveKit connection error:', state.error);
       }
     };

@@ -7,6 +7,7 @@ export class LiveKitService {
     this.connectionState = {
       isConnected: false,
       isConnecting: false,
+      isAudioPlaying: false,
       error: null,
     };
     this.onConnectionStateChanged = null;
@@ -33,7 +34,7 @@ export class LiveKitService {
       this.localParticipant = this.room.localParticipant;
       await this.enableMicrophone();
 
-      this.updateConnectionState({ isConnected: true, isConnecting: false, error: null });
+      this.updateConnectionState({ isConnected: true, isConnecting: false, isAudioPlaying: false, error: null });
       console.log('Connected to LiveKit room');
     } catch (error) {
       console.error('Failed to connect to LiveKit:', error);
@@ -50,14 +51,17 @@ export class LiveKitService {
     if (!this.room) return;
 
     this.room.on(RoomEvent.Connected, () => {
-      this.updateConnectionState({ isConnected: true, isConnecting: false, error: null });
+      this.updateConnectionState({ isConnected: true, isConnecting: false, isAudioPlaying: false, error: null });
     });
 
     this.room.on(RoomEvent.Disconnected, (reason) => {
+      // Only treat unexpected disconnections as errors
+      const isExpectedDisconnect = !reason || reason === 1; // 1 = normal disconnect
       this.updateConnectionState({ 
         isConnected: false, 
         isConnecting: false, 
-        error: reason ? `Disconnected: ${reason}` : null 
+        isAudioPlaying: false,
+        error: isExpectedDisconnect ? null : `Unexpected disconnection: ${reason}`
       });
     });
 
@@ -65,10 +69,17 @@ export class LiveKitService {
       if (track.kind === 'audio' && participant.identity.startsWith('agent-')) {
         console.log('Agent audio track subscribed');
         this.isAgentSpeaking = true;
+        this.updateConnectionState({ isAudioPlaying: true });
         const audioElement = track.attach();
         audioElement.autoplay = true;
-        audioElement.onended = () => { this.isAgentSpeaking = false; };
-        audioElement.onpause = () => { this.isAgentSpeaking = false; };
+        audioElement.onended = () => { 
+          this.isAgentSpeaking = false;
+          this.updateConnectionState({ isAudioPlaying: false });
+        };
+        audioElement.onpause = () => { 
+          this.isAgentSpeaking = false;
+          this.updateConnectionState({ isAudioPlaying: false });
+        };
         document.body.appendChild(audioElement);
       }
     });
@@ -76,6 +87,7 @@ export class LiveKitService {
     this.room.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
       if (track.kind === 'audio') {
         this.isAgentSpeaking = false;
+        this.updateConnectionState({ isAudioPlaying: false });
         track.detach().forEach(element => element.remove());
       }
     });
@@ -106,12 +118,12 @@ export class LiveKitService {
         this.room = null;
         this.localParticipant = null;
       }
-      this.updateConnectionState({ isConnected: false, isConnecting: false, error: null });
+      this.updateConnectionState({ isConnected: false, isConnecting: false, isAudioPlaying: false, error: null });
     } catch (error) {
       console.error('Error disconnecting:', error);
       this.room = null;
       this.localParticipant = null;
-      this.updateConnectionState({ isConnected: false, isConnecting: false, error: null });
+      this.updateConnectionState({ isConnected: false, isConnecting: false, isAudioPlaying: false, error: null });
     }
   }
 

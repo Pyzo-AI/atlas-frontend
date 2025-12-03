@@ -17,7 +17,7 @@ class ApiService {
           'Content-Type': 'application/json',
         },
         // body: JSON.stringify({ agent_id: agentId }),
-        body: JSON.stringify({ agent_id: 1 }), // Temporary hardcoded agent ID
+        body: JSON.stringify({ agent_id: 6 }), // Temporary hardcoded agent ID
         signal: controller.signal,
       });
 
