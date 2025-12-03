@@ -6,11 +6,11 @@ import { ReduxProvider } from "@/providers/ReduxProvider";
 import ElevenLabsProviderWrapper from "@/providers/ElevenLabsProvider";
 import PostHogProvider from "@/providers/PostHogProvider";
 import PrivateRoute from "@/components/auth/PrivateRoute";
-import Header from "@/components/layout/Header";
 import ResponsiveContainer from "@/components/layout/ResponsiveContainer";
 import ResultModalProvider from "@/components/providers/ResultModalProvider";
 import FeedbackModalProvider from "@/components/providers/FeedbackModalProvider";
 import { ToastContainer } from "react-toastify";
+import LayoutWrapper from "@/components/layout/LayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -62,7 +62,9 @@ export default function RootLayout({ children }) {
               <ResultModalProvider>
                 <FeedbackModalProvider>
                   <PrivateRoute>
-                    <ResponsiveContainer>{children}</ResponsiveContainer>
+                    <LayoutWrapper>
+                      <ResponsiveContainer>{children}</ResponsiveContainer>
+                    </LayoutWrapper>
                   </PrivateRoute>
                   <ToastContainer
                     position="top-right"

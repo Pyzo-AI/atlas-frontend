@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { setIsQuestionMode } from '@/store/features/videoSlice'
+import { setIsQuestionMode, setShowChat } from '@/store/features/videoSlice'
 import back_to_session from '@/assets/svg/back_to_session.svg'
 import interaction_mode from '@/assets/svg/interaction_mode.svg'
 import ai_answer_icon from '@/assets/svg/ai_answer_icon.svg'
 import close_icon from '@/assets/svg/close.svg'
 import Image from 'next/image'
 import MicrophonePermissionPopup from '@/components/ui/MicrophonePermissionPopup'
+import { clearOverlayImage } from '@/store/features/imageSlice'
 
 const ChatUI = ({
   onClose,
@@ -14,7 +15,6 @@ const ChatUI = ({
   onStartConversation,
   onStopConversation,
   isConnected,
-  setShowChat,
   setIsJumpedOnChatFromInteractionMode,
   isMobile = false,
   agentId,
@@ -61,11 +61,13 @@ const ChatUI = ({
 
   const handleContinueLesson = () => {
     dispatch(setIsQuestionMode(false))
-    setShowChat(false)
+    dispatch(setShowChat(false))
     setIsJumpedOnChatFromInteractionMode(false)
     if (isConnected && onStopConversation) {
       onStopConversation()
     }
+    // Clear overlay image state (query based slide image)
+    dispatch(clearOverlayImage())
   }
 
   return (

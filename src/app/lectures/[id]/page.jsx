@@ -76,7 +76,8 @@ const CombinedPPTSection = React.memo(
     presentationId,
     onVideoIndexChange,
     isOnlyVideoMode,
-    assessmentId
+    assessmentId,
+    showQueryRelatedSlides = false
   }, ref) => {
     const width = isMobile ? "100%" : "70%";
 
@@ -100,6 +101,7 @@ const CombinedPPTSection = React.memo(
         onVideoIndexChange={onVideoIndexChange}
         isOnlyVideoMode={isOnlyVideoMode}
         assessmentId={assessmentId}
+        showQueryRelatedSlides={showQueryRelatedSlides}
       />
     );
   })
@@ -123,7 +125,9 @@ const CombinedVideoPanel = React.memo(
     canSkipVideo,
     assessmentId,
     isOnlyVideoMode,
-    isFinalAssessmentPresent
+    isFinalAssessmentPresent,
+    showQueryRelatedSlides = false,
+    assessmentDetails = [],
   }) => {
     const width = isMobile ? "100%" : "30%";
 
@@ -149,6 +153,8 @@ const CombinedVideoPanel = React.memo(
         assessmentId={assessmentId}
         isOnlyVideoMode={isOnlyVideoMode}
         isFinalAssessmentPresent={isFinalAssessmentPresent}
+        showQueryRelatedSlides={showQueryRelatedSlides}
+        assessmentDetails={data?.assessment_details || []}
       />
     );
   }
@@ -181,7 +187,8 @@ const Home = () => {
   const isLandscape = !isPortrait && isMobileDevice;
   const isOnlyVideoMode = videos?.[currentVideoIndex]?.trainer_video === null;
   const isFinalAssessmentPresent = data?.assessment_details && data.assessment_details.length > 0 && data.assessment_details[0].id ? true : false;
-
+  const showQueryRelatedSlides = data?.presentation_query;
+  console.log(showQueryRelatedSlides,"showQueryRelatedSlides")
   // Shared video state for synchronization
   const [videoState, setVideoState] = useState({
     currentTime: 0,
@@ -503,6 +510,7 @@ const Home = () => {
                 onVideoIndexChange={handleVideoIndexChange}
                 isOnlyVideoMode={isOnlyVideoMode}
                 assessmentId={assessmentId}
+                showQueryRelatedSlides={showQueryRelatedSlides}
               />
             </div>
 
@@ -527,6 +535,7 @@ const Home = () => {
                 onVideoIndexChange={handleVideoIndexChange}
                 isOnlyVideoMode={isOnlyVideoMode}
                 isFinalAssessmentPresent={isFinalAssessmentPresent}
+                showQueryRelatedSlides={showQueryRelatedSlides}
               />
             </div>
           </div>
@@ -558,6 +567,7 @@ const Home = () => {
                 onVideoIndexChange={handleVideoIndexChange}
                 isOnlyVideoMode={isOnlyVideoMode}
                 assessmentId={assessmentId}
+                showQueryRelatedSlides={showQueryRelatedSlides}
               />
               <CombinedVideoPanel
                 videoPanelRef={videoPanelRef}
@@ -576,6 +586,7 @@ const Home = () => {
                 onVideoIndexChange={handleVideoIndexChange}
                 isOnlyVideoMode={isOnlyVideoMode}
                 isFinalAssessmentPresent={isFinalAssessmentPresent}
+                showQueryRelatedSlides={showQueryRelatedSlides}
               />
             </div>
           </div>

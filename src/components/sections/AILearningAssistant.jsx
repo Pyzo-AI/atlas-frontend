@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setIsQuestionMode } from "../../store/features/videoSlice";
+import { setIsQuestionMode, setShowChat } from "../../store/features/videoSlice";
 import message from "../../assets/svg/message.svg";
 import chat_star from "../../assets/svg/chat_star.svg";
 import microphone from "../../assets/svg/microphone.svg";
@@ -8,8 +8,6 @@ import Image from "next/image";
 import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup";
 
 const AILearningAssistant = ({
-  showChat,
-  setShowChat = () => {},
   onStartConversation = () => {},
   onStopConversation = () => {},
   onPauseVideo = () => {},
@@ -53,7 +51,7 @@ const AILearningAssistant = ({
 
   const handleMessageClick = () => {
     onPauseVideo(); // Pause the video when opening chat
-    setShowChat(true);
+    dispatch(setShowChat(true));
     onStopConversation();
   };
 
