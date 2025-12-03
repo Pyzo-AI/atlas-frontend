@@ -829,14 +829,14 @@ const VideoPanel = forwardRef(
           </div>
         ) : (
           <div
-            className={`cursor-pointer bg-white border border-[#E5E7EB] ${
+            className={`${selectedAssessmentId ? "" : "cursor-pointer"} bg-white border border-[#E5E7EB] ${
               isMobile
                 ? isPhone
                   ? "p-1 md:p-[6px] lg:p-3 rounded-lg flex-shrink-0"
                   : "p-2 pb-1 rounded-lg"
                 : "p-3 pb-2 rounded-xl"
-            } ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "pointer-events-none blur-[1px]" : ""}`}
-            onClick={togglePlayPause}>
+            } ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "blur-[1px] relative" : ""}`}
+            onClick={selectedAssessmentId ? undefined : togglePlayPause}>
             <div
               className={`relative w-full bg-black overflow-hidden ${
                 isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
@@ -867,8 +867,9 @@ const VideoPanel = forwardRef(
                 autoPlayEnabled={autoPlayEnabled}
                 showRemainingDuration={isMobile}
               />
-
-              {/* Custom styles are now handled by VideoPlayer component */}
+              {selectedAssessmentId && (
+                <div className="absolute inset-0 z-10" />
+              )}
             </div>
 
             {/* Time display - Responsive styling */}
