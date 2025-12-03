@@ -127,6 +127,7 @@ const CombinedVideoPanel = React.memo(
     isOnlyVideoMode,
     isFinalAssessmentPresent,
     showQueryRelatedSlides = false,
+    assessmentDetails = [],
   }) => {
     const width = isMobile ? "100%" : "30%";
 
@@ -153,6 +154,7 @@ const CombinedVideoPanel = React.memo(
         isOnlyVideoMode={isOnlyVideoMode}
         isFinalAssessmentPresent={isFinalAssessmentPresent}
         showQueryRelatedSlides={showQueryRelatedSlides}
+        assessmentDetails={data?.assessment_details || []}
       />
     );
   }
