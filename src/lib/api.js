@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_LIVEKIT_API_URL || 'https://sv2r76lh-3000.inc1.devtunnels.ms';
+const API_BASE_URL = process.env.NEXT_PUBLIC_LIVEKIT_API_URL
 
 class ApiService {
   constructor() {

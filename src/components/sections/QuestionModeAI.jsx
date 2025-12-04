@@ -28,7 +28,7 @@ const QuestionModeAI = forwardRef(
             {/* Avatar Container */}
             <div className="relative flex items-center justify-center">
               {/* Animated Wave Rings */}
-              {(isAudioPlaying || liveKitAgentState === "speaking") && (
+              {(isAudioPlaying || (liveKitAgentState === "speaking" && !isLoading)) && (
                 <>
                   {[1, 2, 3].map((ring) => (
                     <div
@@ -81,7 +81,7 @@ const QuestionModeAI = forwardRef(
                   <div className="absolute -top-1 -right-1 w-1 h-1 bg-white/30 rounded-full animate-ping"></div>
                 </div>
                 {/* Professor thinking text */}
-                <p className="text-white/90 text-xs font-light animate-pulse">Connecting...</p>
+                <p className="text-white/90 text-xs font-light animate-pulse">Connecting</p>
               </div>
             ) : isConnected ? (
               <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block capitalize">
