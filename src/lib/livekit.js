@@ -1,4 +1,4 @@
-import { Room, RoomEvent, RemoteParticipant, LocalParticipant, RemoteAudioTrack } from 'livekit-client';
+import { Room, RoomEvent, RemoteParticipant, LocalParticipant, RemoteAudioTrack } from "livekit-client";
 
 export class LiveKitService {
   constructor() {
@@ -13,6 +13,9 @@ export class LiveKitService {
     this.onConnectionStateChanged = null;
     this.onMessage = null;
     this.isAgentSpeaking = false;
+    this.agentState = "idle"; // 'idle', 'listening', 'thinking', 'speaking'
+    this.lastSpeaker = null; // 'agent' | 'user' | null
+    this.onAgentStateChanged = null;
   }
 
   async connect(config) {
@@ -35,13 +38,13 @@ export class LiveKitService {
       await this.enableMicrophone();
 
       this.updateConnectionState({ isConnected: true, isConnecting: false, isAudioPlaying: false, error: null });
-      console.log('Connected to LiveKit room');
+      console.log("Connected to LiveKit room");
     } catch (error) {
-      console.error('Failed to connect to LiveKit:', error);
-      this.updateConnectionState({ 
-        isConnected: false, 
-        isConnecting: false, 
-        error: error.message 
+      console.error("Failed to connect to LiveKit:", error);
+      this.updateConnectionState({
+        isConnected: false,
+        isConnecting: false,
+        error: error.message,
       });
       throw error;
     }
@@ -57,26 +60,26 @@ export class LiveKitService {
     this.room.on(RoomEvent.Disconnected, (reason) => {
       // Only treat unexpected disconnections as errors
       const isExpectedDisconnect = !reason || reason === 1; // 1 = normal disconnect
-      this.updateConnectionState({ 
-        isConnected: false, 
-        isConnecting: false, 
+      this.updateConnectionState({
+        isConnected: false,
+        isConnecting: false,
         isAudioPlaying: false,
-        error: isExpectedDisconnect ? null : `Unexpected disconnection: ${reason}`
+        error: isExpectedDisconnect ? null : `Unexpected disconnection: ${reason}`,
       });
     });
 
     this.room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-      if (track.kind === 'audio' && participant.identity.startsWith('agent-')) {
-        console.log('Agent audio track subscribed');
+      if (track.kind === "audio" && participant.identity.startsWith("agent-")) {
+        console.log("Agent audio track subscribed");
         this.isAgentSpeaking = true;
         this.updateConnectionState({ isAudioPlaying: true });
         const audioElement = track.attach();
         audioElement.autoplay = true;
-        audioElement.onended = () => { 
+        audioElement.onended = () => {
           this.isAgentSpeaking = false;
           this.updateConnectionState({ isAudioPlaying: false });
         };
-        audioElement.onpause = () => { 
+        audioElement.onpause = () => {
           this.isAgentSpeaking = false;
           this.updateConnectionState({ isAudioPlaying: false });
         };
@@ -85,11 +88,15 @@ export class LiveKitService {
     });
 
     this.room.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
-      if (track.kind === 'audio') {
+      if (track.kind === "audio") {
         this.isAgentSpeaking = false;
         this.updateConnectionState({ isAudioPlaying: false });
-        track.detach().forEach(element => element.remove());
+        track.detach().forEach((element) => element.remove());
       }
+    });
+
+    this.room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+      this.handleActiveSpeakersChanged(speakers);
     });
   }
 
@@ -99,12 +106,12 @@ export class LiveKitService {
   }
 
   async enableMicrophone() {
-    if (!this.room || !this.localParticipant) throw new Error('Room not connected');
+    if (!this.room || !this.localParticipant) throw new Error("Room not connected");
     await this.localParticipant.setMicrophoneEnabled(true);
   }
 
   async disableMicrophone() {
-    if (!this.room || !this.localParticipant) throw new Error('Room not connected');
+    if (!this.room || !this.localParticipant) throw new Error("Room not connected");
     await this.localParticipant.setMicrophoneEnabled(false);
   }
 
@@ -120,7 +127,7 @@ export class LiveKitService {
       }
       this.updateConnectionState({ isConnected: false, isConnecting: false, isAudioPlaying: false, error: null });
     } catch (error) {
-      console.error('Error disconnecting:', error);
+      console.error("Error disconnecting:", error);
       this.room = null;
       this.localParticipant = null;
       this.updateConnectionState({ isConnected: false, isConnecting: false, isAudioPlaying: false, error: null });
@@ -141,6 +148,39 @@ export class LiveKitService {
 
   isMicrophoneEnabled() {
     return this.localParticipant?.isMicrophoneEnabled ?? false;
+  }
+
+  handleActiveSpeakersChanged(speakers) {
+    if (!this.localParticipant) return;
+
+    const isAgentSpeaking = speakers.some((p) => p.identity.startsWith("agent-"));
+    const isUserSpeaking = speakers.some((p) => p.identity === this.localParticipant.identity);
+
+    let newState = "idle";
+
+    if (isAgentSpeaking) {
+      newState = "speaking";
+      this.lastSpeaker = "agent";
+    } else if (isUserSpeaking) {
+      newState = "listening";
+      this.lastSpeaker = "user";
+    } else {
+      // Silence - determine if thinking or idle
+      newState = this.lastSpeaker === "user" ? "thinking" : "idle";
+    }
+
+    if (this.agentState !== newState) {
+      this.agentState = newState;
+      this.onAgentStateChanged?.(newState);
+    }
+  }
+
+  getAgentState() {
+    return this.agentState;
+  }
+
+  setOnAgentStateChanged(callback) {
+    this.onAgentStateChanged = callback;
   }
 }
 

@@ -107,6 +107,7 @@ const VideoPanel = forwardRef(
       isConnected: false,
       isAudioPlaying: false,
     });
+    const [liveKitAgentState, setLiveKitAgentState] = useState("idle");
     const [isJumpedOnChatFromInteractionMode, setIsJumpedOnChatFromInteractionMode] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -174,16 +175,16 @@ const VideoPanel = forwardRef(
 
     // LiveKit connection state handler
     const handleLiveKitStateChange = (state) => {
-      console.log(state,"isSpeaking")
+      console.log(state, "isSpeaking");
       setConversationState({
         isLoading: state.isConnecting,
         isConnected: state.isConnected,
         isAudioPlaying: state.isAudioPlaying || false,
       });
-      
+
       // Only log actual errors, not normal disconnections
-      if (!state.isConnected && state.error && !state.error.includes('Disconnected:')) {
-        console.error('LiveKit connection error:', state.error);
+      if (!state.isConnected && state.error && !state.error.includes("Disconnected:")) {
+        console.error("LiveKit connection error:", state.error);
       }
     };
 
@@ -246,25 +247,28 @@ const VideoPanel = forwardRef(
         }));
       },
       onMessage: (message) => {
-         const content = message.message;
+        const content = message.message;
         // Store in current session history (for ChatUI)
         if (message.source === "user") {
           // Trigger API call for image generation only if showQueryRelatedSlides is true
           if (showQueryRelatedSlides) {
             dispatch(setImageLoading(true));
             const currentVideo = videos[currentVideoIndex];
-            generateImage({ 
+            generateImage({
               presentationId: parseInt(presentationId),
               currentSlideId: currentVideo?.slide,
-              userMessage: content, 
-            }).unwrap().then((response) => {
-              dispatch(setOverlayImage(response.slide_image_url));
-            }).catch((error) => {
-              console.log('Failed to generate image:', error);
-              dispatch(setImageLoading(false));
-            });
+              userMessage: content,
+            })
+              .unwrap()
+              .then((response) => {
+                dispatch(setOverlayImage(response.slide_image_url));
+              })
+              .catch((error) => {
+                console.log("Failed to generate image:", error);
+                dispatch(setImageLoading(false));
+              });
           }
-        
+
           if (content.trim() === "") return;
 
           // Track QnA interaction when user asks a question
@@ -341,18 +345,18 @@ const VideoPanel = forwardRef(
           // LiveKit flow
           setConversationState((prev) => ({ ...prev, isLoading: true }));
           await navigator.mediaDevices.getUserMedia({ audio: true });
-          
+
           // Create session and connect
           const sessionResponse = await apiService.createSession(agentId);
-          
+
           liveKitService.onConnectionStateChanged = handleLiveKitStateChange;
-          
+
           await liveKitService.connect({
             url: sessionResponse.livekit_url,
             token: sessionResponse.token,
             roomName: sessionResponse.room_name,
           });
-          
+
           setLiveKitRoom(sessionResponse.room_name);
         } else {
           // ElevenLabs flow
@@ -638,6 +642,14 @@ const VideoPanel = forwardRef(
       }
     }, [selectedAssessmentId, dispatch]);
 
+    useEffect(() => {
+      liveKitService.setOnAgentStateChanged((state) => {
+        setLiveKitAgentState(state);
+      });
+    }, []);
+
+    console.log(liveKitAgentState, "Current Agent State");
+
     // Cleanup is handled by VideoPlayer component
 
     // Handle video end
@@ -853,13 +865,11 @@ const VideoPanel = forwardRef(
 
         {/* Video Section or Grid Playlist - Responsive for both mobile and desktop */}
         {isOnlyVideoMode ? (
-          <div className={`bg-white border border-[#E5E7EB] overflow-y-auto ${
-            isMobile
-              ? isPhone
-                ? "p-2 rounded-lg flex-shrink-0"
-                : "p-3 rounded-lg"
-              : "p-3 rounded-xl"
-          } ${showChat || isQuestionMode ? "hidden" : ""}`} style={{ height: '50vh' }}>
+          <div
+            className={`bg-white border border-[#E5E7EB] overflow-y-auto ${
+              isMobile ? (isPhone ? "p-2 rounded-lg flex-shrink-0" : "p-3 rounded-lg") : "p-3 rounded-xl"
+            } ${showChat || isQuestionMode ? "hidden" : ""}`}
+            style={{ height: "50vh" }}>
             <VideoPlaylist
               videos={videos}
               loading={loading}
@@ -909,9 +919,7 @@ const VideoPanel = forwardRef(
                 autoPlayEnabled={autoPlayEnabled}
                 showRemainingDuration={isMobile}
               />
-              {selectedAssessmentId && (
-                <div className="absolute inset-0 z-10" />
-              )}
+              {selectedAssessmentId && <div className="absolute inset-0 z-10" />}
             </div>
 
             {/* Time display - Responsive styling */}
@@ -951,7 +959,9 @@ const VideoPanel = forwardRef(
         {isQuestionMode && (
           <QuestionModeAI
             isLoading={!conversationState.isConnected}
-            isAudioPlaying={liveKitAgentEnabled ? liveKitService.isSpeaking() : conversation.isSpeaking}
+            liveKitAgentEnabled={liveKitAgentEnabled}
+            liveKitAgentState={liveKitAgentState}
+            isAudioPlaying={conversation.isSpeaking}
             isConnected={conversationState.isConnected}
             avatarUrl={avatarUrl}
             isMobile={isMobile && isPhone}

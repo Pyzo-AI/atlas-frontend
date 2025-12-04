@@ -1,16 +1,11 @@
-import React, {
-  useRef,
-  useEffect,
-  useImperativeHandle,
-  forwardRef,
-} from "react";
+import React, { useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import chat_star from "../../assets/svg/chat_star.svg";
 import Image from "next/image";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 
 const QuestionModeAI = forwardRef(
   (
-    { isAudioPlaying, isLoading, isConnected, isMobile = false, avatarUrl },
+    { isAudioPlaying, isLoading, isConnected, isMobile = false, avatarUrl, liveKitAgentEnabled, liveKitAgentState },
     ref
   ) => {
     // ElevenLabs handles audio automatically
@@ -27,14 +22,13 @@ const QuestionModeAI = forwardRef(
           style={{
             background:
               "linear-gradient(0deg, rgba(0, 0, 0, 0.17), rgba(0, 0, 0, 0.17)), linear-gradient(180deg, #685EDD 0%, #DA8BFF 100%)",
-          }}
-        >
+          }}>
           {/* Main Content Container */}
           <div className="flex flex-col items-center justify-center gap-4 w-[243px] h-[137px]">
             {/* Avatar Container */}
             <div className="relative flex items-center justify-center">
               {/* Animated Wave Rings */}
-              {isAudioPlaying && (
+              {(isAudioPlaying || liveKitAgentState === "speaking") && (
                 <>
                   {[1, 2, 3].map((ring) => (
                     <div
@@ -52,8 +46,7 @@ const QuestionModeAI = forwardRef(
               <div
                 className={`${
                   isMobile ? "w-10 h-10" : "w-16 h-16"
-                } rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10 flex items-center justify-center bg-white/20`}
-              >
+                } rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10 flex items-center justify-center bg-white/20`}>
                 {avatarUrl ? (
                   <Image
                     src={avatarUrl}
@@ -63,9 +56,7 @@ const QuestionModeAI = forwardRef(
                     className="rounded-full object-cover w-full h-full"
                   />
                 ) : (
-                  <span className={`text-white font-semibold z-50 ${
-                    isMobile ? "text-sm" : "text-xl"
-                  }`}>
+                  <span className={`text-white font-semibold z-50 ${isMobile ? "text-sm" : "text-xl"}`}>
                     {userName?.charAt(0)?.toUpperCase() || "U"}
                   </span>
                 )}
@@ -74,41 +65,31 @@ const QuestionModeAI = forwardRef(
 
             {/* Text Content */}
             {isLoading ? (
-              <div
-                className={`flex flex-col items-center ${
-                  isMobile ? "space-y-1" : "space-y-3"
-                }`}
-              >
+              <div className={`flex flex-col items-center ${isMobile ? "space-y-1" : "space-y-3"}`}>
                 {/* Thinking Animation */}
                 <div className="relative">
                   <div className="flex items-center space-x-1">
                     <div className="w-2 h-2 bg-white/80 rounded-full animate-pulse"></div>
                     <div
                       className="w-2 h-2 bg-white/60 rounded-full animate-pulse"
-                      style={{ animationDelay: "0.3s" }}
-                    ></div>
+                      style={{ animationDelay: "0.3s" }}></div>
                     <div
                       className="w-2 h-2 bg-white/40 rounded-full animate-pulse"
-                      style={{ animationDelay: "0.6s" }}
-                    ></div>
+                      style={{ animationDelay: "0.6s" }}></div>
                   </div>
                   {/* Thought bubble effect */}
                   <div className="absolute -top-1 -right-1 w-1 h-1 bg-white/30 rounded-full animate-ping"></div>
                 </div>
                 {/* Professor thinking text */}
-                <p className="text-white/90 text-xs font-light animate-pulse">
-                  Connecting...
-                </p>
+                <p className="text-white/90 text-xs font-light animate-pulse">Connecting...</p>
               </div>
             ) : isConnected ? (
-              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block">
-                {isAudioPlaying ? "Speaking..." : "Listening..."}
+              <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block capitalize">
+                {liveKitAgentEnabled ? liveKitAgentState : isAudioPlaying ? "Speaking" : "Listening"}
               </p>
             ) : (
               <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block">
-                {
-                  "Ask me anything about the presentation, and I'll help with the answers."
-                }
+                {"Ask me anything about the presentation, and I'll help with the answers."}
               </p>
             )}
           </div>
