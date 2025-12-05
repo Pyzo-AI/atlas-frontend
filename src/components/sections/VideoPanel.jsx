@@ -31,6 +31,7 @@ import FeedbackModal from "../modals/FeedbackModal";
 import { useGenerateImageMutation } from "@/store/api/questionsApi";
 import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
+import { toast } from "react-toastify";
 
 // Conversation history management for VideoPanel
 const {
@@ -346,18 +347,24 @@ const VideoPanel = forwardRef(
           setConversationState((prev) => ({ ...prev, isLoading: true }));
           await navigator.mediaDevices.getUserMedia({ audio: true });
 
-          // Create session and connect
-          const sessionResponse = await apiService.createSession(agentId);
+          try {
+            // Create session and connect
+            const sessionResponse = await apiService.createSession(agentId);
 
-          liveKitService.onConnectionStateChanged = handleLiveKitStateChange;
+            liveKitService.onConnectionStateChanged = handleLiveKitStateChange;
 
-          await liveKitService.connect({
-            url: sessionResponse.livekit_url,
-            token: sessionResponse.token,
-            roomName: sessionResponse.room_name,
-          });
+            await liveKitService.connect({
+              url: sessionResponse.livekit_url,
+              token: sessionResponse.token,
+              roomName: sessionResponse.room_name,
+            });
 
-          setLiveKitRoom(sessionResponse.room_name);
+            setLiveKitRoom(sessionResponse.room_name);
+          } catch (sessionError) {
+            toast.error("Interaction mode not available. Please try again later.");
+            dispatch(setIsQuestionMode(false));
+            // throw sessionError;
+          }
         } else {
           // ElevenLabs flow
           setContextSent(false);
