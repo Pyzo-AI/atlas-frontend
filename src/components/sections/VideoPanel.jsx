@@ -96,7 +96,7 @@ const VideoPanel = forwardRef(
       assessmentId,
       isOnlyVideoMode = false,
       isFinalAssessmentPresent = false,
-      liveKitAgentEnabled = true,
+      liveKitAgentEnabled = false,
       showQueryRelatedSlides = false,
       assessmentDetails = [],
     },
