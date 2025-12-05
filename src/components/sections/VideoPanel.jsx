@@ -107,7 +107,7 @@ const VideoPanel = forwardRef(
       isConnected: false,
       isAudioPlaying: false,
     });
-    const [liveKitAgentState, setLiveKitAgentState] = useState("idle");
+    const [liveKitAgentState, setLiveKitAgentState] = useState("connecting");
     const [isJumpedOnChatFromInteractionMode, setIsJumpedOnChatFromInteractionMode] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -398,6 +398,7 @@ const VideoPanel = forwardRef(
         if (liveKitAgentEnabled) {
           await liveKitService.disconnect();
           setLiveKitRoom(null);
+          setLiveKitAgentState("connecting");
         } else {
           await conversation.endSession();
         }
@@ -643,8 +644,12 @@ const VideoPanel = forwardRef(
     }, [selectedAssessmentId, dispatch]);
 
     useEffect(() => {
+       let debounceTimer;
       liveKitService.setOnAgentStateChanged((state) => {
-        setLiveKitAgentState(state);
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          setLiveKitAgentState(state);
+        }, 800);
       });
     }, []);
 
