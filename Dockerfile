@@ -4,6 +4,7 @@ FROM node:18-alpine AS base
 # Build arguments for environment variables
 ARG NEXT_PUBLIC_API_BASE_URL
 ARG NEXT_PUBLIC_LOGIN_BASE_URL
+ARG NEXT_PUBLIC_LIVEKIT_API_URL
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -31,8 +32,10 @@ COPY . .
 # Set build arguments as environment variables for the build process
 ARG NEXT_PUBLIC_API_BASE_URL
 ARG NEXT_PUBLIC_LOGIN_BASE_URL
+ARG NEXT_PUBLIC_LIVEKIT_API_URL
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_LOGIN_BASE_URL=$NEXT_PUBLIC_LOGIN_BASE_URL
+ENV NEXT_PUBLIC_LIVEKIT_API_URL=$NEXT_PUBLIC_LIVEKIT_API_URL
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
