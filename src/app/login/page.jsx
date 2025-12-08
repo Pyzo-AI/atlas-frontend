@@ -1,21 +1,20 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
 import { toast } from "react-toastify";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import trainBoostLogo from "@/assets/svg/train-boost-logo.svg";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
+import { useLoginMutation } from "@/store/api/authApi";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const loginBaseUrl = process.env.NEXT_PUBLIC_LOGIN_BASE_URL;
   const { capture, identify } = usePostHog();
+  const [login, { isLoading }] = useLoginMutation();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -29,99 +28,78 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
 
     try {
-      const response = await fetch(`${loginBaseUrl}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username: email, password }),
+      const data = await login({ email, password }).unwrap();
+
+      // Store both tokens
+      localStorage.setItem(
+        "trainboost_tokens",
+        JSON.stringify({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        })
+      );
+
+      // Get user details from token for PostHog tracking
+      const userDetails = getUserDetailsFromToken();
+
+      // Track session start event
+      capture("session_start", {
+        user_id: userDetails?.sub,
+        timestamp: new Date().toISOString(),
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      // Track successful login event
+      capture("user_login", {
+        user_id: userDetails?.sub,
+        timestamp: new Date().toISOString(),
+        device: navigator.userAgent,
+        location: window.location.hostname,
+      });
 
-        // Store both tokens
-        localStorage.setItem(
-          "trainboost_tokens",
-          JSON.stringify({
-            access_token: data.access_token,
-            refresh_token: data.refresh_token,
-          })
-        );
-
-        // Get user details from token for PostHog tracking
-        const userDetails = getUserDetailsFromToken();
-
-        // Track session start event
-        capture("session_start", {
-          user_id: userDetails?.sub,
-          timestamp: new Date().toISOString(),
-        });
-
-        // Track successful login event
-        capture("user_login", {
-          user_id: userDetails?.sub,
-          timestamp: new Date().toISOString(),
-          device: navigator.userAgent,
-          location: window.location.hostname,
-        });
-
-        // Identify user in PostHog
-        if (userDetails) {
-          identify(userDetails.sub, {
-            email: email,
-            username: userDetails.username || userDetails.preferred_username,
-            name: userDetails.name,
-            first_login: userDetails.iat
-              ? new Date(userDetails.iat * 1000).toISOString()
-              : undefined,
-            roles: userDetails.roles || userDetails.groups,
-            last_login: new Date().toISOString(),
-          });
-        }
-
-        toast.success("Login successful! Welcome to Upskillr", {
-          position: "top-right",
-          autoClose: 2000,
-        });
-
-        router.push("/");
-      } else {
-        // Track failed login attempt
-        capture("login_failed", {
+      // Identify user in PostHog
+      if (userDetails) {
+        identify(userDetails.sub, {
           email: email,
-          timestamp: new Date().toISOString(),
-          error_type: "invalid_credentials",
-          status_code: response.status,
+          username: userDetails.username || userDetails.preferred_username,
+          name: userDetails.name,
+          first_login: userDetails.iat
+            ? new Date(userDetails.iat * 1000).toISOString()
+            : undefined,
+          roles: userDetails.roles || userDetails.groups,
+          last_login: new Date().toISOString(),
         });
-
-        toast.error(
-          "Invalid email or password. Please check your credentials.",
-          {
-            position: "top-right",
-            autoClose: 3000,
-          }
-        );
       }
+
+      toast.success("Login successful! Welcome to Upskillr", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+
+      router.push("/");
     } catch (error) {
-      // Track login error
-      capture("login_error", {
+      const isInvalidCredentials = error.status === 401 || error.status === 400;
+
+      // Track failed login attempt
+      capture(isInvalidCredentials ? "login_failed" : "login_error", {
         email: email,
         timestamp: new Date().toISOString(),
-        error_type: "network_error",
-        error_message: error.message,
+        error_type: isInvalidCredentials ? "invalid_credentials" : "network_error",
+        status_code: error.status,
+        error_message: error.data?.message || error.message,
       });
 
-      toast.error("Login failed. Please try again.", {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      toast.error(
+        isInvalidCredentials
+          ? "Invalid email or password. Please check your credentials."
+          : "Login failed. Please try again.",
+        {
+          position: "top-right",
+          autoClose: 3000,
+        }
+      );
     }
-
-    setIsLoading(false);
   };
 
   return (
