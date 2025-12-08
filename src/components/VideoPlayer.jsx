@@ -1442,9 +1442,19 @@ const VideoPlayer = forwardRef(
               flex-shrink: 0;
             }
             
-            /* Optimize spacing for mobile */
+            /* Optimize spacing for mobile - add more space between controls */
             .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
-              margin: 0 0.1em;
+              margin: 0 0.2em;
+            }
+            
+            /* Add extra spacing for skip backward button */
+            .video-js .vjs-skip-backward {
+              margin-right: 0.3em !important;
+            }
+            
+            /* Ensure volume panel has adequate space */
+            .video-js .vjs-volume-panel {
+              margin-left: 0.3em !important;
             }
           }
 
@@ -1461,15 +1471,21 @@ const VideoPlayer = forwardRef(
               min-width: 2em;
             }
             
-            /* Normal spacing for landscape */
+            /* Better spacing for landscape */
             .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
-              margin: 0 0.1em;
+              margin: 0 0.15em;
+            }
+            
+            /* Add extra spacing for skip backward button */
+            .video-js .vjs-skip-backward {
+              margin-right: 0.25em !important;
             }
             
             /* Ensure volume panel has enough space */
             .video-js .vjs-volume-panel {
               flex-shrink: 0 !important;
               min-width: 6em !important;
+              margin-left: 0.25em !important;
             }
           }
 
@@ -1484,9 +1500,24 @@ const VideoPlayer = forwardRef(
               min-width: 2.2em;
             }
             
+            /* Better spacing for very small screens */
+            .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
+              margin: 0 0.15em;
+            }
+            
+            /* Add extra spacing for skip backward button */
+            .video-js .vjs-skip-backward {
+              margin-right: 0.25em !important;
+            }
+            
+            /* Ensure volume panel has space */
+            .video-js .vjs-volume-panel {
+              margin-left: 0.25em !important;
+            }
+            
             /* Compact layout for very small screens */
             .video-js .vjs-playback-rate {
-              margin: 0;
+              margin: 0 0.1em;
             }
           }
 
