@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useConversation } from "@elevenlabs/react";
 import { CONVERSATION_CONFIG, cleanExpiredMessages } from "@/config/conversationConfig";
 import { liveKitService } from "@/lib/livekit";
-import { apiService } from "@/lib/api";
+import { useCreateSessionMutation } from "@/store/api/liveKitApi";
 import AILearningAssistant from "./AILearningAssistant";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
@@ -124,6 +124,7 @@ const VideoPanel = forwardRef(
     const router = useRouter();
     const dispatch = useDispatch();
     const [generateImage, { isLoading: isImageLoading }] = useGenerateImageMutation();
+    const [createSession] = useCreateSessionMutation();
     const {
       currentVideoIndex,
       isQuestionMode,
@@ -349,7 +350,7 @@ const VideoPanel = forwardRef(
 
           try {
             // Create session and connect
-            const sessionResponse = await apiService.createSession(agentId);
+            const sessionResponse = await createSession(agentId).unwrap();
 
             liveKitService.onConnectionStateChanged = handleLiveKitStateChange;
 
