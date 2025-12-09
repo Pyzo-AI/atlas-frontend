@@ -16,6 +16,7 @@ export class LiveKitService {
     this.agentState = "idle"; // 'idle', 'listening', 'thinking', 'speaking'
     this.lastSpeaker = null; // 'agent' | 'user' | null
     this.onAgentStateChanged = null;
+    this.idleTimeout = null;
   }
 
   async connect(config) {
@@ -156,7 +157,7 @@ export class LiveKitService {
     const isAgentSpeaking = speakers.some((p) => p.identity.startsWith("agent-"));
     const isUserSpeaking = speakers.some((p) => p.identity === this.localParticipant.identity);
 
-    let newState = "idle";
+    let newState = "speaking";
 
     if (isAgentSpeaking) {
       newState = "speaking";
@@ -166,9 +167,19 @@ export class LiveKitService {
       this.lastSpeaker = "user";
     } else {
       // Silence - determine if thinking or idle
-      newState = this.lastSpeaker === "user" ? "thinking" : "idle";
+      if (this.lastSpeaker === "user") {
+        newState = "thinking";
+      } else {
+        clearTimeout(this.idleTimeout);
+        this.idleTimeout = setTimeout(() => {
+          this.agentState = "idle";
+          this.onAgentStateChanged?.("idle");
+        }, 1000);
+        return;
+      }
     }
 
+    clearTimeout(this.idleTimeout);
     if (this.agentState !== newState) {
       this.agentState = newState;
       this.onAgentStateChanged?.(newState);

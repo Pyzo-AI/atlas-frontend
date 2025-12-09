@@ -11,7 +11,7 @@ export const liveKitApi = createApi({
       query: (agentId) => ({
         url: '/session',
         method: 'POST',
-        body: { agent_id: 6 }, // Temporary hardcoded agent ID
+        body: { agent_id: 1 }, // Temporary hardcoded agent ID
       }),
     }),
   }),

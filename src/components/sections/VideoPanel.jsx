@@ -1004,7 +1004,7 @@ const VideoPanel = forwardRef(
             onStopConversation={stopConversation}
             onPauseAnswerAudio={stopAnswerAudio}
             isAudioPlaying={conversationState.isAudioPlaying}
-            isAudioLoading={isListening}
+            isAudioLoading={liveKitAgentEnabled? liveKitAgentState === "listening":isListening}
             isConnected={conversationState.isConnected}
             setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
             isMobile={isMobile && isPhone}
