@@ -170,19 +170,21 @@ export class LiveKitService {
       if (this.lastSpeaker === "user") {
         newState = "thinking";
       } else {
-        clearTimeout(this.idleTimeout);
-        this.idleTimeout = setTimeout(() => {
-          this.agentState = "idle";
-          this.onAgentStateChanged?.("idle");
-        }, 1000);
-        return;
+        newState = "idle";
       }
     }
 
     clearTimeout(this.idleTimeout);
     if (this.agentState !== newState) {
-      this.agentState = newState;
-      this.onAgentStateChanged?.(newState);
+      if (newState === "idle") {
+        this.idleTimeout = setTimeout(() => {
+          this.agentState = "idle";
+          this.onAgentStateChanged?.("idle");
+        }, 1000);
+      } else {
+        this.agentState = newState;
+        this.onAgentStateChanged?.(newState);
+      }
     }
   }
 

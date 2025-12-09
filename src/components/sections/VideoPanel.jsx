@@ -108,7 +108,7 @@ const VideoPanel = forwardRef(
       isConnected: false,
       isAudioPlaying: false,
     });
-    const [liveKitAgentState, setLiveKitAgentState] = useState("connecting");
+    const [liveKitAgentState, setLiveKitAgentState] = useState("speaking");
     const [isJumpedOnChatFromInteractionMode, setIsJumpedOnChatFromInteractionMode] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -406,7 +406,7 @@ const VideoPanel = forwardRef(
         if (liveKitAgentEnabled) {
           await liveKitService.disconnect();
           setLiveKitRoom(null);
-          setLiveKitAgentState("connecting");
+          setLiveKitAgentState("speaking");
         } else {
           await conversation.endSession();
         }
@@ -652,18 +652,10 @@ const VideoPanel = forwardRef(
     }, [selectedAssessmentId, dispatch]);
 
     useEffect(() => {
-       let debounceTimer;
       liveKitService.setOnAgentStateChanged((state) => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
           setLiveKitAgentState(state);
-        }, 800);
       });
     }, []);
-
-    console.log(liveKitAgentState, "Current Agent State");
-
-    // Cleanup is handled by VideoPlayer component
 
     // Handle video end
     const handleVideoEnd = () => {
