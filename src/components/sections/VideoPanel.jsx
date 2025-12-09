@@ -108,7 +108,7 @@ const VideoPanel = forwardRef(
       isConnected: false,
       isAudioPlaying: false,
     });
-    const [liveKitAgentState, setLiveKitAgentState] = useState("speaking");
+    const [liveKitAgentState, setLiveKitAgentState] = useState("connecting");
     const [isJumpedOnChatFromInteractionMode, setIsJumpedOnChatFromInteractionMode] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -406,7 +406,7 @@ const VideoPanel = forwardRef(
         if (liveKitAgentEnabled) {
           await liveKitService.disconnect();
           setLiveKitRoom(null);
-          setLiveKitAgentState("speaking");
+          setLiveKitAgentState("connecting");
         } else {
           await conversation.endSession();
         }
@@ -963,7 +963,7 @@ const VideoPanel = forwardRef(
         {/* Question Mode AI - Responsive */}
         {isQuestionMode && (
           <QuestionModeAI
-            isLoading={!conversationState.isConnected}
+            isLoading={liveKitAgentEnabled? liveKitAgentState === "connecting" : !conversationState.isConnected}
             liveKitAgentEnabled={liveKitAgentEnabled}
             liveKitAgentState={liveKitAgentState}
             isAudioPlaying={conversation.isSpeaking}
