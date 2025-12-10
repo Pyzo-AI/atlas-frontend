@@ -985,6 +985,8 @@ const VideoPanel = forwardRef(
             agentId={agentId}
             isMobile={isMobile && isPhone}
             onPauseSlideVideo={onPauseSlideVideo}
+            liveKitAgentEnabled={liveKitAgentEnabled}
+            presentationId={presentationId}
           />
         )}
 

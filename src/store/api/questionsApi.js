@@ -101,6 +101,12 @@ export const questionsApi = createApi({
         body: { agent_id: 6 }, // Temporary hardcoded agent ID
       }),
     }),
+
+    // Get conversation history
+    getConversationHistory: builder.query({
+      query: (presentationId) => `api/webhooks/presentations/${presentationId}/conversations?limit=-1`,
+      providesTags: ['Question'],
+    }),
   }),
 });
 
@@ -116,4 +122,5 @@ export const {
   useSubmitFeedbackMutation,
   useGetAssessmentSummaryQuery,
   useGenerateImageMutation,
+  useGetConversationHistoryQuery,
 } = questionsApi;
