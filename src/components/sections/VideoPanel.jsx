@@ -350,7 +350,12 @@ const VideoPanel = forwardRef(
 
           try {
             // Create session and connect
-            const sessionResponse = await createSession(agentId).unwrap();
+            const userDetails = getUserDetailsFromToken();
+            const sessionResponse = await createSession({
+              agent_id: agentId,
+              user_id: userDetails?.sub || 0,
+              presentation_id: parseInt(presentationId)
+            }).unwrap();
 
             liveKitService.onConnectionStateChanged = handleLiveKitStateChange;
 
@@ -655,7 +660,26 @@ const VideoPanel = forwardRef(
       liveKitService.setOnAgentStateChanged((state) => {
           setLiveKitAgentState(state);
       });
-    }, []);
+      
+      // Data Packet Handling
+      if (liveKitService.setOnDataReceived) {
+        liveKitService.setOnDataReceived((payload, participant) => {
+          try {
+            const decoder = new TextDecoder();
+            const strData = decoder.decode(payload);
+            const data = JSON.parse(strData);
+            if (data.type === "status" && data.message === "call_ending") {
+                if (liveKitService.isConnected()) {
+                  liveKitService.disconnect();
+                  dispatch(setIsQuestionMode(false));
+                }
+            }
+          } catch (error) {
+            console.error("Failed to parse data packet:", error);
+          }
+        });
+      }
+    }, [dispatch]);
 
     // Handle video end
     const handleVideoEnd = () => {

@@ -12,6 +12,7 @@ export class LiveKitService {
     };
     this.onConnectionStateChanged = null;
     this.onMessage = null;
+    this.onDataReceived = null;
     this.isAgentSpeaking = false;
     this.agentState = "idle"; // 'idle', 'listening', 'thinking', 'speaking'
     this.lastSpeaker = null; // 'agent' | 'user' | null
@@ -98,6 +99,10 @@ export class LiveKitService {
 
     this.room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
       this.handleActiveSpeakersChanged(speakers);
+    });
+
+    this.room.on(RoomEvent.DataReceived, (payload, participant) => {
+      this.onDataReceived?.(payload, participant);
     });
   }
 
@@ -193,6 +198,10 @@ export class LiveKitService {
 
   setOnAgentStateChanged(callback) {
     this.onAgentStateChanged = callback;
+  }
+
+  setOnDataReceived(callback) {
+    this.onDataReceived = callback;
   }
 }
 

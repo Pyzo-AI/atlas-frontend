@@ -8,10 +8,10 @@ export const liveKitApi = createApi({
   }),
   endpoints: (builder) => ({
     createSession: builder.mutation({
-      query: (agentId) => ({
+      query: ({ agent_id, user_id, presentation_id }) => ({
         url: '/session',
         method: 'POST',
-        body: { agent_id: 1 }, // Temporary hardcoded agent ID
+        body: { agent_id, user_id, presentation_id },
       }),
     }),
   }),
