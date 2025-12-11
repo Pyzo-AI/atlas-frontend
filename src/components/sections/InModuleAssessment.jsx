@@ -16,6 +16,7 @@ import ResultModal from "@/components/modals/ResultModal";
 import FeedbackModal from "@/components/modals/FeedbackModal";
 import { setAssessmentCompleted } from "@/utils/assessmentProgress";
 import RadioButton from "@/components/ui/RadioButton";
+import TextArea from "@/components/ui/TextArea";
 
 const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
   const dispatch = useDispatch();
@@ -342,12 +343,10 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
 
               {/* Render based on question type */}
               {currentQuestion?.question_type === "SUBJECTIVE" ? (
-                <textarea
+                <TextArea
                   value={answers[currentQuestion.question_id] || ""}
                   onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
                   placeholder="Type your answer here..."
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:border-[#744FFF] focus:outline-none resize-none transition-colors duration-200"
-                  rows={6}
                 />
               ) : (
                 <div className="space-y-1 sm:space-y-2">

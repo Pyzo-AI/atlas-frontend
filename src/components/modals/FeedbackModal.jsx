@@ -11,6 +11,7 @@ import unrated_start from '@/assets/svg/unrated_start.svg';
 import rated_start from '@/assets/svg/rated_start.svg';
 import half_rated_star from '@/assets/svg/half_rated_star.svg';
 import Image from "next/image";
+import TextArea from "@/components/ui/TextArea";
 
 export default function FeedbackModal({ isOpen, onClose, presentationId }) {
   const [rating, setRating] = useState(0);
@@ -144,11 +145,11 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
           {/* Review Text Area */}
           <div className="w-full max-w-md">
             <div className="relative rounded-xl">
-              <textarea
+              <TextArea
                 value={review}
                 onChange={handleReviewChange}
                 placeholder="Write a review… (optional)"
-                className="w-full h-24 p-3 text-sm resize-none border rounded-xl outline-none border-gray-300 focus:border-[#744FFF] focus:ring-1 focus:ring-[#744FFF]"
+                className="h-24 text-sm border-gray-300 rounded-xl focus:ring-1 focus:ring-[#744FFF]"
               />
               <div className="absolute bottom-3 right-3 text-xs text-gray-400">({review.length}/250)</div>
             </div>
