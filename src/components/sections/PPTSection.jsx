@@ -21,7 +21,8 @@ const PPTSection = React.forwardRef(({
   onVideoIndexChange,
   isOnlyVideoMode,
   assessmentId,
-  showQueryRelatedSlides = false
+  showQueryRelatedSlides = false,
+  passingScore
 }, ref) => {
   const slideVideoRef = useRef(null);
   // Expose pause method to parent component
@@ -71,6 +72,7 @@ const PPTSection = React.forwardRef(({
           canSkipVideo={canSkipVideo}
           assessmentId={assessmentId}
           showQueryRelatedSlides={showQueryRelatedSlides}
+          passingScore={passingScore}
         />
       </div>
 

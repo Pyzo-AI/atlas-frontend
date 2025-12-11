@@ -18,7 +18,7 @@ import { setAssessmentCompleted } from "@/utils/assessmentProgress";
 import RadioButton from "@/components/ui/RadioButton";
 import TextArea from "@/components/ui/TextArea";
 
-const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
+const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore }) => {
   const dispatch = useDispatch();
   const { selectedAssessmentId, currentVideoIndex } = useSelector((state) => state.video);
   const presentationId = useParams().id;
@@ -518,6 +518,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
             setResultData(null);
           }}
           score={resultData?.score}
+          passingScore={passingScore}
           presentationId={resultData?.presentationId}
           assessmentId={resultData?.assessmentId}
           totalQuestions={resultData?.totalQuestions}

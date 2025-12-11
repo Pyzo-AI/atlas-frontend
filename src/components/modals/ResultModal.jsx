@@ -16,10 +16,11 @@ export default function ResultModal({
   onRetry,
   onRestartTraining,
   onShowFeedback,
+  passingScore, 
 }) {
   const router = useRouter();
   const dispatch = useDispatch();
-  const passingScore = process.env.NEXT_PUBLIC_ASSESSMENT_PASSING_SCORE || 100;
+
 
   // Use the actual values from API response
   const actualTotalQuestions = totalQuestions || 0;

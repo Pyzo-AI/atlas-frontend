@@ -76,7 +76,8 @@ const CombinedPPTSection = React.memo(
     onVideoIndexChange,
     isOnlyVideoMode,
     assessmentId,
-    showQueryRelatedSlides = false
+    showQueryRelatedSlides = false,
+    passingScore
   }, ref) => {
     const width = isMobile ? "100%" : "70%";
 
@@ -101,6 +102,7 @@ const CombinedPPTSection = React.memo(
         isOnlyVideoMode={isOnlyVideoMode}
         assessmentId={assessmentId}
         showQueryRelatedSlides={showQueryRelatedSlides}
+        passingScore={passingScore}
       />
     );
   })
@@ -171,10 +173,8 @@ const Home = () => {
   const videos = data?.data;
   const userName = getUserDetailsFromToken()?.preferred_username;
   const assessmentId = data?.assessment_details?.[0]?.id;
-
+  const passingScore = data?.assessment_details?.[0]?.passing_score || 100;
   const canSkipVideo = data?.hasOwnProperty("is_skippable") ? data.is_skippable : !userName?.includes("jeenaseekho");
-
-  const pathname = usePathname();
   const videoPanelRef = useRef(null);
   const pptSectionRef = useRef(null);
   const dispatch = useDispatch();
@@ -513,6 +513,7 @@ const Home = () => {
                 isOnlyVideoMode={isOnlyVideoMode}
                 assessmentId={assessmentId}
                 showQueryRelatedSlides={showQueryRelatedSlides}
+                passingScore={passingScore}
               />
             </div>
 
@@ -571,6 +572,7 @@ const Home = () => {
                 isOnlyVideoMode={isOnlyVideoMode}
                 assessmentId={assessmentId}
                 showQueryRelatedSlides={showQueryRelatedSlides}
+                passingScore={passingScore}
               />
               <CombinedVideoPanel
                 videoPanelRef={videoPanelRef}
