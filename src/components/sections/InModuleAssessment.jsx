@@ -15,6 +15,7 @@ import { useParams } from "next/navigation";
 import ResultModal from "@/components/modals/ResultModal";
 import FeedbackModal from "@/components/modals/FeedbackModal";
 import { setAssessmentCompleted } from "@/utils/assessmentProgress";
+import RadioButton from "@/components/ui/RadioButton";
 
 const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
   const dispatch = useDispatch();
@@ -363,16 +364,11 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
                             : "border-gray-200 hover:border-[#744FFF] hover:bg-[rgba(116,79,255,0.12)]"
                         }`}
                         onClick={() => handleAnswer(currentQuestion.question_id, option)}>
-                        <input
-                          type="radio"
+                        <RadioButton
                           name={`question-${currentQuestion.question_id}`}
                           value={option}
                           checked={answers[currentQuestion.question_id] === option}
                           onChange={() => handleAnswer(currentQuestion.question_id, option)}
-                          className="mt-0.5 mr-2 sm:mr-3 w-3 h-3 sm:w-4 sm:h-4 text-[#744FFF] accent-[#744FFF]"
-                          style={{
-                            accentColor: "#744FFF",
-                          }}
                         />
                         <span className="text-xs sm:text-sm md:text-sm text-gray-700 leading-relaxed flex-1">
                           {option}. {text}

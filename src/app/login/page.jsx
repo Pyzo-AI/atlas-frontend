@@ -7,6 +7,7 @@ import trainBoostLogo from "@/assets/svg/train-boost-logo.svg";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { useLoginMutation } from "@/store/api/authApi";
+import InputField from "@/components/ui/InputField";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -141,65 +142,43 @@ const LoginPage = () => {
           <div className="w-full flex flex-col gap-4 sm:gap-6">
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               {/* Email field */}
-              <div className="flex flex-col gap-[11px]">
-                <label
-                  htmlFor="email"
-                  className="text-sm sm:text-[16px] font-lato font-semibold leading-tight sm:leading-[19px] text-[#1A1C29]"
-                >
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  // type="email"
-                  autoComplete="email"
-                  required
-                  className="w-full h-11 sm:h-[44px] bg-white border border-[#E5E7EB] rounded-[11px] px-3 py-2 sm:py-[9px] text-base sm:text-[14px] font-lato font-normal leading-tight sm:leading-[17px] text-black placeholder:text-[rgba(0,0,0,0.5)] focus:outline-none focus:border-[#4A47C8] transition-colors"
-                  placeholder="abc@gmail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
+              <InputField
+                id="email"
+                name="email"
+                label="Email"
+                placeholder="abc@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
 
               {/* Password field */}
-              <div className="flex flex-col gap-[11px]">
-                <label
-                  htmlFor="password"
-                  className="text-sm sm:text-[16px] font-lato font-semibold leading-tight sm:leading-[19px] text-[#1A1C29]"
-                >
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    required
-                    className="w-full h-11 sm:h-[44px] bg-white border border-[#E5E7EB] rounded-[11px] px-3 py-2 sm:py-[9px] pr-12 text-base sm:text-[14px] font-lato font-normal leading-tight sm:leading-[17px] text-black placeholder:text-[rgba(0,0,0,0.5)] focus:outline-none focus:border-[#4A47C8] transition-colors"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="cursor-pointer absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <FiEye
-                        className="w-full h-full text-[rgba(26,28,41,0.7)]"
-                        strokeWidth={1.5}
-                      />
-                    ) : (
-                      <FiEyeOff
-                        className="w-full h-full text-[rgba(26,28,41,0.7)]"
-                        strokeWidth={1.5}
-                      />
-                    )}
-                  </button>
-                </div>
-              </div>
+              <InputField
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                label="Password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+                rightIcon={
+                  showPassword ? (
+                    <FiEye
+                      className="w-full h-full text-[rgba(26,28,41,0.7)]"
+                      strokeWidth={1.5}
+                    />
+                  ) : (
+                    <FiEyeOff
+                      className="w-full h-full text-[rgba(26,28,41,0.7)]"
+                      strokeWidth={1.5}
+                    />
+                  )
+                }
+                onRightIconClick={() => setShowPassword(!showPassword)}
+              />
 
               {/* Submit button */}
               <button
