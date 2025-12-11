@@ -91,9 +91,7 @@ const LoginPage = () => {
       });
 
       toast.error(
-        isInvalidCredentials
-          ? "Invalid email or password. Please check your credentials."
-          : "Login failed. Please try again.",
+        error.data?.message || "Login failed. Please try again.",
         {
           position: "top-right",
           autoClose: 3000,
