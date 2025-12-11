@@ -40,6 +40,10 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
     }
   };
 
+    const handleKeyDown = (e) => {
+    e.stopPropagation();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting || rating === 0) return;
@@ -148,6 +152,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
               <TextArea
                 value={review}
                 onChange={handleReviewChange}
+                onKeyDown={handleKeyDown}
                 placeholder="Write a review… (optional)"
                 className="h-24 text-sm border-gray-300 rounded-xl focus:ring-1 focus:ring-[#744FFF]"
               />
