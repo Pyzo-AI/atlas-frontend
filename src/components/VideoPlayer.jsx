@@ -1484,6 +1484,7 @@ const VideoPlayer = forwardRef(
             /* Add extra spacing for skip backward button */
             .video-js .vjs-skip-backward {
               margin-right: 0.25em !important;
+              margin-top: 3px !important;
             }
             
             /* Ensure volume panel has enough space */
