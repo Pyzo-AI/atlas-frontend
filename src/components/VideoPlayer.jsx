@@ -1393,7 +1393,12 @@ const VideoPlayer = forwardRef(
             /* Fix menu positioning for tiny and x-small layouts in landscape */
             .video-js.vjs-layout-tiny .vjs-menu-button-popup .vjs-menu .vjs-menu-content,
             .video-js.vjs-layout-x-small .vjs-menu-button-popup .vjs-menu .vjs-menu-content {
-              bottom: -10px !important;
+              bottom: 0em !important;
+            }
+            
+            /* Override default menu content bottom positioning */
+            .video-js .vjs-menu-button-popup .vjs-menu .vjs-menu-content {
+              bottom: 0em !important;
             }
           }
           
