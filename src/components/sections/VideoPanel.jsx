@@ -681,6 +681,16 @@ const VideoPanel = forwardRef(
       }
     }, [dispatch]);
 
+    // Cleanup on unmount - disconnect LiveKit and reset question mode
+    useEffect(() => {
+      return () => {
+        if (liveKitService.isConnected()) {
+          liveKitService.disconnect();
+        }
+        dispatch(setIsQuestionMode(false));
+      };
+    }, [dispatch]);
+
     // Handle video end
     const handleVideoEnd = () => {
       // Save progress for completed video
