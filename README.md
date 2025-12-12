@@ -8,7 +8,7 @@ This project is a Next.js application created using [`create-next-app`](https://
 
 Ensure you have the following installed:
 - Node.js (>= 18.x)
-- npm, yarn, pnpm, or bun
+- npm or yarn
 
 ### Installation
 
@@ -45,11 +45,11 @@ This project utilizes the following environment variables. Ensure you create a `
 
 Example `.env` file:
 ```env
-NEXT_PUBLIC_API_BASE_URL=https://be.dev.train.pyzo.ai
-NEXT_PUBLIC_LOGIN_BASE_URL=https://users.uat.trainboost.esmagico.com
-NEXT_PUBLIC_LIVEKIT_API_URL=https://engine.conversations.dev.train.pyzo.ai
-NEXT_PUBLIC_POSTHOG_KEY=your_posthog_key_here
-NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+NEXT_PUBLIC_API_BASE_URL=https://api.example.com
+NEXT_PUBLIC_LOGIN_BASE_URL=https://auth.example.com
+NEXT_PUBLIC_LIVEKIT_API_URL=https://livekit.example.com
+NEXT_PUBLIC_POSTHOG_KEY=phc_1234567890abcdef
+NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 ```
 
 ## Running the Application
