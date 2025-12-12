@@ -1393,7 +1393,12 @@ const VideoPlayer = forwardRef(
             /* Fix menu positioning for tiny and x-small layouts in landscape */
             .video-js.vjs-layout-tiny .vjs-menu-button-popup .vjs-menu .vjs-menu-content,
             .video-js.vjs-layout-x-small .vjs-menu-button-popup .vjs-menu .vjs-menu-content {
-              bottom: -10px !important;
+              bottom: 0em !important;
+            }
+            
+            /* Override default menu content bottom positioning */
+            .video-js .vjs-menu-button-popup .vjs-menu .vjs-menu-content {
+              bottom: 0em !important;
             }
           }
           
@@ -1479,6 +1484,7 @@ const VideoPlayer = forwardRef(
             /* Add extra spacing for skip backward button */
             .video-js .vjs-skip-backward {
               margin-right: 0.25em !important;
+              margin-top: 2.5px !important;
             }
             
             /* Ensure volume panel has enough space */
