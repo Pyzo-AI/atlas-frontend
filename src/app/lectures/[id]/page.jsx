@@ -19,6 +19,9 @@ import FullscreenController from "@/components/ui/FullscreenController";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress, clearVideoProgress } from "@/utils/videoProgress";
 import { clearAssessmentProgress } from "@/utils/assessmentProgress";
+import Image from "next/image";
+import RotateDeviceIcon from "@/assets/svg/rotate_device.svg";
+import RotateArrowIcon from "@/assets/svg/rotate_arrow.svg";
 
 // Portrait Mode Rotation Prompt Component
 const RotationPrompt = () => {
@@ -26,9 +29,13 @@ const RotationPrompt = () => {
     <div className="absolute top-16 inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
       <div className="text-center text-white px-6">
         <div className="mb-6">
-          <svg className="w-16 h-16 mx-auto mb-4 animate-bounce" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l6.36 6.36c.59.59 1.54.59 2.12 0L16.59 10.23c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.72 14.72h1.5c-.36 3.76-2.7 6.93-5.97 8.48L9.15 23.38l1.33-1.32-3.81-3.81L7.33 24c6.29-.44 11.44-5.28 11.95-11.53z" />
-          </svg>
+          <Image 
+            src={RotateDeviceIcon} 
+            alt="Rotate device" 
+            width={64} 
+            height={64} 
+            className="mx-auto mb-4 animate-bounce" 
+          />
         </div>
         <h2 className="text-xl font-semibold mb-2">Better Experience Awaits!</h2>
         <p className="text-gray-300 mb-4">
@@ -36,9 +43,12 @@ const RotationPrompt = () => {
         </p>
         <div className="flex items-center justify-center space-x-2">
           <div className="w-8 h-12 border-2 border-white rounded-sm"></div>
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32z" />
-          </svg>
+          <Image 
+            src={RotateArrowIcon} 
+            alt="Rotate arrow" 
+            width={24} 
+            height={24} 
+          />
           <div className="w-12 h-8 border-2 border-white rounded-sm"></div>
         </div>
       </div>
