@@ -1036,6 +1036,8 @@ const VideoPanel = forwardRef(
             isConnected={conversationState.isConnected}
             setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
             isMobile={isMobile && isPhone}
+            liveKitAgentEnabled={liveKitAgentEnabled}
+            liveKitAgentState={liveKitAgentState}
           />
         )}
         <FeedbackModal

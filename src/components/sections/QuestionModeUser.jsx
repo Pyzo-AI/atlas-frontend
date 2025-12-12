@@ -24,6 +24,8 @@ const QuestionModeUser = ({
   isConnected,
   setIsJumpedOnChatFromInteractionMode,
   isMobile = false,
+  liveKitAgentEnabled = false,
+  liveKitAgentState = "connecting",
 }) => {
   const dispatch = useDispatch()
   const { question } = useSelector((state) => state.video)
@@ -110,7 +112,12 @@ const QuestionModeUser = ({
       <div className="mt-6 flex items-center justify-center px-0 md:px-3 gap-2 md:gap-4 mx-auto">
         <button
           onClick={handleChatHistory}
-          className="cursor-pointer flex items-center gap-1 px-3 py-[7px] bg-[rgba(110,96,223,0.1)] rounded-[73.75px]"
+          disabled={liveKitAgentEnabled && liveKitAgentState === "connecting"}
+          className={`flex items-center gap-1 px-3 py-[7px] rounded-[73.75px] ${
+            liveKitAgentEnabled && liveKitAgentState === "connecting"
+              ? "bg-gray-200 cursor-not-allowed opacity-50"
+              : "bg-[rgba(110,96,223,0.1)] cursor-pointer"
+          }`}
         >
           <Image
             className="w-4 h-4 lg:w-5 lg:h-5"
@@ -121,7 +128,12 @@ const QuestionModeUser = ({
 
         <button
           onClick={handleBackToSession}
-          className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-[#6E60DF] rounded-[73.75px]"
+          disabled={liveKitAgentEnabled && liveKitAgentState === "connecting"}
+          className={`flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-[73.75px] ${
+            liveKitAgentEnabled && liveKitAgentState === "connecting"
+              ? "bg-gray-400 cursor-not-allowed opacity-50"
+              : "bg-[#6E60DF] cursor-pointer"
+          }`}
         >
           <Image
             className="w-4 h-4 lg:w-5 lg:h-5"
