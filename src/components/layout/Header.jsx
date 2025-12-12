@@ -163,9 +163,9 @@ const Header = ({ onMenuClick }) => {
           </div>
         </button> */}
         <div className="relative" ref={dropdownRef}>
-          <img
+          <Image
             className="cursor-pointer w-8 h-8 rounded-full"
-            src={userIcon.src}
+            src={userIcon}
             alt="User"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           />

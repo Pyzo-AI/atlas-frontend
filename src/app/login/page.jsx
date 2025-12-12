@@ -8,6 +8,7 @@ import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { useLoginMutation } from "@/store/api/authApi";
 import InputField from "@/components/ui/InputField";
+import Image from "next/image";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -121,8 +122,8 @@ const LoginPage = () => {
             {/* Logo and brand */}
             <div className="flex items-center gap-1 mb-1">
               <div className="w-6 h-6">
-                <img
-                  src={trainBoostLogo.src}
+                <Image
+                  src={trainBoostLogo}
                   alt="Upskillr Logo"
                   className="w-6 h-6"
                 />
