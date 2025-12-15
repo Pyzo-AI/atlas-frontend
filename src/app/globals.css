@@ -4,6 +4,8 @@
 @theme {
   --color-primary: #2762EA;
   --color-page-background: #F9F9F9;
+  --color-primary-text: #1A1C29;
+  --color-primary-text-muted: #1A1C29CC;
 }
 
 body {

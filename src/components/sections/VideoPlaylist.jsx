@@ -232,7 +232,7 @@ const VideoPlaylist = ({
                     <h4
                       className={`font-lato font-medium ${
                         isMobile ? "text-[9px] text-600" : "text-[12px]"
-                      } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}>
+                      } leading-[14px] tracking-[0.02em] text-primary-text line-clamp-2`}>
                       {video.title || "Untitled Video"}
                     </h4>
                     {!isMobile && (
@@ -297,7 +297,7 @@ const VideoPlaylist = ({
                         <h4
                           className={`font-lato font-medium ${
                             isMobile ? "text-[9px]" : "text-[12px]"
-                          } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}>
+                          } leading-[14px] tracking-[0.02em] text-primary-text line-clamp-2`}>
                           Quiz - {assessment.question_count} Questions
                         </h4>
                         {!isMobile && (
@@ -367,7 +367,7 @@ const VideoPlaylist = ({
                 <h4
                   className={`font-lato font-medium ${
                     isMobile ? "text-[9px]" : "text-[12px]"
-                  } leading-[14px] tracking-[0.02em] text-[#1A1C29] line-clamp-2`}>
+                  } leading-[14px] tracking-[0.02em] text-primary-text line-clamp-2`}>
                   Final Assessment - {assessmentDetails[0]?.question_count || 0} Questions
                 </h4>
                 {!isMobile && (

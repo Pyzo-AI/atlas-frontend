@@ -135,7 +135,7 @@ const ChatUI = ({
       <div className="flex flex-col h-full border border-[#E5E7EB] rounded-xl overflow-hidden">
         {/* Header */}
         <div className="flex justify-between items-center px-3 py-1 lg:py-3 pb-1 md:pb-2 border-b border-[#E5E7EB] flex-shrink-0">
-          <h2 className="font-lato font-bold text-[12px] lg:text-base leading-[19px] tracking-[0.02em] text-[#1A1C29]">
+          <h2 className="font-lato font-bold text-[12px] lg:text-base leading-[19px] tracking-[0.02em] text-primary-text">
             Interaction History
           </h2>
           <button
@@ -193,7 +193,7 @@ const ChatUI = ({
                           <div className="flex justify-end">
                             <div className="max-w-[75%]">
                               <div className="bg-[rgba(26,26,26,0.07)] rounded-[10px_10px_10px_0px] px-2.5 py-2">
-                                <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-[#1A1C29]">
+                                <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-primary-text">
                                   {item.content}
                                 </p>
                               </div>
@@ -209,7 +209,7 @@ const ChatUI = ({
                               <Image src={ai_answer_icon} alt="AI Answer Icon" />
                             </div>
                             <div className="flex-1 max-w-[301px]">
-                              <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-[#1A1C29]">
+                              <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-primary-text">
                                 {item.content || 'No text answer found'}
                               </p>
                               {item.time && (
@@ -232,7 +232,7 @@ const ChatUI = ({
                     /* User Message */
                     <div className="flex justify-end">
                       <div className="max-w-[75%] bg-[rgba(26,26,26,0.07)] rounded-[10px_10px_10px_0px] px-2.5 py-2">
-                        <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-[#1A1C29]">
+                        <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-primary-text">
                           {item.content}
                         </p>
                       </div>
@@ -244,7 +244,7 @@ const ChatUI = ({
                         <Image src={ai_answer_icon} alt="AI Answer Icon" />
                       </div>
                       <div className="flex-1 max-w-[301px]">
-                        <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-[#1A1C29]">
+                        <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-primary-text">
                           {item.content || 'No text answer found'}
                         </p>
                       </div>

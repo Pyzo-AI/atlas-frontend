@@ -101,7 +101,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
             </div>
 
             {/* Title */}
-            <h2 className="text-xl font-bold text-[#1A1C29] text-center">How Was the Training?</h2>
+            <h2 className="text-xl font-bold text-primary-text text-center">How Was the Training?</h2>
           </div>
 
           {/* Rating Section */}

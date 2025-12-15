@@ -130,13 +130,13 @@ const LoginPage = () => {
                   className="w-6 h-6"
                 />
               </div>
-              <span className="text-[20px] font-lato font-bold leading-[19px] tracking-[0.02em] text-[#1A1C29]">
+              <span className="text-[20px] font-lato font-bold leading-[19px] tracking-[0.02em] text-primary-text">
                 Upskillr 
               </span>
             </div>
 
             {/* Main heading */}
-            <h1 className="text-xl sm:text-[24px] font-lato font-bold leading-tight sm:leading-[29px] tracking-[0.02em] text-[#1A1C29] text-center">
+            <h1 className="text-xl sm:text-[24px] font-lato font-bold leading-tight sm:leading-[29px] tracking-[0.02em] text-primary-text text-center">
               Sign in to your account
             </h1>
           </div>

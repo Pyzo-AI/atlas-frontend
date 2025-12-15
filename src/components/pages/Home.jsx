@@ -447,7 +447,7 @@ const Home = () => {
         <div className="flex flex-col items-start gap-4 sm:gap-[16px] w-full px-4 sm:px-5 py-4 sm:py-4">
           {/* Header with tabs */}
           <div className="flex justify-between items-center gap-4 sm:gap-[16px] w-full">
-            <h2 className="font-lato font-bold text-base sm:text-[16px] leading-tight sm:leading-[19px] text-[#1A1C29]">
+            <h2 className="font-lato font-bold text-base sm:text-[16px] leading-tight sm:leading-[19px] text-primary-text">
               Available Courses
             </h2>
 
@@ -558,7 +558,7 @@ const Home = () => {
                         <HiBookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                       </div>
                       <div className="flex flex-col gap-2">
-                        <h3 className="font-lato font-semibold text-lg sm:text-xl text-[#1A1C29]">
+                        <h3 className="font-lato font-semibold text-lg sm:text-xl text-primary-text">
                           No Courses Found
                         </h3>
                       </div>

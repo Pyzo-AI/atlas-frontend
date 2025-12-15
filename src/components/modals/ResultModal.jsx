@@ -87,12 +87,12 @@ export default function ResultModal({
         </div>
 
         {/* Title */}
-        <h1 className="font-lato font-bold text-[20px] leading-[100%] tracking-[0em] text-[#1A1C29] mb-2">
+        <h1 className="font-lato font-bold text-[20px] leading-[100%] tracking-[0em] text-primary-text mb-2">
           {isPerfectScore ? "Congratulations! 🎉" : "You're on the right track!"}
         </h1>
 
         {/* Subtitle */}
-        <p className="font-lato font-medium text-[14px] leading-[100%] tracking-[0em] text-center text-[#1A1C29CC] mb-2">
+        <p className="font-lato font-medium text-[14px] leading-[100%] tracking-[0em] text-center text-primary-text-muted mb-2">
           {isPerfectScore ? (
             "You've mastered the training with a perfect score!"
           ) : (

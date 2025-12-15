@@ -18,7 +18,7 @@ const InputField = ({
   ...props
 }) => {
   const defaultInputClass = "w-full h-11 sm:h-[44px] bg-white border border-[#E5E7EB] rounded-[11px] px-3 py-2 sm:py-[9px] text-base sm:text-[14px] font-lato font-normal leading-tight sm:leading-[17px] text-black placeholder:text-[rgba(0,0,0,0.5)] focus:outline-none focus:border-[#4A47C8] transition-colors";
-  const defaultLabelClass = "text-sm sm:text-[16px] font-lato font-semibold leading-tight sm:leading-[19px] text-[#1A1C29]";
+  const defaultLabelClass = "text-sm sm:text-[16px] font-lato font-semibold leading-tight sm:leading-[19px] text-primary-text";
 
   return (
     <div className={`flex flex-col gap-[11px] ${className}`}>

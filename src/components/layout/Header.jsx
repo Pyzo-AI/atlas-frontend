@@ -149,7 +149,7 @@ const Header = ({ onMenuClick }) => {
                 className={`font-lato font-semibold text-[14px] leading-[100%] tracking-[0.02em] ${
                   isActive
                     ? "text-blue-600 "
-                    : "text-[#1A1C29] hover:text-blue-600"
+                    : "text-primary-text hover:text-blue-600"
                 }`}
               >
                 {item.name}

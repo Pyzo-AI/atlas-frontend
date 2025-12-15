@@ -95,11 +95,11 @@ const AILearningAssistant = ({
                 <h3
                   className={`w-full text-center font-lato font-bold ${
                     isMobileView ? "text-[10px]" : "text-lg leading-5"
-                  }  text-[#1A1C29]`}>
+                  }  text-primary-text`}>
                   AI Assistant
                 </h3>
                 {!isMobileView && (
-                  <p className="w-full text-center font-lato font-normal text-xs leading-4 text-[#1A1C29]">
+                  <p className="w-full text-center font-lato font-normal text-xs leading-4 text-primary-text">
                     Get instant answers to your questions and personalized learning support.
                   </p>
                 )}
