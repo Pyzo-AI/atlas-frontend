@@ -71,7 +71,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-sm mx-auto text-center">
             <div className="mb-4">
-              <GiExpand className="w-12 h-12 mx-auto text-blue-500" />
+              <GiExpand className="w-12 h-12 mx-auto text-primary" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Better Experience in Fullscreen
@@ -92,7 +92,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
                   setShowLandscapePrompt(false);
                   setUserExitedFullscreen(false);
                 }}
-                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover"
               >
                 Go Fullscreen
               </button>

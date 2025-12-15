@@ -85,7 +85,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
                   href={item.href}
                   onClick={handleLinkClick}
                   className={`relative flex items-center px-4 py-2 mx-0 h-9 rounded-md transition-all duration-200 ${
-                    active ? "bg-[rgba(39,98,234,0.1)] text-[#2762EA]" : "text-[rgba(26,28,41,0.8)] hover:bg-gray-50"
+                    active ? "bg-[rgba(39,98,234,0.1)] text-primary" : "text-[rgba(26,28,41,0.8)] hover:bg-gray-50"
                   }`}>
                   <div className="flex items-center gap-1">
                     <div className="w-4 h-4">
@@ -95,7 +95,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
                   </div>
                   {/* Active Indicator */}
                   {active && (
-                    <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-[3px] h-[27px] bg-[#2762EA] rounded-l-lg" />
+                    <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-[3px] h-[27px] bg-primary rounded-l-lg" />
                   )}
                 </Link>
               );

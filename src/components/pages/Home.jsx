@@ -206,7 +206,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
     >
       {/* badge */}
       {badgeInfo.subtitle && (
-        <div className="absolute top-4.5 right-4.5 flex flex-col items-end p-1 gap-0.5 bg-[#2762EA] rounded-[5px] z-10">
+        <div className="absolute top-4.5 right-4.5 flex flex-col items-end p-1 gap-0.5 bg-primary rounded-[5px] z-10">
           <p className="font-lato font-medium text-[10px] leading-[10px] text-[#fff]">
             {badgeInfo.subtitle}
           </p>
@@ -232,7 +232,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
               {presentation?.title || "Unknown Title"}
             </h3>
            {presentation?.presentation_duration > 0 && presentation?.presentation_duration && (
-              <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-[#2762EA]">
+              <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-primary">
                 <span className="font-lato font-medium text-[11px] leading-4 text-white">
                   {formatDuration(presentation.presentation_duration)}
                 </span>

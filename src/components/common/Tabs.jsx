@@ -11,7 +11,7 @@ const Tabs = ({ tabs, activeTab, onTabChange }) => {
           onClick={() => onTabChange(tab.id)}
           className={`flex justify-center items-center px-4 py-2 h-[33px] rounded-t-lg ${
             activeTab === tab.id
-              ? " border-b-2 border-[#2762EA]"
+              ? " border-b-2 border-primary"
               : "border-b-2 border-transparent hover:bg-[#f0f3f5] cursor-pointer"
           }`}
           // style={activeTab === tab.id ? { boxShadow: '0px 4px 4px 0px #00000014' } : {}}
@@ -19,7 +19,7 @@ const Tabs = ({ tabs, activeTab, onTabChange }) => {
           <span
             className={`font-lato text-[14px] leading-[17px] ${
               activeTab === tab.id
-                ? "font-semibold text-[#2762EA]"
+                ? "font-semibold text-primary"
                 : "font-medium text-[#1D1F2C]"
             }`}
           >
