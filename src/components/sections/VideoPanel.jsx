@@ -15,6 +15,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useConversation } from "@elevenlabs/react";
 import { CONVERSATION_CONFIG, cleanExpiredMessages } from "@/config/conversationConfig";
+import { liveKitService } from "@/lib/livekit";
+import { useCreateSessionMutation } from "@/store/api/liveKitApi";
 import AILearningAssistant from "./AILearningAssistant";
 import QuestionModeUser from "./QuestionModeUser";
 import QuestionModeAI from "./QuestionModeAI";
@@ -29,6 +31,7 @@ import FeedbackModal from "../modals/FeedbackModal";
 import { useGenerateImageMutation } from "@/store/api/questionsApi";
 import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
+import { toast } from "react-toastify";
 
 // Conversation history management for VideoPanel
 const {
@@ -94,6 +97,7 @@ const VideoPanel = forwardRef(
       assessmentId,
       isOnlyVideoMode = false,
       isFinalAssessmentPresent = false,
+      liveKitAgentEnabled = false,
       showQueryRelatedSlides = false,
       assessmentDetails = [],
     },
@@ -104,6 +108,7 @@ const VideoPanel = forwardRef(
       isConnected: false,
       isAudioPlaying: false,
     });
+    const [liveKitAgentState, setLiveKitAgentState] = useState("connecting");
     const [isJumpedOnChatFromInteractionMode, setIsJumpedOnChatFromInteractionMode] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -119,6 +124,7 @@ const VideoPanel = forwardRef(
     const router = useRouter();
     const dispatch = useDispatch();
     const [generateImage, { isLoading: isImageLoading }] = useGenerateImageMutation();
+    const [createSession] = useCreateSessionMutation();
     const {
       currentVideoIndex,
       isQuestionMode,
@@ -133,6 +139,7 @@ const VideoPanel = forwardRef(
 
     const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
     const [contextSent, setContextSent] = useState(false);
+    const [liveKitRoom, setLiveKitRoom] = useState(null);
     // Keep ref updated with current isQuestionMode value
     useEffect(() => {
       isQuestionModeRef.current = isQuestionMode;
@@ -166,6 +173,21 @@ const VideoPanel = forwardRef(
     const formatSeconds = (sec) => {
       if (typeof sec !== "number") return sec;
       return Math.round(sec * 10) / 10;
+    };
+
+    // LiveKit connection state handler
+    const handleLiveKitStateChange = (state) => {
+      console.log(state, "isSpeaking");
+      setConversationState({
+        isLoading: state.isConnecting,
+        isConnected: state.isConnected,
+        isAudioPlaying: state.isAudioPlaying || false,
+      });
+
+      // Only log actual errors, not normal disconnections
+      if (!state.isConnected && state.error && !state.error.includes("Disconnected:")) {
+        console.error("LiveKit connection error:", state.error);
+      }
     };
 
     // ElevenLabs Conversational AI
@@ -227,25 +249,28 @@ const VideoPanel = forwardRef(
         }));
       },
       onMessage: (message) => {
-         const content = message.message;
+        const content = message.message;
         // Store in current session history (for ChatUI)
         if (message.source === "user") {
           // Trigger API call for image generation only if showQueryRelatedSlides is true
           if (showQueryRelatedSlides) {
             dispatch(setImageLoading(true));
             const currentVideo = videos[currentVideoIndex];
-            generateImage({ 
+            generateImage({
               presentationId: parseInt(presentationId),
               currentSlideId: currentVideo?.slide,
-              userMessage: content, 
-            }).unwrap().then((response) => {
-              dispatch(setOverlayImage(response.slide_image_url));
-            }).catch((error) => {
-              console.log('Failed to generate image:', error);
-              dispatch(setImageLoading(false));
-            });
+              userMessage: content,
+            })
+              .unwrap()
+              .then((response) => {
+                dispatch(setOverlayImage(response.slide_image_url));
+              })
+              .catch((error) => {
+                console.log("Failed to generate image:", error);
+                dispatch(setImageLoading(false));
+              });
           }
-        
+
           if (content.trim() === "") return;
 
           // Track QnA interaction when user asks a question
@@ -318,34 +343,63 @@ const VideoPanel = forwardRef(
           onPauseVideo();
         }
 
-        // Reset context sent flag for new conversation
-        setContextSent(false);
+        if (liveKitAgentEnabled) {
+          // LiveKit flow
+          setConversationState((prev) => ({ ...prev, isLoading: true }));
+          await navigator.mediaDevices.getUserMedia({ audio: true });
 
-        setConversationState((prev) => ({ ...prev, isLoading: true }));
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        await conversation.startSession({
-          agentId: agentId,
-          userId: getUserDetailsFromToken()?.email,
-        });
-
-        // Send context immediately after connection is established
-        setTimeout(() => {
           try {
-            const contextSummary = generateContextSummary();
-            if (contextSummary) {
-              try {
-                conversation.sendContextualUpdate(
-                  `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
-                );
-                setContextSent(true);
-              } catch (error) {
-                console.error("Error sending initial context:", error);
-              }
-            }
-          } catch (error) {
-            console.error("Could not send initial context:", error.message);
+            // Create session and connect
+            const userDetails = getUserDetailsFromToken();
+            const sessionResponse = await createSession({
+              agent_id: agentId,
+              user_id: userDetails?.sub || 0,
+              presentation_id: parseInt(presentationId)
+            }).unwrap();
+
+            liveKitService.onConnectionStateChanged = handleLiveKitStateChange;
+
+            await liveKitService.connect({
+              url: sessionResponse.livekit_url,
+              token: sessionResponse.token,
+              roomName: sessionResponse.room_name,
+            });
+
+            setLiveKitRoom(sessionResponse.room_name);
+          } catch (sessionError) {
+            toast.error("Interaction mode not available. Please try again later.");
+            dispatch(setIsQuestionMode(false));
+            // throw sessionError;
           }
-        }, 1500);
+        } else {
+          // ElevenLabs flow
+          setContextSent(false);
+          setConversationState((prev) => ({ ...prev, isLoading: true }));
+          await navigator.mediaDevices.getUserMedia({ audio: true });
+          await conversation.startSession({
+            agentId: agentId,
+            userId: getUserDetailsFromToken()?.email,
+          });
+
+          // Send context immediately after connection is established
+          setTimeout(() => {
+            try {
+              const contextSummary = generateContextSummary();
+              if (contextSummary) {
+                try {
+                  conversation.sendContextualUpdate(
+                    `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
+                  );
+                  setContextSent(true);
+                } catch (error) {
+                  console.error("Error sending initial context:", error);
+                }
+              }
+            } catch (error) {
+              console.error("Could not send initial context:", error.message);
+            }
+          }, 1500);
+        }
       } catch (error) {
         console.log("Failed to start conversation:", error);
         setConversationState((prev) => ({ ...prev, isLoading: false }));
@@ -354,7 +408,13 @@ const VideoPanel = forwardRef(
 
     const stopConversation = async () => {
       try {
-        await conversation.endSession();
+        if (liveKitAgentEnabled) {
+          await liveKitService.disconnect();
+          setLiveKitRoom(null);
+          setLiveKitAgentState("connecting");
+        } else {
+          await conversation.endSession();
+        }
         setConversationState((prev) => ({
           ...prev,
           isConnected: false,
@@ -596,7 +656,40 @@ const VideoPanel = forwardRef(
       }
     }, [selectedAssessmentId, dispatch]);
 
-    // Cleanup is handled by VideoPlayer component
+    useEffect(() => {
+      liveKitService.setOnAgentStateChanged((state) => {
+          setLiveKitAgentState(state);
+      });
+      
+      // Data Packet Handling
+      if (liveKitService.setOnDataReceived) {
+        liveKitService.setOnDataReceived((payload, participant) => {
+          try {
+            const decoder = new TextDecoder();
+            const strData = decoder.decode(payload);
+            const data = JSON.parse(strData);
+            if (data.type === "status" && data.message === "call_ending") {
+                if (liveKitService.isConnected()) {
+                  liveKitService.disconnect();
+                  dispatch(setIsQuestionMode(false));
+                }
+            }
+          } catch (error) {
+            console.error("Failed to parse data packet:", error);
+          }
+        });
+      }
+    }, [dispatch]);
+
+    // Cleanup on unmount - disconnect LiveKit and reset question mode
+    useEffect(() => {
+      return () => {
+        if (liveKitService.isConnected()) {
+          liveKitService.disconnect();
+        }
+        dispatch(setIsQuestionMode(false));
+      };
+    }, [dispatch]);
 
     // Handle video end
     const handleVideoEnd = () => {
@@ -811,13 +904,11 @@ const VideoPanel = forwardRef(
 
         {/* Video Section or Grid Playlist - Responsive for both mobile and desktop */}
         {isOnlyVideoMode ? (
-          <div className={`bg-white border border-[#E5E7EB] overflow-y-auto ${
-            isMobile
-              ? isPhone
-                ? "p-2 rounded-lg flex-shrink-0"
-                : "p-3 rounded-lg"
-              : "p-3 rounded-xl"
-          } ${showChat || isQuestionMode ? "hidden" : ""}`} style={{ height: '50vh' }}>
+          <div
+            className={`bg-white border border-[#E5E7EB] overflow-y-auto ${
+              isMobile ? (isPhone ? "p-2 rounded-lg flex-shrink-0" : "p-3 rounded-lg") : "p-3 rounded-xl"
+            } ${showChat || isQuestionMode ? "hidden" : ""}`}
+            style={{ height: "50vh" }}>
             <VideoPlaylist
               videos={videos}
               loading={loading}
@@ -867,9 +958,7 @@ const VideoPanel = forwardRef(
                 autoPlayEnabled={autoPlayEnabled}
                 showRemainingDuration={isMobile}
               />
-              {selectedAssessmentId && (
-                <div className="absolute inset-0 z-10" />
-              )}
+              {selectedAssessmentId && <div className="absolute inset-0 z-10" />}
             </div>
 
             {/* Time display - Responsive styling */}
@@ -908,7 +997,9 @@ const VideoPanel = forwardRef(
         {/* Question Mode AI - Responsive */}
         {isQuestionMode && (
           <QuestionModeAI
-            isLoading={!conversationState.isConnected}
+            isLoading={liveKitAgentEnabled? liveKitAgentState === "connecting" : !conversationState.isConnected}
+            liveKitAgentEnabled={liveKitAgentEnabled}
+            liveKitAgentState={liveKitAgentState}
             isAudioPlaying={conversation.isSpeaking}
             isConnected={conversationState.isConnected}
             avatarUrl={avatarUrl}
@@ -928,6 +1019,8 @@ const VideoPanel = forwardRef(
             agentId={agentId}
             isMobile={isMobile && isPhone}
             onPauseSlideVideo={onPauseSlideVideo}
+            liveKitAgentEnabled={liveKitAgentEnabled}
+            presentationId={presentationId}
           />
         )}
 
@@ -939,10 +1032,12 @@ const VideoPanel = forwardRef(
             onStopConversation={stopConversation}
             onPauseAnswerAudio={stopAnswerAudio}
             isAudioPlaying={conversationState.isAudioPlaying}
-            isAudioLoading={isListening}
+            isAudioLoading={liveKitAgentEnabled? liveKitAgentState === "listening":isListening}
             isConnected={conversationState.isConnected}
             setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
             isMobile={isMobile && isPhone}
+            liveKitAgentEnabled={liveKitAgentEnabled}
+            liveKitAgentState={liveKitAgentState}
           />
         )}
         <FeedbackModal

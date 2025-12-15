@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { setIsQuestionMode, setShowChat } from '@/store/features/videoSlice'
 import back_to_session from '@/assets/svg/back_to_session.svg'
@@ -8,6 +8,7 @@ import close_icon from '@/assets/svg/close.svg'
 import Image from 'next/image'
 import MicrophonePermissionPopup from '@/components/ui/MicrophonePermissionPopup'
 import { clearOverlayImage } from '@/store/features/imageSlice'
+import { useGetConversationHistoryQuery } from '@/store/api/questionsApi'
 
 const ChatUI = ({
   onClose,
@@ -18,10 +19,61 @@ const ChatUI = ({
   setIsJumpedOnChatFromInteractionMode,
   isMobile = false,
   agentId,
-  onPauseSlideVideo
+  onPauseSlideVideo,
+  liveKitAgentEnabled = false,
+  presentationId
 }) => {
   const dispatch = useDispatch()
   const [showMicPopup, setShowMicPopup] = useState(false)
+  const messagesContainerRef = useRef(null)
+  
+  // Fetch conversation history when liveKitAgentEnabled is true
+  const { data: apiConversation = [], isLoading: isLoadingHistory } = useGetConversationHistoryQuery(
+    presentationId,
+    { 
+      skip: !liveKitAgentEnabled || !presentationId,
+      refetchOnMountOrArgChange: true
+    }
+  )
+  
+  // Format time with AM/PM
+  const formatTime = (time) => {
+    if (!time) return ''
+    const [hours, minutes] = time.split(':')
+    const hour12 = hours % 12 || 12
+    const ampm = hours >= 12 ? 'PM' : 'AM'
+    return `${hour12}:${minutes} ${ampm}`
+  }
+  
+  // Group messages by date for liveKitAgentEnabled
+  const groupMessagesByDate = (messages) => {
+    const today = new Date().toISOString().split('T')[0]
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    
+    const grouped = {}
+    messages.forEach(msg => {
+      const date = msg.date
+      if (!grouped[date]) grouped[date] = []
+      grouped[date].push(msg)
+    })
+    
+    return Object.entries(grouped).map(([date, msgs]) => ({
+      date,
+      label: date === today ? 'Today' : date === yesterday ? 'Yesterday' : new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+      messages: msgs
+    }))
+  }
+  
+  // Use API conversation if liveKitAgentEnabled, otherwise use passed conversation
+  const displayConversation = liveKitAgentEnabled ? apiConversation : conversation
+  const groupedConversation = liveKitAgentEnabled ? groupMessagesByDate(apiConversation) : null
+  
+  // Position at bottom on mount without visible scrolling
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+    }
+  }, [displayConversation])
 
   const handleInteractionMode = async () => {
     if (!agentId) return;
@@ -95,16 +147,86 @@ const ChatUI = ({
         </div>
 
         {/* Messages Container */}
-        <div className="flex-1 px-3 py-4 overflow-y-auto min-h-0">
-          {conversation.length === 0 ? (
+        <div ref={messagesContainerRef} className="flex-1 px-3 py-4 overflow-y-auto min-h-0">
+          {isLoadingHistory ? (
+            <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className={index % 2 === 0 ? "flex justify-end" : "flex gap-2 items-start"}>
+                  {index % 2 === 0 ? (
+                    <div className="max-w-[75%] bg-gray-200 rounded-[10px_10px_10px_0px] px-2.5 py-2 animate-pulse">
+                      <div className="h-3 bg-gray-300 rounded w-24 lg:w-32"></div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gray-300 animate-pulse flex-shrink-0"></div>
+                      <div className="flex-1 max-w-[301px]">
+                        <div className="h-3 bg-gray-300 rounded w-32 lg:w-48 animate-pulse"></div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : displayConversation.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-500">
               <p className="font-lato font-normal text-xs lg:text-sm">
                 No conversation history yet. Start asking questions!
               </p>
             </div>
+          ) : liveKitAgentEnabled && groupedConversation ? (
+            <div className="space-y-4">
+              {groupedConversation.map((group, groupIndex) => (
+                <div key={group.date}>
+                  {/* Date Separator */}
+                  <div className="flex items-center my-4">
+                    <div className="flex-1 h-px bg-gray-300"></div>
+                    <span className="px-3 text-xs font-medium text-gray-500 bg-white">{group.label}</span>
+                    <div className="flex-1 h-px bg-gray-300"></div>
+                  </div>
+                  
+                  {/* Messages for this date */}
+                  <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+                    {group.messages.map((item, index) => (
+                      <div key={index}>
+                        {item.type === 'question' ? (
+                          /* User Message */
+                          <div className="flex justify-end">
+                            <div className="max-w-[75%]">
+                              <div className="bg-[rgba(26,26,26,0.07)] rounded-[10px_10px_10px_0px] px-2.5 py-2">
+                                <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-[#1A1C29]">
+                                  {item.content}
+                                </p>
+                              </div>
+                              {item.time && (
+                                <p className="text-xs text-gray-500 mt-1 text-right">{formatTime(item.time)}</p>
+                              )}
+                            </div>
+                          </div>
+                        ) : item.type === 'answer' ? (
+                          /* AI Message */
+                          <div className="flex gap-2 items-start">
+                            <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-b from-[#685EDD] to-[#DA8BFF] flex items-center justify-center flex-shrink-0">
+                              <Image src={ai_answer_icon} alt="AI Answer Icon" />
+                            </div>
+                            <div className="flex-1 max-w-[301px]">
+                              <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-[#1A1C29]">
+                                {item.content || 'No text answer found'}
+                              </p>
+                              {item.time && (
+                                <p className="text-xs text-gray-500 mt-1">{formatTime(item.time)}</p>
+                              )}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="space-y-3 sm:space-y-4 lg:space-y-6">
-              {conversation.map((item, index) => (
+              {displayConversation.map((item, index) => (
                 <div key={index}>
                   {item.type === 'question' ? (
                     /* User Message */
