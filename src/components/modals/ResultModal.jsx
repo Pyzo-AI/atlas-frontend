@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import Modal from "@/components/common/Modal";
 import { setCurrentVideoIndex } from "@/store/features/videoSlice";
 import { showFeedbackModal } from "@/store/features/feedbackModalSlice";
+import ProgressCircle from "@/components/ui/ProgressCircle";
 
 export default function ResultModal({
   isOpen,
@@ -76,22 +77,7 @@ export default function ResultModal({
           ) : (
             // Partial Score - Progress Circle
             <div className="relative w-20 h-20">
-              <svg className="w-full h-full" viewBox="0 0 36 36">
-                {/* Background circle */}
-                <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#E5E7EB" strokeWidth="2" />
-                {/* Progress circle - starts from top */}
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="15.9155"
-                  fill="none"
-                  stroke="#744FFF"
-                  strokeWidth="2"
-                  strokeDasharray={`${(actualPercentage / 100) * 100}, 100`}
-                  strokeLinecap="round"
-                  transform="rotate(-90 18 18)"
-                />
-              </svg>
+              <ProgressCircle score={actualPercentage} />
               {/* Score text */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-2xl font-bold text-[#744FFF]">{Math.round(actualPercentage)}%</span>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useFullscreenOnLandscape } from '@/hooks/useFullscreenOnLandscape';
+import { GiExpand } from "react-icons/gi";
 
 const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
   const [showLandscapePrompt, setShowLandscapePrompt] = useState(false);
@@ -70,9 +71,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-sm mx-auto text-center">
             <div className="mb-4">
-              <svg className="w-12 h-12 mx-auto text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-              </svg>
+              <GiExpand className="w-12 h-12 mx-auto text-blue-500" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Better Experience in Fullscreen
@@ -101,47 +100,6 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
           </div>
         </div>
       )}
-
-      {/* Fullscreen Toggle Button (always visible on mobile) */}
-      {/* <button
-        onClick={() => {
-          const isFullscreen = document.fullscreenElement || 
-                              document.webkitFullscreenElement || 
-                              document.mozFullScreenElement || 
-                              document.msFullscreenElement;
-          
-          if (isFullscreen) {
-            exitFullscreen();
-            setUserExitedFullscreen(true); // Remember user preference
-          } else {
-            enterFullscreen();
-            setUserExitedFullscreen(false); // Reset preference when manually entering
-          }
-        }}
-        className="fixed bottom-4 right-4 z-40 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-all md:hidden"
-        title="Toggle Fullscreen"
-      >
-        {(() => {
-          const isFullscreen = document.fullscreenElement || 
-                              document.webkitFullscreenElement || 
-                              document.mozFullScreenElement || 
-                              document.msFullscreenElement;
-          
-          if (isFullscreen) {
-            return (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.5 3.5M15 9h4.5M15 9V4.5M15 9l5.5-5.5M9 15v4.5M9 15H4.5M9 15l-5.5 5.5M15 15h4.5M15 15v4.5m0-4.5l5.5 5.5" />
-              </svg>
-            );
-          } else {
-            return (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-              </svg>
-            );
-          }
-        })()}
-      </button> */}
     </div>
   );
 };

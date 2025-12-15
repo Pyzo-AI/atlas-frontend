@@ -11,6 +11,8 @@ import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress } from "@/utils/videoProgress";
 import { isAssessmentCompletedLocally } from "@/utils/assessmentProgress";
 import { useParams } from "next/navigation";
+import playlist_completed_icon from "@/assets/svg/playlist_completed.svg";
+import Image from "next/image";
 
 const VideoPlaylist = ({
   videos = [],
@@ -242,15 +244,7 @@ const VideoPlaylist = ({
 
                   {/* Status indicator - keeping absolute position as requested */}
                   {isVideoCompleted(video?.slide) && (
-                    <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
-                      <svg className="w-[9.6px] h-[9.6px] text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
+                    <Image src={playlist_completed_icon} alt="Completed" className="absolute w-3 h-3 -right-1 -top-1 z-10" />
                   )}
                 </div>
               );
@@ -315,15 +309,7 @@ const VideoPlaylist = ({
 
                       {/* Assessment Status indicator - Only show green checkmark if completed */}
                       {isAssessmentCompletedLocal && (
-                        <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
-                          <svg className="w-[9.6px] h-[9.6px] text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
+                        <Image src={playlist_completed_icon} alt="Completed" className="absolute w-3 h-3 -right-1 -top-1 z-10" />
                       )}
                     </div>
                   );
@@ -394,15 +380,7 @@ const VideoPlaylist = ({
               {/* Final Assessment Status indicator - Show green checkmark if passed */}
               {(isAssessmentCompletedLocally(presentationId, assessmentDetails[0]?.id) ||
                 assessmentDetails[0]?.passed) && (
-                <div className="absolute w-3 h-3 -right-1 -top-1 bg-[#1EA356] rounded-full flex items-center justify-center z-10 overflow-visible">
-                  <svg className="w-[9.6px] h-[9.6px] text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
+                <Image src={playlist_completed_icon} alt="Completed" className="absolute w-3 h-3 -right-1 -top-1 z-10" />
               )}
             </div>
           )}

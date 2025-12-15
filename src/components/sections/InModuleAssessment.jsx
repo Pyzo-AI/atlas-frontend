@@ -17,6 +17,7 @@ import FeedbackModal from "@/components/modals/FeedbackModal";
 import { setAssessmentCompleted } from "@/utils/assessmentProgress";
 import RadioButton from "@/components/ui/RadioButton";
 import TextArea from "@/components/ui/TextArea";
+import { HiExclamationCircle } from "react-icons/hi2";
 
 const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore }) => {
   const dispatch = useDispatch();
@@ -137,13 +138,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
           <div className="flex flex-col justify-center items-center p-3 sm:p-4 md:p-6 min-h-full">
             <div className="w-full max-w-2xl text-center">
               <div className="text-red-500 mb-4">
-                <svg className="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <HiExclamationCircle className="w-12 h-12 mx-auto mb-2" />
                 <p className="text-sm font-medium">Failed to load assessment</p>
                 <p className="text-xs text-gray-600 mt-1">Please try again later</p>
               </div>

@@ -8,6 +8,8 @@ import userIcon from "@/assets/svg/user.svg";
 import { trackLogout } from "@/utils/authTracking";
 import Image from "next/image";
 import hamburger from "@/assets/svg/hamburger.svg";
+import Lottie from "lottie-react";
+import spinnerAnimation from "@/assets/json/spinner.json";
 
 const navigation = [
   // { name: "Home", href: "/" },
@@ -155,13 +157,7 @@ const Header = ({ onMenuClick }) => {
             );
           })}
         </nav>
-        {/* <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 bg-[#f1f2f4] gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-2.5">
-          <div data-icon="Bell" data-size="20px" data-weight="regular">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-              <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"/>
-            </svg>
-          </div>
-        </button> */}
+     
         <div className="relative" ref={dropdownRef}>
           <Image
             className="cursor-pointer w-8 h-8 rounded-full"
@@ -181,25 +177,11 @@ const Header = ({ onMenuClick }) => {
                 className="cursor-pointer w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isLoggingOut && (
-                  <svg
-                    className="animate-spin h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
+                  <Lottie
+                    animationData={spinnerAnimation}
+                    className="h-4 w-4"
+                    loop={true}
+                  />
                 )}
                 {isLoggingOut ? "Signing out..." : "Sign out"}
               </button>

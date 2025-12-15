@@ -14,6 +14,7 @@ import dueSoon from "../../assets/svg/due-soon.svg";
 import FeedbackSuccessModal from "../modals/FeedbackSuccessModal";
 import { useDispatch } from "react-redux";
 import { setAutoPlayEnabled, setSelectedAssessmentId } from "@/store/features/videoSlice";
+import { HiBookOpen, HiChevronDown } from "react-icons/hi2";
 
 // Course data matching Figma design
 const presentations = {
@@ -496,19 +497,7 @@ const Home = () => {
                           ? `Overdue`
                           : `Completed`}
                 </span>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <HiChevronDown className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
               {isDropdownOpen && (
                 <div className="absolute top-full mt-1 w-32 bg-white border border-[#E0E2E7] rounded-[6px] shadow-lg z-50">
@@ -566,20 +555,12 @@ const Home = () => {
                   <div className="flex flex-col items-center justify-center w-full min-h-[50vh]">
                     <div className="flex flex-col items-center gap-4 text-center">
                       <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#F3EDFF] rounded-full flex items-center justify-center">
-                        <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#2762EA]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
+                        <HiBookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-[#2762EA]" />
                       </div>
                       <div className="flex flex-col gap-2">
                         <h3 className="font-lato font-semibold text-lg sm:text-xl text-[#1A1C29]">
                           No Courses Found
                         </h3>
-                        {/* <p className="font-lato font-normal text-sm sm:text-base text-[#585858] max-w-md">
-                        {filter === "all" 
-                          ? "No courses are available at the moment. Please check back later."
-                          : `No courses found for the "${filter === "in-progress" ? "In Progress" : filter.charAt(0).toUpperCase() + filter.slice(1)}" filter.`
-                        }
-                      </p> */}
                       </div>
                     </div>
                   </div>

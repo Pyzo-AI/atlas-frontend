@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import Modal from "@/components/common/Modal";
-
+import feedback_success_image from "@/assets/svg/feedback_success.svg";
+import Image from "next/image";
 export default function FeedbackSuccessModal({ isOpen, onClose }) {
   const router = useRouter();
 
@@ -25,16 +26,7 @@ export default function FeedbackSuccessModal({ isOpen, onClose }) {
         {/* Success Icon */}
         <div className="w-24 h-24 mx-auto">
           <div className="relative w-full h-full">
-            {/* Outer circle */}
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-              {/* Inner circle */}
-              <div className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center">
-                {/* Checkmark */}
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            </div>
+            <Image src={feedback_success_image} alt="Success" className="w-20 h-20" />
           </div>
         </div>
 
