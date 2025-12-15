@@ -343,7 +343,7 @@ const Home = () => {
 
   if (error) {
     return (
-      <div className="w-full min-h-screen bg-[#F9F9F9] flex items-center justify-center">
+      <div className="w-full min-h-screen bg-page-background flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-red-600 mb-2">
             Error Loading Presentations
@@ -356,7 +356,7 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="w-full min-h-screen bg-[#F9F9F9] animate-pulse">
+      <div className="w-full min-h-screen bg-page-background animate-pulse">
         {/* Purple Header Section Skeleton */}
         <div className="w-full bg-gray-300 relative mt-1">
           {/* User Profile Skeleton */}
@@ -414,9 +414,9 @@ const Home = () => {
 
   return (
     <>
-      <div className="w-full min-h-screen bg-[#F9F9F9]">
+      <div className="w-full min-h-screen bg-page-background">
         {/* Purple Header Section */}
-        <div className="w-full bg-[#2762EA] relative mt-1">
+        <div className="w-full bg-primary relative mt-1">
           {/* User Profile */}
           <div className="flex items-center gap-3 sm:gap-[12px] px-4 sm:px-5 py-4 sm:py-6">
             <Image
@@ -458,7 +458,7 @@ const Home = () => {
                   <button
                     key={tab}
                     onClick={() => setFilter(tab)}
-                    className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${filter === tab ? "bg-[#2762EA]" : ""
+                    className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${filter === tab ? "bg-primary" : ""
                       }`}
                   >
                     <span
@@ -510,7 +510,7 @@ const Home = () => {
                           setIsDropdownOpen(false);
                         }}
                         className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${filter === tab
-                          ? "bg-[#2762EA] text-white"
+                          ? "bg-primary text-white"
                           : "text-[#667085]"
                           }`}
                       >
@@ -555,7 +555,7 @@ const Home = () => {
                   <div className="flex flex-col items-center justify-center w-full min-h-[50vh]">
                     <div className="flex flex-col items-center gap-4 text-center">
                       <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#F3EDFF] rounded-full flex items-center justify-center">
-                        <HiBookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-[#2762EA]" />
+                        <HiBookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                       </div>
                       <div className="flex flex-col gap-2">
                         <h3 className="font-lato font-semibold text-lg sm:text-xl text-[#1A1C29]">

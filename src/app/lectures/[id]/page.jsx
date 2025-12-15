@@ -497,9 +497,9 @@ const Home = () => {
 
     return (
       <FullscreenController enableAutoFullscreen={true}>
-        <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0 flex-col">
+        <div className="flex h-screen w-screen bg-page-background overflow-hidden fixed inset-0 flex-col">
           {/* Breadcrumb Navigation */}
-          <div className={`${paddingX} ${paddingY} bg-[#F9F9F9]`}>
+          <div className={`${paddingX} ${paddingY} bg-page-background`}>
             <CombinedBreadCrumb data={data} />
           </div>
 
@@ -528,7 +528,7 @@ const Home = () => {
             </div>
 
             {/* Right Side - Video Panel */}
-            <div className={`${rightWidth} bg-[#F9F9F9] ${rightPadding} overflow-hidden`}>
+            <div className={`${rightWidth} bg-page-background ${rightPadding} overflow-hidden`}>
               <CombinedVideoPanel
                 isMobile={true}
                 isPhone={isPhone}
@@ -563,7 +563,7 @@ const Home = () => {
       {/* Show rotation prompt on mobile portrait mode */}
       {isPortrait && isMobileDevice && <RotationPrompt />}
 
-      <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-[#F9F9F9] overflow-x-hidden">
+      <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-page-background overflow-x-hidden">
         <div className="layout-container flex h-full grow flex-col">
           <div className=" px-6 py-5 overflow-hidden">
             <CombinedBreadCrumb data={data} />

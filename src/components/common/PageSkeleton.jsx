@@ -2,7 +2,7 @@ import React from "react";
 
 const PageSkeleton = () => {
   return (
-    <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-[#F9F9F9] overflow-x-hidden">
+    <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-page-background overflow-x-hidden">
       <div className="layout-container flex h-full grow flex-col">
         <div className="px-6 py-5 overflow-hidden">
           {/* BreadCrumb Skeleton */}
