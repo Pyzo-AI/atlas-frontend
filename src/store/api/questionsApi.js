@@ -92,6 +92,21 @@ export const questionsApi = createApi({
         },
       }),
     }),
+
+    // Create LiveKit session
+    createSession: builder.mutation({
+      query: (agentId) => ({
+        url: `${process.env.NEXT_PUBLIC_LIVEKIT_API_URL}/session`,
+        method: 'POST',
+        body: { agent_id: 6 }, // Temporary hardcoded agent ID
+      }),
+    }),
+
+    // Get conversation history
+    getConversationHistory: builder.query({
+      query: (presentationId) => `api/webhooks/presentations/${presentationId}/conversations?limit=-1`,
+      providesTags: ['Question'],
+    }),
   }),
 });
 
@@ -107,4 +122,5 @@ export const {
   useSubmitFeedbackMutation,
   useGetAssessmentSummaryQuery,
   useGenerateImageMutation,
+  useGetConversationHistoryQuery,
 } = questionsApi;
