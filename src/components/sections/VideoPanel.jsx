@@ -352,7 +352,7 @@ const VideoPanel = forwardRef(
             // Create session and connect
             const userDetails = getUserDetailsFromToken();
             const sessionResponse = await createSession({
-              agent_id: agentId,
+              agent_id: +agentId,
               user_id: userDetails?.sub || 0,
               presentation_id: parseInt(presentationId)
             }).unwrap();
