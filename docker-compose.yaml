@@ -24,8 +24,8 @@ services:
       start_period: 40s
 
 networks:
-  default:
-    name: ${DEFAULT_NETWORK_NAME:-default}
+#  default:
+#    name: ${DEFAULT_NETWORK_NAME:-default}
   shared-net:
     name: ${NETWORK_NAME}
     external: true
