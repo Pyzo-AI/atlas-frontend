@@ -907,8 +907,8 @@ const VideoPanel = forwardRef(
           <div
             className={`bg-white border border-[#E5E7EB] overflow-y-auto ${
               isMobile ? (isPhone ? "p-2 rounded-lg flex-shrink-0" : "p-3 rounded-lg") : "p-3 rounded-xl"
-            } ${showChat || isQuestionMode ? "hidden" : ""}`}
-            style={{ height: "50vh" }}>
+            } ${showChat || isQuestionMode ? "hidden" : ""} ${!agentId ? "flex-1" : ""}`}
+            style={agentId ? { height: "50vh" } : {}}>
             <VideoPlaylist
               videos={videos}
               loading={loading}
@@ -982,17 +982,19 @@ const VideoPanel = forwardRef(
         )}
 
         {/* AI Assistant Section - Responsive */}
-        <div
-          className={`${isMobile && isPhone ? "flex-1 min-h-0" : "h-full"} ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "pointer-events-none blur-[1px]" : ""}`}>
-          <AILearningAssistant
-            onStartConversation={startConversation}
-            onStopConversation={stopConversation}
-            onPauseVideo={pauseVideo}
-            onPauseSlideVideo={onPauseSlideVideo}
-            agentId={agentId}
-            isMobileView={isMobile && isPhone}
-          />
-        </div>
+        {!(isOnlyVideoMode && !agentId) && (
+          <div
+            className={`${isMobile && isPhone ? "flex-1 min-h-0" : "h-full"} ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "pointer-events-none blur-[1px]" : ""}`}>
+            <AILearningAssistant
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+              onPauseVideo={pauseVideo}
+              onPauseSlideVideo={onPauseSlideVideo}
+              agentId={agentId}
+              isMobileView={isMobile && isPhone}
+            />
+          </div>
+        )}
 
         {/* Question Mode AI - Responsive */}
         {isQuestionMode && (

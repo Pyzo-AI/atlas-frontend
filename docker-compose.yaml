@@ -9,8 +9,8 @@ services:
         - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
         - NEXT_PUBLIC_LOGIN_BASE_URL=${NEXT_PUBLIC_LOGIN_BASE_URL}
         - NEXT_PUBLIC_LIVEKIT_API_URL=${NEXT_PUBLIC_LIVEKIT_API_URL}
-#    ports:
-#      - "3000:3000"
+    ports:
+      - "3000:3000"
     environment:
       NODE_ENV: production
       PORT: "3000"
