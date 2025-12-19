@@ -458,7 +458,7 @@ const Home = () => {
                 placeholder="Search courses..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 px-3 h-[32px] border border-[#E0E2E7] rounded-[6px] font-lato text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2762EA] focus:border-transparent"
+                className="w-64 px-3 h-[32px] border border-[#000] rounded-[6px] font-lato text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2762EA] focus:border-transparent"
               />
             </div>
 
