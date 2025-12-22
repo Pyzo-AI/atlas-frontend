@@ -268,7 +268,7 @@ const SlideVideoSection = React.forwardRef(({
         )}
         <VideoPlayerContainer
           ref={videoPlayerContainerRef}
-          key={`video-player-${currentVideoIndex}`}
+          key={`video-player-${presentationId}-${currentVideoIndex}-${videos?.[currentVideoIndex]?.slide_video || 'no-video'}`}
           videos={videos}
           currentVideoIndex={currentVideoIndex}
           presentationId={presentationId}
