@@ -15,6 +15,7 @@ const initialState = {
   selectedAssessmentId: null,
   autoPlayEnabled: false,
   showChat: false,
+  slideNumbers: [],
 };
 
 const videoSlice = createSlice({
@@ -64,6 +65,9 @@ const videoSlice = createSlice({
     setShowChat: (state, action) => {
       state.showChat = action.payload;
     },
+    setSlideNumbers: (state, action) => {
+      state.slideNumbers = action.payload;
+    },
   },
 });
 
@@ -82,5 +86,6 @@ export const {
   syncPptToVideoPanel,
   setAutoPlayEnabled,
   setShowChat,
+  setSlideNumbers,
 } = videoSlice.actions;
 export default videoSlice.reducer;

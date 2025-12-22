@@ -11,6 +11,7 @@ import {
   setQuestion,
   setAnswerPptIndex,
   setShowChat,
+  setSlideNumbers,
 } from '@/store/features/videoSlice'
 import { clearOverlayImage } from '@/store/features/imageSlice'
 
@@ -65,6 +66,7 @@ const QuestionModeUser = ({
     // Clear state
     dispatch(setQuestion(''))
     dispatch(setIsQuestionMode(false))
+    dispatch(setSlideNumbers([]))
     // Clear overlay image state (query based slide image)
     dispatch(clearOverlayImage())
   }
@@ -73,6 +75,7 @@ const QuestionModeUser = ({
     onPauseVideo() // Pause the video when opening chat
     dispatch(setShowChat(true))
     dispatch(setIsQuestionMode(false))
+    dispatch(setSlideNumbers([]))
     setIsJumpedOnChatFromInteractionMode(true)
     if (isConnected && onStopConversation) {
       onStopConversation()

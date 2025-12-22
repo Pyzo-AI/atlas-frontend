@@ -77,7 +77,7 @@ const CombinedPPTSection = React.memo(
     onVideoIndexChange,
     isOnlyVideoMode,
     assessmentId,
-    showQueryRelatedSlides = false
+    showQueryRelatedSlides = false,
   }, ref) => {
     const width = isMobile ? "100%" : "70%";
 
@@ -128,7 +128,7 @@ const CombinedVideoPanel = React.memo(
     isFinalAssessmentPresent,
     showQueryRelatedSlides = false,
     assessmentDetails = [],
-    liveKitAgentEnabled
+    liveKitAgentEnabled,
   }) => {
     const width = isMobile ? "100%" : "30%";
 
@@ -189,7 +189,7 @@ const Home = () => {
   const isLandscape = !isPortrait && isMobileDevice;
   const isOnlyVideoMode = videos?.[currentVideoIndex]?.trainer_video === null;
   const isFinalAssessmentPresent = data?.assessment_details && data.assessment_details.length > 0 && data.assessment_details[0].id ? true : false;
-  const showQueryRelatedSlides = data?.presentation_query;
+  const showQueryRelatedSlides = !data?.presentation_query;
   const liveKitAgentEnabled = data?.interaction_mode === "pyzo_train_convo_ai" || false;
   console.log(showQueryRelatedSlides,"showQueryRelatedSlides")
   // Shared video state for synchronization

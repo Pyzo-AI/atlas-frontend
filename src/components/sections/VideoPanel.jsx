@@ -9,6 +9,7 @@ import {
   setSelectedAssessmentId,
   setAutoPlayEnabled,
   setShowChat,
+  setSlideNumbers,
 } from "@/store/features/videoSlice";
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -236,6 +237,7 @@ const VideoPanel = forwardRef(
         const currentVideo = videos[currentVideoIndex];
         if (isQuestionModeRef.current) {
           dispatch(setIsQuestionMode(false));
+          dispatch(setSlideNumbers([]));
           capture("slide_redirect", {
             user_id: userDetails?.sub,
             module_id: presentationId,
@@ -352,7 +354,8 @@ const VideoPanel = forwardRef(
             // Create session and connect
             const userDetails = getUserDetailsFromToken();
             const sessionResponse = await createSession({
-              agent_id: +agentId,
+              // agent_id: +agentId,
+              agent_id: 6, // Temporary hardcode until we have multiple agents
               user_id: userDetails?.sub || 0,
               presentation_id: parseInt(presentationId)
             }).unwrap();
@@ -369,6 +372,7 @@ const VideoPanel = forwardRef(
           } catch (sessionError) {
             toast.error("Interaction mode not available. Please try again later.");
             dispatch(setIsQuestionMode(false));
+            dispatch(setSlideNumbers([]));
             // throw sessionError;
           }
         } else {
@@ -672,6 +676,7 @@ const VideoPanel = forwardRef(
                 if (liveKitService.isConnected()) {
                   liveKitService.disconnect();
                   dispatch(setIsQuestionMode(false));
+                  dispatch(setSlideNumbers([]));
                 }
             }
           } catch (error) {
@@ -679,7 +684,16 @@ const VideoPanel = forwardRef(
           }
         });
       }
-    }, [dispatch]);
+
+      // Slide Metadata Handling - Console log the data
+      if (liveKitService.setOnSlideMetadataReceived) {
+        liveKitService.setOnSlideMetadataReceived((metadata, slideNumbers) => {
+          console.log('📊 [VideoPanel] Slide metadata received:', metadata);
+          console.log('🎯 [VideoPanel] Referenced slide numbers:', slideNumbers);
+          dispatch(setSlideNumbers(slideNumbers || []));
+        });
+      }
+    }, [dispatch, setSlideNumbers]);
 
     // Cleanup on unmount - disconnect LiveKit and reset question mode
     useEffect(() => {
@@ -688,6 +702,7 @@ const VideoPanel = forwardRef(
           liveKitService.disconnect();
         }
         dispatch(setIsQuestionMode(false));
+        dispatch(setSlideNumbers([]));
       };
     }, [dispatch]);
 

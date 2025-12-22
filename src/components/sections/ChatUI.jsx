@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useDispatch } from 'react-redux'
-import { setIsQuestionMode, setShowChat } from '@/store/features/videoSlice'
+import { setIsQuestionMode, setShowChat, setSlideNumbers } from '@/store/features/videoSlice'
 import back_to_session from '@/assets/svg/back_to_session.svg'
 import interaction_mode from '@/assets/svg/interaction_mode.svg'
 import ai_answer_icon from '@/assets/svg/ai_answer_icon.svg'
@@ -113,6 +113,7 @@ const ChatUI = ({
 
   const handleContinueLesson = () => {
     dispatch(setIsQuestionMode(false))
+    dispatch(setSlideNumbers([]))
     dispatch(setShowChat(false))
     setIsJumpedOnChatFromInteractionMode(false)
     if (isConnected && onStopConversation) {

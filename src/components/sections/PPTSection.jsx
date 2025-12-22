@@ -21,7 +21,7 @@ const PPTSection = React.forwardRef(({
   onVideoIndexChange,
   isOnlyVideoMode,
   assessmentId,
-  showQueryRelatedSlides = false
+  showQueryRelatedSlides = false,
 }, ref) => {
   const slideVideoRef = useRef(null);
   // Expose pause method to parent component

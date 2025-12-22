@@ -16,10 +16,10 @@ const SlideVideoSection = React.forwardRef(({
   presentationId,
   canSkipVideo,
   assessmentId,
-  showQueryRelatedSlides = false
+  showQueryRelatedSlides = false,
 }, ref) => {
   const dispatch = useDispatch();
-  const { currentVideoIndex ,currentVideoTime} = useSelector((state) => state.video);
+  const { currentVideoIndex ,currentVideoTime, slideNumbers} = useSelector((state) => state.video);
   const slideVideoRef = useRef(null);
   const preloadSlideVideoRef = useRef(null);
   const videoPlayerContainerRef = useRef(null);
@@ -222,6 +222,8 @@ const SlideVideoSection = React.forwardRef(({
   }, []);
 
   const videoIndex = answerPptIndex !== null ? answerPptIndex : currentVideoIndex;
+  const slideImage = slideNumbers.length > 0 ? videos?.find(video => video.slide === slideNumbers[0])?.slide_image_url : null;
+  console.log(slideImage,"slideImage")
 
   if (selectedAssessmentId) {
     return <InModuleAssessment videos={videos} assessmentDetails={assessmentDetails} />;
@@ -248,6 +250,17 @@ const SlideVideoSection = React.forwardRef(({
               }}
             />
           )}
+        {/* Slide Numbers Image Overlay */}
+        {slideImage && isQuestionMode && showQueryRelatedSlides && (
+          <div className="absolute inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center">
+            <Image
+              src={slideImage}
+              alt="Slide reference"
+              fill
+              className="object-fill"
+            />
+          </div>
+        )}
         {/* Overlay Image */}
         {showQueryRelatedSlides && isQuestionMode && (isImageLoading || overlayImageUrl) && (
           <div className="absolute inset-0 z-30 bg-black bg-opacity-50 flex items-center justify-center">
@@ -314,6 +327,17 @@ const SlideVideoSection = React.forwardRef(({
             <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
             <p className="text-sm">Loading slide video...</p>
           </div>
+        </div>
+      )}
+      {/* Slide Numbers Image Overlay */}
+      {slideImage && isQuestionMode && showQueryRelatedSlides && (
+        <div className="absolute inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center">
+          <Image
+            src={slideImage}
+            alt="Slide reference"
+            fill
+            className="object-fill"
+          />
         </div>
       )}
       {/* Overlay Image */}

@@ -18,6 +18,7 @@ export class LiveKitService {
     this.lastSpeaker = null; // 'agent' | 'user' | null
     this.onAgentStateChanged = null;
     this.idleTimeout = null;
+    this.onSlideMetadataReceived = null;
   }
 
   async connect(config) {
@@ -103,6 +104,30 @@ export class LiveKitService {
 
     this.room.on(RoomEvent.DataReceived, (payload, participant) => {
       this.onDataReceived?.(payload, participant);
+      
+      // Handle data messages (PPT slide metadata)
+      try {
+        const jsonString = new TextDecoder().decode(payload);
+        const data = JSON.parse(jsonString);
+        
+        console.log('📊 Data received from agent:', data);
+        
+        if (data.type === 'rag_metadata') {
+          console.log('🎯 PPT Slide metadata received:', data.data);
+          
+          // Extract slide numbers
+          const slideNumbers = data.data
+            .map((item) => item.metadata?.slide_number)
+            .filter((num) => num !== undefined);
+          
+          console.log('🎯 Referenced slides:', slideNumbers);
+          
+          // Emit this data to UI components
+          this.onSlideMetadataReceived?.(data.data, slideNumbers);
+        }
+      } catch (error) {
+        console.error('Failed to parse data message:', error);
+      }
     });
   }
 
@@ -202,6 +227,10 @@ export class LiveKitService {
 
   setOnDataReceived(callback) {
     this.onDataReceived = callback;
+  }
+
+  setOnSlideMetadataReceived(callback) {
+    this.onSlideMetadataReceived = callback;
   }
 }
 
