@@ -94,7 +94,8 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
     const minutes = totalMinutes % 60;
     
     if (hours > 0) {
-      return `${hours}hr ${minutes}m`;
+      // Only show minutes if > 0 (e.g., "1hr" instead of "1hr 0m")
+      return minutes > 0 ? `${hours}hr ${minutes}m` : `${hours}hr`;
     }
     return `${minutes}m`;
   };
@@ -232,7 +233,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
             </h3>
            {presentation?.presentation_duration > 0 && presentation?.presentation_duration && (
               <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-[#2762EA]">
-                <span className="font-lato font-medium text-[11px] leading-4 text-white">
+                <span className="font-lato font-medium text-[11px] leading-4 text-white whitespace-nowrap">
                   {formatDuration(presentation.presentation_duration)}
                 </span>
               </div>
