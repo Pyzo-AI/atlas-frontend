@@ -239,14 +239,13 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
         // Fetch assessment summary for final assessments
         try {
           const summaryData = await getAssessmentSummary(presentationId).unwrap();
-          
           // Use summary data for result modal
           const modalData = {
-            score: summaryData.summary.avg_percentage,
+            score: summaryData.summary.latest_percentage ?? summaryData.summary.latest_percentage,
             presentationId: presentationId,
             assessmentId: selectedAssessmentId,
             totalQuestions: summaryData.summary.total_questions,
-            correctAnswers: summaryData.summary.correct_questions,
+            correctAnswers: summaryData.summary.latest_correct_questions ?? summaryData.summary.correct_questions,
           };
           setResultData(modalData);
           setShowResultModalLocal(true);
