@@ -13,7 +13,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "livekit-client": "^2.16.0",
     "lottie-react": "^2.4.1",
-    "next": "^15.3.6",
+    "next": "^15.3.8",
     "posthog-js": "^1.262.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",

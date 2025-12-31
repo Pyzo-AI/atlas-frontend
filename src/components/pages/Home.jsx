@@ -95,7 +95,8 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
     const minutes = totalMinutes % 60;
     
     if (hours > 0) {
-      return `${hours}hr ${minutes}m`;
+      // Only show minutes if > 0 (e.g., "1hr" instead of "1hr 0m")
+      return minutes > 0 ? `${hours}hr ${minutes}m` : `${hours}hr`;
     }
     return `${minutes}m`;
   };
@@ -232,8 +233,8 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
               {presentation?.title || "Unknown Title"}
             </h3>
            {presentation?.presentation_duration > 0 && presentation?.presentation_duration && (
-              <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-primary">
-                <span className="font-lato font-medium text-[11px] leading-4 text-white">
+              <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-[#2762EA]">
+                <span className="font-lato font-medium text-[11px] leading-4 text-white whitespace-nowrap">
                   {formatDuration(presentation.presentation_duration)}
                 </span>
               </div>
@@ -271,6 +272,7 @@ const Home = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { capture } = usePostHog();
   const dispatch = useDispatch();
 
@@ -445,11 +447,22 @@ const Home = () => {
 
         {/* Course Section */}
         <div className="flex flex-col items-start gap-4 sm:gap-[16px] w-full px-4 sm:px-5 py-4 sm:py-4">
-          {/* Header with tabs */}
+          {/* Header with search and tabs */}
           <div className="flex justify-between items-center gap-4 sm:gap-[16px] w-full">
-            <h2 className="font-lato font-bold text-base sm:text-[16px] leading-tight sm:leading-[19px] text-primary-text">
-              Available Courses
-            </h2>
+            <div className="flex items-center gap-4">
+              <h2 className="font-lato font-bold text-base sm:text-[16px] leading-tight sm:leading-[19px] text-[#1A1C29]">
+                Available Courses
+              </h2>
+              
+              {/* Search Box */}
+              <input
+                type="text"
+                placeholder="Search courses..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-64 px-3 h-[32px] border border-[#000] rounded-[6px] font-lato text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2762EA] focus:border-transparent"
+              />
+            </div>
 
             {/* Desktop Tabs */}
             <div className="hidden lg:flex items-start p-1 w-auto h-[32px] bg-white border border-[#E0E2E7] rounded-[6px] gap-1">
@@ -535,6 +548,13 @@ const Home = () => {
           <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full">
             {(() => {
               const filteredPresentations = presentations?.data?.filter((p) => {
+                // Filter by search query
+                const matchesSearch = searchQuery === "" || 
+                  p.title?.toLowerCase().includes(searchQuery.toLowerCase());
+                
+                if (!matchesSearch) return false;
+                
+                // Filter by status
                 if (filter === "all") return true;
                 if (filter === "locked")
                   return p.lock_info?.status === "locked";

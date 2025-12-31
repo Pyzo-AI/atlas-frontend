@@ -22,3 +22,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+networks:
+  default:
+    name: ${DEFAULT_NETWORK_NAME:-default}
+  shared-net:
+    name: ${NETWORK_NAME}
+    external: true

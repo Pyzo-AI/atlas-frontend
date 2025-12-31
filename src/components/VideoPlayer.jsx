@@ -45,6 +45,8 @@ const VideoPlayer = forwardRef(
     const timeUpdateRef = useRef(null);
     const seekingRef = useRef(false);
     const skipBackwardInProgressRef = useRef(false);
+    // Unique key to force video element recreation on mount
+    const [videoElementKey] = useState(() => Date.now());
 
     useEffect(() => {
       setIsClient(true);
@@ -109,6 +111,12 @@ const VideoPlayer = forwardRef(
 
     useEffect(() => {
       if (!isClient || !videoRef.current) return;
+
+      // Check if video element is in the DOM (Video.js removes it on dispose)
+      if (!document.body.contains(videoRef.current)) {
+        console.log("Video element not in DOM, skipping initialization");
+        return;
+      }
 
       if (playerRef.current) {
         playerRef.current.dispose();
@@ -943,6 +951,7 @@ const VideoPlayer = forwardRef(
     return (
       <div className={className} style={style}>
         <video
+          key={`video-element-${videoElementKey}`}
           ref={videoRef}
           className="video-js vjs-default-skin"
           width={width}
