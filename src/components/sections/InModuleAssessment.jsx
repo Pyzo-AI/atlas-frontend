@@ -241,11 +241,11 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
           const summaryData = await getAssessmentSummary(presentationId).unwrap();
           // Use summary data for result modal
           const modalData = {
-            score: summaryData.summary.latest_percentage ?? summaryData.summary.latest_percentage,
+            score: summaryData.summary.latest_percentage,
             presentationId: presentationId,
             assessmentId: selectedAssessmentId,
             totalQuestions: summaryData.summary.total_questions,
-            correctAnswers: summaryData.summary.latest_correct_questions ?? summaryData.summary.correct_questions,
+            correctAnswers: summaryData.summary.latest_correct_questions,
           };
           setResultData(modalData);
           setShowResultModalLocal(true);
