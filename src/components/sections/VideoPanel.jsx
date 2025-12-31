@@ -126,14 +126,8 @@ const VideoPanel = forwardRef(
     const dispatch = useDispatch();
     const [generateImage] = useGenerateImageMutation();
     const [createSession] = useCreateSessionMutation();
-    const {
-      currentVideoIndex,
-      isQuestionMode,
-      selectedAssessmentId,
-      autoPlayEnabled,
-      currentVideoTime,
-      showChat,
-    } = useSelector((state) => state.video);
+    const { currentVideoIndex, isQuestionMode, selectedAssessmentId, autoPlayEnabled, currentVideoTime, showChat } =
+      useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
     // Keep ref updated with current isQuestionMode value
@@ -350,7 +344,7 @@ const VideoPanel = forwardRef(
             const sessionResponse = await createSession({
               agent_id: +agentId,
               user_id: userDetails?.sub || 0,
-              presentation_id: parseInt(presentationId)
+              presentation_id: parseInt(presentationId),
             }).unwrap();
 
             liveKitService.onConnectionStateChanged = handleLiveKitStateChange;
@@ -623,9 +617,9 @@ const VideoPanel = forwardRef(
 
     useEffect(() => {
       liveKitService.setOnAgentStateChanged((state) => {
-          setLiveKitAgentState(state);
+        setLiveKitAgentState(state);
       });
-      
+
       // Data Packet Handling
       if (liveKitService.setOnDataReceived) {
         liveKitService.setOnDataReceived((payload, participant) => {
@@ -634,10 +628,10 @@ const VideoPanel = forwardRef(
             const strData = decoder.decode(payload);
             const data = JSON.parse(strData);
             if (data.type === "status" && data.message === "call_ending") {
-                if (liveKitService.isConnected()) {
-                  liveKitService.disconnect();
-                  dispatch(setIsQuestionMode(false));
-                }
+              if (liveKitService.isConnected()) {
+                liveKitService.disconnect();
+                dispatch(setIsQuestionMode(false));
+              }
             }
           } catch (error) {
             console.error("Failed to parse data packet:", error);
@@ -796,11 +790,10 @@ const VideoPanel = forwardRef(
           isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
         }`}
         style={!isMobile ? { width } : undefined}>
-
         {/* Video Section or Grid Playlist - Responsive for both mobile and desktop */}
         {isOnlyVideoMode ? (
           <div
-            className={`bg-white border border-[#E5E7EB] overflow-y-auto ${
+            className={`bg-white border border-border-light overflow-y-auto ${
               isMobile ? (isPhone ? "p-2 rounded-lg flex-shrink-0" : "p-3 rounded-lg") : "p-3 rounded-xl"
             } ${showChat || isQuestionMode ? "hidden" : ""} ${!agentId ? "flex-1" : ""}`}
             style={agentId ? { height: "50vh" } : {}}>
@@ -815,7 +808,7 @@ const VideoPanel = forwardRef(
           </div>
         ) : (
           <div
-            className={`${selectedAssessmentId ? "" : "cursor-pointer"} bg-white border border-[#E5E7EB] ${
+            className={`${selectedAssessmentId ? "" : "cursor-pointer"} bg-white border border-border-light ${
               isMobile
                 ? isPhone
                   ? "p-1 md:p-[6px] lg:p-3 rounded-lg flex-shrink-0"
@@ -894,7 +887,7 @@ const VideoPanel = forwardRef(
         {/* Question Mode AI - Responsive */}
         {isQuestionMode && (
           <QuestionModeAI
-            isLoading={liveKitAgentEnabled? liveKitAgentState === "connecting" : !conversationState.isConnected}
+            isLoading={liveKitAgentEnabled ? liveKitAgentState === "connecting" : !conversationState.isConnected}
             liveKitAgentEnabled={liveKitAgentEnabled}
             liveKitAgentState={liveKitAgentState}
             isAudioPlaying={conversation.isSpeaking}
@@ -929,7 +922,7 @@ const VideoPanel = forwardRef(
             onStopConversation={stopConversation}
             onPauseAnswerAudio={stopAnswerAudio}
             isAudioPlaying={conversationState.isAudioPlaying}
-            isAudioLoading={liveKitAgentEnabled? liveKitAgentState === "listening":isListening}
+            isAudioLoading={liveKitAgentEnabled ? liveKitAgentState === "listening" : isListening}
             isConnected={conversationState.isConnected}
             setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
             isMobile={isMobile && isPhone}

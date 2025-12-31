@@ -22,9 +22,7 @@ const LoginPage = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    const tokens = JSON.parse(
-      localStorage.getItem("trainboost_tokens") || "{}"
-    );
+    const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
     if (tokens.access_token) {
       router.push("/");
     }
@@ -68,9 +66,7 @@ const LoginPage = () => {
           email: email,
           username: userDetails.username || userDetails.preferred_username,
           name: userDetails.name,
-          first_login: userDetails.iat
-            ? new Date(userDetails.iat * 1000).toISOString()
-            : undefined,
+          first_login: userDetails.iat ? new Date(userDetails.iat * 1000).toISOString() : undefined,
           roles: userDetails.roles || userDetails.groups,
           last_login: new Date().toISOString(),
         });
@@ -94,25 +90,22 @@ const LoginPage = () => {
         error_message: error.data?.message || error.message,
       });
 
-      toast.error(
-        error.data?.message || "Login failed. Please try again.",
-        {
-          position: "top-right",
-          autoClose: 3000,
-        }
-      );
+      toast.error(error.data?.message || "Login failed. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center bg-[#FEFBFF] overflow-hidden mt-[-44px] px-4 sm:px-6">
+    <div className="relative min-h-screen w-full flex items-center justify-center bg-bg-login overflow-hidden mt-[-44px] px-4 sm:px-6">
       {/* Background blur effects */}
       <div
-        className="absolute w-[819px] h-[819px] left-[-318px] top-[221px] bg-[rgba(158,59,213,0.7)] rounded-full"
+        className="absolute w-[819px] h-[819px] left-[-318px] top-[221px] bg-bg-blur-purple rounded-full"
         style={{ filter: "blur(160px)" }}
       />
       <div
-        className="absolute w-[1157px] h-[1157px] left-[230px] top-[367px] bg-[#4A47C8] rounded-full"
+        className="absolute w-[1157px] h-[1157px] left-[230px] top-[367px] bg-bg-blur-blue rounded-full"
         style={{ filter: "blur(190px)" }}
       />
 
@@ -124,14 +117,10 @@ const LoginPage = () => {
             {/* Logo and brand */}
             <div className="flex items-center gap-1 mb-1">
               <div className="w-6 h-6">
-                <Image
-                  src={trainBoostLogo}
-                  alt="Upskillr Logo"
-                  className="w-6 h-6"
-                />
+                <Image src={trainBoostLogo} alt="Upskillr Logo" className="w-6 h-6" />
               </div>
               <span className="text-[20px] font-lato font-bold leading-[19px] tracking-[0.02em] text-primary-text">
-                Upskillr 
+                Upskillr
               </span>
             </div>
 
@@ -169,15 +158,9 @@ const LoginPage = () => {
                 required
                 rightIcon={
                   showPassword ? (
-                    <FiEye
-                      className="w-full h-full text-[rgba(26,28,41,0.7)]"
-                      strokeWidth={1.5}
-                    />
+                    <FiEye className="w-full h-full text-text-subtle" strokeWidth={1.5} />
                   ) : (
-                    <FiEyeOff
-                      className="w-full h-full text-[rgba(26,28,41,0.7)]"
-                      strokeWidth={1.5}
-                    />
+                    <FiEyeOff className="w-full h-full text-text-subtle" strokeWidth={1.5} />
                   )
                 }
                 onRightIconClick={() => setShowPassword(!showPassword)}
@@ -187,15 +170,10 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="cursor-pointer w-full h-11 sm:h-[44px] bg-gradient-to-b from-[#685EDD] to-[#DA8BFF] rounded-[11px] flex items-center justify-center px-3 py-2 sm:py-[9px] disabled:opacity-70"
-              >
+                className="cursor-pointer w-full h-11 sm:h-[44px] bg-gradient-to-b from-gradient-start to-gradient-end rounded-[11px] flex items-center justify-center px-3 py-2 sm:py-[9px] disabled:opacity-70">
                 {isLoading ? (
                   <div className="flex items-center gap-3">
-                    <Lottie
-                      animationData={spinnerAnimation}
-                      className="h-5 w-5"
-                      loop={true}
-                    />
+                    <Lottie animationData={spinnerAnimation} className="h-5 w-5" loop={true} />
                     <span className="text-sm sm:text-[16px] font-lato font-semibold leading-tight sm:leading-[19px] text-white">
                       Signing in...
                     </span>

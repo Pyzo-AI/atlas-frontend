@@ -702,7 +702,7 @@ const VideoPlayer = forwardRef(
             }
           };
 
-          const actualVideo = videoElement.querySelector('video');
+          const actualVideo = videoElement.querySelector("video");
           if (actualVideo) {
             actualVideo.addEventListener("touchend", handleVideoTap, { passive: false });
           }
@@ -716,8 +716,8 @@ const VideoPlayer = forwardRef(
               playerRef.current.pause();
             }
           };
-          
-          const actualVideoForTouch = videoElementForTouch.querySelector('video');
+
+          const actualVideoForTouch = videoElementForTouch.querySelector("video");
           if (actualVideoForTouch) {
             actualVideoForTouch.addEventListener("touchend", handleMobileTouch, { passive: true });
           }
@@ -938,12 +938,12 @@ const VideoPlayer = forwardRef(
           style={{
             width,
             height,
-            backgroundColor: "#000",
+            backgroundColor: "var(--color-dark)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}>
-          <div style={{ color: "white" }}>Loading...</div>
+          <div style={{ color: "var(--color-light)" }}>Loading...</div>
         </div>
       );
     }
@@ -1033,7 +1033,7 @@ const VideoPlayer = forwardRef(
           }
 
           .vjs-skip-backward:hover {
-            color: #f0f0f0 !important; /* Light gray on hover */
+            color: var(--color-video-text-hover) !important; /* Light gray on hover */
           }
 
           .skip-backward-content {
@@ -1427,7 +1427,7 @@ const VideoPlayer = forwardRef(
 
           .video-js .vjs-menu li.vjs-selected {
             background-color: rgba(255, 255, 255, 0.2);
-            color: #fff;
+            color: var(--color-light);
           }
 
           /* Disable double-click selection */

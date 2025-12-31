@@ -1,14 +1,8 @@
 import React from "react";
 
-const TextArea = ({
-  value,
-  onChange,
-  placeholder,
-  rows = 6,
-  className = "",
-  ...props
-}) => {
-  const defaultClass = "w-full p-3 border border-gray-200 rounded-lg focus:border-[#744FFF] focus:outline-none resize-none transition-colors duration-200";
+const TextArea = ({ value, onChange, placeholder, rows = 6, className = "", ...props }) => {
+  const defaultClass =
+    "w-full p-3 border border-gray-200 rounded-lg focus:border-accent focus:outline-none resize-none transition-colors duration-200";
 
   return (
     <textarea

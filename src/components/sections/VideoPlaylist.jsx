@@ -163,13 +163,15 @@ const VideoPlaylist = ({
 
   if (loading) {
     return (
-      <div className="mt-3 bg-white rounded-xl border border-[#E5E7EB]" style={isGridLayout&&{paddingBottom:"10px"}}>
+      <div
+        className="mt-3 bg-white rounded-xl border border-border-light"
+        style={isGridLayout && { paddingBottom: "10px" }}>
         <div className="px-5 py-4">
           <div className="flex overflow-x-auto gap-2 pb-2 pt-1 pr-1">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="flex-shrink-0 w-[119px] h-[68px] bg-white border border-[#E5E7EB] rounded-lg animate-pulse">
+                className="flex-shrink-0 w-[119px] h-[68px] bg-white border border-border-light rounded-lg animate-pulse">
                 <div className="p-2 flex flex-col gap-1.5">
                   <div className="h-7 bg-gray-200 rounded w-full"></div>
                   <div className="h-3 bg-gray-100 rounded w-1/2"></div>
@@ -219,8 +221,8 @@ const VideoPlaylist = ({
                         : "w-[238px] h-[68px]"
                   } rounded-lg transition-all duration-200 overflow-visible ${isGridLayout ? "" : "scroll-ml-4"} ${
                     !selectedAssessmentId && currentVideoIndex === index
-                      ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
-                      : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
+                      ? "bg-selected-bg border-2 border-selected-border shadow-md"
+                      : "bg-white border border-border-light hover:bg-bg-item-hover"
                   }
                 ${
                   isQuestionMode || showChat || (!canSkipVideo && hasLocalProgress(video.slide) === 0)
@@ -236,7 +238,7 @@ const VideoPlaylist = ({
                       {video.title || "Untitled Video"}
                     </h4>
                     {!isMobile && (
-                      <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
+                      <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-text-subtle">
                         {formatDuration(video.duration) || "0:00"}
                       </div>
                     )}
@@ -244,7 +246,11 @@ const VideoPlaylist = ({
 
                   {/* Status indicator - keeping absolute position as requested */}
                   {isVideoCompleted(video?.slide) && (
-                    <Image src={playlist_completed_icon} alt="Completed" className="absolute w-3 h-3 -right-1 -top-1 z-10" />
+                    <Image
+                      src={playlist_completed_icon}
+                      alt="Completed"
+                      className="absolute w-3 h-3 -right-1 -top-1 z-10"
+                    />
                   )}
                 </div>
               );
@@ -284,8 +290,8 @@ const VideoPlaylist = ({
                             : "w-[238px] h-[68px]"
                       } rounded-lg transition-all duration-200 overflow-visible ${isGridLayout ? "" : "scroll-ml-4"} ${
                         isAssessmentSelected
-                          ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
-                          : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
+                          ? "bg-selected-bg border-2 border-selected-border shadow-md"
+                          : "bg-white border border-border-light hover:bg-bg-item-hover"
                       }
                     ${
                       isQuestionMode || showChat || (!canSkipVideo && !isVideoCompleted(video?.slide))
@@ -301,7 +307,7 @@ const VideoPlaylist = ({
                           Quiz - {assessment.question_count} Questions
                         </h4>
                         {!isMobile && (
-                          <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
+                          <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-text-subtle">
                             {assessment.type || "Assessment"}
                           </div>
                         )}
@@ -309,7 +315,11 @@ const VideoPlaylist = ({
 
                       {/* Assessment Status indicator - Only show green checkmark if completed */}
                       {isAssessmentCompletedLocal && (
-                        <Image src={playlist_completed_icon} alt="Completed" className="absolute w-3 h-3 -right-1 -top-1 z-10" />
+                        <Image
+                          src={playlist_completed_icon}
+                          alt="Completed"
+                          className="absolute w-3 h-3 -right-1 -top-1 z-10"
+                        />
                       )}
                     </div>
                   );
@@ -352,8 +362,8 @@ const VideoPlaylist = ({
                     : "w-[238px] h-[68px]"
               } rounded-lg transition-all duration-200 overflow-visible ${isGridLayout ? "" : "scroll-ml-4"} ${
                 selectedAssessmentId === assessmentDetails[0]?.id
-                  ? "bg-[#E7F0FE] border-2 border-[#5396FF] shadow-md"
-                  : "bg-white border border-[#E5E7EB] hover:bg-[#F8F9FA]"
+                  ? "bg-selected-bg border-2 border-selected-border shadow-md"
+                  : "bg-white border border-border-light hover:bg-bg-item-hover"
               }
               ${
                 isQuestionMode ||
@@ -371,7 +381,7 @@ const VideoPlaylist = ({
                   Final Assessment - {assessmentDetails[0]?.question_count || 0} Questions
                 </h4>
                 {!isMobile && (
-                  <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-[rgba(26,28,41,0.7)]">
+                  <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-text-subtle">
                     {assessmentDetails[0]?.type || "Assessment"}
                   </div>
                 )}
@@ -380,7 +390,11 @@ const VideoPlaylist = ({
               {/* Final Assessment Status indicator - Show green checkmark if passed */}
               {(isAssessmentCompletedLocally(presentationId, assessmentDetails[0]?.id) ||
                 assessmentDetails[0]?.passed) && (
-                <Image src={playlist_completed_icon} alt="Completed" className="absolute w-3 h-3 -right-1 -top-1 z-10" />
+                <Image
+                  src={playlist_completed_icon}
+                  alt="Completed"
+                  className="absolute w-3 h-3 -right-1 -top-1 z-10"
+                />
               )}
             </div>
           )}

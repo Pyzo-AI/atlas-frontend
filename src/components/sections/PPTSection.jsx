@@ -2,132 +2,125 @@ import React, { useRef } from "react";
 import VideoPlaylist from "./VideoPlaylist";
 import SlideVideoSection from "./SlideVideoSection";
 
-const PPTSection = React.forwardRef(({
-  videos = [],
-  loading = false,
-  height = "calc(100vh - 240px)",
-  width = "70%",
-  currentVideoIndex = 0,
-  currentVideoTime = 0,
-  isVideoPlaying = false,
-  videoDuration = 0,
-  title,
-  author,
-  isMobileView = false,
-  isPhoneView = false,
-  canSkipVideo = true,
-  assessmentDetails = [],
-  presentationId,
-  onVideoIndexChange,
-  isOnlyVideoMode,
-  assessmentId,
-  showQueryRelatedSlides = false,
-  passingScore
-}, ref) => {
-  const slideVideoRef = useRef(null);
-  // Expose pause method to parent component
-  React.useImperativeHandle(ref, () => ({
-    pauseSlideVideo: () => {
-      if (slideVideoRef.current) {
-        slideVideoRef.current.pauseSlideVideo();
-      }
-    }
-  }));
-  return (
-    <div
-      className={`flex flex-col ${isOnlyVideoMode ? "overflow-y-auto" : ""} ${isPhoneView
-        ? "h-full p-2"
-        : isMobileView
-          ? "h-full p-4"
-          : "h-[calc(100vh-156px)] pr-5 border-r border-[#E5E7EB] flex-shrink-0"
-        }`}
-      style={{ width: isPhoneView ? '100%' : isMobileView ? '100%' : width }}
-    >
-      {/* Video Section */}
+const PPTSection = React.forwardRef(
+  (
+    {
+      videos = [],
+      loading = false,
+      height = "calc(100vh - 240px)",
+      width = "70%",
+      currentVideoIndex = 0,
+      currentVideoTime = 0,
+      isVideoPlaying = false,
+      videoDuration = 0,
+      title,
+      author,
+      isMobileView = false,
+      isPhoneView = false,
+      canSkipVideo = true,
+      assessmentDetails = [],
+      presentationId,
+      onVideoIndexChange,
+      isOnlyVideoMode,
+      assessmentId,
+      showQueryRelatedSlides = false,
+      passingScore,
+    },
+    ref
+  ) => {
+    const slideVideoRef = useRef(null);
+    // Expose pause method to parent component
+    React.useImperativeHandle(ref, () => ({
+      pauseSlideVideo: () => {
+        if (slideVideoRef.current) {
+          slideVideoRef.current.pauseSlideVideo();
+        }
+      },
+    }));
+    return (
       <div
-        className={`bg-white  ${isOnlyVideoMode
-          ? (isPhoneView
-            ? "flex-shrink-0 overflow-hidden mb-2 aspect-video"
-            : isMobileView
-              ? "flex-shrink-0 overflow-hidden mb-3 aspect-video"
-              : "rounded-xl border border-[#E5E7EB] flex-shrink-0 aspect-video relative")
-          : (isPhoneView
-            ? "flex-1 overflow-hidden mb-2"
-            : isMobileView
-              ? "flex-1 overflow-hidden mb-3"
-              : "rounded-xl border border-[#E5E7EB] min-h-[400px] relative")
-          }`}
-        style={!isOnlyVideoMode ? { height: isPhoneView ? 'auto' : isMobileView ? 'auto' : height } : undefined}
-      >
-        <SlideVideoSection
-          ref={slideVideoRef}
-          videos={videos}
-          currentVideoTime={currentVideoTime + 0.1}
-          isVideoPlaying={isVideoPlaying}
-          videoDuration={videoDuration}
-          assessmentDetails={assessmentDetails}
-          isOnlyVideoMode={isOnlyVideoMode}
-          presentationId={presentationId}
-          onVideoIndexChange={onVideoIndexChange}
-          canSkipVideo={canSkipVideo}
-          assessmentId={assessmentId}
-          showQueryRelatedSlides={showQueryRelatedSlides}
-          passingScore={passingScore}
-        />
-      </div>
-
-      {/* Title and Author Info */}
-      <div
-        className={`flex justify-between items-center ${isPhoneView
-          ? "mt-0"
-          : isMobileView
-            ? "mt-2"
-            : "mt-3 pr-1"
-          }`}
-      >
-        <p
-          className={`font-bold font-lato leading-[100%] tracking-[0.02em] m-0 ${isPhoneView
-            ? "text-[10px] overflow-hidden text-ellipsis whitespace-nowrap"
-            : isMobileView
-              ? "text-[16px]"
-              : "text-[20px]"
-            }`}
-        >
-          {title || (isPhoneView ? "Corporate Finance" : isMobileView ? "Corporate Finance" : "Untitled")}
-        </p>
-        <p
-          className={`font-semibold font-lato leading-[100%] tracking-[0.02em] m-0 ${isPhoneView
-            ? "text-[8px]"
-            : isMobileView
-              ? "text-[12px]"
-              : "text-[14px]"
-            }`}
-        >
-          <span className="text-[#00000080]">By:</span> {author || (isPhoneView ? "Giri Prathap" : isMobileView ? "Giri Prathap" : "Unknown")}
-        </p>
-      </div>
-
-      {/* Video Playlist Section */}
-  {  !isOnlyVideoMode &&  <div
-        className={`${isOnlyVideoMode ? "flex-1 min-h-0 overflow-y-auto" : ""} ${
+        className={`flex flex-col ${isOnlyVideoMode ? "overflow-y-auto" : ""} ${
           isPhoneView
-            ? "mt-0"
+            ? "h-full p-2"
             : isMobileView
-              ? "mt-2"
-              : ""
+              ? "h-full p-4"
+              : "h-[calc(100vh-156px)] pr-5 border-r border-border-light flex-shrink-0"
         }`}
-      >
-        <VideoPlaylist
-          videos={videos}
-          loading={loading}
-          canSkipVideo={canSkipVideo}
-          isMobile={isPhoneView}
-          assessmentDetails={assessmentDetails}
-        />
-      </div>}
-    </div>
-  );
-});
+        style={{ width: isPhoneView ? "100%" : isMobileView ? "100%" : width }}>
+        {/* Video Section */}
+        <div
+          className={`bg-white  ${
+            isOnlyVideoMode
+              ? isPhoneView
+                ? "flex-shrink-0 overflow-hidden mb-2 aspect-video"
+                : isMobileView
+                  ? "flex-shrink-0 overflow-hidden mb-3 aspect-video"
+                  : "rounded-xl border border-border-light flex-shrink-0 aspect-video relative"
+              : isPhoneView
+                ? "flex-1 overflow-hidden mb-2"
+                : isMobileView
+                  ? "flex-1 overflow-hidden mb-3"
+                  : "rounded-xl border border-border-light min-h-[400px] relative"
+          }`}
+          style={!isOnlyVideoMode ? { height: isPhoneView ? "auto" : isMobileView ? "auto" : height } : undefined}>
+          <SlideVideoSection
+            ref={slideVideoRef}
+            videos={videos}
+            currentVideoTime={currentVideoTime + 0.1}
+            isVideoPlaying={isVideoPlaying}
+            videoDuration={videoDuration}
+            assessmentDetails={assessmentDetails}
+            isOnlyVideoMode={isOnlyVideoMode}
+            presentationId={presentationId}
+            onVideoIndexChange={onVideoIndexChange}
+            canSkipVideo={canSkipVideo}
+            assessmentId={assessmentId}
+            showQueryRelatedSlides={showQueryRelatedSlides}
+            passingScore={passingScore}
+          />
+        </div>
+
+        {/* Title and Author Info */}
+        <div
+          className={`flex justify-between items-center ${isPhoneView ? "mt-0" : isMobileView ? "mt-2" : "mt-3 pr-1"}`}>
+          <p
+            className={`font-bold font-lato leading-[100%] tracking-[0.02em] m-0 ${
+              isPhoneView
+                ? "text-[10px] overflow-hidden text-ellipsis whitespace-nowrap"
+                : isMobileView
+                  ? "text-[16px]"
+                  : "text-[20px]"
+            }`}>
+            {title || (isPhoneView ? "Corporate Finance" : isMobileView ? "Corporate Finance" : "Untitled")}
+          </p>
+          <p
+            className={`font-semibold font-lato leading-[100%] tracking-[0.02em] m-0 ${
+              isPhoneView ? "text-[8px]" : isMobileView ? "text-[12px]" : "text-[14px]"
+            }`}>
+            <span className="text-primary-text-muted">By:</span>{" "}
+            {author || (isPhoneView ? "Giri Prathap" : isMobileView ? "Giri Prathap" : "Unknown")}
+          </p>
+        </div>
+
+        {/* Video Playlist Section */}
+        {!isOnlyVideoMode && (
+          <div
+            className={`${isOnlyVideoMode ? "flex-1 min-h-0 overflow-y-auto" : ""} ${
+              isPhoneView ? "mt-0" : isMobileView ? "mt-2" : ""
+            }`}>
+            <VideoPlaylist
+              videos={videos}
+              loading={loading}
+              canSkipVideo={canSkipVideo}
+              isMobile={isPhoneView}
+              assessmentDetails={assessmentDetails}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+);
 
 PPTSection.displayName = "PPTSection";
 

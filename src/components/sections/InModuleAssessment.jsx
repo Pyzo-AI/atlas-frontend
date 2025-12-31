@@ -232,7 +232,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
       // Show result modal only for final assessments
       if (isFinalAssessment) {
         console.log("Showing ResultModal for final assessment:", selectedAssessmentId);
-        
+
         // Fetch assessment summary for final assessments
         try {
           const summaryData = await getAssessmentSummary(presentationId).unwrap();
@@ -247,7 +247,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
           setResultData(modalData);
           setShowResultModalLocal(true);
         } catch (summaryError) {
-          console.error('Failed to fetch assessment summary:', summaryError);
+          console.error("Failed to fetch assessment summary:", summaryError);
           // Don't show result modal if summary API fails
         }
       } else {
@@ -353,8 +353,8 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                       <label
                         className={`flex items-start cursor-pointer p-1 sm:p-2 rounded-lg border transition-all duration-200 ${
                           answers[currentQuestion.question_id] === option
-                            ? "border-[#744FFF] bg-[rgba(116,79,255,0.12)]"
-                            : "border-gray-200 hover:border-[#744FFF] hover:bg-[rgba(116,79,255,0.12)]"
+                            ? "border-accent bg-accent-light"
+                            : "border-gray-200 hover:border-accent hover:bg-accent-light"
                         }`}
                         onClick={() => handleAnswer(currentQuestion.question_id, option)}>
                         <RadioButton
@@ -381,7 +381,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                 className={`px-[18px] py-2 rounded-lg font-semibold text-sm leading-4 text-center transition-colors duration-200 ${
                   currentQuestionIndex === 0
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-[rgba(116,79,255,0.12)] text-[#744FFF] hover:bg-[rgba(116,79,255,0.2)] cursor-pointer"
+                    : "bg-accent-light text-accent hover:bg-accent-light-hover cursor-pointer"
                 }`}>
                 Previous
               </button>
@@ -393,7 +393,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                   className={`px-6 sm:px-8 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-colors duration-200 ${
                     !answers[currentQuestion?.question_id] || isSubmitting
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-[#744FFF] text-white hover:bg-[#6B46E5] cursor-pointer"
+                      : "bg-accent text-light hover:bg-accent-hover cursor-pointer"
                   }`}>
                   {isSubmitting ? "Submitting..." : "Submit"}
                 </button>
@@ -404,7 +404,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                   className={`px-6 sm:px-8 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-colors duration-200 ${
                     !answers[currentQuestion?.question_id]
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-[#744FFF] text-white hover:bg-[#6B46E5] cursor-pointer"
+                      : "bg-accent text-light hover:bg-accent-hover cursor-pointer"
                   }`}>
                   Next
                 </button>
@@ -458,9 +458,9 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
           -moz-appearance: none;
           width: 18px;
           height: 18px;
-          border: 1.28571px solid #744fff;
+          border: 1.28571px solid var(--color-accent);
           border-radius: 18px;
-          background: #ffffff;
+          background: var(--color-light);
           position: relative;
           cursor: pointer;
           flex: none;
@@ -468,8 +468,8 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
         }
 
         .custom-radio:checked {
-          border: 1.28571px solid #744fff;
-          background: #ffffff;
+          border: 1.28571px solid var(--color-accent);
+          background: var(--color-light);
         }
 
         .custom-radio:checked::before {
@@ -479,26 +479,26 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
           height: 12px;
           left: 2.5px;
           top: 2.5px;
-          background: #744fff;
+          background: var(--color-accent);
           border-radius: 50%;
         }
 
         .custom-radio:focus {
           outline: none;
-          box-shadow: 0 0 0 2px rgba(116, 79, 255, 0.2);
+          box-shadow: 0 0 0 2px var(--color-accent-light-hover);
         }
 
         .custom-radio:hover {
-          border-color: #744fff;
+          border-color: var(--color-accent);
         }
 
         /* Unchecked state - lighter border */
         .custom-radio:not(:checked) {
-          border-color: #d1d5db;
+          border-color: var(--color-border-input);
         }
 
         .custom-radio:not(:checked):hover {
-          border-color: #744fff;
+          border-color: var(--color-accent);
         }
       `}</style>
 

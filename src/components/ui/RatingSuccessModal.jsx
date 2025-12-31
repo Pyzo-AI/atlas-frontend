@@ -9,18 +9,12 @@ const RatingSuccessModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black bg-opacity-50"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-xl w-full md:w-[420px] mx-4 md:mx-0">
         {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="cursor-pointer absolute top-4 right-4 w-6 h-6 "
-        >
+        <button onClick={onClose} className="cursor-pointer absolute top-4 right-4 w-6 h-6 ">
           <Image src={close_icon} alt="Close" width={24} height={24} />
         </button>
 
@@ -30,12 +24,7 @@ const RatingSuccessModal = ({ isOpen, onClose }) => {
             {/* Icon and Text Section */}
             <div className="flex flex-col items-center gap-5">
               {/* Success Icon */}
-              <Image
-                src={rating_success}
-                alt="Rating Success"
-                width={80}
-                height={80}
-              />
+              <Image src={rating_success} alt="Rating Success" width={80} height={80} />
 
               {/* Text Content */}
               <div className="flex flex-col items-center gap-2 text-center">
@@ -52,8 +41,7 @@ const RatingSuccessModal = ({ isOpen, onClose }) => {
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="cursor-pointer bg-[#744FFF] hover:bg-[#5F3FCC] text-white font-semibold text-base px-16 py-3 rounded-full transition-colors min-w-[219px] h-10 flex items-center justify-center"
-            >
+              className="cursor-pointer bg-accent hover:bg-accent-dark text-light font-semibold text-base px-16 py-3 rounded-full transition-colors min-w-[219px] h-10 flex items-center justify-center">
               Close
             </button>
           </div>

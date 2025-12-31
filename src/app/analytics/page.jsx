@@ -1,15 +1,11 @@
 "use client";
 
-
 import React, { useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 
-import {
-  useGetPresentationStatsQuery,
-  useGetAssessmentStatsQuery,
-} from "@/store/api/analyticsApi";
+import { useGetPresentationStatsQuery, useGetAssessmentStatsQuery } from "@/store/api/analyticsApi";
 import Tabs from "@/components/common/Tabs";
 import ErrorState from "@/components/common/ErrorState";
 import Learning from "@/components/pages/Learning";
@@ -35,9 +31,7 @@ export default function Analytics() {
   };
 
   const [activeTab, setActiveTab] = useState(initializeActiveTabFromURL());
-  const [appliedFilters, setAppliedFilters] = useState(
-    initializeFiltersFromURL()
-  );
+  const [appliedFilters, setAppliedFilters] = useState(initializeFiltersFromURL());
 
   const tabs = [
     { id: "learning", label: "Learning" },
@@ -51,10 +45,7 @@ export default function Analytics() {
     setActiveTab(tabId);
   };
 
-  const buildUrlWithFilters = (
-    basePath,
-    additionalFilters
-  ) => {
+  const buildUrlWithFilters = (basePath, additionalFilters) => {
     const params = new URLSearchParams();
 
     // Add current filters
@@ -117,10 +108,7 @@ export default function Analytics() {
     return presentationStatsData.summary_metrics.map((metric, index) => ({
       title: metric.title,
       value: metric.value,
-      onClick:
-        index === 0
-          ? () => router.push(buildUrlWithFilters("/modules"))
-          : undefined,
+      onClick: index === 0 ? () => router.push(buildUrlWithFilters("/modules")) : undefined,
     }));
   }, [presentationStatsData, router, buildUrlWithFilters]);
 
@@ -132,10 +120,7 @@ export default function Analytics() {
     return assessmentStatsData.summary_metrics.map((metric, index) => ({
       title: metric.title,
       value: metric.value,
-      onClick:
-        index === 0
-          ? () => router.push(buildUrlWithFilters("/assessments"))
-          : undefined,
+      onClick: index === 0 ? () => router.push(buildUrlWithFilters("/assessments")) : undefined,
     }));
   }, [assessmentStatsData, router, buildUrlWithFilters]);
 
@@ -160,10 +145,10 @@ export default function Analytics() {
       <div className="sm:bg-white w-full rounded-lg sm:px-4 py-4 sm:py-5">
         <div className="flex justify-between items-start">
           <div className="space-y-1 mb-4">
-            <h2 className="font-lato font-bold text-[16px] md:text-[20px] leading-[100%] tracking-[0.01em] text-[#111827]">
+            <h2 className="font-lato font-bold text-[16px] md:text-[20px] leading-[100%] tracking-[0.01em] text-text-heading">
               Analytics
             </h2>
-            <p className="font-lato font-normal text-[12px] leading-[15px] md:leading-[100%] tracking-[0em] text-[#4B5563]">
+            <p className="font-lato font-normal text-[12px] leading-[15px] md:leading-[100%] tracking-[0em] text-text-body">
               Track user progress and achievements
             </p>
           </div>
@@ -194,18 +179,11 @@ export default function Analytics() {
           showDeleteButton={false}
         /> */}
         <div className="mb-4">
-          <Tabs
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
+          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
         </div>
         {activeTab === "learning" &&
           (statsError ? (
-            <ErrorState
-              message="Failed to load learning analytics. Please try again."
-              onRetry={refetchStats}
-            />
+            <ErrorState message="Failed to load learning analytics. Please try again." onRetry={refetchStats} />
           ) : (
             <Learning isLoading={isLoadingStats} analyticsData={learningData} />
           ))}
@@ -216,10 +194,7 @@ export default function Analytics() {
               onRetry={refetchAssessmentStats}
             />
           ) : (
-            <Assessments
-              isLoading={isLoadingAssessmentStats}
-              analyticsData={assessmentsData}
-            />
+            <Assessments isLoading={isLoadingAssessmentStats} analyticsData={assessmentsData} />
           ))}
       </div>
     </div>

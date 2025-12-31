@@ -17,11 +17,10 @@ export default function ResultModal({
   onRetry,
   onRestartTraining,
   onShowFeedback,
-  passingScore, 
+  passingScore,
 }) {
   const router = useRouter();
   const dispatch = useDispatch();
-
 
   // Use the actual values from API response
   const actualTotalQuestions = totalQuestions || 0;
@@ -71,8 +70,8 @@ export default function ResultModal({
         <div className="relative flex justify-center mx-auto mb-5">
           {isPerfectScore ? (
             // Perfect Score - Simple Green Circle
-            <div className="w-20 h-20 border-4 border-[#00A63E] rounded-full flex items-center justify-center">
-              <span className="text-2xl font-bold text-[#00A63E]">{Math.round(actualPercentage)}%</span>
+            <div className="w-20 h-20 border-4 border-success rounded-full flex items-center justify-center">
+              <span className="text-2xl font-bold text-success">{Math.round(actualPercentage)}%</span>
             </div>
           ) : (
             // Partial Score - Progress Circle
@@ -80,7 +79,7 @@ export default function ResultModal({
               <ProgressCircle score={actualPercentage} />
               {/* Score text */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl font-bold text-[#744FFF]">{Math.round(actualPercentage)}%</span>
+                <span className="text-2xl font-bold text-accent">{Math.round(actualPercentage)}%</span>
               </div>
             </div>
           )}
@@ -98,11 +97,11 @@ export default function ResultModal({
           ) : (
             <>
               You correctly answered{" "}
-              <span className="font-lato font-bold text-[14px] leading-[100%] tracking-[0em] text-center text-[#744FFF]">
+              <span className="font-lato font-bold text-[14px] leading-[100%] tracking-[0em] text-center text-accent">
                 {actualCorrectAnswers}
               </span>{" "}
               out of{" "}
-              <span className="font-lato font-bold text-[14px] leading-[100%] tracking-[0em] text-center text-[#744FFF]">
+              <span className="font-lato font-bold text-[14px] leading-[100%] tracking-[0em] text-center text-accent">
                 {actualTotalQuestions}
               </span>{" "}
               questions across all assessments.
@@ -112,9 +111,9 @@ export default function ResultModal({
 
         {/* Warning message for non-perfect scores */}
         {!isPerfectScore && (
-          <div className="bg-[#FFFBEA]  rounded-2xl px-1.5 py-2 mb-6">
-            <p className="font-lato font-normal text-[14px] leading-[16px] tracking-[0em] text-center text-[#B69C09]">
-             Mastery is within reach. A perfect score of {passingScore}% is needed to complete the module.
+          <div className="bg-warning-bg  rounded-2xl px-1.5 py-2 mb-6">
+            <p className="font-lato font-normal text-[14px] leading-[16px] tracking-[0em] text-center text-warning-text">
+              Mastery is within reach. A perfect score of {passingScore}% is needed to complete the module.
             </p>
           </div>
         )}
@@ -124,19 +123,19 @@ export default function ResultModal({
           {isPerfectScore ? (
             <button
               onClick={showFeedback}
-              className="cursor-pointer w-full bg-[#744FFF] hover:bg-[#6B46E5] text-white py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg mt-5">
+              className="cursor-pointer w-full bg-accent hover:bg-accent-hover text-light py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg mt-5">
               Continue
             </button>
           ) : (
             <div className="flex gap-3">
               <button
                 onClick={showFeedback}
-                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-[rgba(116,79,255,0.12)] hover:bg-[rgba(116,79,255,0.2)] text-[#744FFF] font-semibold text-base rounded-[73.75px] transition-all duration-200 flex-1">
+                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent-light hover:bg-accent-light-hover text-accent font-semibold text-base rounded-[73.75px] transition-all duration-200 flex-1">
                 Give Feedback
               </button>
               <button
                 onClick={handleRestartTraining}
-                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-[#744FFF] hover:bg-[#6B46E5] text-white font-semibold text-base rounded-[73.75px] transition-all duration-200 flex-1">
+                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent hover:bg-accent-hover text-light font-semibold text-base rounded-[73.75px] transition-all duration-200 flex-1">
                 Restart Training
               </button>
             </div>
