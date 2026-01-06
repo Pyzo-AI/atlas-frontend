@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
+import { getTokens } from "@/store/utils/token";
 
 /**
  * Helper to detect if a URL is an HLS stream
@@ -26,18 +27,12 @@ const getVideoType = (url) => {
 };
 
 /**
- * Get access token from localStorage
+ * Get access token using the centralized token utility
  * @returns {string|null} - The access token or null
  */
 const getAccessToken = () => {
-  if (typeof window === "undefined") return null;
-  try {
-    const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
-    return tokens.access_token || null;
-  } catch (error) {
-    console.error("Error getting access token:", error);
-    return null;
-  }
+  const tokens = getTokens();
+  return tokens.access_token || null;
 };
 
 /**
