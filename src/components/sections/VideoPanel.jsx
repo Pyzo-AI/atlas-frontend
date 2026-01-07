@@ -114,32 +114,22 @@ const VideoPanel = forwardRef(
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
     const [lastVideoSrc, setLastVideoSrc] = useState("");
-    // Slide view tracking
-    const [slideViewStartTime, setSlideViewStartTime] = useState("");
     const [videoStartTime, setVideoStartTime] = useState(0);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-    const videoRef = useRef(null);
-    const activeVideoRef = useRef(null);
-    const preloadVideoRef = useRef(null); // For preloading next video
-    const router = useRouter();
-    const dispatch = useDispatch();
-    const [generateImage, { isLoading: isImageLoading }] = useGenerateImageMutation();
-    const [createSession] = useCreateSessionMutation();
-    const {
-      currentVideoIndex,
-      isQuestionMode,
-      currentVideoTime: reduxCurrentVideoTime,
-      selectedAssessmentId,
-      autoPlayEnabled,
-      currentVideoTime,
-      showChat,
-    } = useSelector((state) => state.video);
-    const { capture } = usePostHog();
-    const isQuestionModeRef = useRef(isQuestionMode);
-
+    const [preloadedVideoIndex, setPreloadedVideoIndex] = useState(-1);
+    const [initialVideoTime, setInitialVideoTime] = useState(0);
     const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
     const [contextSent, setContextSent] = useState(false);
-    const [liveKitRoom, setLiveKitRoom] = useState(null);
+    const videoRef = useRef(null);
+    const activeVideoRef = useRef(null);
+    const router = useRouter();
+    const dispatch = useDispatch();
+    const [generateImage] = useGenerateImageMutation();
+    const [createSession] = useCreateSessionMutation();
+    const { currentVideoIndex, isQuestionMode, selectedAssessmentId, autoPlayEnabled, currentVideoTime, showChat } =
+      useSelector((state) => state.video);
+    const { capture } = usePostHog();
+    const isQuestionModeRef = useRef(isQuestionMode);
     // Keep ref updated with current isQuestionMode value
     useEffect(() => {
       isQuestionModeRef.current = isQuestionMode;
@@ -354,7 +344,7 @@ const VideoPanel = forwardRef(
             const sessionResponse = await createSession({
               agent_id: +agentId,
               user_id: userDetails?.sub || 0,
-              presentation_id: parseInt(presentationId)
+              presentation_id: parseInt(presentationId),
             }).unwrap();
 
             liveKitService.onConnectionStateChanged = handleLiveKitStateChange;
@@ -364,8 +354,6 @@ const VideoPanel = forwardRef(
               token: sessionResponse.token,
               roomName: sessionResponse.room_name,
             });
-
-            setLiveKitRoom(sessionResponse.room_name);
           } catch (sessionError) {
             toast.error("Interaction mode not available. Please try again later.");
             dispatch(setIsQuestionMode(false));
@@ -410,7 +398,6 @@ const VideoPanel = forwardRef(
       try {
         if (liveKitAgentEnabled) {
           await liveKitService.disconnect();
-          setLiveKitRoom(null);
           setLiveKitAgentState("connecting");
         } else {
           await conversation.endSession();
@@ -424,10 +411,6 @@ const VideoPanel = forwardRef(
         console.error("Failed to stop conversation:", error);
       }
     };
-    const [showRedirectPopup, setShowRedirectPopup] = useState(false);
-    const [countdown, setCountdown] = useState(10);
-    const [preloadedVideoIndex, setPreloadedVideoIndex] = useState(-1);
-    const [initialVideoTime, setInitialVideoTime] = useState(0);
 
     // Function to stop conversation
     const stopAnswerAudio = () => {
@@ -435,27 +418,6 @@ const VideoPanel = forwardRef(
         stopConversation();
       }
     };
-
-    // Handle countdown and redirect
-    useEffect(() => {
-      if (!showRedirectPopup) return;
-
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      if (countdown === 0) {
-        router.push(getRedirectPath());
-      }
-
-      return () => clearInterval(timer);
-    }, [showRedirectPopup, countdown, router, isPresentationQuizPassed]);
 
     // Initialize video on first load
     useEffect(() => {
@@ -534,8 +496,8 @@ const VideoPanel = forwardRef(
 
           // Calculate initial time for new video
           let startTime = 0;
-          if (typeof reduxCurrentVideoTime === "number" && reduxCurrentVideoTime > 0) {
-            startTime = reduxCurrentVideoTime;
+          if (typeof currentVideoTime === "number" && currentVideoTime > 0) {
+            startTime = currentVideoTime;
           } else if (currentVideo?.is_completed) {
             // If video is completed, always start from 0
             startTime = 0;
@@ -582,9 +544,6 @@ const VideoPanel = forwardRef(
               slide_title: currentVideo.title,
               timestamp: currentTime,
             });
-
-            // Set new slide view start time
-            setSlideViewStartTime(currentTime);
           }
 
           // Notify parent about video index change
@@ -658,9 +617,9 @@ const VideoPanel = forwardRef(
 
     useEffect(() => {
       liveKitService.setOnAgentStateChanged((state) => {
-          setLiveKitAgentState(state);
+        setLiveKitAgentState(state);
       });
-      
+
       // Data Packet Handling
       if (liveKitService.setOnDataReceived) {
         liveKitService.setOnDataReceived((payload, participant) => {
@@ -669,10 +628,10 @@ const VideoPanel = forwardRef(
             const strData = decoder.decode(payload);
             const data = JSON.parse(strData);
             if (data.type === "status" && data.message === "call_ending") {
-                if (liveKitService.isConnected()) {
-                  liveKitService.disconnect();
-                  dispatch(setIsQuestionMode(false));
-                }
+              if (liveKitService.isConnected()) {
+                liveKitService.disconnect();
+                dispatch(setIsQuestionMode(false));
+              }
             }
           } catch (error) {
             console.error("Failed to parse data packet:", error);
@@ -770,8 +729,6 @@ const VideoPanel = forwardRef(
             slide_title: nextVideo.title,
             timestamp: currentTime,
           });
-
-          setSlideViewStartTime(currentTime);
         }
       } else {
         // setShowRedirectPopup(true);
@@ -781,12 +738,6 @@ const VideoPanel = forwardRef(
         dispatch(setAutoPlayEnabled(false));
         dispatch(setSelectedAssessmentId(assessmentId));
       }
-    };
-
-    // Close popup handler
-    const handleClosePopup = () => {
-      setShowRedirectPopup(false);
-      setCountdown(10);
     };
 
     const handleRedirectToHomePage = () => {
@@ -829,14 +780,6 @@ const VideoPanel = forwardRef(
       dispatch(setShowChat(false));
     };
 
-    // Global redirect path - always go to assessment first
-    const getRedirectPath = () => {
-      const currentPath = window.location.pathname;
-      const presentationId = currentPath.split("/lectures/")[1];
-      return assessmentId
-        ? `/assessment/${presentationId}?assessment-id=${assessmentId}`
-        : `/assessment/${presentationId}`;
-    };
     // Determine device type for responsive styling
     const isPhone = isPhoneView;
     const isMobile = isMobileView;
@@ -847,65 +790,10 @@ const VideoPanel = forwardRef(
           isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
         }`}
         style={!isMobile ? { width } : undefined}>
-        {/* Redirect Popup - Unified for both mobile and desktop */}
-        {showRedirectPopup && (
-          <div className="fixed inset-0 bg-[#00000080] flex items-center justify-center z-50">
-            <div
-              className={`relative flex flex-col items-center gap-5 w-96 bg-white rounded-2xl ${
-                isPhone ? "p-5" : "p-6"
-              }`}>
-              {/* Content Container */}
-              <div className="flex flex-col items-center gap-6 w-[336px]">
-                {/* Icon */}
-                <div className="flex flex-col items-center gap-5 w-[336px]">
-                  <Image
-                    src={redirecting_logo}
-                    alt="Training Completed"
-                    width={80}
-                    height={80}
-                    className="w-[50px] h-[50px]"
-                  />
-
-                  {/* Text Content */}
-                  <div className="flex flex-col items-center gap-2 w-[336px] h-[70px]">
-                    <h3 className="font-lato font-bold text-xl leading-6 text-[#1A1C29]">Training Completed!</h3>
-                    <div className="flex flex-col items-center gap-1 w-[336px] h-[38px]">
-                      <p className="font-lato font-normal text-sm leading-[17px] text-center text-[rgba(26,28,41,0.8)]">
-                        You'll be redirected to the assessment in
-                      </p>
-                      <span className="font-lato font-bold text-sm leading-[17px] text-[#744FFF]">
-                        {countdown} seconds.
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex flex-row items-center gap-3 w-[336px] h-10">
-                  <button
-                    onClick={handleRedirectToHomePage}
-                    className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[rgba(116,79,255,0.12)] rounded-[73.75px] cursor-pointer">
-                    <span className="font-lato font-semibold text-base leading-4 text-center text-[#744FFF]">
-                      Do It Later
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => router.push(getRedirectPath())}
-                    className="flex justify-center items-center px-4 py-[6px] gap-2.5 w-[162px] h-10 bg-[#744FFF] rounded-[73.75px] cursor-pointer">
-                    <span className="font-lato font-semibold text-base leading-4 text-center text-white">
-                      Start Now
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Video Section or Grid Playlist - Responsive for both mobile and desktop */}
         {isOnlyVideoMode ? (
           <div
-            className={`bg-white border border-[#E5E7EB] overflow-y-auto ${
+            className={`bg-white border border-border-light overflow-y-auto ${
               isMobile ? (isPhone ? "p-2 rounded-lg flex-shrink-0" : "p-3 rounded-lg") : "p-3 rounded-xl"
             } ${showChat || isQuestionMode ? "hidden" : ""} ${!agentId ? "flex-1" : ""}`}
             style={agentId ? { height: "50vh" } : {}}>
@@ -920,7 +808,7 @@ const VideoPanel = forwardRef(
           </div>
         ) : (
           <div
-            className={`${selectedAssessmentId ? "" : "cursor-pointer"} bg-white border border-[#E5E7EB] ${
+            className={`${selectedAssessmentId ? "" : "cursor-pointer"} bg-white border border-border-light ${
               isMobile
                 ? isPhone
                   ? "p-1 md:p-[6px] lg:p-3 rounded-lg flex-shrink-0"
@@ -999,7 +887,7 @@ const VideoPanel = forwardRef(
         {/* Question Mode AI - Responsive */}
         {isQuestionMode && (
           <QuestionModeAI
-            isLoading={liveKitAgentEnabled? liveKitAgentState === "connecting" : !conversationState.isConnected}
+            isLoading={liveKitAgentEnabled ? liveKitAgentState === "connecting" : !conversationState.isConnected}
             liveKitAgentEnabled={liveKitAgentEnabled}
             liveKitAgentState={liveKitAgentState}
             isAudioPlaying={conversation.isSpeaking}
@@ -1034,7 +922,7 @@ const VideoPanel = forwardRef(
             onStopConversation={stopConversation}
             onPauseAnswerAudio={stopAnswerAudio}
             isAudioPlaying={conversationState.isAudioPlaying}
-            isAudioLoading={liveKitAgentEnabled? liveKitAgentState === "listening":isListening}
+            isAudioLoading={liveKitAgentEnabled ? liveKitAgentState === "listening" : isListening}
             isConnected={conversationState.isConnected}
             setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
             isMobile={isMobile && isPhone}

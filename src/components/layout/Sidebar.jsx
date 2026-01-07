@@ -68,12 +68,12 @@ const Sidebar = ({ isOpen = false, onClose }) => {
         {/* Main Content */}
         <div className="flex flex-col">
           {/* Logo Section */}
-         <div className="flex flex-col justify-center items-start p-3 px-4 h-[68px]">
-          <div className="flex items-center gap-1">
-            {/* Logo Icon */}
+          <div className="flex flex-col justify-center items-start p-3 px-4 h-[68px]">
+            <div className="flex items-center gap-1">
+              {/* Logo Icon */}
               <Image src={logo} height={25} width={58} alt="Pyzo Logo" />
+            </div>
           </div>
-        </div>
 
           {/* Menu Section */}
           <div className="flex flex-col gap-2 px-0">
@@ -85,7 +85,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
                   href={item.href}
                   onClick={handleLinkClick}
                   className={`relative flex items-center px-4 py-2 mx-0 h-9 rounded-md transition-all duration-200 ${
-                    active ? "bg-[rgba(39,98,234,0.1)] text-[#2762EA]" : "text-[rgba(26,28,41,0.8)] hover:bg-gray-50"
+                    active ? "bg-bg-primary-light text-primary" : "text-text-subtle-alt hover:bg-gray-50"
                   }`}>
                   <div className="flex items-center gap-1">
                     <div className="w-4 h-4">
@@ -95,7 +95,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
                   </div>
                   {/* Active Indicator */}
                   {active && (
-                    <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-[3px] h-[27px] bg-[#2762EA] rounded-l-lg" />
+                    <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-[3px] h-[27px] bg-primary rounded-l-lg" />
                   )}
                 </Link>
               );

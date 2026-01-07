@@ -60,10 +60,10 @@ const AILearningAssistant = ({
       {showMicPopup && (
         <MicrophonePermissionPopup onCancel={() => setShowMicPopup(false)} onAllowMicrophone={handleAllowMicrophone} />
       )}
-      <div className="flex flex-col items-start p-1 md:p-[6px] lg:p-3 gap-2.5 w-full h-full flex-1 border border-[#E5E7EB] rounded-xl bg-white overflow-hidden">
+      <div className="flex flex-col items-start p-1 md:p-[6px] lg:p-3 gap-2.5 w-full h-full flex-1 border border-border-light rounded-xl bg-white overflow-hidden">
         {/* Inner Frame */}
         <div
-          className={`w-full h-full bg-[#E0DDFF] rounded-xl ${
+          className={`w-full h-full bg-bg-lavender rounded-xl ${
             isMobileView ? "p-1" : "p-3"
           } flex flex-col min-h-0 overflow-hidden relative`}>
           {/* Chat Icon - Positioned absolutely */}
@@ -95,11 +95,11 @@ const AILearningAssistant = ({
                 <h3
                   className={`w-full text-center font-lato font-bold ${
                     isMobileView ? "text-[10px]" : "text-lg leading-5"
-                  }  text-[#1A1C29]`}>
+                  }  text-primary-text`}>
                   AI Assistant
                 </h3>
                 {!isMobileView && (
-                  <p className="w-full text-center font-lato font-normal text-xs leading-4 text-[#1A1C29]">
+                  <p className="w-full text-center font-lato font-normal text-xs leading-4 text-primary-text">
                     Get instant answers to your questions and personalized learning support.
                   </p>
                 )}
@@ -121,7 +121,7 @@ const AILearningAssistant = ({
                 style={
                   agentId
                     ? {
-                        background: "linear-gradient(180deg, #685EDD 0%, #DA8BFF 100%)",
+                        background: "var(--gradient-primary)",
                       }
                     : {}
                 }
