@@ -1,13 +1,19 @@
-import React, { useState, useRef, useEffect } from "react";
-import chat_history from "@/assets/svg/chat_history.svg";
-import back_to_session from "@/assets/svg/back_to_session.svg";
-import Image from "next/image";
-import tap_to_speak from "@/assets/svg/tap-to-speak.svg";
-import Lottie from "lottie-react";
-import userWaveAnimation from "@/assets/json/user_wave.json";
-import { useDispatch, useSelector } from "react-redux";
-import { setIsQuestionMode, setQuestion, setAnswerPptIndex, setShowChat } from "@/store/features/videoSlice";
-import { clearOverlayImage } from "@/store/features/imageSlice";
+import React, { useState, useRef, useEffect } from 'react'
+import chat_history from '@/assets/svg/chat_history.svg'
+import back_to_session from '@/assets/svg/back_to_session.svg'
+import Image from 'next/image'
+import tap_to_speak from '@/assets/svg/tap-to-speak.svg'
+import Lottie from 'lottie-react'
+import userWaveAnimation from '@/assets/json/user_wave.json'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  setIsQuestionMode,
+  setQuestion,
+  setAnswerPptIndex,
+  setShowChat,
+  setSlideNumbers,
+} from '@/store/features/videoSlice'
+import { clearOverlayImage } from '@/store/features/imageSlice'
 
 const QuestionModeUser = ({
   onPauseVideo,
@@ -58,17 +64,19 @@ const QuestionModeUser = ({
     // }
     onStopConversation();
     // Clear state
-    dispatch(setQuestion(""));
-    dispatch(setIsQuestionMode(false));
+    dispatch(setQuestion(''))
+    dispatch(setIsQuestionMode(false))
+    dispatch(setSlideNumbers([]))
     // Clear overlay image state (query based slide image)
     dispatch(clearOverlayImage());
   };
 
   const handleChatHistory = () => {
-    onPauseVideo(); // Pause the video when opening chat
-    dispatch(setShowChat(true));
-    dispatch(setIsQuestionMode(false));
-    setIsJumpedOnChatFromInteractionMode(true);
+    onPauseVideo() // Pause the video when opening chat
+    dispatch(setShowChat(true))
+    dispatch(setIsQuestionMode(false))
+    dispatch(setSlideNumbers([]))
+    setIsJumpedOnChatFromInteractionMode(true)
     if (isConnected && onStopConversation) {
       onStopConversation();
     }
