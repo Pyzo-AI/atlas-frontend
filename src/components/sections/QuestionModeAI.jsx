@@ -16,12 +16,11 @@ const QuestionModeAI = forwardRef(
     const userName = getUserDetailsFromToken()?.name;
 
     return (
-      <div className="p-1 md:p-3 bg-white rounded-xl border border-[#E5E7EB]">
+      <div className="p-1 md:p-3 bg-white rounded-xl border border-border-light">
         <div
           className="w-full aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center"
           style={{
-            background:
-              "linear-gradient(0deg, rgba(0, 0, 0, 0.17), rgba(0, 0, 0, 0.17)), linear-gradient(180deg, #685EDD 0%, #DA8BFF 100%)",
+            background: "var(--gradient-primary-darkened)",
           }}>
           {/* Main Content Container */}
           <div className="flex flex-col items-center justify-center gap-4 w-[243px] h-[137px]">

@@ -358,7 +358,7 @@ const VideoPlayerContainer = forwardRef(
 
     return (
       <VideoPlayer
-        key={`trainer-video-${currentVideoIndex}-${currentVideo.trainer_video}`}
+        key={`trainer-video-${currentVideoIndex}-${isOnlyVideoMode ? currentVideo.slide_video : currentVideo.trainer_video}`}
         ref={videoRef}
         src={isOnlyVideoMode ? currentVideo.slide_video : currentVideo.trainer_video}
         poster={currentVideo.thumbnail}

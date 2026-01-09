@@ -17,6 +17,7 @@ const SlideVideoSection = React.forwardRef(({
   canSkipVideo,
   assessmentId,
   showQueryRelatedSlides = false,
+  passingScore,
 }, ref) => {
   const dispatch = useDispatch();
   const { currentVideoIndex ,currentVideoTime, slideNumbers} = useSelector((state) => state.video);
@@ -226,7 +227,7 @@ const SlideVideoSection = React.forwardRef(({
   console.log(slideImage,"slideImage")
 
   if (selectedAssessmentId) {
-    return <InModuleAssessment videos={videos} assessmentDetails={assessmentDetails} />;
+    return <InModuleAssessment videos={videos} assessmentDetails={assessmentDetails} passingScore={passingScore} />;
   }
 
   if (isOnlyVideoMode) {
@@ -281,7 +282,7 @@ const SlideVideoSection = React.forwardRef(({
         )}
         <VideoPlayerContainer
           ref={videoPlayerContainerRef}
-          key={`video-player-${currentVideoIndex}`}
+          key={`video-player-${presentationId}-${currentVideoIndex}-${videos?.[currentVideoIndex]?.slide_video || 'no-video'}`}
           videos={videos}
           currentVideoIndex={currentVideoIndex}
           presentationId={presentationId}

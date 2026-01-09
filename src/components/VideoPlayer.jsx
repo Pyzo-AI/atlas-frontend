@@ -2,6 +2,82 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
+import { getTokens } from "@/store/utils/token";
+
+/**
+ * Helper to detect if a URL is an HLS stream
+ * @param {string} url - The video source URL
+ * @returns {boolean} - True if the URL is an HLS manifest
+ */
+const isHlsStream = (url) => {
+  if (!url || typeof url !== "string") return false;
+  return url.includes(".m3u8") || url.includes("master.m3u8");
+};
+
+/**
+ * Get the appropriate MIME type for the video source
+ * @param {string} url - The video source URL
+ * @returns {string} - The MIME type
+ */
+const getVideoType = (url) => {
+  if (isHlsStream(url)) {
+    return "application/x-mpegURL";
+  }
+  return "video/mp4";
+};
+
+/**
+ * Get access token using the centralized token utility
+ * @returns {string|null} - The access token or null
+ */
+const getAccessToken = () => {
+  const tokens = getTokens();
+  return tokens.access_token || null;
+};
+
+/**
+ * Setup global VHS xhr hook for HLS authentication
+ * This must be called before the player is initialized
+ * It intercepts ALL HLS requests including manifests, segments, and encryption keys
+ */
+const setupVhsXhrHook = () => {
+  if (typeof window === "undefined") return;
+
+  // Access the VHS module from videojs
+  const vhs = videojs.Vhs || videojs.VHS;
+
+  if (vhs && vhs.xhr) {
+    // Set the global beforeRequest hook
+    vhs.xhr.beforeRequest = (options) => {
+      // Ensure options object exists
+      if (!options) {
+        return options;
+      }
+
+      const accessToken = getAccessToken();
+      if (accessToken) {
+        // Initialize headers object if it doesn't exist
+        options.headers = options.headers || {};
+        options.headers["Authorization"] = `Bearer ${accessToken}`;
+
+        // Log for debugging
+        const uri = options.uri || options.url || "";
+        console.log("[VHS Global Hook] Adding auth to:", uri.substring(0, 80));
+      }
+
+      return options;
+    };
+
+    console.log("[VHS] Global xhr.beforeRequest hook installed");
+  } else {
+    console.warn("[VHS] Could not find VHS module for xhr hook");
+  }
+};
+
+// Initialize VHS hook when module loads (client-side only)
+if (typeof window !== "undefined") {
+  setupVhsXhrHook();
+}
 
 const VideoPlayer = forwardRef(
   (
@@ -45,6 +121,8 @@ const VideoPlayer = forwardRef(
     const timeUpdateRef = useRef(null);
     const seekingRef = useRef(false);
     const skipBackwardInProgressRef = useRef(false);
+    // Unique key to force video element recreation on mount
+    const [videoElementKey] = useState(() => Date.now());
 
     useEffect(() => {
       setIsClient(true);
@@ -102,7 +180,7 @@ const VideoPlayer = forwardRef(
       },
       load: () => {
         if (playerRef.current) {
-          playerRef.current.src({ src, type: "video/mp4" });
+          playerRef.current.src({ src, type: getVideoType(src) });
         }
       },
     }));
@@ -110,10 +188,20 @@ const VideoPlayer = forwardRef(
     useEffect(() => {
       if (!isClient || !videoRef.current) return;
 
+      // Check if video element is in the DOM (Video.js removes it on dispose)
+      if (!document.body.contains(videoRef.current)) {
+        console.log("Video element not in DOM, skipping initialization");
+        return;
+      }
+
       if (playerRef.current) {
         playerRef.current.dispose();
         playerRef.current = null;
       }
+
+      // Ensure VHS xhr hook is setup before creating player
+      // This is critical for HLS encrypted streams
+      setupVhsXhrHook();
 
       playerRef.current = videojs(videoRef.current, {
         controls: controls,
@@ -122,7 +210,7 @@ const VideoPlayer = forwardRef(
         sources: [
           {
             src,
-            type: "video/mp4",
+            type: getVideoType(src),
           },
         ],
         preload: "auto",
@@ -151,6 +239,35 @@ const VideoPlayer = forwardRef(
           nativeControlsForTouch: false,
           nativeAudioTracks: false,
           nativeVideoTracks: false,
+          // VHS (Video.js HTTP Streaming) configuration for HLS with encrypted streams
+          vhs: {
+            overrideNative: true,
+            // Enable withCredentials if needed for CORS
+            withCredentials: false,
+            // Handle segment and key requests with auth headers
+            xhr: {
+              beforeRequest: (options) => {
+                // Ensure options and options.uri exist before trying to modify
+                if (!options) {
+                  return options;
+                }
+
+                const accessToken = getAccessToken();
+                if (accessToken) {
+                  // Initialize headers object if it doesn't exist
+                  options.headers = options.headers || {};
+                  options.headers["Authorization"] = `Bearer ${accessToken}`;
+
+                  // Log for debugging (remove in production)
+                  const uri = options.uri || options.url || "";
+                  if (uri.includes(".m3u8") || uri.includes("video-key") || uri.includes(".ts")) {
+                    console.log("[VHS] Adding auth header to request:", uri.substring(0, 100));
+                  }
+                }
+                return options;
+              },
+            },
+          },
         },
         // Ensure playback rate menu is always available
         breakpoints: {
@@ -183,6 +300,27 @@ const VideoPlayer = forwardRef(
       }
 
       playerRef.current.ready(() => {
+        // Re-setup VHS xhr hook after player is ready as fallback
+        // This ensures the hook is active for the tech instance
+        try {
+          const tech = playerRef.current.tech({ IWillNotUseThisInPlugins: true });
+          if (tech && tech.vhs && tech.vhs.xhr) {
+            const originalXhr = tech.vhs.xhr;
+            tech.vhs.xhr = (options, callback) => {
+              const accessToken = getAccessToken();
+              if (accessToken) {
+                options.headers = options.headers || {};
+                options.headers["Authorization"] = `Bearer ${accessToken}`;
+                console.log("[VHS Tech Hook] Auth added to:", (options.uri || "").substring(0, 80));
+              }
+              return originalXhr(options, callback);
+            };
+            console.log("[VHS] Tech-level xhr hook installed");
+          }
+        } catch (e) {
+          console.log("[VHS] Tech hook setup skipped:", e.message);
+        }
+
         // Show/hide remaining time based on prop
         if (showRemainingDuration) {
           playerRef.current.addClass("vjs-show-remaining-time");
@@ -694,7 +832,7 @@ const VideoPlayer = forwardRef(
             }
           };
 
-          const actualVideo = videoElement.querySelector('video');
+          const actualVideo = videoElement.querySelector("video");
           if (actualVideo) {
             actualVideo.addEventListener("touchend", handleVideoTap, { passive: false });
           }
@@ -708,8 +846,8 @@ const VideoPlayer = forwardRef(
               playerRef.current.pause();
             }
           };
-          
-          const actualVideoForTouch = videoElementForTouch.querySelector('video');
+
+          const actualVideoForTouch = videoElementForTouch.querySelector("video");
           if (actualVideoForTouch) {
             actualVideoForTouch.addEventListener("touchend", handleMobileTouch, { passive: true });
           }
@@ -848,6 +986,38 @@ const VideoPlayer = forwardRef(
         }
       });
 
+      // HLS/VHS error handling for encrypted streams
+      playerRef.current.on("error", (e) => {
+        const error = playerRef.current.error();
+        if (error) {
+          console.error("[VideoPlayer] Playback error:", {
+            code: error.code,
+            message: error.message,
+            src: src?.substring(0, 100),
+          });
+
+          // Check for specific HLS/encryption errors
+          if (error.code === 4) {
+            console.error("[VideoPlayer] Media error - possibly HLS key fetch failed");
+          }
+        }
+      });
+
+      // VHS-specific event for key load issues
+      const tech = playerRef.current.tech({ IWillNotUseThisInPlugins: true });
+      if (tech && tech.vhs) {
+        tech.vhs.on("error", (err) => {
+          console.error("[VHS] HLS streaming error:", err);
+        });
+
+        // Log when segments are being loaded (useful for debugging)
+        if (process.env.NODE_ENV === "development") {
+          tech.vhs.on("bandwidthupdate", () => {
+            console.log("[VHS] Bandwidth update - stream is loading");
+          });
+        }
+      }
+
       // Additional iOS Safari seek prevention
       if (!canSkipVideo) {
         const videoElement = playerRef.current.el().querySelector("video");
@@ -930,12 +1100,12 @@ const VideoPlayer = forwardRef(
           style={{
             width,
             height,
-            backgroundColor: "#000",
+            backgroundColor: "var(--color-dark)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}>
-          <div style={{ color: "white" }}>Loading...</div>
+          <div style={{ color: "var(--color-light)" }}>Loading...</div>
         </div>
       );
     }
@@ -943,6 +1113,7 @@ const VideoPlayer = forwardRef(
     return (
       <div className={className} style={style}>
         <video
+          key={`video-element-${videoElementKey}`}
           ref={videoRef}
           className="video-js vjs-default-skin"
           width={width}
@@ -1024,7 +1195,7 @@ const VideoPlayer = forwardRef(
           }
 
           .vjs-skip-backward:hover {
-            color: #f0f0f0 !important; /* Light gray on hover */
+            color: var(--color-video-text-hover) !important; /* Light gray on hover */
           }
 
           .skip-backward-content {
@@ -1418,7 +1589,7 @@ const VideoPlayer = forwardRef(
 
           .video-js .vjs-menu li.vjs-selected {
             background-color: rgba(255, 255, 255, 0.2);
-            color: #fff;
+            color: var(--color-light);
           }
 
           /* Disable double-click selection */

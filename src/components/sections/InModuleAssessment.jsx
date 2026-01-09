@@ -15,8 +15,11 @@ import { useParams } from "next/navigation";
 import ResultModal from "@/components/modals/ResultModal";
 import FeedbackModal from "@/components/modals/FeedbackModal";
 import { setAssessmentCompleted } from "@/utils/assessmentProgress";
+import RadioButton from "@/components/ui/RadioButton";
+import TextArea from "@/components/ui/TextArea";
+import { HiExclamationCircle } from "react-icons/hi2";
 
-const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
+const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore }) => {
   const dispatch = useDispatch();
   const { selectedAssessmentId, currentVideoIndex } = useSelector((state) => state.video);
   const presentationId = useParams().id;
@@ -135,19 +138,13 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
           <div className="flex flex-col justify-center items-center p-3 sm:p-4 md:p-6 min-h-full">
             <div className="w-full max-w-2xl text-center">
               <div className="text-red-500 mb-4">
-                <svg className="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <HiExclamationCircle className="w-12 h-12 mx-auto mb-2" />
                 <p className="text-sm font-medium">Failed to load assessment</p>
                 <p className="text-xs text-gray-600 mt-1">Please try again later</p>
               </div>
               <button
                 onClick={() => refetch()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                className="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary-hover transition-colors">
                 Retry
               </button>
               <button
@@ -235,23 +232,22 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
       // Show result modal only for final assessments
       if (isFinalAssessment) {
         console.log("Showing ResultModal for final assessment:", selectedAssessmentId);
-        
+
         // Fetch assessment summary for final assessments
         try {
           const summaryData = await getAssessmentSummary(presentationId).unwrap();
-          
           // Use summary data for result modal
           const modalData = {
-            score: summaryData.summary.avg_percentage,
+            score: summaryData.summary.latest_percentage,
             presentationId: presentationId,
             assessmentId: selectedAssessmentId,
             totalQuestions: summaryData.summary.total_questions,
-            correctAnswers: summaryData.summary.correct_questions,
+            correctAnswers: summaryData.summary.latest_correct_questions,
           };
           setResultData(modalData);
           setShowResultModalLocal(true);
         } catch (summaryError) {
-          console.error('Failed to fetch assessment summary:', summaryError);
+          console.error("Failed to fetch assessment summary:", summaryError);
           // Don't show result modal if summary API fails
         }
       } else {
@@ -341,12 +337,10 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
 
               {/* Render based on question type */}
               {currentQuestion?.question_type === "SUBJECTIVE" ? (
-                <textarea
+                <TextArea
                   value={answers[currentQuestion.question_id] || ""}
                   onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
                   placeholder="Type your answer here..."
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:border-[#744FFF] focus:outline-none resize-none transition-colors duration-200"
-                  rows={6}
                 />
               ) : (
                 <div className="space-y-1 sm:space-y-2">
@@ -359,20 +353,15 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
                       <label
                         className={`flex items-start cursor-pointer p-1 sm:p-2 rounded-lg border transition-all duration-200 ${
                           answers[currentQuestion.question_id] === option
-                            ? "border-[#744FFF] bg-[rgba(116,79,255,0.12)]"
-                            : "border-gray-200 hover:border-[#744FFF] hover:bg-[rgba(116,79,255,0.12)]"
+                            ? "border-accent bg-accent-light"
+                            : "border-gray-200 hover:border-accent hover:bg-accent-light"
                         }`}
                         onClick={() => handleAnswer(currentQuestion.question_id, option)}>
-                        <input
-                          type="radio"
+                        <RadioButton
                           name={`question-${currentQuestion.question_id}`}
                           value={option}
                           checked={answers[currentQuestion.question_id] === option}
                           onChange={() => handleAnswer(currentQuestion.question_id, option)}
-                          className="mt-0.5 mr-2 sm:mr-3 w-3 h-3 sm:w-4 sm:h-4 text-[#744FFF] accent-[#744FFF]"
-                          style={{
-                            accentColor: "#744FFF",
-                          }}
                         />
                         <span className="text-xs sm:text-sm md:text-sm text-gray-700 leading-relaxed flex-1">
                           {option}. {text}
@@ -392,7 +381,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
                 className={`px-[18px] py-2 rounded-lg font-semibold text-sm leading-4 text-center transition-colors duration-200 ${
                   currentQuestionIndex === 0
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-[rgba(116,79,255,0.12)] text-[#744FFF] hover:bg-[rgba(116,79,255,0.2)] cursor-pointer"
+                    : "bg-accent-light text-accent hover:bg-accent-light-hover cursor-pointer"
                 }`}>
                 Previous
               </button>
@@ -404,7 +393,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
                   className={`px-6 sm:px-8 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-colors duration-200 ${
                     !answers[currentQuestion?.question_id] || isSubmitting
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-[#744FFF] text-white hover:bg-[#6B46E5] cursor-pointer"
+                      : "bg-accent text-light hover:bg-accent-hover cursor-pointer"
                   }`}>
                   {isSubmitting ? "Submitting..." : "Submit"}
                 </button>
@@ -415,7 +404,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
                   className={`px-6 sm:px-8 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-colors duration-200 ${
                     !answers[currentQuestion?.question_id]
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-[#744FFF] text-white hover:bg-[#6B46E5] cursor-pointer"
+                      : "bg-accent text-light hover:bg-accent-hover cursor-pointer"
                   }`}>
                   Next
                 </button>
@@ -469,9 +458,9 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
           -moz-appearance: none;
           width: 18px;
           height: 18px;
-          border: 1.28571px solid #744fff;
+          border: 1.28571px solid var(--color-accent);
           border-radius: 18px;
-          background: #ffffff;
+          background: var(--color-light);
           position: relative;
           cursor: pointer;
           flex: none;
@@ -479,8 +468,8 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
         }
 
         .custom-radio:checked {
-          border: 1.28571px solid #744fff;
-          background: #ffffff;
+          border: 1.28571px solid var(--color-accent);
+          background: var(--color-light);
         }
 
         .custom-radio:checked::before {
@@ -490,26 +479,26 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
           height: 12px;
           left: 2.5px;
           top: 2.5px;
-          background: #744fff;
+          background: var(--color-accent);
           border-radius: 50%;
         }
 
         .custom-radio:focus {
           outline: none;
-          box-shadow: 0 0 0 2px rgba(116, 79, 255, 0.2);
+          box-shadow: 0 0 0 2px var(--color-accent-light-hover);
         }
 
         .custom-radio:hover {
-          border-color: #744fff;
+          border-color: var(--color-accent);
         }
 
         /* Unchecked state - lighter border */
         .custom-radio:not(:checked) {
-          border-color: #d1d5db;
+          border-color: var(--color-border-input);
         }
 
         .custom-radio:not(:checked):hover {
-          border-color: #744fff;
+          border-color: var(--color-accent);
         }
       `}</style>
 
@@ -523,6 +512,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [] }) => {
             setResultData(null);
           }}
           score={resultData?.score}
+          passingScore={passingScore}
           presentationId={resultData?.presentationId}
           assessmentId={resultData?.assessmentId}
           totalQuestions={resultData?.totalQuestions}
