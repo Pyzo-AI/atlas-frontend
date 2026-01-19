@@ -7,10 +7,13 @@ import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
 import { useSubmitFeedbackMutation } from "@/store/api/questionsApi";
 import review_image from "@/assets/svg/review.svg";
-import unrated_start from '@/assets/svg/unrated_start.svg';
-import rated_start from '@/assets/svg/rated_start.svg';
-import half_rated_star from '@/assets/svg/half_rated_star.svg';
+import unrated_start from "@/assets/svg/unrated_start.svg";
+import rated_start from "@/assets/svg/rated_start.svg";
+import half_rated_star from "@/assets/svg/half_rated_star.svg";
 import Image from "next/image";
+import TextArea from "@/components/ui/TextArea";
+import Lottie from "lottie-react";
+import spinnerAnimation from "@/assets/json/spinner.json";
 
 export default function FeedbackModal({ isOpen, onClose, presentationId }) {
   const [rating, setRating] = useState(0);
@@ -39,7 +42,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
     }
   };
 
-    const handleKeyDown = (e) => {
+  const handleKeyDown = (e) => {
     e.stopPropagation();
   };
 
@@ -83,7 +86,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
   return (
     <Modal
       isOpen={isOpen}
-      onClose={() => { }} // Prevent closing
+      onClose={() => {}} // Prevent closing
       closeOnOverlayClick={false}
       closeOnEscape={false}
       size="md"
@@ -98,7 +101,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
             </div>
 
             {/* Title */}
-            <h2 className="text-xl font-bold text-[#1A1C29] text-center">How Was the Training?</h2>
+            <h2 className="text-xl font-bold text-primary-text text-center">How Was the Training?</h2>
           </div>
 
           {/* Rating Section */}
@@ -107,24 +110,24 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
               const currentRating = hoveredStar || rating;
               const isFullStar = star <= currentRating;
               const isHalfStar = star - 0.5 === currentRating;
-              
+
               let starSrc = unrated_start;
               if (isFullStar) {
                 starSrc = rated_start;
               } else if (isHalfStar) {
                 starSrc = half_rated_star;
               }
-              
+
               return (
                 <div key={star} className="relative w-8 h-8">
-                  <Image 
-                    src={starSrc} 
-                    alt={isFullStar ? "Rated star" : isHalfStar ? "Half rated star" : "Unrated star"} 
-                    width={32} 
+                  <Image
+                    src={starSrc}
+                    alt={isFullStar ? "Rated star" : isHalfStar ? "Half rated star" : "Unrated star"}
+                    width={32}
                     height={32}
                     className="w-8 h-8"
                   />
-                  
+
                   {/* Left half click area */}
                   <button
                     className="absolute left-0 top-0 w-1/2 h-full focus:outline-none cursor-pointer z-10"
@@ -132,7 +135,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
                     onMouseEnter={() => handleStarHover(star, true)}
                     onMouseLeave={handleStarLeave}
                   />
-                  
+
                   {/* Right half click area */}
                   <button
                     className="absolute right-0 top-0 w-1/2 h-full focus:outline-none cursor-pointer z-10"
@@ -148,12 +151,12 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
           {/* Review Text Area */}
           <div className="w-full max-w-md">
             <div className="relative rounded-xl">
-              <textarea
+              <TextArea
                 value={review}
                 onChange={handleReviewChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Write a review… (optional)"
-                className="w-full h-24 p-3 text-sm resize-none border rounded-xl outline-none border-gray-300 focus:border-[#744FFF] focus:ring-1 focus:ring-[#744FFF]"
+                className="h-24 text-sm border-gray-300 rounded-xl focus:ring-1 focus:ring-accent"
               />
               <div className="absolute bottom-3 right-3 text-xs text-gray-400">({review.length}/250)</div>
             </div>
@@ -164,29 +167,14 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
             <button
               onClick={handleSubmit}
               disabled={isSubmitDisabled || isSubmitting}
-              className={`cursor-pointer w-1/2 py-2 rounded-4xl font-semibold text-lg transition-all duration-200 ${isSubmitDisabled || isSubmitting
-                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                : "bg-[#744FFF] hover:bg-[#6B46E5] text-white shadow-lg"
-                }`}>
+              className={`cursor-pointer w-1/2 py-2 rounded-4xl font-semibold text-lg transition-all duration-200 ${
+                isSubmitDisabled || isSubmitting
+                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                  : "bg-accent hover:bg-accent-hover text-light shadow-lg"
+              }`}>
               {isSubmitting ? (
                 <div className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <Lottie animationData={spinnerAnimation} className="-ml-1 mr-2 h-5 w-5" loop={true} />
                   Submitting...
                 </div>
               ) : (

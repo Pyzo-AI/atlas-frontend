@@ -14,85 +14,14 @@ import dueSoon from "../../assets/svg/due-soon.svg";
 import FeedbackSuccessModal from "../modals/FeedbackSuccessModal";
 import { useDispatch } from "react-redux";
 import { setAutoPlayEnabled, setSelectedAssessmentId } from "@/store/features/videoSlice";
-
-// Course data matching Figma design
-const presentations = {
-  data: [
-    {
-      presentation_id: 1,
-      title: "Introduction to Digital Banking",
-      author: "Dr. Ananya Mehta",
-      status: "locked",
-      isCompleted: false,
-      isPresentationCompleted: false,
-      image:
-        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
-      lock_info: {
-        status: "locked",
-        unlock_time: "2025-09-30T16:08:00+05:30",
-      },
-      due_info: {
-        status: "due",
-        due_time: "2025-10-03T16:08:00+05:30",
-      },
-    },
-    {
-      presentation_id: 2,
-      title: "Basics of Financial Planning",
-      author: "Ms. Shreya Iyer",
-      status: "progress",
-      isCompleted: false,
-      isPresentationCompleted: false,
-      image:
-        "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
-      lock_info: {
-        status: "unlocked",
-      },
-      due_info: {
-        status: "due",
-        due_time: "2025-10-03T16:08:00+05:30",
-      },
-    },
-    {
-      presentation_id: 3,
-      title: "Customer Service Excellence",
-      author: "Mr. Arjun Deshmukh",
-      status: "overdue",
-      isCompleted: false,
-      isPresentationCompleted: false,
-      image:
-        "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop",
-      lock_info: {
-        status: "unlocked",
-      },
-      due_info: {
-        status: "overdue",
-        due_time: "2025-09-25T16:08:00+05:30",
-      },
-    },
-    {
-      presentation_id: 4,
-      title: "Effective Communication Skills",
-      author: "Dr. Kavita Nair",
-      status: "completed",
-      isCompleted: true,
-      isPresentationCompleted: true,
-      presentationCompletedDate: "2024-12-15T14:30:00+05:30",
-      image:
-        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=300&fit=crop",
-      lock_info: {
-        status: "unlocked",
-      },
-    },
-  ],
-};
+import { HiBookOpen, HiChevronDown } from "react-icons/hi2";
 
 const PresentationCard = ({ presentation, onClick, currentTime }) => {
   const formatDuration = (seconds) => {
     const totalMinutes = Math.floor(seconds / 60);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-    
+
     if (hours > 0) {
       // Only show minutes if > 0 (e.g., "1hr" instead of "1hr 0m")
       return minutes > 0 ? `${hours}hr ${minutes}m` : `${hours}hr`;
@@ -123,51 +52,43 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
   const getBadgeInfo = () => {
     if (presentation.isPresentationCompleted) {
       const completedDate = presentation.presentationCompletedDate
-        ? new Date(presentation.presentationCompletedDate).toLocaleDateString('en-GB')
+        ? new Date(presentation.presentationCompletedDate).toLocaleDateString("en-GB")
         : "Unknown date";
       return {
         icon: completed,
-        color: "#008236",
+        colorClass: "bg-status-completed",
+        textColorClass: "text-light",
         title: "Completed",
         subtitle: `Completed ${completedDate}`,
       };
     }
 
     // Check lock status first - highest priority
-    if (
-      presentation.lock_info?.status === "locked" &&
-      presentation.lock_info?.unlock_time
-    ) {
+    if (presentation.lock_info?.status === "locked" && presentation.lock_info?.unlock_time) {
       return {
         icon: locked,
-        color: "#E7E7E7",
-        textColor: "#1A1C29",
+        colorClass: "bg-status-locked-bg",
+        textColorClass: "text-primary-text",
         title: "Locked",
         subtitle: getUnlockMessage(presentation.lock_info.unlock_time),
       };
     }
 
-    if (
-      presentation.due_info?.status === "overdue" &&
-      presentation.due_info?.due_time
-    ) {
+    if (presentation.due_info?.status === "overdue" && presentation.due_info?.due_time) {
       return {
         icon: overdue,
-        color: "#FEE2E2",
-        textColor: "#DC2626",
+        colorClass: "bg-status-overdue-bg",
+        textColorClass: "text-status-overdue-text",
         title: "Overdue",
         subtitle: getOverdueMessage(presentation.due_info.due_time),
       };
     }
 
-    if (
-      presentation.due_info?.status === "due" &&
-      presentation.due_info?.due_time
-    ) {
+    if (presentation.due_info?.status === "due" && presentation.due_info?.due_time) {
       return {
         icon: unlocked,
-        color: "#DBEAFE",
-        textColor: "#1447E6",
+        colorClass: "bg-status-progress-bg",
+        textColorClass: "text-status-progress-text",
         title: "In Progress",
         subtitle: getDueMessage(presentation.due_info.due_time),
       };
@@ -177,8 +98,8 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
     if (!presentation.lock_info && !presentation.due_info) {
       return {
         icon: null,
-        color: null,
-        textColor: null,
+        colorClass: null,
+        textColorClass: null,
         title: null,
         subtitle: null,
       };
@@ -186,8 +107,8 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
 
     return {
       icon: unlocked,
-      color: "#DBEAFE",
-      textColor: "#1447E6",
+      colorClass: "bg-status-progress-bg",
+      textColorClass: "text-status-progress-text",
       title: "In Progress",
       subtitle: null,
     };
@@ -198,42 +119,33 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
 
   return (
     <div
-      className={`relative flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] transition-shadow duration-300 ${isLocked
-        ? " cursor-not-allowed"
-        : "cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)]"
-        }`}
-      onClick={isLocked ? undefined : onClick}
-    >
+      className={`relative flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] transition-shadow duration-300 ${
+        isLocked ? " cursor-not-allowed" : "cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)]"
+      }`}
+      onClick={isLocked ? undefined : onClick}>
       {/* badge */}
       {badgeInfo.subtitle && (
-        <div className="absolute top-4.5 right-4.5 flex flex-col items-end p-1 gap-0.5 bg-[#2762EA] rounded-[5px] z-10">
-          <p className="font-lato font-medium text-[10px] leading-[10px] text-[#fff]">
-            {badgeInfo.subtitle}
-          </p>
+        <div className="absolute top-4.5 right-4.5 flex flex-col items-end p-1 gap-0.5 bg-primary rounded-[5px] z-10">
+          <p className="font-lato font-medium text-[10px] leading-[10px] text-light">{badgeInfo.subtitle}</p>
         </div>
       )}
       <div className="flex flex-col items-start gap-[12px] w-full flex-1">
         {/* Thumbnail */}
-        <div className="w-full flex-1 bg-[#F3EDFF] rounded-[8px] overflow-hidden relative">
+        <div className="w-full flex-1 bg-bg-light-purple rounded-[8px] overflow-hidden relative">
           {presentation?.image && presentation.image.trim() !== "" && (
-            <Image
-              src={presentation.image}
-              alt={presentation?.title}
-              fill
-              className="object-cover"
-            />
+            <Image src={presentation.image} alt={presentation?.title} fill className="object-cover" />
           )}
         </div>
 
         {/* Content */}
         <div className="flex flex-col items-start gap-2 sm:gap-[8px] w-full">
           <div className="flex items-center gap-2 sm:gap-[8px] w-full">
-            <h3 className="font-lato font-semibold text-sm sm:text-[16px] leading-tight sm:leading-[19px] text-[#1D1F2C] flex-grow">
+            <h3 className="font-lato font-semibold text-sm sm:text-[16px] leading-tight sm:leading-[19px] text-text-title flex-grow">
               {presentation?.title || "Unknown Title"}
             </h3>
-           {presentation?.presentation_duration > 0 && presentation?.presentation_duration && (
-              <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-[#2762EA]">
-                <span className="font-lato font-medium text-[11px] leading-4 text-white whitespace-nowrap">
+            {presentation?.presentation_duration > 0 && presentation?.presentation_duration && (
+              <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-primary">
+                <span className="font-lato font-medium text-[11px] leading-4 text-light whitespace-nowrap">
                   {formatDuration(presentation.presentation_duration)}
                 </span>
               </div>
@@ -241,18 +153,13 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
           </div>
 
           <div className="flex justify-between items-start gap-2 sm:gap-[8px] w-full">
-            <span className="font-lato font-normal text-xs sm:text-[12px] leading-tight sm:leading-[14px] text-[#585858]">
+            <span className="font-lato font-normal text-xs sm:text-[12px] leading-tight sm:leading-[14px] text-text-secondary">
               {presentation?.author || "Unknown Author"}
             </span>
             {badgeInfo.title && (
               <div
-                className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px]"
-                style={{ backgroundColor: badgeInfo.color }}
-              >
-                <span
-                  className="font-lato font-medium text-[11px] leading-4"
-                  style={{ color: badgeInfo.textColor || "#FFFFFF" }}
-                >
+                className={`flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] ${badgeInfo.colorClass}`}>
+                <span className={`font-lato font-medium text-[11px] leading-4 ${badgeInfo.textColorClass}`}>
                   {badgeInfo.title}
                 </span>
               </div>
@@ -277,8 +184,8 @@ const Home = () => {
 
   // Check for feedback success parameter
   useEffect(() => {
-    const feedbackParam = searchParams.get('feedback');
-    if (feedbackParam === 'success') {
+    const feedbackParam = searchParams.get("feedback");
+    if (feedbackParam === "success") {
       setShowSuccessModal(true);
     }
   }, [searchParams]);
@@ -286,11 +193,10 @@ const Home = () => {
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false);
     // Remove the feedback parameter from URL
-    router.replace('/');
+    router.replace("/");
   };
 
   // Calculate counts for each filter
-
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -312,20 +218,19 @@ const Home = () => {
     const data = presentations?.data || [];
     return {
       all: data.length,
-      locked: data.filter(p => p.lock_info?.status === "locked").length,
-      "in-progress": data.filter(p => p.lock_info?.status === "unlocked" && !p.isPresentationCompleted && p.due_info?.status !== "overdue").length,
-      overdue: data.filter(p => p.due_info?.status === "overdue").length,
-      completed: data.filter(p => p.isPresentationCompleted).length,
+      locked: data.filter((p) => p.lock_info?.status === "locked").length,
+      "in-progress": data.filter(
+        (p) => p.lock_info?.status === "unlocked" && !p.isPresentationCompleted && p.due_info?.status !== "overdue"
+      ).length,
+      overdue: data.filter((p) => p.due_info?.status === "overdue").length,
+      completed: data.filter((p) => p.isPresentationCompleted).length,
     };
   };
-
 
   const counts = getCounts();
   const handlePresentationClick = (presentationId) => {
     const userDetails = getUserDetailsFromToken();
-    const selectedPresentation = presentations?.data?.find(
-      (p) => p.presentation_id === presentationId
-    );
+    const selectedPresentation = presentations?.data?.find((p) => p.presentation_id === presentationId);
 
     // Track module start event
     capture("module_start", {
@@ -344,11 +249,9 @@ const Home = () => {
 
   if (error) {
     return (
-      <div className="w-full min-h-screen bg-[#F9F9F9] flex items-center justify-center">
+      <div className="w-full min-h-screen bg-page-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">
-            Error Loading Presentations
-          </h2>
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Presentations</h2>
           <p className="text-gray-600">Failed to fetch data from the server.</p>
         </div>
       </div>
@@ -357,7 +260,7 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="w-full min-h-screen bg-[#F9F9F9] animate-pulse">
+      <div className="w-full min-h-screen bg-page-background animate-pulse">
         {/* Purple Header Section Skeleton */}
         <div className="w-full bg-gray-300 relative mt-1">
           {/* User Profile Skeleton */}
@@ -384,8 +287,7 @@ const Home = () => {
               {[...Array(8)].map((_, index) => (
                 <div
                   key={index}
-                  className="flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px]"
-                >
+                  className="flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px]">
                   <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full flex-1">
                     {/* Thumbnail skeleton */}
                     <div className="w-full flex-1 bg-gray-200 rounded-[8px]"></div>
@@ -408,37 +310,34 @@ const Home = () => {
     );
   }
 
-  const completedCount = presentations?.data?.filter(
-    (p) => p.isPresentationCompleted
-  ).length;
+  const completedCount = presentations?.data?.filter((p) => p.isPresentationCompleted).length;
   const totalCount = presentations?.data?.length;
 
   return (
     <>
-      <div className="w-full min-h-screen bg-[#F9F9F9]">
+      <div className="w-full min-h-screen bg-page-background">
         {/* Purple Header Section */}
-        <div className="w-full bg-[#2762EA] relative mt-1">
+        <div className="w-full bg-primary relative mt-1">
           {/* User Profile */}
           <div className="flex items-center gap-3 sm:gap-[12px] px-4 sm:px-5 py-4 sm:py-6">
             <Image
-              className="w-10 h-10 sm:w-[48px] sm:h-[48px] bg-[#F1F2F4] rounded-[60px] flex-shrink-0"
+              className="w-10 h-10 sm:w-[48px] sm:h-[48px] bg-bg-light-gray rounded-[60px] flex-shrink-0"
               src={chat_star}
               alt="User icon"
             />
             <div className="flex flex-col justify-center items-start gap-1 sm:gap-[4px] min-w-0 flex-1">
-              <span className="font-lato font-semibold text-base sm:text-[17px] leading-tight sm:leading-[20px] text-white truncate">
+              <span className="font-lato font-semibold text-base sm:text-[17px] leading-tight sm:leading-[20px] text-light truncate">
                 Hello, {userDetails?.name}
               </span>
-              <span className="font-lato font-normal text-xs sm:text-[12px] leading-tight sm:leading-[14px] text-white opacity-70">
-                Browse your courses and get instant answers to your questions with
-                our AI guide.
+              <span className="font-lato font-normal text-xs sm:text-[12px] leading-tight sm:leading-[14px] text-light opacity-70">
+                Browse your courses and get instant answers to your questions with our AI guide.
               </span>
             </div>
           </div>
 
           {/* Learning Overview - Hidden by default as per Figma */}
           {/* <div className="absolute flex flex-col items-start gap-3 sm:gap-[12px] w-full h-[138px] px-4 sm:px-[40px] top-[104px] invisible">
-            <h3 className="w-full h-[17px] font-lato font-semibold text-sm sm:text-[14px] leading-[17px] text-white">
+            <h3 className="w-full h-[17px] font-lato font-semibold text-sm sm:text-[14px] leading-[17px] text-light">
               Learning Overview
             </h3>
           </div> */}
@@ -449,56 +348,53 @@ const Home = () => {
           {/* Header with search and tabs */}
           <div className="flex justify-between items-center gap-4 sm:gap-[16px] w-full">
             <div className="flex items-center gap-4">
-              <h2 className="font-lato font-bold text-base sm:text-[16px] leading-tight sm:leading-[19px] text-[#1A1C29]">
+              <h2 className="font-lato font-bold text-base sm:text-[16px] leading-tight sm:leading-[19px] text-primary-text">
                 Available Courses
               </h2>
-              
+
               {/* Search Box */}
               <input
                 type="text"
                 placeholder="Search courses..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 px-3 h-[32px] border border-[#000] rounded-[6px] font-lato text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2762EA] focus:border-transparent"
+                className="w-64 px-3 h-[32px] border border-border-dark rounded-[6px] font-lato text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
 
             {/* Desktop Tabs */}
-            <div className="hidden lg:flex items-start p-1 w-auto h-[32px] bg-white border border-[#E0E2E7] rounded-[6px] gap-1">
-              {["all", "locked", "in-progress", "overdue", "completed"].map(
-                (tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setFilter(tab)}
-                    className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${filter === tab ? "bg-[#2762EA]" : ""
-                      }`}
-                  >
-                    <span
-                      className={`font-lato font-medium text-[10px] leading-[20px] whitespace-nowrap ${filter === tab ? "text-white" : "text-[#667085]"
-                        }`}
-                    >
-                      {tab === "all"
-                        ? `All`
-                        : tab === "locked"
-                          ? `Locked`
-                          : tab === "in-progress"
-                            ? `In Progress`
-                            : tab === "overdue"
-                              ? `Overdue`
-                              : `Completed`}
-                    </span>
-                  </button>
-                )
-              )}
+            <div className="hidden lg:flex items-start p-1 w-auto h-[32px] bg-white border border-border rounded-[6px] gap-1">
+              {["all", "locked", "in-progress", "overdue", "completed"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setFilter(tab)}
+                  className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${
+                    filter === tab ? "bg-primary" : ""
+                  }`}>
+                  <span
+                    className={`font-lato font-medium text-[10px] leading-[20px] whitespace-nowrap ${
+                      filter === tab ? "text-light" : "text-text-muted"
+                    }`}>
+                    {tab === "all"
+                      ? `All`
+                      : tab === "locked"
+                        ? `Locked`
+                        : tab === "in-progress"
+                          ? `In Progress`
+                          : tab === "overdue"
+                            ? `Overdue`
+                            : `Completed`}
+                  </span>
+                </button>
+              ))}
             </div>
 
             {/* Mobile/Tablet Dropdown */}
             <div className="relative lg:hidden">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center justify-between px-3 py-2 w-32 h-[30px] bg-white border border-[#E0E2E7] rounded-[6px]"
-              >
-                <span className="font-lato font-medium text-[12px] text-[#667085]">
+                className="flex items-center justify-between px-3 py-2 w-32 h-[30px] bg-white border border-border rounded-[6px]">
+                <span className="font-lato font-medium text-[12px] text-text-muted">
                   {filter === "all"
                     ? `All`
                     : filter === "locked"
@@ -509,47 +405,33 @@ const Home = () => {
                           ? `Overdue`
                           : `Completed`}
                 </span>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <HiChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                />
               </button>
               {isDropdownOpen && (
-                <div className="absolute top-full mt-1 w-32 bg-white border border-[#E0E2E7] rounded-[6px] shadow-lg z-50">
-                  {["all", "locked", "in-progress", "overdue", "completed"].map(
-                    (tab) => (
-                      <button
-                        key={tab}
-                        onClick={() => {
-                          setFilter(tab);
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${filter === tab
-                          ? "bg-[#2762EA] text-white"
-                          : "text-[#667085]"
-                          }`}
-                      >
-                        {tab === "all"
-                          ? `All`
-                          : tab === "locked"
-                            ? `Locked`
-                            : tab === "in-progress"
-                              ? `In Progress`
-                              : tab === "overdue"
-                                ? `Overdue`
-                                : `Completed`}
-                      </button>
-                    )
-                  )}
+                <div className="absolute top-full mt-1 w-32 bg-white border border-border rounded-[6px] shadow-lg z-50">
+                  {["all", "locked", "in-progress", "overdue", "completed"].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => {
+                        setFilter(tab);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${
+                        filter === tab ? "bg-primary text-light" : "text-text-muted"
+                      }`}>
+                      {tab === "all"
+                        ? `All`
+                        : tab === "locked"
+                          ? `Locked`
+                          : tab === "in-progress"
+                            ? `In Progress`
+                            : tab === "overdue"
+                              ? `Overdue`
+                              : `Completed`}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -558,48 +440,39 @@ const Home = () => {
           {/* Course Grid */}
           <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full">
             {(() => {
-              const filteredPresentations = presentations?.data?.filter((p) => {
-                // Filter by search query
-                const matchesSearch = searchQuery === "" || 
-                  p.title?.toLowerCase().includes(searchQuery.toLowerCase());
-                
-                if (!matchesSearch) return false;
-                
-                // Filter by status
-                if (filter === "all") return true;
-                if (filter === "locked")
-                  return p.lock_info?.status === "locked";
-                if (filter === "in-progress")
-                  return (
-                    p.lock_info?.status === "unlocked" &&
-                    !p.isPresentationCompleted &&
-                    p.due_info?.status !== "overdue"
-                  );
-                if (filter === "overdue")
-                  return p.due_info?.status === "overdue" && !p.isPresentationCompleted;
-                if (filter === "completed") return p.isPresentationCompleted;
-                return true;
-              }) || [];
+              const filteredPresentations =
+                presentations?.data?.filter((p) => {
+                  // Filter by search query
+                  const matchesSearch =
+                    searchQuery === "" || p.title?.toLowerCase().includes(searchQuery.toLowerCase());
+
+                  if (!matchesSearch) return false;
+
+                  // Filter by status
+                  if (filter === "all") return true;
+                  if (filter === "locked") return p.lock_info?.status === "locked";
+                  if (filter === "in-progress")
+                    return (
+                      p.lock_info?.status === "unlocked" &&
+                      !p.isPresentationCompleted &&
+                      p.due_info?.status !== "overdue"
+                    );
+                  if (filter === "overdue") return p.due_info?.status === "overdue" && !p.isPresentationCompleted;
+                  if (filter === "completed") return p.isPresentationCompleted;
+                  return true;
+                }) || [];
 
               if (filteredPresentations.length === 0) {
                 return (
                   <div className="flex flex-col items-center justify-center w-full min-h-[50vh]">
                     <div className="flex flex-col items-center gap-4 text-center">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#F3EDFF] rounded-full flex items-center justify-center">
-                        <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#2762EA]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-bg-light-purple rounded-full flex items-center justify-center">
+                        <HiBookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                       </div>
                       <div className="flex flex-col gap-2">
-                        <h3 className="font-lato font-semibold text-lg sm:text-xl text-[#1A1C29]">
+                        <h3 className="font-lato font-semibold text-lg sm:text-xl text-primary-text">
                           No Courses Found
                         </h3>
-                        {/* <p className="font-lato font-normal text-sm sm:text-base text-[#585858] max-w-md">
-                        {filter === "all" 
-                          ? "No courses are available at the moment. Please check back later."
-                          : `No courses found for the "${filter === "in-progress" ? "In Progress" : filter.charAt(0).toUpperCase() + filter.slice(1)}" filter.`
-                        }
-                      </p> */}
                       </div>
                     </div>
                   </div>
@@ -613,9 +486,7 @@ const Home = () => {
                       key={presentation.presentation_id}
                       presentation={presentation}
                       currentTime={currentTime}
-                      onClick={() =>
-                        handlePresentationClick(presentation.presentation_id)
-                      }
+                      onClick={() => handlePresentationClick(presentation.presentation_id)}
                     />
                   ))}
                 </div>
@@ -626,10 +497,7 @@ const Home = () => {
       </div>
 
       {/* Success Modal */}
-      <FeedbackSuccessModal
-        isOpen={showSuccessModal}
-        onClose={handleSuccessModalClose}
-      />
+      <FeedbackSuccessModal isOpen={showSuccessModal} onClose={handleSuccessModalClose} />
     </>
   );
 };

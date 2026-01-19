@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import VideoPanel from "@/components/sections/VideoPanel";
 import PPTSection from "@/components/sections/PPTSection";
-import FloatingChatbot from "@/components/chat/FloatingChatbot";
 import { useGetAllVideoQuery, useSubmitVideoProgressMutation } from "@/store/api/questionsApi";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -20,6 +19,9 @@ import FullscreenController from "@/components/ui/FullscreenController";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress, clearVideoProgress } from "@/utils/videoProgress";
 import { clearAssessmentProgress } from "@/utils/assessmentProgress";
+import Image from "next/image";
+import RotateDeviceIcon from "@/assets/svg/rotate_device.svg";
+import RotateArrowIcon from "@/assets/svg/rotate_arrow.svg";
 
 // Portrait Mode Rotation Prompt Component
 const RotationPrompt = () => {
@@ -27,9 +29,13 @@ const RotationPrompt = () => {
     <div className="absolute top-16 inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
       <div className="text-center text-white px-6">
         <div className="mb-6">
-          <svg className="w-16 h-16 mx-auto mb-4 animate-bounce" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32zm-6.25-.77c-.59-.59-1.54-.59-2.12 0L1.75 8.11c-.59.59-.59 1.54 0 2.12l6.36 6.36c.59.59 1.54.59 2.12 0L16.59 10.23c.59-.59.59-1.54 0-2.12L10.23 1.75zm4.72 14.72h1.5c-.36 3.76-2.7 6.93-5.97 8.48L9.15 23.38l1.33-1.32-3.81-3.81L7.33 24c6.29-.44 11.44-5.28 11.95-11.53z" />
-          </svg>
+          <Image 
+            src={RotateDeviceIcon} 
+            alt="Rotate device" 
+            width={64} 
+            height={64} 
+            className="mx-auto mb-4 animate-bounce" 
+          />
         </div>
         <h2 className="text-xl font-semibold mb-2">Better Experience Awaits!</h2>
         <p className="text-gray-300 mb-4">
@@ -37,9 +43,12 @@ const RotationPrompt = () => {
         </p>
         <div className="flex items-center justify-center space-x-2">
           <div className="w-8 h-12 border-2 border-white rounded-sm"></div>
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M16.48 2.52c3.27 1.55 5.61 4.72 5.97 8.48h1.5C23.44 4.84 18.29 0 12 0l-.66.03 3.81 3.81 1.33-1.32z" />
-          </svg>
+          <Image 
+            src={RotateArrowIcon} 
+            alt="Rotate arrow" 
+            width={24} 
+            height={24} 
+          />
           <div className="w-12 h-8 border-2 border-white rounded-sm"></div>
         </div>
       </div>
@@ -77,7 +86,8 @@ const CombinedPPTSection = React.memo(
     onVideoIndexChange,
     isOnlyVideoMode,
     assessmentId,
-    showQueryRelatedSlides = false
+    showQueryRelatedSlides = false,
+    passingScore
   }, ref) => {
     const width = isMobile ? "100%" : "70%";
 
@@ -102,6 +112,7 @@ const CombinedPPTSection = React.memo(
         isOnlyVideoMode={isOnlyVideoMode}
         assessmentId={assessmentId}
         showQueryRelatedSlides={showQueryRelatedSlides}
+        passingScore={passingScore}
       />
     );
   })
@@ -128,7 +139,7 @@ const CombinedVideoPanel = React.memo(
     isFinalAssessmentPresent,
     showQueryRelatedSlides = false,
     assessmentDetails = [],
-    liveKitAgentEnabled
+    liveKitAgentEnabled,
   }) => {
     const width = isMobile ? "100%" : "30%";
 
@@ -172,10 +183,8 @@ const Home = () => {
   const videos = data?.data;
   const userName = getUserDetailsFromToken()?.preferred_username;
   const assessmentId = data?.assessment_details?.[0]?.id;
-
+  const passingScore = data?.assessment_details?.[0]?.passing_score || 100;
   const canSkipVideo = data?.hasOwnProperty("is_skippable") ? data.is_skippable : !userName?.includes("jeenaseekho");
-
-  const pathname = usePathname();
   const videoPanelRef = useRef(null);
   const pptSectionRef = useRef(null);
   const dispatch = useDispatch();
@@ -191,7 +200,6 @@ const Home = () => {
   const isFinalAssessmentPresent = data?.assessment_details && data.assessment_details.length > 0 && data.assessment_details[0].id ? true : false;
   const showQueryRelatedSlides = data?.presentation_query;
   const liveKitAgentEnabled = data?.interaction_mode === "pyzo_train_convo_ai" || false;
-  console.log(showQueryRelatedSlides,"showQueryRelatedSlides")
   // Shared video state for synchronization
   const [videoState, setVideoState] = useState({
     currentTime: 0,
@@ -488,9 +496,9 @@ const Home = () => {
 
     return (
       <FullscreenController enableAutoFullscreen={true}>
-        <div className="flex h-screen w-screen bg-[#F9F9F9] overflow-hidden fixed inset-0 flex-col">
+        <div className="flex h-screen w-screen bg-page-background overflow-hidden fixed inset-0 flex-col">
           {/* Breadcrumb Navigation */}
-          <div className={`${paddingX} ${paddingY} bg-[#F9F9F9]`}>
+          <div className={`${paddingX} ${paddingY} bg-page-background`}>
             <CombinedBreadCrumb data={data} />
           </div>
 
@@ -514,11 +522,12 @@ const Home = () => {
                 isOnlyVideoMode={isOnlyVideoMode}
                 assessmentId={assessmentId}
                 showQueryRelatedSlides={showQueryRelatedSlides}
+                passingScore={passingScore}
               />
             </div>
 
             {/* Right Side - Video Panel */}
-            <div className={`${rightWidth} bg-[#F9F9F9] ${rightPadding} overflow-hidden`}>
+            <div className={`${rightWidth} bg-page-background ${rightPadding} overflow-hidden`}>
               <CombinedVideoPanel
                 isMobile={true}
                 isPhone={isPhone}
@@ -553,7 +562,7 @@ const Home = () => {
       {/* Show rotation prompt on mobile portrait mode */}
       {isPortrait && isMobileDevice && <RotationPrompt />}
 
-      <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-[#F9F9F9] overflow-x-hidden">
+      <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-page-background overflow-x-hidden">
         <div className="layout-container flex h-full grow flex-col">
           <div className=" px-6 py-5 overflow-hidden">
             <CombinedBreadCrumb data={data} />
@@ -572,6 +581,7 @@ const Home = () => {
                 isOnlyVideoMode={isOnlyVideoMode}
                 assessmentId={assessmentId}
                 showQueryRelatedSlides={showQueryRelatedSlides}
+                passingScore={passingScore}
               />
               <CombinedVideoPanel
                 videoPanelRef={videoPanelRef}
@@ -596,13 +606,6 @@ const Home = () => {
             </div>
           </div>
         </div>
-
-        {/* Floating Chatbot */}
-        {/* <FloatingChatbot 
-          onPauseVideo={handlePauseVideo} 
-          videos={videos} 
-          presentationId={presentationId}
-        /> */}
       </div>
     </>
   );

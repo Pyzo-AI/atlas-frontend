@@ -1,11 +1,105 @@
 @import url("https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap");
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #2762ea;
+  --color-page-background: #f9f9f9;
+  --color-primary-text: #1a1c29;
+  --color-primary-text-muted: #1a1c29cc;
+  --color-primary-hover: #1e55e6;
+
+  /* Status Colors */
+  --color-status-completed: #008236;
+  --color-status-locked-bg: #e7e7e7;
+  --color-status-overdue-bg: #fee2e2;
+  --color-status-overdue-text: #dc2626;
+  --color-status-progress-bg: #dbeafe;
+  --color-status-progress-text: #1447e6;
+
+  /* Text Colors */
+  --color-text-title: #1d1f2c;
+  --color-text-secondary: #585858;
+  --color-text-muted: #667085;
+  --color-text-heading: #111827;
+  --color-text-body: #4b5563;
+  --color-text-subtle: rgba(26, 28, 41, 0.7);
+  --color-text-subtle-alt: rgba(26, 28, 41, 0.8);
+  --color-text-placeholder: rgba(0, 0, 0, 0.5);
+
+  /* Background Colors */
+  --color-bg-light-purple: #f3edff;
+  --color-bg-light-gray: #f1f2f4;
+  --color-bg-hover: #f0f3f5;
+  --color-bg-neutral: #f7f7f7;
+  --color-bg-item-hover: #f8f9fa;
+  --color-bg-lavender: #e0ddff;
+  --color-bg-login: #fefbff;
+  --color-bg-blur-purple: rgba(158, 59, 213, 0.7);
+  --color-bg-blur-blue: #4a47c8;
+  --color-bg-primary-light: rgba(39, 98, 234, 0.1);
+  --color-bg-chat-bubble: rgba(26, 26, 26, 0.07);
+  --color-bg-accent-subtle: rgba(110, 96, 223, 0.1);
+
+  /* Border Colors */
+  --color-border: #e0e2e7;
+  --color-border-dark: #000000;
+  --color-border-light: #e5e7eb;
+  --color-border-card: #e4e6e8;
+
+  /* Accent/Brand Colors (Purple) */
+  --color-accent: #744fff;
+  --color-accent-hover: #6b46e5;
+  --color-accent-light: rgba(116, 79, 255, 0.12);
+  --color-accent-light-hover: rgba(116, 79, 255, 0.2);
+  --color-accent-secondary: #6e60df;
+  --color-accent-dark: #5f3fcc;
+
+  /* Gradient Colors */
+  --color-gradient-start: #685edd;
+  --color-gradient-end: #da8bff;
+  --gradient-primary: linear-gradient(180deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  --gradient-primary-darkened:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.17), rgba(0, 0, 0, 0.17)),
+    linear-gradient(180deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+
+  /* Active/Selected State Colors */
+  --color-selected-bg: #e7f0fe;
+  --color-selected-border: #5396ff;
+
+  /* Success Colors */
+  --color-success: #00a63e;
+
+  /* Warning Colors */
+  --color-warning-bg: #fffbea;
+  --color-warning-text: #b69c09;
+
+  /* Link Colors */
+  --color-link: #043a87;
+
+  /* Common Colors */
+  --color-light: #ffffff;
+  --color-dark: #000000;
+
+  /* Video Player Colors */
+  --color-video-text-hover: #f0f0f0;
+  --color-border-input: #d1d5db;
+}
+
 body {
   margin: 0;
   padding: 0;
-  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue",
+  font-family:
+    "Lato",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -65,7 +159,22 @@ body {
 
 /* Prevent iOS zoom on input focus */
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
-  select, textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"] {
+  select,
+  textarea,
+  input[type="text"],
+  input[type="password"],
+  input[type="datetime"],
+  input[type="datetime-local"],
+  input[type="date"],
+  input[type="month"],
+  input[type="time"],
+  input[type="week"],
+  input[type="number"],
+  input[type="email"],
+  input[type="url"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="color"] {
     font-size: 16px !important;
   }
 }

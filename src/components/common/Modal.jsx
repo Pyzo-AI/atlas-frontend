@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { IoClose } from "react-icons/io5";
 
 export default function Modal({
   isOpen,
@@ -73,19 +74,7 @@ export default function Modal({
             onClick={onClose}
             className="absolute top-4 right-4 z-10 p-1 rounded-full hover:bg-gray-100 transition-colors"
           >
-            <svg
-              className="w-5 h-5 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <IoClose className="w-5 h-5 text-gray-500" />
           </button>
         )}
 
