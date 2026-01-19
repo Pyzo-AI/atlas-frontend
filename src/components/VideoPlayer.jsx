@@ -1338,6 +1338,15 @@ const VideoPlayer = forwardRef(
         <style
           dangerouslySetInnerHTML={{
             __html: `
+          /* Center the big play button */
+          .video-js .vjs-big-play-button {
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
+          }
+
           /* Completely disable progress control interactions when seeking is disabled */
           .vjs-progress-control.no-seek,
           .vjs-progress-control.no-seek *,
