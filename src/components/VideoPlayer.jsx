@@ -60,11 +60,25 @@ const isIPhoneOrIPod = () => {
   // Check specifically for iPhone or iPod (NOT iPad)
   const isIPhonePod = /iPhone|iPod/.test(ua) && !window.MSStream;
 
-  if (isIPhonePod) {
-    console.log("[isIPhoneOrIPod] Detected iPhone/iPod:", ua.substring(0, 100));
+  // Also check for Chrome on iOS (CriOS) or Firefox on iOS (FxiOS) on iPhone
+  // These also need native HLS approach
+  const isIOSBrowser = /CriOS|FxiOS/.test(ua) && /iPhone|iPod/.test(ua);
+
+  const result = isIPhonePod || isIOSBrowser;
+
+  if (result) {
+    // Log iOS version for debugging
+    const iosVersionMatch = ua.match(/OS (\d+)_(\d+)/);
+    const iosVersion = iosVersionMatch ? `${iosVersionMatch[1]}.${iosVersionMatch[2]}` : "unknown";
+    console.log("[isIPhoneOrIPod] Detected iPhone/iPod:", {
+      iosVersion,
+      isIPhonePod,
+      isIOSBrowser,
+      ua: ua.substring(0, 150),
+    });
   }
 
-  return isIPhonePod;
+  return result;
 };
 
 /**
@@ -92,13 +106,63 @@ const isIPad = () => {
 };
 
 /**
+ * Check if MediaSource API is fully supported
+ * Some iOS devices have MediaSource but it doesn't work properly for HLS
+ * @returns {boolean} - True if MediaSource is properly supported
+ */
+const hasMSESupport = () => {
+  if (typeof window === "undefined") return false;
+
+  // Check basic MediaSource availability
+  if (!("MediaSource" in window)) {
+    console.log("[hasMSESupport] MediaSource not available");
+    return false;
+  }
+
+  // Check if MediaSource.isTypeSupported exists and works
+  try {
+    const mse = window.MediaSource;
+    if (typeof mse.isTypeSupported !== "function") {
+      console.log("[hasMSESupport] MediaSource.isTypeSupported not a function");
+      return false;
+    }
+
+    // Test HLS MIME type support
+    const hlsSupported = mse.isTypeSupported('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
+    console.log("[hasMSESupport] HLS codec support:", hlsSupported);
+    return hlsSupported;
+  } catch (e) {
+    console.log("[hasMSESupport] Error checking MSE support:", e.message);
+    return false;
+  }
+};
+
+/**
  * Detect if we need to use native HLS with token in URL
  * This is ONLY for iPhone/iPod which have limited MSE support
  * iPad and Desktop Safari can use VHS with XHR hooks
  * @returns {boolean} - True if we need native HLS approach (iPhone/iPod only)
  */
 const needsNativeHLS = () => {
-  return isIPhoneOrIPod();
+  // iPhone/iPod always needs native HLS
+  if (isIPhoneOrIPod()) {
+    return true;
+  }
+
+  // If it's Safari but not iPad and not desktop, treat as needing native HLS
+  // This catches edge cases like older iOS devices
+  if (isSafari() && !isIPad() && typeof window !== "undefined") {
+    // Check if we're on a touch device that's not iPad
+    const isTouchDevice = "ontouchend" in document;
+    const isSmallScreen = window.innerWidth < 768;
+
+    if (isTouchDevice && isSmallScreen) {
+      console.log("[needsNativeHLS] Detected small touch device Safari - using native HLS");
+      return true;
+    }
+  }
+
+  return false;
 };
 
 /**
@@ -418,6 +482,7 @@ const VideoPlayer = forwardRef(
       const sourceUrl = getSourceUrlWithToken(src);
       const usingSafari = isSafari();
       const usingNativeHLS = needsNativeHLS(); // Only true for iPhone/iPod
+      const mseSupport = hasMSESupport();
 
       // Log detailed info for debugging
       const vhsModule = videojs.Vhs || videojs.VHS;
@@ -426,6 +491,7 @@ const VideoPlayer = forwardRef(
         isIPhone: isIPhoneOrIPod(),
         isIPad: isIPad(),
         usingNativeHLS,
+        mseSupport,
         originalSrc: src?.substring(0, 80),
         sourceUrl: sourceUrl?.substring(0, 80),
         hasTokenInUrl: sourceUrl?.includes("token="),
@@ -435,9 +501,9 @@ const VideoPlayer = forwardRef(
         vhsVersion: vhsModule?.VERSION || "unknown",
         mseSupported: typeof window !== "undefined" && "MediaSource" in window,
         videoJsVersion: videojs.VERSION,
-        videojsObject: Object.keys(videojs).filter(
-          (k) => k.toLowerCase().includes("vhs") || k.toLowerCase().includes("hls")
-        ),
+        userAgent: navigator.userAgent,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
       });
 
       // Critical check
@@ -450,6 +516,7 @@ const VideoPlayer = forwardRef(
 
       if (usingNativeHLS) {
         console.log("[iPhone/iPod] Using native HLS with token in URL - VHS hooks will be bypassed");
+        console.log("[iPhone/iPod] Token URL:", sourceUrl);
       } else if (usingSafari) {
         console.log("[Safari/iPad] Forcing VHS with overrideNative=true for HLS playback");
       }
@@ -572,6 +639,19 @@ const VideoPlayer = forwardRef(
         playerRef.current.playbackRate(playbackRate);
         playerRef.current.muted(muted);
       }
+
+      // Add error event handler for debugging
+      playerRef.current.on("error", () => {
+        const error = playerRef.current.error();
+        console.error("[VideoPlayer] ❌ Playback error:", {
+          code: error?.code,
+          message: error?.message,
+          userAgent: navigator.userAgent,
+          isIPhone: isIPhoneOrIPod(),
+          usingNativeHLS: needsNativeHLS(),
+          sourceUrl: sourceUrl?.substring(0, 100),
+        });
+      });
 
       playerRef.current.ready(() => {
         // Re-setup VHS xhr hook after player is ready as fallback
