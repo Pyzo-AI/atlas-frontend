@@ -62,30 +62,12 @@ const appendTokenToUrl = (url, token) => {
 };
 
 /**
- * Get the source URL with token appended for Safari
- * Safari may make direct requests for media files (including MP4 init segments)
- * that bypass VHS XHR hooks, so we add token to ALL source URLs for Safari
+ * Get the source URL - no token needed since VHS will add it to key requests only
  * @param {string} url - The original source URL
- * @returns {string} - URL with token appended
+ * @returns {string} - URL without token
  */
 const getSourceUrlWithToken = (url) => {
-  // For Safari, add token to ALL source URLs (HLS and MP4)
-  // Safari may request MP4 files directly from HLS manifests (as init segments)
-  if (isSafari()) {
-    const accessToken = getAccessToken();
-    if (accessToken) {
-      console.log("[Safari] Adding token to source URL:", url?.substring(0, 80));
-      return appendTokenToUrl(url, accessToken);
-    }
-  }
-  // For other browsers with HLS, VHS hooks will handle token injection
-  // But still add token to HLS source URL as a safety measure
-  if (isHlsStream(url)) {
-    const accessToken = getAccessToken();
-    if (accessToken) {
-      return appendTokenToUrl(url, accessToken);
-    }
-  }
+  // Don't add token to source URL - VHS hooks will add it only to /key requests
   return url;
 };
 
@@ -104,50 +86,60 @@ const setupVhsXhrHook = () => {
     // CRITICAL: Set global VHS options to force overrideNative for ALL browsers
     // This prevents Safari from using its native AVFoundation HLS player
     // which makes OS-level requests that bypass JavaScript XHR/fetch
-    if (vhs.options) {
-      vhs.options.overrideNative = true;
+    
+    // Create options object if it doesn't exist
+    if (!vhs.options) {
+      vhs.options = {};
     }
+    vhs.options.overrideNative = true;
 
-    // Also try setting on videojs.options for good measure
-    if (videojs.options && videojs.options.html5) {
-      videojs.options.html5.vhs = videojs.options.html5.vhs || {};
-      videojs.options.html5.vhs.overrideNative = true;
-      videojs.options.html5.hls = videojs.options.html5.hls || {};
-      videojs.options.html5.hls.overrideNative = true;
-      videojs.options.html5.nativeAudioTracks = false;
-      videojs.options.html5.nativeVideoTracks = false;
+    // Also set on videojs.options for good measure
+    if (!videojs.options) {
+      videojs.options = {};
     }
+    if (!videojs.options.html5) {
+      videojs.options.html5 = {};
+    }
+    videojs.options.html5.vhs = videojs.options.html5.vhs || {};
+    videojs.options.html5.vhs.overrideNative = true;
+    videojs.options.html5.hls = videojs.options.html5.hls || {};
+    videojs.options.html5.hls.overrideNative = true;
+    videojs.options.html5.nativeAudioTracks = false;
+    videojs.options.html5.nativeVideoTracks = false;
 
     if (vhs.xhr) {
-      // Set the global beforeRequest hook
-      vhs.xhr.beforeRequest = (options) => {
+      // Set the global onRequest hook (replaces deprecated beforeRequest)
+      vhs.xhr.onRequest = (options) => {
         // Ensure options object exists
         if (!options) {
           return options;
         }
 
-        const accessToken = getAccessToken();
-        if (accessToken) {
-          // Append token as URL query parameter
-          if (options.uri) {
-            options.uri = appendTokenToUrl(options.uri, accessToken);
+        const uri = options.uri || options.url || "";
+        
+        // Only add token to encryption key requests
+        if (uri.includes('/key')) {
+          const accessToken = getAccessToken();
+          if (accessToken) {
+            // Append token as URL query parameter
+            if (options.uri) {
+              options.uri = appendTokenToUrl(options.uri, accessToken);
+            }
+            if (options.url) {
+              options.url = appendTokenToUrl(options.url, accessToken);
+            }
+            console.log("[VHS Global Hook] Token added to key request:", uri.substring(0, 120));
+          } else {
+            console.warn("[VHS Global Hook] No access token for key request:", uri.substring(0, 120));
           }
-          if (options.url) {
-            options.url = appendTokenToUrl(options.url, accessToken);
-          }
-
-          // Log for debugging
-          const uri = options.uri || options.url || "";
-          console.log("[VHS Global Hook] Token added to:", uri.substring(0, 120));
         } else {
-          const uri = options.uri || options.url || "";
-          console.warn("[VHS Global Hook] No access token for:", uri.substring(0, 120));
+          console.log("[VHS Global Hook] No token for:", uri.substring(0, 120));
         }
 
         return options;
       };
 
-      console.log("[VHS] Global xhr.beforeRequest hook installed");
+      console.log("[VHS] Global xhr.onRequest hook installed");
     }
 
     console.log("[VHS] Global overrideNative configured:", vhs.options?.overrideNative);
@@ -156,92 +148,7 @@ const setupVhsXhrHook = () => {
   }
 };
 
-/**
- * Setup global fetch interceptor for Safari
- * Safari's native media player may make fetch requests that bypass VHS XHR hooks
- * This interceptor adds the token to all media-related fetch requests
- */
-const setupSafariFetchInterceptor = () => {
-  if (typeof window === "undefined") return;
-  if (!isSafari()) return;
-
-  // Only setup once
-  if (window._safariMediaFetchInterceptorInstalled) return;
-  window._safariMediaFetchInterceptorInstalled = true;
-
-  const originalFetch = window.fetch;
-  window.fetch = async (input, init) => {
-    let url = typeof input === "string" ? input : input?.url;
-
-    // Check if this is a media request that needs token
-    const isMediaRequest =
-      url &&
-      (url.includes(".mp4") ||
-        url.includes(".ts") ||
-        url.includes(".m3u8") ||
-        url.includes("/key") ||
-        url.includes("segment") ||
-        url.includes("output"));
-
-    if (isMediaRequest && !url.includes("token=")) {
-      const accessToken = getAccessToken();
-      if (accessToken) {
-        const newUrl = appendTokenToUrl(url, accessToken);
-        console.log("[Safari Fetch Interceptor] Token added to:", newUrl.substring(0, 100));
-
-        // Create new request with tokenized URL
-        if (typeof input === "string") {
-          input = newUrl;
-        } else {
-          input = new Request(newUrl, input);
-        }
-      }
-    }
-
-    return originalFetch(input, init);
-  };
-
-  console.log("[Safari] Global fetch interceptor installed for media requests");
-};
-
-/**
- * Setup global XMLHttpRequest interceptor for Safari
- * Safari's native media player may make XHR requests that bypass VHS XHR hooks
- * This interceptor adds the token to all media-related XHR requests
- */
-const setupSafariXhrInterceptor = () => {
-  if (typeof window === "undefined") return;
-  if (!isSafari()) return;
-
-  // Only setup once
-  if (window._safariMediaXhrInterceptorInstalled) return;
-  window._safariMediaXhrInterceptorInstalled = true;
-
-  const originalOpen = XMLHttpRequest.prototype.open;
-  XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-    // Check if this is a media request that needs token
-    const isMediaRequest =
-      url &&
-      (url.includes(".mp4") ||
-        url.includes(".ts") ||
-        url.includes(".m3u8") ||
-        url.includes("/key") ||
-        url.includes("segment") ||
-        url.includes("output"));
-
-    if (isMediaRequest && !url.includes("token=")) {
-      const accessToken = getAccessToken();
-      if (accessToken) {
-        url = appendTokenToUrl(url, accessToken);
-        console.log("[Safari XHR Interceptor] Token added to:", url.substring(0, 100));
-      }
-    }
-
-    return originalOpen.call(this, method, url, ...rest);
-  };
-
-  console.log("[Safari] Global XHR interceptor installed for media requests");
-};
+// Safari interceptors removed - VHS handles all requests including key requests
 
 /**
  * Disable Safari's native HLS capability to force VHS/MSE usage
@@ -286,8 +193,6 @@ if (typeof window !== "undefined") {
   // IMPORTANT: Disable Safari native HLS BEFORE setting up VHS
   disableSafariNativeHls();
   setupVhsXhrHook();
-  setupSafariFetchInterceptor();
-  setupSafariXhrInterceptor();
 }
 
 const VideoPlayer = forwardRef(
@@ -423,20 +328,31 @@ const VideoPlayer = forwardRef(
       const usingSafari = isSafari();
 
       // Log detailed info for debugging Safari issues
+      const vhsModule = videojs.Vhs || videojs.VHS;
       console.log("[VideoPlayer] Initializing player:", {
         isSafari: usingSafari,
         originalSrc: src?.substring(0, 80),
         sourceUrl: sourceUrl?.substring(0, 80),
         hasToken: sourceUrl?.includes("token="),
         isHLS: isHlsStream(src),
-        vhsAvailable: !!(videojs.Vhs || videojs.VHS),
+        videoType: getVideoType(src),
+        vhsAvailable: !!vhsModule,
+        vhsVersion: vhsModule?.VERSION || 'unknown',
+        mseSupported: typeof window !== 'undefined' && 'MediaSource' in window,
+        videoJsVersion: videojs.VERSION,
+        videojsObject: Object.keys(videojs).filter(k => k.toLowerCase().includes('vhs') || k.toLowerCase().includes('hls')),
       });
+      
+      // Critical check
+      if (!vhsModule) {
+        console.error("[VideoPlayer] ❌ VHS MODULE NOT FOUND! HLS will not work.");
+        console.error("[VideoPlayer] Available videojs properties:", Object.keys(videojs).slice(0, 20));
+      } else {
+        console.log("[VideoPlayer] ✅ VHS module found:", vhsModule.VERSION);
+      }
 
       if (usingSafari) {
         console.log("[Safari] Forcing VHS with overrideNative=true for HLS playback");
-        // Re-ensure interceptors are active for Safari
-        setupSafariFetchInterceptor();
-        setupSafariXhrInterceptor();
       }
 
       playerRef.current = videojs(videoRef.current, {
@@ -490,31 +406,34 @@ const VideoPlayer = forwardRef(
             handleManifestRedirects: true,
             // Enable withCredentials if needed for CORS
             withCredentials: false,
-            // Custom segment/key loader that ensures token is added
+            // Custom key loader that ensures token is added only to key requests
             xhr: {
-              beforeRequest: (options) => {
+              onRequest: (options) => {
                 // Ensure options exist
                 if (!options) {
                   console.warn("[VHS XHR] Options is null/undefined");
                   return options;
                 }
 
-                const accessToken = getAccessToken();
-                if (accessToken) {
-                  // Append token as URL query parameter to BOTH uri and url
-                  if (options.uri) {
-                    options.uri = appendTokenToUrl(options.uri, accessToken);
+                const uri = options.uri || options.url || "";
+                
+                // Only add token to encryption key requests
+                if (uri.includes('/key')) {
+                  const accessToken = getAccessToken();
+                  if (accessToken) {
+                    // Append token as URL query parameter to BOTH uri and url
+                    if (options.uri) {
+                      options.uri = appendTokenToUrl(options.uri, accessToken);
+                    }
+                    if (options.url) {
+                      options.url = appendTokenToUrl(options.url, accessToken);
+                    }
+                    console.log("[VHS XHR onRequest] Token added to key request:", uri.substring(0, 150));
+                  } else {
+                    console.warn("[VHS XHR onRequest] No token for key request:", uri.substring(0, 150));
                   }
-                  if (options.url) {
-                    options.url = appendTokenToUrl(options.url, accessToken);
-                  }
-
-                  // Log all requests for debugging
-                  const uri = options.uri || options.url || "";
-                  console.log("[VHS XHR beforeRequest] Token added:", uri.substring(0, 150));
                 } else {
-                  const uri = options.uri || options.url || "";
-                  console.warn("[VHS XHR beforeRequest] No token for:", uri.substring(0, 150));
+                  console.log("[VHS XHR onRequest] No token for:", uri.substring(0, 120));
                 }
                 return options;
               },
@@ -563,19 +482,23 @@ const VideoPlayer = forwardRef(
           if (tech && tech.vhs && tech.vhs.xhr) {
             const originalXhr = tech.vhs.xhr;
             tech.vhs.xhr = (options, callback) => {
-              const accessToken = getAccessToken();
-              if (accessToken) {
-                // Append token as URL query parameter
-                if (options.uri) {
-                  options.uri = appendTokenToUrl(options.uri, accessToken);
+              const uri = options.uri || options.url || "";
+              
+              // Only add token to encryption key requests
+              if (uri.includes('/key')) {
+                const accessToken = getAccessToken();
+                if (accessToken) {
+                  // Append token as URL query parameter
+                  if (options.uri) {
+                    options.uri = appendTokenToUrl(options.uri, accessToken);
+                  }
+                  if (options.url) {
+                    options.url = appendTokenToUrl(options.url, accessToken);
+                  }
+                  console.log("[VHS Tech Hook] Token added to key request:", uri.substring(0, 100));
                 }
-                if (options.url) {
-                  options.url = appendTokenToUrl(options.url, accessToken);
-                }
-                console.log(
-                  "[VHS Tech Hook] Token param added to:",
-                  (options.uri || options.url || "").substring(0, 100)
-                );
+              } else {
+                console.log("[VHS Tech Hook] No token for:", uri.substring(0, 100));
               }
               return originalXhr(options, callback);
             };
@@ -1253,16 +1176,41 @@ const VideoPlayer = forwardRef(
       // HLS/VHS error handling for encrypted streams
       playerRef.current.on("error", (e) => {
         const error = playerRef.current.error();
+        const tech = playerRef.current.tech({ IWillNotUseThisInPlugins: true });
+        
         if (error) {
           console.error("[VideoPlayer] Playback error:", {
             code: error.code,
             message: error.message,
             src: src?.substring(0, 100),
+            isHLS: isHlsStream(src),
+            vhsAvailable: !!(videojs.Vhs || videojs.VHS),
+            techName: tech?.name,
+            canPlayType: tech?.canPlayType?.(getVideoType(src)),
+            mseSupported: typeof window !== 'undefined' && 'MediaSource' in window,
           });
 
           // Check for specific HLS/encryption errors
           if (error.code === 4) {
-            console.error("[VideoPlayer] Media error - possibly HLS key fetch failed");
+            console.error("[VideoPlayer] MEDIA_ERR_SRC_NOT_SUPPORTED - Possible causes:");
+            console.error("  1. VHS not loaded or initialized");
+            console.error("  2. MSE not supported in browser");
+            console.error("  3. MIME type mismatch");
+            console.error("  4. HLS manifest parsing failed");
+            
+            // Check if VHS is actually available
+            if (!(videojs.Vhs || videojs.VHS)) {
+              console.error("  ❌ VHS module not found! HLS playback will not work.");
+            } else {
+              console.log("  ✅ VHS module is available");
+            }
+            
+            // Check MSE support
+            if (typeof window !== 'undefined' && !('MediaSource' in window)) {
+              console.error("  ❌ MediaSource API not supported in this browser");
+            } else {
+              console.log("  ✅ MediaSource API is supported");
+            }
           }
         }
       });
