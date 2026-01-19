@@ -48,32 +48,57 @@ const isSafari = () => {
 };
 
 /**
- * Detect if the browser is iOS Safari (iPhone, iPad, iPod)
- * iOS Safari uses native HLS via AVFoundation which completely bypasses JavaScript
- * There's no way to intercept XHR/fetch on iOS Safari for HLS streams
- * NOTE: On iOS, ALL browsers (Chrome, Firefox, etc.) use WebKit/Safari engine
- * @returns {boolean} - True if running on iOS (any browser)
+ * Detect if the browser is on iPhone/iPod (NOT iPad)
+ * iPhone/iPod have limited MSE support and MUST use native HLS
+ * iPad has better MSE support and can use VHS like desktop Safari
+ * @returns {boolean} - True if running on iPhone or iPod
  */
-const isIOSSafari = () => {
+const isIPhoneOrIPod = () => {
   if (typeof window === "undefined" || typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
 
-  // Check for iOS devices - iPhone, iPad, iPod
-  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  // Check specifically for iPhone or iPod (NOT iPad)
+  const isIPhonePod = /iPhone|iPod/.test(ua) && !window.MSStream;
 
-  // Check for iPad on iOS 13+ which reports as "Macintosh" in User-Agent
-  // Need to check if document exists before accessing it
-  const isIPadOS = typeof document !== "undefined" && ua.includes("Macintosh") && navigator.maxTouchPoints > 1;
-
-  // On iOS, even Chrome (CriOS) and Firefox (FxiOS) use WebKit/Safari engine
-  // So ALL iOS browsers need the token-in-URL approach
-  const isAnyIOSBrowser = isIOS || isIPadOS;
-
-  if (isAnyIOSBrowser) {
-    console.log("[isIOSSafari] Detected iOS device:", { isIOS, isIPadOS, ua: ua.substring(0, 100) });
+  if (isIPhonePod) {
+    console.log("[isIPhoneOrIPod] Detected iPhone/iPod:", ua.substring(0, 100));
   }
 
-  return isAnyIOSBrowser;
+  return isIPhonePod;
+};
+
+/**
+ * Detect if the browser is on iPad
+ * iPad has better MSE support and can use VHS like desktop Safari
+ * @returns {boolean} - True if running on iPad
+ */
+const isIPad = () => {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+
+  // Check for iPad in User-Agent
+  const isIPadUA = /iPad/.test(ua) && !window.MSStream;
+
+  // Check for iPad on iOS 13+ which reports as "Macintosh" in User-Agent
+  const isIPadOS = typeof document !== "undefined" && ua.includes("Macintosh") && navigator.maxTouchPoints > 1;
+
+  const result = isIPadUA || isIPadOS;
+
+  if (result) {
+    console.log("[isIPad] Detected iPad:", { isIPadUA, isIPadOS, ua: ua.substring(0, 100) });
+  }
+
+  return result;
+};
+
+/**
+ * Detect if we need to use native HLS with token in URL
+ * This is ONLY for iPhone/iPod which have limited MSE support
+ * iPad and Desktop Safari can use VHS with XHR hooks
+ * @returns {boolean} - True if we need native HLS approach (iPhone/iPod only)
+ */
+const needsNativeHLS = () => {
+  return isIPhoneOrIPod();
 };
 
 /**
@@ -98,18 +123,20 @@ const appendTokenToUrl = (url, token) => {
  * @returns {string} - URL with token if needed for the platform
  */
 const getSourceUrlWithToken = (url) => {
-  const isIOS = isIOSSafari();
+  const needsTokenInUrl = needsNativeHLS();
   const isHLS = isHlsStream(url);
 
   console.log("[getSourceUrlWithToken] Checking:", {
-    isIOS,
+    needsTokenInUrl,
+    isIPhone: isIPhoneOrIPod(),
+    isIPad: isIPad(),
     isHLS,
     urlStart: url?.substring(0, 60),
   });
 
-  // iOS (all browsers) uses native HLS which bypasses ALL JavaScript
+  // Only iPhone/iPod needs native HLS which bypasses ALL JavaScript
   // We MUST add token to the source URL for iOS
-  if (isIOS && isHLS) {
+  if (needsTokenInUrl && isHLS) {
     const accessToken = getAccessToken();
     if (accessToken) {
       const tokenizedUrl = appendTokenToUrl(url, accessToken);
@@ -216,11 +243,12 @@ const disableSafariNativeHls = () => {
   if (typeof window === "undefined") return;
   if (!isSafari()) return;
 
-  // IMPORTANT: Do NOT disable native HLS on iOS Safari
-  // iOS has limited MSE support and MUST use native HLS
-  // We handle iOS by adding token directly to the source URL
-  if (isIOSSafari()) {
-    console.log("[iOS Safari] Skipping native HLS disable - using native HLS with token in URL");
+  // IMPORTANT: Do NOT disable native HLS on iPhone/iPod
+  // iPhone/iPod have limited MSE support and MUST use native HLS
+  // iPad can use VHS like desktop Safari
+  // We handle iPhone/iPod by adding token directly to the source URL
+  if (needsNativeHLS()) {
+    console.log("[iPhone/iPod] Skipping native HLS disable - using native HLS with token in URL");
     return;
   }
 
@@ -387,17 +415,17 @@ const VideoPlayer = forwardRef(
       disableSafariNativeHls();
       setupVhsXhrHook();
 
-      // For Safari, add token directly to source URL as a fallback
-      // But we still need VHS to intercept key/segment requests
       const sourceUrl = getSourceUrlWithToken(src);
       const usingSafari = isSafari();
-      const usingIOSSafari = isIOSSafari();
+      const usingNativeHLS = needsNativeHLS(); // Only true for iPhone/iPod
 
-      // Log detailed info for debugging Safari issues
+      // Log detailed info for debugging
       const vhsModule = videojs.Vhs || videojs.VHS;
       console.log("[VideoPlayer] Initializing player:", {
         isSafari: usingSafari,
-        isIOSSafari: usingIOSSafari,
+        isIPhone: isIPhoneOrIPod(),
+        isIPad: isIPad(),
+        usingNativeHLS,
         originalSrc: src?.substring(0, 80),
         sourceUrl: sourceUrl?.substring(0, 80),
         hasTokenInUrl: sourceUrl?.includes("token="),
@@ -420,10 +448,10 @@ const VideoPlayer = forwardRef(
         console.log("[VideoPlayer] ✅ VHS module found:", vhsModule.VERSION);
       }
 
-      if (usingIOSSafari) {
-        console.log("[iOS Safari] Using native HLS with token in URL - VHS hooks will be bypassed");
+      if (usingNativeHLS) {
+        console.log("[iPhone/iPod] Using native HLS with token in URL - VHS hooks will be bypassed");
       } else if (usingSafari) {
-        console.log("[Desktop Safari] Forcing VHS with overrideNative=true for HLS playback");
+        console.log("[Safari/iPad] Forcing VHS with overrideNative=true for HLS playback");
       }
 
       playerRef.current = videojs(videoRef.current, {
@@ -460,24 +488,24 @@ const VideoPlayer = forwardRef(
         techOrder: ["html5"],
         html5: {
           nativeControlsForTouch: false,
-          nativeAudioTracks: usingIOSSafari ? true : false, // iOS needs native audio tracks
-          nativeVideoTracks: usingIOSSafari ? true : false, // iOS needs native video tracks
+          nativeAudioTracks: usingNativeHLS ? true : false, // iPhone/iPod needs native audio tracks
+          nativeVideoTracks: usingNativeHLS ? true : false, // iPhone/iPod needs native video tracks
           nativeTextTracks: false,
           // VHS (Video.js HTTP Streaming) configuration for HLS with encrypted streams
-          // CRITICAL: On iOS, we MUST use native HLS (overrideNative: false)
-          // because iOS has limited MSE support. Token is added to URL instead.
-          // On Desktop Safari/Chrome, we use VHS (overrideNative: true) with XHR hooks.
+          // CRITICAL: On iPhone/iPod, we MUST use native HLS (overrideNative: false)
+          // because they have limited MSE support. Token is added to URL instead.
+          // iPad and Desktop Safari can use VHS (overrideNative: true) with XHR hooks.
           vhs: {
-            // iOS: false (use native HLS with token in URL)
-            // Desktop: true (use VHS/MSE with XHR hooks for key requests)
-            overrideNative: usingIOSSafari ? false : true,
+            // iPhone/iPod: false (use native HLS with token in URL)
+            // iPad/Desktop: true (use VHS/MSE with XHR hooks for key requests)
+            overrideNative: usingNativeHLS ? false : true,
             enableLowInitialPlaylist: true,
             smoothQualityChange: true,
             allowSeeksWithinUnsafeLiveWindow: true,
             handleManifestRedirects: true,
             withCredentials: false,
-            // Custom key loader - only used on desktop where VHS is active
-            xhr: usingIOSSafari
+            // Custom key loader - only used on iPad/desktop where VHS is active
+            xhr: usingNativeHLS
               ? undefined
               : {
                   onRequest: (options) => {
@@ -509,10 +537,10 @@ const VideoPlayer = forwardRef(
                   },
                 },
           },
-          // Desktop Safari: Force VHS instead of native HLS
-          // iOS: Allow native HLS
+          // iPad/Desktop Safari: Force VHS instead of native HLS
+          // iPhone/iPod: Allow native HLS
           hls: {
-            overrideNative: usingIOSSafari ? false : true,
+            overrideNative: usingNativeHLS ? false : true,
           },
         },
         // Ensure playback rate menu is always available
