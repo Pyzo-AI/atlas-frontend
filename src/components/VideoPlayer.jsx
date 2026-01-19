@@ -48,6 +48,22 @@ const isSafari = () => {
 };
 
 /**
+ * Detect if the browser is iOS Safari (iPhone, iPad, iPod)
+ * iOS Safari uses native HLS via AVFoundation which completely bypasses JavaScript
+ * There's no way to intercept XHR/fetch on iOS Safari for HLS streams
+ * @returns {boolean} - True if running on iOS Safari
+ */
+const isIOSSafari = () => {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  // Check for iOS devices
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  // Also check for iPad on iOS 13+ which reports as Mac
+  const isIPadOS = ua.includes("Mac") && "ontouchend" in document;
+  return (isIOS || isIPadOS) && isSafari();
+};
+
+/**
  * Helper to append token as query parameter to URL
  * @param {string} url - The original URL
  * @param {string} token - The access token
@@ -62,12 +78,23 @@ const appendTokenToUrl = (url, token) => {
 };
 
 /**
- * Get the source URL - no token needed since VHS will add it to key requests only
+ * Get the source URL with token for platforms that need it
+ * iOS Safari REQUIRES token in URL because native HLS bypasses JavaScript completely
+ * Desktop Safari and Chrome can use VHS hooks for key requests
  * @param {string} url - The original source URL
- * @returns {string} - URL without token
+ * @returns {string} - URL with token if needed for the platform
  */
 const getSourceUrlWithToken = (url) => {
-  // Don't add token to source URL - VHS hooks will add it only to /key requests
+  // iOS Safari uses native HLS which bypasses ALL JavaScript
+  // We MUST add token to the source URL for iOS Safari
+  if (isIOSSafari() && isHlsStream(url)) {
+    const accessToken = getAccessToken();
+    if (accessToken) {
+      console.log("[iOS Safari] Adding token to source URL for native HLS playback");
+      return appendTokenToUrl(url, accessToken);
+    }
+  }
+  // For desktop browsers, VHS hooks will add token to /key requests only
   return url;
 };
 
@@ -86,7 +113,7 @@ const setupVhsXhrHook = () => {
     // CRITICAL: Set global VHS options to force overrideNative for ALL browsers
     // This prevents Safari from using its native AVFoundation HLS player
     // which makes OS-level requests that bypass JavaScript XHR/fetch
-    
+
     // Create options object if it doesn't exist
     if (!vhs.options) {
       vhs.options = {};
@@ -116,9 +143,9 @@ const setupVhsXhrHook = () => {
         }
 
         const uri = options.uri || options.url || "";
-        
+
         // Only add token to encryption key requests
-        if (uri.includes('/key')) {
+        if (uri.includes("/key")) {
           const accessToken = getAccessToken();
           if (accessToken) {
             // Append token as URL query parameter
@@ -154,12 +181,23 @@ const setupVhsXhrHook = () => {
  * Disable Safari's native HLS capability to force VHS/MSE usage
  * Safari's AVFoundation makes OS-level requests that bypass JavaScript
  * By disabling native HLS detection, we force Video.js to use MSE via VHS
+ *
+ * NOTE: This ONLY applies to desktop Safari. iOS Safari MUST use native HLS
+ * because MSE support is limited on iOS. For iOS, we add token to URL instead.
  */
 const disableSafariNativeHls = () => {
   if (typeof window === "undefined") return;
   if (!isSafari()) return;
 
-  // Only run once
+  // IMPORTANT: Do NOT disable native HLS on iOS Safari
+  // iOS has limited MSE support and MUST use native HLS
+  // We handle iOS by adding token directly to the source URL
+  if (isIOSSafari()) {
+    console.log("[iOS Safari] Skipping native HLS disable - using native HLS with token in URL");
+    return;
+  }
+
+  // Only run once (for desktop Safari)
   if (window._safariNativeHlsDisabled) return;
   window._safariNativeHlsDisabled = true;
 
@@ -182,7 +220,7 @@ const disableSafariNativeHls = () => {
       return originalCanPlayType.call(this, type);
     };
 
-    console.log("[Safari] Native HLS capability disabled - forcing MSE/VHS usage");
+    console.log("[Desktop Safari] Native HLS capability disabled - forcing MSE/VHS usage");
   } catch (e) {
     console.warn("[Safari] Failed to disable native HLS:", e.message);
   }
@@ -326,23 +364,27 @@ const VideoPlayer = forwardRef(
       // But we still need VHS to intercept key/segment requests
       const sourceUrl = getSourceUrlWithToken(src);
       const usingSafari = isSafari();
+      const usingIOSSafari = isIOSSafari();
 
       // Log detailed info for debugging Safari issues
       const vhsModule = videojs.Vhs || videojs.VHS;
       console.log("[VideoPlayer] Initializing player:", {
         isSafari: usingSafari,
+        isIOSSafari: usingIOSSafari,
         originalSrc: src?.substring(0, 80),
         sourceUrl: sourceUrl?.substring(0, 80),
-        hasToken: sourceUrl?.includes("token="),
+        hasTokenInUrl: sourceUrl?.includes("token="),
         isHLS: isHlsStream(src),
         videoType: getVideoType(src),
         vhsAvailable: !!vhsModule,
-        vhsVersion: vhsModule?.VERSION || 'unknown',
-        mseSupported: typeof window !== 'undefined' && 'MediaSource' in window,
+        vhsVersion: vhsModule?.VERSION || "unknown",
+        mseSupported: typeof window !== "undefined" && "MediaSource" in window,
         videoJsVersion: videojs.VERSION,
-        videojsObject: Object.keys(videojs).filter(k => k.toLowerCase().includes('vhs') || k.toLowerCase().includes('hls')),
+        videojsObject: Object.keys(videojs).filter(
+          (k) => k.toLowerCase().includes("vhs") || k.toLowerCase().includes("hls")
+        ),
       });
-      
+
       // Critical check
       if (!vhsModule) {
         console.error("[VideoPlayer] ❌ VHS MODULE NOT FOUND! HLS will not work.");
@@ -351,8 +393,10 @@ const VideoPlayer = forwardRef(
         console.log("[VideoPlayer] ✅ VHS module found:", vhsModule.VERSION);
       }
 
-      if (usingSafari) {
-        console.log("[Safari] Forcing VHS with overrideNative=true for HLS playback");
+      if (usingIOSSafari) {
+        console.log("[iOS Safari] Using native HLS with token in URL - VHS hooks will be bypassed");
+      } else if (usingSafari) {
+        console.log("[Desktop Safari] Forcing VHS with overrideNative=true for HLS playback");
       }
 
       playerRef.current = videojs(videoRef.current, {
@@ -416,9 +460,9 @@ const VideoPlayer = forwardRef(
                 }
 
                 const uri = options.uri || options.url || "";
-                
+
                 // Only add token to encryption key requests
-                if (uri.includes('/key')) {
+                if (uri.includes("/key")) {
                   const accessToken = getAccessToken();
                   if (accessToken) {
                     // Append token as URL query parameter to BOTH uri and url
@@ -483,9 +527,9 @@ const VideoPlayer = forwardRef(
             const originalXhr = tech.vhs.xhr;
             tech.vhs.xhr = (options, callback) => {
               const uri = options.uri || options.url || "";
-              
+
               // Only add token to encryption key requests
-              if (uri.includes('/key')) {
+              if (uri.includes("/key")) {
                 const accessToken = getAccessToken();
                 if (accessToken) {
                   // Append token as URL query parameter
@@ -1177,7 +1221,7 @@ const VideoPlayer = forwardRef(
       playerRef.current.on("error", (e) => {
         const error = playerRef.current.error();
         const tech = playerRef.current.tech({ IWillNotUseThisInPlugins: true });
-        
+
         if (error) {
           console.error("[VideoPlayer] Playback error:", {
             code: error.code,
@@ -1187,7 +1231,7 @@ const VideoPlayer = forwardRef(
             vhsAvailable: !!(videojs.Vhs || videojs.VHS),
             techName: tech?.name,
             canPlayType: tech?.canPlayType?.(getVideoType(src)),
-            mseSupported: typeof window !== 'undefined' && 'MediaSource' in window,
+            mseSupported: typeof window !== "undefined" && "MediaSource" in window,
           });
 
           // Check for specific HLS/encryption errors
@@ -1197,16 +1241,16 @@ const VideoPlayer = forwardRef(
             console.error("  2. MSE not supported in browser");
             console.error("  3. MIME type mismatch");
             console.error("  4. HLS manifest parsing failed");
-            
+
             // Check if VHS is actually available
             if (!(videojs.Vhs || videojs.VHS)) {
               console.error("  ❌ VHS module not found! HLS playback will not work.");
             } else {
               console.log("  ✅ VHS module is available");
             }
-            
+
             // Check MSE support
-            if (typeof window !== 'undefined' && !('MediaSource' in window)) {
+            if (typeof window !== "undefined" && !("MediaSource" in window)) {
               console.error("  ❌ MediaSource API not supported in this browser");
             } else {
               console.log("  ✅ MediaSource API is supported");
