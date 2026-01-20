@@ -356,11 +356,16 @@ const VideoPlayerContainer = forwardRef(
       );
     }
 
+    // Determine video source and detect type
+    const videoSrc = isOnlyVideoMode ? currentVideo.slide_video : currentVideo.trainer_video;
+    const isHLS = videoSrc && (videoSrc.includes('.m3u8') || videoSrc.includes('master.m3u8'));
+    const videoType = isHLS ? 'HLS (encrypted)' : 'MP4';
+
     return (
       <VideoPlayer
-        key={`trainer-video-${currentVideoIndex}-${isOnlyVideoMode ? currentVideo.slide_video : currentVideo.trainer_video}`}
+        key={`trainer-video-${currentVideoIndex}-${videoSrc}`}
         ref={videoRef}
-        src={isOnlyVideoMode ? currentVideo.slide_video : currentVideo.trainer_video}
+        src={videoSrc}
         poster={currentVideo.thumbnail}
         className={className}
         canSkipVideo={canSkipVideo}
@@ -384,12 +389,12 @@ const VideoPlayerContainer = forwardRef(
         onSkipBackward={handleSkipBackward}
         onCanPlay={(e) => {
           if (!isMobile) {
-            console.log("Trainer video can play");
+            console.log(`[VideoPlayerContainer] Video can play - Type: ${videoType}, Mode: ${isOnlyVideoMode ? 'slide_video' : 'trainer_video'}`);
           }
         }}
         onLoadStart={() => {
           if (!isMobile) {
-            console.log("Trainer video loading started...");
+            console.log(`[VideoPlayerContainer] Video loading - Type: ${videoType}, URL: ${videoSrc?.substring(0, 100)}`);
           }
         }}
       />
