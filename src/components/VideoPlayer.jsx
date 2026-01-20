@@ -1588,6 +1588,28 @@ const VideoPlayer = forwardRef(
             touch-action: none !important;
           }
 
+          /* Completely hide the mouse display tooltip when seeking is disabled */
+          .vjs-progress-control.no-seek .vjs-mouse-display {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+          }
+
+          /* Also hide the time tooltip that appears on hover */
+          .vjs-progress-control.no-seek .vjs-time-tooltip {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+          }
+
+          /* Hide any tooltip in the progress control when seeking is disabled */
+          .vjs-progress-control.no-seek .vjs-progress-holder .vjs-time-tooltip,
+          .vjs-progress-control.no-seek .vjs-play-progress .vjs-time-tooltip,
+          .vjs-progress-control.no-seek .vjs-mouse-display .vjs-time-tooltip {
+            display: none !important;
+            visibility: hidden !important;
+          }
+
           .vjs-skip-backward {
             width: 3.2em;
             cursor: pointer;
