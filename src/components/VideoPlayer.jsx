@@ -36,6 +36,187 @@ const getAccessToken = () => {
 };
 
 /**
+ * Detect if the browser is Safari
+ * Safari uses native HLS and doesn't support XHR interception for HLS streams
+ * @returns {boolean} - True if running in Safari
+ */
+const isSafari = () => {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent.toLowerCase();
+  // Safari but not Chrome (Chrome UA also includes "safari")
+  return ua.includes("safari") && !ua.includes("chrome") && !ua.includes("chromium") && !ua.includes("android");
+};
+
+/**
+ * Detect if the browser is on iPhone/iPod (NOT iPad)
+ * iPhone/iPod have limited MSE support and MUST use native HLS
+ * iPad has better MSE support and can use VHS like desktop Safari
+ * @returns {boolean} - True if running on iPhone or iPod
+ */
+const isIPhoneOrIPod = () => {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+
+  // Check specifically for iPhone or iPod (NOT iPad)
+  const isIPhonePod = /iPhone|iPod/.test(ua) && !window.MSStream;
+
+  // Also check for Chrome on iOS (CriOS) or Firefox on iOS (FxiOS) on iPhone
+  // These also need native HLS approach
+  const isIOSBrowser = /CriOS|FxiOS/.test(ua) && /iPhone|iPod/.test(ua);
+
+  const result = isIPhonePod || isIOSBrowser;
+
+  if (result) {
+    // Log iOS version for debugging
+    const iosVersionMatch = ua.match(/OS (\d+)_(\d+)/);
+    const iosVersion = iosVersionMatch ? `${iosVersionMatch[1]}.${iosVersionMatch[2]}` : "unknown";
+    console.log("[isIPhoneOrIPod] Detected iPhone/iPod:", {
+      iosVersion,
+      isIPhonePod,
+      isIOSBrowser,
+      ua: ua.substring(0, 150),
+    });
+  }
+
+  return result;
+};
+
+/**
+ * Detect if the browser is on iPad
+ * iPad has better MSE support and can use VHS like desktop Safari
+ * @returns {boolean} - True if running on iPad
+ */
+const isIPad = () => {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+
+  // Check for iPad in User-Agent
+  const isIPadUA = /iPad/.test(ua) && !window.MSStream;
+
+  // Check for iPad on iOS 13+ which reports as "Macintosh" in User-Agent
+  const isIPadOS = typeof document !== "undefined" && ua.includes("Macintosh") && navigator.maxTouchPoints > 1;
+
+  const result = isIPadUA || isIPadOS;
+
+  if (result) {
+    console.log("[isIPad] Detected iPad:", { isIPadUA, isIPadOS, ua: ua.substring(0, 100) });
+  }
+
+  return result;
+};
+
+/**
+ * Check if MediaSource API is fully supported
+ * Some iOS devices have MediaSource but it doesn't work properly for HLS
+ * @returns {boolean} - True if MediaSource is properly supported
+ */
+const hasMSESupport = () => {
+  if (typeof window === "undefined") return false;
+
+  // Check basic MediaSource availability
+  if (!("MediaSource" in window)) {
+    console.log("[hasMSESupport] MediaSource not available");
+    return false;
+  }
+
+  // Check if MediaSource.isTypeSupported exists and works
+  try {
+    const mse = window.MediaSource;
+    if (typeof mse.isTypeSupported !== "function") {
+      console.log("[hasMSESupport] MediaSource.isTypeSupported not a function");
+      return false;
+    }
+
+    // Test HLS MIME type support
+    const hlsSupported = mse.isTypeSupported('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
+    console.log("[hasMSESupport] HLS codec support:", hlsSupported);
+    return hlsSupported;
+  } catch (e) {
+    console.log("[hasMSESupport] Error checking MSE support:", e.message);
+    return false;
+  }
+};
+
+/**
+ * Detect if we need to use native HLS with token in URL
+ * This is ONLY for iPhone/iPod which have limited MSE support
+ * iPad and Desktop Safari can use VHS with XHR hooks
+ * @returns {boolean} - True if we need native HLS approach (iPhone/iPod only)
+ */
+const needsNativeHLS = () => {
+  // iPhone/iPod always needs native HLS
+  if (isIPhoneOrIPod()) {
+    return true;
+  }
+
+  // If it's Safari but not iPad and not desktop, treat as needing native HLS
+  // This catches edge cases like older iOS devices
+  if (isSafari() && !isIPad() && typeof window !== "undefined") {
+    // Check if we're on a touch device that's not iPad
+    const isTouchDevice = "ontouchend" in document;
+    const isSmallScreen = window.innerWidth < 768;
+
+    if (isTouchDevice && isSmallScreen) {
+      console.log("[needsNativeHLS] Detected small touch device Safari - using native HLS");
+      return true;
+    }
+  }
+
+  return false;
+};
+
+/**
+ * Helper to append token as query parameter to URL
+ * @param {string} url - The original URL
+ * @param {string} token - The access token
+ * @returns {string} - URL with token appended as query parameter
+ */
+const appendTokenToUrl = (url, token) => {
+  if (!url || !token) return url;
+  // Check if token is already in the URL to avoid duplication
+  if (url.includes("token=")) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}token=${encodeURIComponent(token)}`;
+};
+
+/**
+ * Get the source URL with token for platforms that need it
+ * iOS Safari REQUIRES token in URL because native HLS bypasses JavaScript completely
+ * Desktop Safari and Chrome can use VHS hooks for key requests
+ * @param {string} url - The original source URL
+ * @returns {string} - URL with token if needed for the platform
+ */
+const getSourceUrlWithToken = (url) => {
+  const needsTokenInUrl = needsNativeHLS();
+  const isHLS = isHlsStream(url);
+
+  console.log("[getSourceUrlWithToken] Checking:", {
+    needsTokenInUrl,
+    isIPhone: isIPhoneOrIPod(),
+    isIPad: isIPad(),
+    isHLS,
+    urlStart: url?.substring(0, 60),
+  });
+
+  // Only iPhone/iPod needs native HLS which bypasses ALL JavaScript
+  // We MUST add token to the source URL for iOS
+  if (needsTokenInUrl && isHLS) {
+    const accessToken = getAccessToken();
+    if (accessToken) {
+      const tokenizedUrl = appendTokenToUrl(url, accessToken);
+      console.log("[iOS] ✅ Token added to source URL for native HLS playback");
+      console.log("[iOS] Tokenized URL:", tokenizedUrl.substring(0, 80) + "...");
+      return tokenizedUrl;
+    } else {
+      console.warn("[iOS] ⚠️ No access token available! HLS playback will likely fail.");
+    }
+  }
+
+  // For desktop browsers, VHS hooks will add token to /key requests only
+  return url;
+};
+
+/**
  * Setup global VHS xhr hook for HLS authentication
  * This must be called before the player is initialized
  * It intercepts ALL HLS requests including manifests, segments, and encryption keys
@@ -46,36 +227,128 @@ const setupVhsXhrHook = () => {
   // Access the VHS module from videojs
   const vhs = videojs.Vhs || videojs.VHS;
 
-  if (vhs && vhs.xhr) {
-    // Set the global beforeRequest hook
-    vhs.xhr.beforeRequest = (options) => {
-      // Ensure options object exists
-      if (!options) {
-        return options;
-      }
+  if (vhs) {
+    // CRITICAL: Set global VHS options to force overrideNative for ALL browsers
+    // This prevents Safari from using its native AVFoundation HLS player
+    // which makes OS-level requests that bypass JavaScript XHR/fetch
 
-      const accessToken = getAccessToken();
-      if (accessToken) {
-        // Initialize headers object if it doesn't exist
-        options.headers = options.headers || {};
-        options.headers["Authorization"] = `Bearer ${accessToken}`;
+    // Create options object if it doesn't exist
+    if (!vhs.options) {
+      vhs.options = {};
+    }
+    vhs.options.overrideNative = true;
 
-        // Log for debugging
+    // Also set on videojs.options for good measure
+    if (!videojs.options) {
+      videojs.options = {};
+    }
+    if (!videojs.options.html5) {
+      videojs.options.html5 = {};
+    }
+    videojs.options.html5.vhs = videojs.options.html5.vhs || {};
+    videojs.options.html5.vhs.overrideNative = true;
+    videojs.options.html5.hls = videojs.options.html5.hls || {};
+    videojs.options.html5.hls.overrideNative = true;
+    videojs.options.html5.nativeAudioTracks = false;
+    videojs.options.html5.nativeVideoTracks = false;
+
+    if (vhs.xhr) {
+      // Set the global onRequest hook (replaces deprecated beforeRequest)
+      vhs.xhr.onRequest = (options) => {
+        // Ensure options object exists
+        if (!options) {
+          return options;
+        }
+
         const uri = options.uri || options.url || "";
-        console.log("[VHS Global Hook] Adding auth to:", uri.substring(0, 80));
-      }
 
-      return options;
+        // Only add token to encryption key requests
+        if (uri.includes("/key")) {
+          const accessToken = getAccessToken();
+          if (accessToken) {
+            // Append token as URL query parameter
+            if (options.uri) {
+              options.uri = appendTokenToUrl(options.uri, accessToken);
+            }
+            if (options.url) {
+              options.url = appendTokenToUrl(options.url, accessToken);
+            }
+            console.log("[VHS Global Hook] Token added to key request:", uri.substring(0, 120));
+          } else {
+            console.warn("[VHS Global Hook] No access token for key request:", uri.substring(0, 120));
+          }
+        } else {
+          console.log("[VHS Global Hook] No token for:", uri.substring(0, 120));
+        }
+
+        return options;
+      };
+
+      console.log("[VHS] Global xhr.onRequest hook installed");
+    }
+
+    console.log("[VHS] Global overrideNative configured:", vhs.options?.overrideNative);
+  } else {
+    console.warn("[VHS] Could not find VHS module for configuration");
+  }
+};
+
+// Safari interceptors removed - VHS handles all requests including key requests
+
+/**
+ * Disable Safari's native HLS capability to force VHS/MSE usage
+ * Safari's AVFoundation makes OS-level requests that bypass JavaScript
+ * By disabling native HLS detection, we force Video.js to use MSE via VHS
+ *
+ * NOTE: This ONLY applies to desktop Safari. iOS Safari MUST use native HLS
+ * because MSE support is limited on iOS. For iOS, we add token to URL instead.
+ */
+const disableSafariNativeHls = () => {
+  if (typeof window === "undefined") return;
+  if (!isSafari()) return;
+
+  // IMPORTANT: Do NOT disable native HLS on iPhone/iPod
+  // iPhone/iPod have limited MSE support and MUST use native HLS
+  // iPad can use VHS like desktop Safari
+  // We handle iPhone/iPod by adding token directly to the source URL
+  if (needsNativeHLS()) {
+    console.log("[iPhone/iPod] Skipping native HLS disable - using native HLS with token in URL");
+    return;
+  }
+
+  // Only run once (for desktop Safari)
+  if (window._safariNativeHlsDisabled) return;
+  window._safariNativeHlsDisabled = true;
+
+  try {
+    // Override the canPlayType function on HTMLVideoElement to report no native HLS support
+    // This forces Video.js to use MSE instead of native HLS
+    const originalCanPlayType = HTMLVideoElement.prototype.canPlayType;
+    HTMLVideoElement.prototype.canPlayType = function (type) {
+      // Block native HLS type detection for Safari
+      if (
+        type &&
+        (type.includes("application/vnd.apple.mpegurl") ||
+          type.includes("application/x-mpegURL") ||
+          type.includes("audio/mpegurl") ||
+          type.includes("audio/x-mpegurl"))
+      ) {
+        console.log("[Safari Native HLS Disabled] Blocking native HLS for type:", type);
+        return ""; // Return empty string to indicate no support
+      }
+      return originalCanPlayType.call(this, type);
     };
 
-    console.log("[VHS] Global xhr.beforeRequest hook installed");
-  } else {
-    console.warn("[VHS] Could not find VHS module for xhr hook");
+    console.log("[Desktop Safari] Native HLS capability disabled - forcing MSE/VHS usage");
+  } catch (e) {
+    console.warn("[Safari] Failed to disable native HLS:", e.message);
   }
 };
 
 // Initialize VHS hook when module loads (client-side only)
 if (typeof window !== "undefined") {
+  // IMPORTANT: Disable Safari native HLS BEFORE setting up VHS
+  disableSafariNativeHls();
   setupVhsXhrHook();
 }
 
@@ -180,7 +453,8 @@ const VideoPlayer = forwardRef(
       },
       load: () => {
         if (playerRef.current) {
-          playerRef.current.src({ src, type: getVideoType(src) });
+          const sourceUrl = getSourceUrlWithToken(src);
+          playerRef.current.src({ src: sourceUrl, type: getVideoType(src) });
         }
       },
     }));
@@ -201,7 +475,51 @@ const VideoPlayer = forwardRef(
 
       // Ensure VHS xhr hook is setup before creating player
       // This is critical for HLS encrypted streams
+      // Also ensure Safari native HLS is disabled BEFORE player creation
+      disableSafariNativeHls();
       setupVhsXhrHook();
+
+      const sourceUrl = getSourceUrlWithToken(src);
+      const usingSafari = isSafari();
+      const usingNativeHLS = needsNativeHLS(); // Only true for iPhone/iPod
+      const mseSupport = hasMSESupport();
+
+      // Log detailed info for debugging
+      const vhsModule = videojs.Vhs || videojs.VHS;
+      console.log("[VideoPlayer] Initializing player:", {
+        isSafari: usingSafari,
+        isIPhone: isIPhoneOrIPod(),
+        isIPad: isIPad(),
+        usingNativeHLS,
+        mseSupport,
+        originalSrc: src?.substring(0, 80),
+        sourceUrl: sourceUrl?.substring(0, 80),
+        hasTokenInUrl: sourceUrl?.includes("token="),
+        isHLS: isHlsStream(src),
+        videoType: getVideoType(src),
+        vhsAvailable: !!vhsModule,
+        vhsVersion: vhsModule?.VERSION || "unknown",
+        mseSupported: typeof window !== "undefined" && "MediaSource" in window,
+        videoJsVersion: videojs.VERSION,
+        userAgent: navigator.userAgent,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
+      });
+
+      // Critical check
+      if (!vhsModule) {
+        console.error("[VideoPlayer] ❌ VHS MODULE NOT FOUND! HLS will not work.");
+        console.error("[VideoPlayer] Available videojs properties:", Object.keys(videojs).slice(0, 20));
+      } else {
+        console.log("[VideoPlayer] ✅ VHS module found:", vhsModule.VERSION);
+      }
+
+      if (usingNativeHLS) {
+        console.log("[iPhone/iPod] Using native HLS with token in URL - VHS hooks will be bypassed");
+        console.log("[iPhone/iPod] Token URL:", sourceUrl);
+      } else if (usingSafari) {
+        console.log("[Safari/iPad] Forcing VHS with overrideNative=true for HLS playback");
+      }
 
       playerRef.current = videojs(videoRef.current, {
         controls: controls,
@@ -209,7 +527,7 @@ const VideoPlayer = forwardRef(
         fluid: true,
         sources: [
           {
-            src,
+            src: sourceUrl,
             type: getVideoType(src),
           },
         ],
@@ -237,36 +555,59 @@ const VideoPlayer = forwardRef(
         techOrder: ["html5"],
         html5: {
           nativeControlsForTouch: false,
-          nativeAudioTracks: false,
-          nativeVideoTracks: false,
+          nativeAudioTracks: usingNativeHLS ? true : false, // iPhone/iPod needs native audio tracks
+          nativeVideoTracks: usingNativeHLS ? true : false, // iPhone/iPod needs native video tracks
+          nativeTextTracks: false,
           // VHS (Video.js HTTP Streaming) configuration for HLS with encrypted streams
+          // CRITICAL: On iPhone/iPod, we MUST use native HLS (overrideNative: false)
+          // because they have limited MSE support. Token is added to URL instead.
+          // iPad and Desktop Safari can use VHS (overrideNative: true) with XHR hooks.
           vhs: {
-            overrideNative: true,
-            // Enable withCredentials if needed for CORS
+            // iPhone/iPod: false (use native HLS with token in URL)
+            // iPad/Desktop: true (use VHS/MSE with XHR hooks for key requests)
+            overrideNative: usingNativeHLS ? false : true,
+            enableLowInitialPlaylist: true,
+            smoothQualityChange: true,
+            allowSeeksWithinUnsafeLiveWindow: true,
+            handleManifestRedirects: true,
             withCredentials: false,
-            // Handle segment and key requests with auth headers
-            xhr: {
-              beforeRequest: (options) => {
-                // Ensure options and options.uri exist before trying to modify
-                if (!options) {
-                  return options;
-                }
+            // Custom key loader - only used on iPad/desktop where VHS is active
+            xhr: usingNativeHLS
+              ? undefined
+              : {
+                  onRequest: (options) => {
+                    if (!options) {
+                      console.warn("[VHS XHR] Options is null/undefined");
+                      return options;
+                    }
 
-                const accessToken = getAccessToken();
-                if (accessToken) {
-                  // Initialize headers object if it doesn't exist
-                  options.headers = options.headers || {};
-                  options.headers["Authorization"] = `Bearer ${accessToken}`;
+                    const uri = options.uri || options.url || "";
 
-                  // Log for debugging (remove in production)
-                  const uri = options.uri || options.url || "";
-                  if (uri.includes(".m3u8") || uri.includes("video-key") || uri.includes(".ts")) {
-                    console.log("[VHS] Adding auth header to request:", uri.substring(0, 100));
-                  }
-                }
-                return options;
-              },
-            },
+                    // Only add token to encryption key requests
+                    if (uri.includes("/key")) {
+                      const accessToken = getAccessToken();
+                      if (accessToken) {
+                        if (options.uri) {
+                          options.uri = appendTokenToUrl(options.uri, accessToken);
+                        }
+                        if (options.url) {
+                          options.url = appendTokenToUrl(options.url, accessToken);
+                        }
+                        console.log("[VHS XHR onRequest] Token added to key request:", uri.substring(0, 150));
+                      } else {
+                        console.warn("[VHS XHR onRequest] No token for key request:", uri.substring(0, 150));
+                      }
+                    } else {
+                      console.log("[VHS XHR onRequest] No token for:", uri.substring(0, 120));
+                    }
+                    return options;
+                  },
+                },
+          },
+          // iPad/Desktop Safari: Force VHS instead of native HLS
+          // iPhone/iPod: Allow native HLS
+          hls: {
+            overrideNative: usingNativeHLS ? false : true,
           },
         },
         // Ensure playback rate menu is always available
@@ -299,6 +640,19 @@ const VideoPlayer = forwardRef(
         playerRef.current.muted(muted);
       }
 
+      // Add error event handler for debugging
+      playerRef.current.on("error", () => {
+        const error = playerRef.current.error();
+        console.error("[VideoPlayer] ❌ Playback error:", {
+          code: error?.code,
+          message: error?.message,
+          userAgent: navigator.userAgent,
+          isIPhone: isIPhoneOrIPod(),
+          usingNativeHLS: needsNativeHLS(),
+          sourceUrl: sourceUrl?.substring(0, 100),
+        });
+      });
+
       playerRef.current.ready(() => {
         // Re-setup VHS xhr hook after player is ready as fallback
         // This ensures the hook is active for the tech instance
@@ -307,11 +661,23 @@ const VideoPlayer = forwardRef(
           if (tech && tech.vhs && tech.vhs.xhr) {
             const originalXhr = tech.vhs.xhr;
             tech.vhs.xhr = (options, callback) => {
-              const accessToken = getAccessToken();
-              if (accessToken) {
-                options.headers = options.headers || {};
-                options.headers["Authorization"] = `Bearer ${accessToken}`;
-                console.log("[VHS Tech Hook] Auth added to:", (options.uri || "").substring(0, 80));
+              const uri = options.uri || options.url || "";
+
+              // Only add token to encryption key requests
+              if (uri.includes("/key")) {
+                const accessToken = getAccessToken();
+                if (accessToken) {
+                  // Append token as URL query parameter
+                  if (options.uri) {
+                    options.uri = appendTokenToUrl(options.uri, accessToken);
+                  }
+                  if (options.url) {
+                    options.url = appendTokenToUrl(options.url, accessToken);
+                  }
+                  console.log("[VHS Tech Hook] Token added to key request:", uri.substring(0, 100));
+                }
+              } else {
+                console.log("[VHS Tech Hook] No token for:", uri.substring(0, 100));
               }
               return originalXhr(options, callback);
             };
@@ -989,16 +1355,41 @@ const VideoPlayer = forwardRef(
       // HLS/VHS error handling for encrypted streams
       playerRef.current.on("error", (e) => {
         const error = playerRef.current.error();
+        const tech = playerRef.current.tech({ IWillNotUseThisInPlugins: true });
+
         if (error) {
           console.error("[VideoPlayer] Playback error:", {
             code: error.code,
             message: error.message,
             src: src?.substring(0, 100),
+            isHLS: isHlsStream(src),
+            vhsAvailable: !!(videojs.Vhs || videojs.VHS),
+            techName: tech?.name,
+            canPlayType: tech?.canPlayType?.(getVideoType(src)),
+            mseSupported: typeof window !== "undefined" && "MediaSource" in window,
           });
 
           // Check for specific HLS/encryption errors
           if (error.code === 4) {
-            console.error("[VideoPlayer] Media error - possibly HLS key fetch failed");
+            console.error("[VideoPlayer] MEDIA_ERR_SRC_NOT_SUPPORTED - Possible causes:");
+            console.error("  1. VHS not loaded or initialized");
+            console.error("  2. MSE not supported in browser");
+            console.error("  3. MIME type mismatch");
+            console.error("  4. HLS manifest parsing failed");
+
+            // Check if VHS is actually available
+            if (!(videojs.Vhs || videojs.VHS)) {
+              console.error("  ❌ VHS module not found! HLS playback will not work.");
+            } else {
+              console.log("  ✅ VHS module is available");
+            }
+
+            // Check MSE support
+            if (typeof window !== "undefined" && !("MediaSource" in window)) {
+              console.error("  ❌ MediaSource API not supported in this browser");
+            } else {
+              console.log("  ✅ MediaSource API is supported");
+            }
           }
         }
       });
@@ -1126,6 +1517,15 @@ const VideoPlayer = forwardRef(
         <style
           dangerouslySetInnerHTML={{
             __html: `
+          /* Center the big play button */
+          .video-js .vjs-big-play-button {
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
+          }
+
           /* Completely disable progress control interactions when seeking is disabled */
           .vjs-progress-control.no-seek,
           .vjs-progress-control.no-seek *,
@@ -1186,6 +1586,28 @@ const VideoPlayer = forwardRef(
             background: transparent;
             pointer-events: auto !important;
             touch-action: none !important;
+          }
+
+          /* Completely hide the mouse display tooltip when seeking is disabled */
+          .vjs-progress-control.no-seek .vjs-mouse-display {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+          }
+
+          /* Also hide the time tooltip that appears on hover */
+          .vjs-progress-control.no-seek .vjs-time-tooltip {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+          }
+
+          /* Hide any tooltip in the progress control when seeking is disabled */
+          .vjs-progress-control.no-seek .vjs-progress-holder .vjs-time-tooltip,
+          .vjs-progress-control.no-seek .vjs-play-progress .vjs-time-tooltip,
+          .vjs-progress-control.no-seek .vjs-mouse-display .vjs-time-tooltip {
+            display: none !important;
+            visibility: hidden !important;
           }
 
           .vjs-skip-backward {
