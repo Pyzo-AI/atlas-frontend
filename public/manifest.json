@@ -1,6 +1,6 @@
 {
-  "name": "Upskillr - AI Training Platform",
-  "short_name": "Upskillr",
+  "name": "Atlas - AI Training Platform",
+  "short_name": "Atlas",
   "description": "Training Using AI",
   "start_url": "/",
   "display": "standalone",
