@@ -72,7 +72,7 @@ const LoginPage = () => {
         });
       }
 
-      toast.success("Login successful! Welcome to Upskillr", {
+      toast.success("Login successful! Welcome to Atlas", {
         position: "top-right",
         autoClose: 2000,
       });
@@ -117,10 +117,10 @@ const LoginPage = () => {
             {/* Logo and brand */}
             <div className="flex items-center gap-1 mb-1">
               <div className="w-6 h-6">
-                <Image src={trainBoostLogo} alt="Upskillr Logo" className="w-6 h-6" />
+                <Image src={trainBoostLogo} alt="Atlas Logo" className="w-6 h-6" />
               </div>
               <span className="text-[20px] font-lato font-bold leading-[19px] tracking-[0.02em] text-primary-text">
-                Upskillr
+                Atlas
               </span>
             </div>
 

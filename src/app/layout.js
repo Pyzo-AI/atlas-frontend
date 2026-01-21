@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Upskillr",
+  title: "Atlas",
   description: "Training Using AI",
   manifest: "/manifest.json",
   icons: {
@@ -48,7 +48,7 @@ export default function RootLayout({ children }) {
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Upskillr" />
+        <meta name="apple-mobile-web-app-title" content="Atlas" />
         <link rel="apple-touch-icon" href="/icon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/icon.png" />
         <link rel="icon" type="image/png" href="/icon.png" />
