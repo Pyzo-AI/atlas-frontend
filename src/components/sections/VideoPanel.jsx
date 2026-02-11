@@ -632,11 +632,11 @@ const VideoPanel = forwardRef(
             const strData = decoder.decode(payload);
             const data = JSON.parse(strData);
             if (data.type === "status" && data.message === "call_ending") {
-                if (liveKitService.isConnected()) {
-                  liveKitService.disconnect();
-                  dispatch(setIsQuestionMode(false));
-                  dispatch(setSlideNumbers([]));
-                }
+              if (liveKitService.isConnected()) {
+                liveKitService.disconnect();
+                dispatch(setIsQuestionMode(false));
+                dispatch(setSlideNumbers([]));
+              }
             }
           } catch (error) {
             console.error("Failed to parse data packet:", error);
@@ -647,9 +647,18 @@ const VideoPanel = forwardRef(
       // Slide Metadata Handling - Console log the data
       if (liveKitService.setOnSlideMetadataReceived) {
         liveKitService.setOnSlideMetadataReceived((metadata, slideNumbers) => {
-          console.log('📊 [VideoPanel] Slide metadata received:', metadata);
-          console.log('🎯 [VideoPanel] Referenced slide numbers:', slideNumbers);
+          console.log("📊 [VideoPanel] Slide metadata received:", metadata);
+          console.log("🎯 [VideoPanel] Referenced slide numbers:", slideNumbers);
+
           dispatch(setSlideNumbers(slideNumbers || []));
+
+          // Clear generated overlay image when a specific slide redirect or reference is received
+          if (
+            metadata &&
+            (metadata.type === "slide_redirect" || (Array.isArray(slideNumbers) && slideNumbers.length > 0))
+          ) {
+            dispatch(setOverlayImage(null));
+          }
         });
       }
     }, [dispatch, setSlideNumbers]);

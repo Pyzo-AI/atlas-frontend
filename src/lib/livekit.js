@@ -104,29 +104,25 @@ export class LiveKitService {
 
     this.room.on(RoomEvent.DataReceived, (payload, participant) => {
       this.onDataReceived?.(payload, participant);
-      
+
       // Handle data messages (PPT slide metadata)
       try {
         const jsonString = new TextDecoder().decode(payload);
         const data = JSON.parse(jsonString);
-        
-        console.log('📊 Data received from agent:', data);
-        
-        if (data.type === 'rag_metadata') {
-          console.log('🎯 PPT Slide metadata received:', data.data);
-          
-          // Extract slide numbers
-          const slideNumbers = data.data
-            .map((item) => item.metadata?.slide_number)
-            .filter((num) => num !== undefined);
-          
-          console.log('🎯 Referenced slides:', slideNumbers);
-          
-          // Emit this data to UI components
+
+        console.log("📊 Data received from agent:", data);
+
+        if (data.type === "slide_redirect" && data.slide_number) {
+          const slideNumbers = Array.isArray(data.slide_number) ? data.slide_number : [data.slide_number];
+          console.log("🎯 Slide redirect:", slideNumbers);
+          this.onSlideMetadataReceived?.(data, slideNumbers);
+        } else if (data.slide_number) {
+          const slideNumbers = Array.isArray(data.slide_number) ? data.slide_number : [data.slide_number];
+          console.log("🎯 Referenced slides:", slideNumbers);
           this.onSlideMetadataReceived?.(data.data, slideNumbers);
         }
       } catch (error) {
-        console.error('Failed to parse data message:', error);
+        console.error("Failed to parse data message:", error);
       }
     });
   }
