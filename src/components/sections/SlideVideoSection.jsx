@@ -265,7 +265,7 @@ const SlideVideoSection = React.forwardRef(
             </div>
           )}
           {/* Overlay Image */}
-          {showQueryRelatedSlides && isQuestionMode && (isImageLoading || overlayImageUrl) && (
+          {/* {showQueryRelatedSlides && isQuestionMode && (isImageLoading || overlayImageUrl) && (
             <div className="absolute inset-0 z-30 bg-black bg-opacity-50 flex items-center justify-center">
               {isImageLoading ? (
                 <div className="text-white text-center">
@@ -276,7 +276,7 @@ const SlideVideoSection = React.forwardRef(
                 <Image src={overlayImageUrl} alt="Generated overlay" fill className="object-fill" />
               )}
             </div>
-          )}
+          )} */}
           <VideoPlayerContainer
             ref={videoPlayerContainerRef}
             key={`video-player-${presentationId}-${currentVideoIndex}-${videos?.[currentVideoIndex]?.slide_video || "no-video"}`}
@@ -334,7 +334,7 @@ const SlideVideoSection = React.forwardRef(
           </div>
         )}
         {/* Overlay Image */}
-        {showQueryRelatedSlides && isQuestionMode && (isImageLoading || overlayImageUrl) && (
+        {/* {showQueryRelatedSlides && isQuestionMode && (isImageLoading || overlayImageUrl) && (
           <div className="absolute inset-0 z-20 bg-black bg-opacity-50 flex items-center justify-center">
             {isImageLoading ? (
               <div className="text-white text-center">
@@ -345,7 +345,7 @@ const SlideVideoSection = React.forwardRef(
               <Image src={overlayImageUrl} alt="Generated overlay" fill className="object-fill" />
             )}
           </div>
-        )}
+        )} */}
         <video
           key={`slide-video-${videoIndex}`}
           ref={slideVideoRef}
