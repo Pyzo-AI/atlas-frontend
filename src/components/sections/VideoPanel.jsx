@@ -34,6 +34,140 @@ import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
 import { toast } from "react-toastify";
 
+const dummyImages = [
+  {
+    product_url: "https://www.google.com/search?q=yellow+dress",
+    product_image_url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    product_url: "https://www.google.com/search?q=white+hoodie",
+    product_image_url: "https://images.unsplash.com/photo-1564557287817-3785e38ec1f5?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    product_url: "https://www.google.com/search?q=pink+dress",
+    product_image_url: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    product_url: "https://www.google.com/search?q=stylish+outfit",
+    product_image_url: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1000&auto=format&fit=crop",
+  },
+];
+
+const AnswerImageGallery = ({ images }) => {
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  const [virtualActiveIndex, setVirtualActiveIndex] = React.useState(0);
+  const scrollRef = React.useRef(null);
+
+  // Use 5 sets for an even larger buffer for truly continuous feel
+  const virtualImages = React.useMemo(() => [...images, ...images, ...images, ...images, ...images], [images]);
+  const originalLength = images.length;
+  // Start in the very middle (index 2 of 0,1,2,3,4)
+  const middleStart = originalLength * 2;
+
+  // Initialize scroll position to the middle set on mount or when images change
+  React.useEffect(() => {
+    if (scrollRef.current && originalLength > 0) {
+      const container = scrollRef.current;
+      const firstItem = container.querySelector(".carousel-item");
+      if (firstItem) {
+        const itemWidth = firstItem.offsetWidth;
+        container.scrollLeft = itemWidth * middleStart;
+        setVirtualActiveIndex(middleStart);
+      }
+    }
+  }, [originalLength]);
+
+  const handleScroll = (e) => {
+    const container = e.target;
+    const scrollLeft = container.scrollLeft;
+    const firstItem = container.querySelector(".carousel-item");
+    if (!firstItem) return;
+
+    const itemWidth = firstItem.offsetWidth;
+    const originalWidth = itemWidth * originalLength;
+
+    // Silent reset
+    if (scrollLeft < originalWidth) {
+      container.scrollLeft = scrollLeft + originalWidth * 2;
+      return;
+    } else if (scrollLeft > originalWidth * 4) {
+      container.scrollLeft = scrollLeft - originalWidth * 2;
+      return;
+    }
+
+    const center = scrollLeft + container.offsetWidth / 2;
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    const items = container.querySelectorAll(".carousel-item");
+    items.forEach((item, index) => {
+      const itemCenter = item.offsetLeft + item.offsetWidth / 2;
+      const distance = Math.abs(center - itemCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    if (closestIndex !== virtualActiveIndex) {
+      setVirtualActiveIndex(closestIndex);
+      const realIndex = closestIndex % originalLength;
+      if (realIndex !== activeIndex) {
+        setActiveIndex(realIndex);
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center w-full h-full bg-white rounded-xl overflow-hidden border border-gray-100">
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex items-center h-full overflow-x-auto snap-x snap-mandatory w-full no-scrollbar px-[10%] py-4">
+        {virtualImages.map((item, idx) => {
+          const isActive = idx === virtualActiveIndex;
+          const distance = Math.abs(idx - virtualActiveIndex);
+
+          return (
+            <a
+              key={idx}
+              href={item.product_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="carousel-item snap-center snap-always h-full flex-shrink-0 w-[80%] flex items-center justify-center cursor-pointer"
+              style={{
+                perspective: "1000px",
+                zIndex: isActive ? 50 : 20 - distance,
+                position: "relative",
+              }}>
+              <div
+                className={`
+                  transition-all duration-500 ease-in-out relative
+                  box-border bg-[#F1F2F4] rounded-[24px] overflow-hidden flex items-center justify-center shadow-md
+                `}
+                style={{
+                  width: "100%",
+                  aspectRatio: "182/119",
+                  transform: isActive
+                    ? "scale(1.15) translateX(0) translateZ(0)"
+                    : idx < virtualActiveIndex
+                      ? "scale(0.85) translateX(35%) translateZ(-150px)"
+                      : "scale(0.85) translateX(-35%) translateZ(-150px)",
+                  opacity: isActive ? 1 : Math.max(0.1, 1 - distance * 0.3),
+                  pointerEvents: isActive ? "auto" : "none",
+                }}>
+                <div className={`relative w-full h-full transition-all duration-300 ${isActive ? "p-0" : "p-4"}`}>
+                  <Image src={item.product_image_url} alt="" fill className="object-contain" unoptimized />
+                </div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 // Conversation history management for VideoPanel
 const {
   STORAGE_KEY: CONVERSATION_STORAGE_KEY,
@@ -101,6 +235,7 @@ const VideoPanel = forwardRef(
       liveKitAgentEnabled = false,
       showQueryRelatedSlides = false,
       assessmentDetails = [],
+      showAnswerImage = true,
     },
     ref
   ) => {
@@ -815,7 +950,26 @@ const VideoPanel = forwardRef(
         }`}
         style={!isMobile ? { width } : undefined}>
         {/* Video Section or Grid Playlist - Responsive for both mobile and desktop */}
-        {isOnlyVideoMode ? (
+        {/* Video Section or Grid Playlist or Answer Image Gallery */}
+        {showAnswerImage && dummyImages.length > 0 ? (
+          <div
+            className={`bg-white border border-border-light ${
+              isMobile
+                ? isPhone
+                  ? "p-1 md:p-[6px] lg:p-3 rounded-lg flex-shrink-0"
+                  : "p-2 pb-1 rounded-lg"
+                : "p-3 pb-2 rounded-xl"
+            } ${showChat || isQuestionMode ? "hidden" : ""}`}>
+            <div
+              className={`relative w-full bg-white overflow-hidden ${
+                isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
+              }`}>
+              <div className="absolute inset-0">
+                <AnswerImageGallery images={dummyImages} isMobile={isMobile} isPhone={isPhone} />
+              </div>
+            </div>
+          </div>
+        ) : isOnlyVideoMode ? (
           <div
             className={`bg-white border border-border-light overflow-y-auto ${
               isMobile ? (isPhone ? "p-2 rounded-lg flex-shrink-0" : "p-3 rounded-lg") : "p-3 rounded-xl"

@@ -178,3 +178,11 @@ body {
     font-size: 16px !important;
   }
 }
+/* Utility to hide scrollbar but allow scrolling */
+@utility no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}
