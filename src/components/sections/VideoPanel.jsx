@@ -53,18 +53,26 @@ const dummyImages = [
   },
 ];
 
-const AnswerImageGallery = ({ images }) => {
+const AnswerImageGallery = ({ images, isLooping = true }) => {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [virtualActiveIndex, setVirtualActiveIndex] = React.useState(0);
   const scrollRef = React.useRef(null);
 
-  // Use 5 sets for an even larger buffer for truly continuous feel
-  const virtualImages = React.useMemo(() => [...images, ...images, ...images, ...images, ...images], [images]);
   const originalLength = images.length;
-  // Start in the very middle (index 2 of 0,1,2,3,4)
-  const middleStart = originalLength * 2;
 
-  // Initialize scroll position to the middle set on mount or when images change
+  // Create virtual list: 5 sets for looping, or [null, ...images, null] for non-looping spacers
+  const virtualImages = React.useMemo(() => {
+    if (originalLength === 0) return [];
+    if (isLooping) {
+      return [...images, ...images, ...images, ...images, ...images];
+    }
+    // Add spacers to the start and end to keep the 'stack' wings visible at the edges
+    return [null, ...images, null];
+  }, [images, isLooping]);
+
+  const middleStart = isLooping ? originalLength * 2 : originalLength > 0 ? 1 : 0;
+
+  // Initialize scroll position
   React.useEffect(() => {
     if (scrollRef.current && originalLength > 0) {
       const container = scrollRef.current;
@@ -75,7 +83,7 @@ const AnswerImageGallery = ({ images }) => {
         setVirtualActiveIndex(middleStart);
       }
     }
-  }, [originalLength]);
+  }, [originalLength, isLooping]);
 
   const handleScroll = (e) => {
     const container = e.target;
@@ -84,19 +92,31 @@ const AnswerImageGallery = ({ images }) => {
     if (!firstItem) return;
 
     const itemWidth = firstItem.offsetWidth;
-    const originalWidth = itemWidth * originalLength;
 
-    // Silent reset
-    if (scrollLeft < originalWidth) {
-      container.scrollLeft = scrollLeft + originalWidth * 2;
-      return;
-    } else if (scrollLeft > originalWidth * 4) {
-      container.scrollLeft = scrollLeft - originalWidth * 2;
-      return;
+    // Looping silent reset
+    if (isLooping) {
+      const originalWidth = itemWidth * originalLength;
+      if (scrollLeft < originalWidth) {
+        container.scrollLeft = scrollLeft + originalWidth * 2;
+        return;
+      } else if (scrollLeft > originalWidth * 4) {
+        container.scrollLeft = scrollLeft - originalWidth * 2;
+        return;
+      }
+    } else {
+      // Clamping scroll for non-looping to keep images centered but prevent scrolling to spacers
+      const minLockedScroll = itemWidth;
+      const maxLockedScroll = itemWidth * originalLength;
+      if (scrollLeft < minLockedScroll) {
+        container.scrollLeft = minLockedScroll;
+        // Don't return, let it calculate closestIndex to stay at 1
+      } else if (scrollLeft > maxLockedScroll) {
+        container.scrollLeft = maxLockedScroll;
+      }
     }
 
     const center = scrollLeft + container.offsetWidth / 2;
-    let closestIndex = 0;
+    let closestIndex = isLooping ? 0 : 1;
     let minDistance = Infinity;
 
     const items = container.querySelectorAll(".carousel-item");
@@ -111,7 +131,9 @@ const AnswerImageGallery = ({ images }) => {
 
     if (closestIndex !== virtualActiveIndex) {
       setVirtualActiveIndex(closestIndex);
-      const realIndex = closestIndex % originalLength;
+      const realIndex = isLooping
+        ? closestIndex % originalLength
+        : Math.max(0, Math.min(originalLength - 1, closestIndex - 1));
       if (realIndex !== activeIndex) {
         setActiveIndex(realIndex);
       }
@@ -127,23 +149,25 @@ const AnswerImageGallery = ({ images }) => {
         {virtualImages.map((item, idx) => {
           const isActive = idx === virtualActiveIndex;
           const distance = Math.abs(idx - virtualActiveIndex);
+          const isSpacer = item === null;
 
           return (
-            <a
+            <div
               key={idx}
-              href={item.product_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="carousel-item snap-center snap-always h-full flex-shrink-0 w-[80%] flex items-center justify-center cursor-pointer"
+              className={`carousel-item h-full flex-shrink-0 w-[80%] flex items-center justify-center pointer-events-none ${!isSpacer || isLooping ? "snap-center snap-always" : ""}`}
               style={{
                 perspective: "1000px",
                 zIndex: isActive ? 50 : 20 - distance,
                 position: "relative",
               }}>
-              <div
+              <a
+                href={item?.product_url || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
                 className={`
                   transition-all duration-500 ease-in-out relative
                   box-border bg-[#F1F2F4] rounded-[24px] overflow-hidden flex items-center justify-center shadow-md
+                  ${isSpacer ? "opacity-0" : ""}
                 `}
                 style={{
                   width: "100%",
@@ -153,14 +177,16 @@ const AnswerImageGallery = ({ images }) => {
                     : idx < virtualActiveIndex
                       ? "scale(0.85) translateX(35%) translateZ(-150px)"
                       : "scale(0.85) translateX(-35%) translateZ(-150px)",
-                  opacity: isActive ? 1 : Math.max(0.1, 1 - distance * 0.3),
-                  pointerEvents: isActive ? "auto" : "none",
+                  opacity: isSpacer ? 0 : isActive ? 1 : Math.max(0.1, 1 - distance * 0.3),
+                  pointerEvents: isActive && !isSpacer ? "auto" : "none",
                 }}>
-                <div className={`relative w-full h-full transition-all duration-300 ${isActive ? "p-0" : "p-4"}`}>
-                  <Image src={item.product_image_url} alt="" fill className="object-contain" unoptimized />
-                </div>
-              </div>
-            </a>
+                {!isSpacer && (
+                  <div className={`relative w-full h-full transition-all duration-300 ${isActive ? "p-0" : "p-4"}`}>
+                    <Image src={item.product_image_url} alt="" fill className="object-contain" unoptimized />
+                  </div>
+                )}
+              </a>
+            </div>
           );
         })}
       </div>
@@ -965,7 +991,7 @@ const VideoPanel = forwardRef(
                 isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
               }`}>
               <div className="absolute inset-0">
-                <AnswerImageGallery images={dummyImages} isMobile={isMobile} isPhone={isPhone} />
+                <AnswerImageGallery images={dummyImages} isMobile={isMobile} isPhone={isPhone} isLooping={false} />
               </div>
             </div>
           </div>
