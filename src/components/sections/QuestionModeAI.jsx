@@ -3,7 +3,7 @@ import chat_star from "../../assets/svg/chat_star.svg";
 import Image from "next/image";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { useSelector } from "react-redux";
-import AnswerImageGallery from "@/components/sections/AnswerImageGallery";
+import ProductRecommendationGallery from "@/components/sections/ProductRecommendationGallery";
 
 const QuestionModeAI = forwardRef(
   (
@@ -27,13 +27,13 @@ const QuestionModeAI = forwardRef(
     const userName = getUserDetailsFromToken()?.name;
     const { productRecommendations } = useSelector((state) => state.video);
 
-    // Show AnswerImageGallery when product recommendations are available
+    // Show ProductRecommendationGallery when product recommendations are available
     if (enableProductRecommendations && productRecommendations?.length > 0) {
       return (
         <div className="p-1 md:p-3 bg-white rounded-xl border border-border-light">
           <div className="relative w-full bg-white overflow-hidden aspect-video rounded-lg">
             <div className="absolute inset-0">
-              <AnswerImageGallery
+              <ProductRecommendationGallery
                 images={productRecommendations}
                 isLooping={true}
                 autoScroll={true}

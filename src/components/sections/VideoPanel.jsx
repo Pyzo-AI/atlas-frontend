@@ -33,7 +33,6 @@ import FeedbackModal from "../modals/FeedbackModal";
 import { useGenerateImageMutation } from "@/store/api/questionsApi";
 import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
-import AnswerImageGallery from "./AnswerImageGallery";
 import { toast } from "react-toastify";
 
 // Conversation history management for VideoPanel

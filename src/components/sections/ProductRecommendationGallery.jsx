@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 
-const AnswerImageGallery = ({ images, isLooping = true, autoScroll = false, autoScrollInterval = 3000 }) => {
+const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = false, autoScrollInterval = 3000 }) => {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [virtualActiveIndex, setVirtualActiveIndex] = React.useState(0);
   const scrollRef = React.useRef(null);
@@ -175,4 +175,4 @@ const AnswerImageGallery = ({ images, isLooping = true, autoScroll = false, auto
   );
 };
 
-export default AnswerImageGallery;
+export default ProductRecommendationGallery;
