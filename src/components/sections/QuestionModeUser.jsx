@@ -12,6 +12,7 @@ import {
   setAnswerPptIndex,
   setShowChat,
   setSlideNumbers,
+  setProductRecommendations,
 } from '@/store/features/videoSlice'
 import { clearOverlayImage } from '@/store/features/imageSlice'
 
@@ -69,6 +70,7 @@ const QuestionModeUser = ({
     dispatch(setSlideNumbers([]))
     // Clear overlay image state (query based slide image)
     dispatch(clearOverlayImage());
+    dispatch(setProductRecommendations([]));
   };
 
   const handleChatHistory = () => {

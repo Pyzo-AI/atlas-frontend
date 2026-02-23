@@ -10,6 +10,7 @@ import {
   setAutoPlayEnabled,
   setShowChat,
   setSlideNumbers,
+  setProductRecommendations,
 } from "@/store/features/videoSlice";
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -32,205 +33,8 @@ import FeedbackModal from "../modals/FeedbackModal";
 import { useGenerateImageMutation } from "@/store/api/questionsApi";
 import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
+import AnswerImageGallery from "./AnswerImageGallery";
 import { toast } from "react-toastify";
-
-const dummyImages = [
-  {
-    product_url: "https://www.google.com/search?q=yellow+dress",
-    product_image_url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    product_url: "https://www.google.com/search?q=white+hoodie",
-    product_image_url: "https://images.unsplash.com/photo-1564557287817-3785e38ec1f5?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    product_url: "https://www.google.com/search?q=pink+dress",
-    product_image_url: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    product_url: "https://www.google.com/search?q=stylish+outfit",
-    product_image_url: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1000&auto=format&fit=crop",
-  },
-];
-
-const AnswerImageGallery = ({ images, isLooping = true, autoScroll = false, autoScrollInterval = 3000 }) => {
-  const [activeIndex, setActiveIndex] = React.useState(0);
-  const [virtualActiveIndex, setVirtualActiveIndex] = React.useState(0);
-  const scrollRef = React.useRef(null);
-
-  const originalLength = images.length;
-
-  // Create virtual list: 5 sets for looping, or [null, ...images, null] for non-looping spacers
-  const virtualImages = React.useMemo(() => {
-    if (originalLength === 0) return [];
-    if (isLooping) {
-      return [...images, ...images, ...images, ...images, ...images];
-    }
-    // Add spacers to the start and end to keep the 'stack' wings visible at the edges
-    return [null, ...images, null];
-  }, [images, isLooping]);
-
-  const middleStart = isLooping ? originalLength * 2 : originalLength > 0 ? 1 : 0;
-
-  // Initialize scroll position
-  React.useEffect(() => {
-    if (scrollRef.current && originalLength > 0) {
-      const container = scrollRef.current;
-      const firstItem = container.querySelector(".carousel-item");
-      if (firstItem) {
-        const itemWidth = firstItem.offsetWidth;
-        container.scrollLeft = itemWidth * middleStart;
-        setVirtualActiveIndex(middleStart);
-      }
-    }
-  }, [originalLength, isLooping]);
-
-  // Handle Auto Scroll
-  const activeIndexRef = React.useRef(virtualActiveIndex);
-  React.useEffect(() => {
-    activeIndexRef.current = virtualActiveIndex;
-  }, [virtualActiveIndex]);
-
-  React.useEffect(() => {
-    if (!autoScroll || originalLength <= 1) return;
-
-    const interval = setInterval(() => {
-      const container = scrollRef.current;
-      if (container) {
-        const firstItem = container.querySelector(".carousel-item");
-        if (firstItem) {
-          const itemWidth = firstItem.offsetWidth;
-          // Calculate next index based on current scroll position to be most accurate
-          const currentScrollIndex = Math.round(container.scrollLeft / itemWidth);
-          let nextIndex = currentScrollIndex + 1;
-
-          if (isLooping) {
-            // In looping mode, we just keep going, handleScroll handles silent resets
-            container.scrollTo({
-              left: itemWidth * nextIndex,
-              behavior: "smooth",
-            });
-          } else {
-            // In non-looping mode, reset to first real image (index 1) if at the end
-            if (nextIndex > originalLength) {
-              container.scrollTo({
-                left: itemWidth * 1,
-                behavior: "smooth",
-              });
-            } else {
-              container.scrollTo({
-                left: itemWidth * nextIndex,
-                behavior: "smooth",
-              });
-            }
-          }
-        }
-      }
-    }, autoScrollInterval);
-
-    return () => clearInterval(interval);
-  }, [autoScroll, autoScrollInterval, isLooping, originalLength]);
-
-  const handleScroll = (e) => {
-    const container = e.target;
-    const scrollLeft = container.scrollLeft;
-    const firstItem = container.querySelector(".carousel-item");
-    if (!firstItem) return;
-
-    const itemWidth = firstItem.offsetWidth;
-
-    // Looping silent reset
-    if (isLooping) {
-      const originalWidth = itemWidth * originalLength;
-      if (scrollLeft < originalWidth) {
-        container.scrollLeft = scrollLeft + originalWidth * 2;
-        return;
-      } else if (scrollLeft > originalWidth * 4) {
-        container.scrollLeft = scrollLeft - originalWidth * 2;
-        return;
-      }
-    }
-    // Clamping is managed naturally by CSS scroll-snap on .carousel-item
-    // Spacer items (null) do not have snap-center, so they won't be centered by the browser.
-
-    const center = scrollLeft + container.offsetWidth / 2;
-    let closestIndex = isLooping ? 0 : 1;
-    let minDistance = Infinity;
-
-    const items = container.querySelectorAll(".carousel-item");
-    items.forEach((item, index) => {
-      const itemCenter = item.offsetLeft + item.offsetWidth / 2;
-      const distance = Math.abs(center - itemCenter);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = index;
-      }
-    });
-
-    if (closestIndex !== virtualActiveIndex) {
-      setVirtualActiveIndex(closestIndex);
-      const realIndex = isLooping
-        ? closestIndex % originalLength
-        : Math.max(0, Math.min(originalLength - 1, closestIndex - 1));
-      if (realIndex !== activeIndex) {
-        setActiveIndex(realIndex);
-      }
-    }
-  };
-
-  return (
-    <div className="flex flex-col items-center justify-center w-full h-full bg-white rounded-xl overflow-hidden border border-gray-100">
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex items-center h-full overflow-x-auto snap-x snap-mandatory w-full no-scrollbar px-[10%] py-4">
-        {virtualImages.map((item, idx) => {
-          const isActive = idx === virtualActiveIndex;
-          const distance = Math.abs(idx - virtualActiveIndex);
-          const isSpacer = item === null;
-
-          return (
-            <div
-              key={idx}
-              className={`carousel-item h-full flex-shrink-0 w-[80%] flex items-center justify-center pointer-events-none ${!isSpacer || isLooping ? "snap-center snap-always" : ""}`}
-              style={{
-                perspective: "1000px",
-                zIndex: isActive ? 50 : 20 - distance,
-                position: "relative",
-              }}>
-              <a
-                href={item?.product_url || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`
-                  transition-all duration-500 ease-in-out relative
-                  box-border bg-[#F1F2F4] rounded-[24px] overflow-hidden flex items-center justify-center shadow-md
-                  ${isSpacer ? "opacity-0" : ""}
-                `}
-                style={{
-                  width: "100%",
-                  aspectRatio: "182/119",
-                  transform: isActive
-                    ? "scale(1.15) translateX(0) translateZ(0)"
-                    : idx < virtualActiveIndex
-                      ? "scale(0.85) translateX(35%) translateZ(-150px)"
-                      : "scale(0.85) translateX(-35%) translateZ(-150px)",
-                  opacity: isSpacer ? 0 : isActive ? 1 : Math.max(0.1, 1 - distance * 0.3),
-                  pointerEvents: isActive && !isSpacer ? "auto" : "none",
-                }}>
-                {!isSpacer && (
-                  <div className={`relative w-full h-full transition-all duration-300 ${isActive ? "p-0" : "p-4"}`}>
-                    <Image src={item.product_image_url} alt="" fill className="object-contain" unoptimized />
-                  </div>
-                )}
-              </a>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
 
 // Conversation history management for VideoPanel
 const {
@@ -287,7 +91,7 @@ const VideoPanel = forwardRef(
       width = "30%",
       isMobileView = false,
       isPhoneView = false,
-      agentId,
+      // agentId,
       avatarUrl,
       conversationHistory = [],
       setConversationHistory,
@@ -299,10 +103,11 @@ const VideoPanel = forwardRef(
       liveKitAgentEnabled = false,
       showQueryRelatedSlides = false,
       assessmentDetails = [],
-      showAnswerImage = true,
+      enableProductRecommendations = true,
     },
     ref
   ) => {
+    const agentId = 37;
     const [conversationState, setConversationState] = useState({
       isLoading: false,
       isConnected: false,
@@ -326,8 +131,15 @@ const VideoPanel = forwardRef(
     const dispatch = useDispatch();
     const [generateImage] = useGenerateImageMutation();
     const [createSession] = useCreateSessionMutation();
-    const { currentVideoIndex, isQuestionMode, selectedAssessmentId, autoPlayEnabled, currentVideoTime, showChat } =
-      useSelector((state) => state.video);
+    const {
+      currentVideoIndex,
+      isQuestionMode,
+      selectedAssessmentId,
+      autoPlayEnabled,
+      currentVideoTime,
+      showChat,
+      productRecommendations,
+    } = useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
     // Keep ref updated with current isQuestionMode value
@@ -845,11 +657,22 @@ const VideoPanel = forwardRef(
 
       // Slide Metadata Handling - Console log the data
       if (liveKitService.setOnSlideMetadataReceived) {
-        liveKitService.setOnSlideMetadataReceived((metadata, slideNumbers) => {
+        liveKitService.setOnSlideMetadataReceived((metadata, slideNumbers, recommendations) => {
           console.log("📊 [VideoPanel] Slide metadata received:", metadata);
           console.log("🎯 [VideoPanel] Referenced slide numbers:", slideNumbers);
 
           dispatch(setSlideNumbers(slideNumbers || []));
+
+          // Handle product recommendations
+          if (recommendations && recommendations.length > 0) {
+            console.log("🛍️ [VideoPanel] Product recommendations:", recommendations);
+            // Process recommendations - split pipe-separated image URLs and use the first one
+            const processedRecommendations = recommendations.map((rec) => ({
+              product_url: rec.product_url,
+              product_image_url: rec.product_image_url?.split(" | ")?.[0]?.trim() || rec.product_image_url,
+            }));
+            dispatch(setProductRecommendations(processedRecommendations));
+          }
 
           // Clear generated overlay image when a specific slide redirect or reference is received
           if (
@@ -1013,34 +836,7 @@ const VideoPanel = forwardRef(
           isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
         }`}
         style={!isMobile ? { width } : undefined}>
-        {/* Video Section or Grid Playlist - Responsive for both mobile and desktop */}
-        {/* Video Section or Grid Playlist or Answer Image Gallery */}
-        {showAnswerImage && dummyImages.length > 0 ? (
-          <div
-            className={`bg-white border border-border-light ${
-              isMobile
-                ? isPhone
-                  ? "p-1 md:p-[6px] lg:p-3 rounded-lg flex-shrink-0"
-                  : "p-2 rounded-lg"
-                : "p-3 rounded-xl"
-            } ${showChat || isQuestionMode ? "hidden" : ""}`}>
-            <div
-              className={`relative w-full bg-white overflow-hidden ${
-                isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
-              }`}>
-              <div className="absolute inset-0">
-                <AnswerImageGallery
-                  images={dummyImages}
-                  isMobile={isMobile}
-                  isPhone={isPhone}
-                  isLooping={false}
-                  autoScroll={false}
-                  autoScrollInterval={3000}
-                />
-              </div>
-            </div>
-          </div>
-        ) : isOnlyVideoMode ? (
+        {isOnlyVideoMode ? (
           <div
             className={`bg-white border border-border-light overflow-y-auto ${
               isMobile ? (isPhone ? "p-2 rounded-lg flex-shrink-0" : "p-3 rounded-lg") : "p-3 rounded-xl"
@@ -1143,6 +939,7 @@ const VideoPanel = forwardRef(
             isConnected={conversationState.isConnected}
             avatarUrl={avatarUrl}
             isMobile={isMobile && isPhone}
+            enableProductRecommendations={enableProductRecommendations}
           />
         )}
 

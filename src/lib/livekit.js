@@ -110,16 +110,19 @@ export class LiveKitService {
         const jsonString = new TextDecoder().decode(payload);
         const data = JSON.parse(jsonString);
 
-        console.log("📊 Data received from agent:", data);
+        console.log("product_image:", data);
 
         if (data.type === "slide_redirect" && data.slide_number) {
           const slideNumbers = Array.isArray(data.slide_number) ? data.slide_number : [data.slide_number];
           console.log("🎯 Slide redirect:", slideNumbers);
-          this.onSlideMetadataReceived?.(data, slideNumbers);
+          this.onSlideMetadataReceived?.(data, slideNumbers, null);
+        } else if (data.type === "product_recommendations" && data.recommendations) {
+          console.log("🛍️ Product recommendations received:", data.recommendations);
+          this.onSlideMetadataReceived?.(data, [], data.recommendations);
         } else if (data.slide_number) {
           const slideNumbers = Array.isArray(data.slide_number) ? data.slide_number : [data.slide_number];
           console.log("🎯 Referenced slides:", slideNumbers);
-          this.onSlideMetadataReceived?.(data.data, slideNumbers);
+          this.onSlideMetadataReceived?.(data.data, slideNumbers, null);
         }
       } catch (error) {
         console.error("Failed to parse data message:", error);
