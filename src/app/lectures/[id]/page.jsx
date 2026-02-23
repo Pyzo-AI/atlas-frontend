@@ -187,7 +187,7 @@ const Home = () => {
   const assessmentId = data?.assessment_details?.[0]?.id;
   const passingScore = data?.assessment_details?.[0]?.passing_score || 100;
   const canSkipVideo = data?.hasOwnProperty("is_skippable") ? data.is_skippable : !userName?.includes("jeenaseekho");
-  const enableProductRecommendations = !data?.enable_product_recommendations || false;
+  const enableProductRecommendations = data?.enable_product_recommendations || false;
   const videoPanelRef = useRef(null);
   const pptSectionRef = useRef(null);
   const dispatch = useDispatch();

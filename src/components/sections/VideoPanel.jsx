@@ -90,7 +90,7 @@ const VideoPanel = forwardRef(
       width = "30%",
       isMobileView = false,
       isPhoneView = false,
-      // agentId,
+      agentId,
       avatarUrl,
       conversationHistory = [],
       setConversationHistory,
@@ -106,7 +106,7 @@ const VideoPanel = forwardRef(
     },
     ref
   ) => {
-    const agentId = 37;
+    // const agentId = 37;
     const [conversationState, setConversationState] = useState({
       isLoading: false,
       isConnected: false,
