@@ -53,7 +53,7 @@ const dummyImages = [
   },
 ];
 
-const AnswerImageGallery = ({ images, isLooping = true }) => {
+const AnswerImageGallery = ({ images, isLooping = true, autoScroll = false, autoScrollInterval = 3000 }) => {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [virtualActiveIndex, setVirtualActiveIndex] = React.useState(0);
   const scrollRef = React.useRef(null);
@@ -85,6 +85,52 @@ const AnswerImageGallery = ({ images, isLooping = true }) => {
     }
   }, [originalLength, isLooping]);
 
+  // Handle Auto Scroll
+  const activeIndexRef = React.useRef(virtualActiveIndex);
+  React.useEffect(() => {
+    activeIndexRef.current = virtualActiveIndex;
+  }, [virtualActiveIndex]);
+
+  React.useEffect(() => {
+    if (!autoScroll || originalLength <= 1) return;
+
+    const interval = setInterval(() => {
+      const container = scrollRef.current;
+      if (container) {
+        const firstItem = container.querySelector(".carousel-item");
+        if (firstItem) {
+          const itemWidth = firstItem.offsetWidth;
+          // Calculate next index based on current scroll position to be most accurate
+          const currentScrollIndex = Math.round(container.scrollLeft / itemWidth);
+          let nextIndex = currentScrollIndex + 1;
+
+          if (isLooping) {
+            // In looping mode, we just keep going, handleScroll handles silent resets
+            container.scrollTo({
+              left: itemWidth * nextIndex,
+              behavior: "smooth",
+            });
+          } else {
+            // In non-looping mode, reset to first real image (index 1) if at the end
+            if (nextIndex > originalLength) {
+              container.scrollTo({
+                left: itemWidth * 1,
+                behavior: "smooth",
+              });
+            } else {
+              container.scrollTo({
+                left: itemWidth * nextIndex,
+                behavior: "smooth",
+              });
+            }
+          }
+        }
+      }
+    }, autoScrollInterval);
+
+    return () => clearInterval(interval);
+  }, [autoScroll, autoScrollInterval, isLooping, originalLength]);
+
   const handleScroll = (e) => {
     const container = e.target;
     const scrollLeft = container.scrollLeft;
@@ -103,17 +149,9 @@ const AnswerImageGallery = ({ images, isLooping = true }) => {
         container.scrollLeft = scrollLeft - originalWidth * 2;
         return;
       }
-    } else {
-      // Clamping scroll for non-looping to keep images centered but prevent scrolling to spacers
-      const minLockedScroll = itemWidth;
-      const maxLockedScroll = itemWidth * originalLength;
-      if (scrollLeft < minLockedScroll) {
-        container.scrollLeft = minLockedScroll;
-        // Don't return, let it calculate closestIndex to stay at 1
-      } else if (scrollLeft > maxLockedScroll) {
-        container.scrollLeft = maxLockedScroll;
-      }
     }
+    // Clamping is managed naturally by CSS scroll-snap on .carousel-item
+    // Spacer items (null) do not have snap-center, so they won't be centered by the browser.
 
     const center = scrollLeft + container.offsetWidth / 2;
     let closestIndex = isLooping ? 0 : 1;
@@ -983,15 +1021,22 @@ const VideoPanel = forwardRef(
               isMobile
                 ? isPhone
                   ? "p-1 md:p-[6px] lg:p-3 rounded-lg flex-shrink-0"
-                  : "p-2 pb-1 rounded-lg"
-                : "p-3 pb-2 rounded-xl"
+                  : "p-2 rounded-lg"
+                : "p-3 rounded-xl"
             } ${showChat || isQuestionMode ? "hidden" : ""}`}>
             <div
               className={`relative w-full bg-white overflow-hidden ${
                 isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
               }`}>
               <div className="absolute inset-0">
-                <AnswerImageGallery images={dummyImages} isMobile={isMobile} isPhone={isPhone} isLooping={false} />
+                <AnswerImageGallery
+                  images={dummyImages}
+                  isMobile={isMobile}
+                  isPhone={isPhone}
+                  isLooping={false}
+                  autoScroll={false}
+                  autoScrollInterval={3000}
+                />
               </div>
             </div>
           </div>
