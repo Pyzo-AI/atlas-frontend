@@ -1,10 +1,86 @@
 import React from "react";
 import Image from "next/image";
 
+// Renders product image(s) — supports both string (single) and array (multi-grid) modes
+const ProductImageContent = ({ imageUrl, isActive }) => {
+  const isMultiple = Array.isArray(imageUrl);
+
+  if (isMultiple) {
+    const count = imageUrl.length;
+
+    // Grid layout:
+    // 2 → 1 row: [half | half]
+    // 3 → 2 rows: [half | half] + [full]
+    // 4 → 2 rows: [half | half] + [half | half]
+    return (
+      <div
+        className="w-full h-full grid gap-1.5 p-2"
+        style={{
+          gridTemplateColumns: "1fr 1fr",
+          gridTemplateRows: count <= 2 ? "1fr" : "1fr 1fr",
+        }}
+      >
+        {imageUrl.map((url, i) => {
+          // For 3 images: last item spans full width
+          const spanFull = count === 3 && i === 2;
+          return (
+            <div
+              key={i}
+              className="relative bg-[#E8E9EB] overflow-hidden min-h-0"
+              style={{ borderRadius: "12px", ...(spanFull ? { gridColumn: "1 / -1" } : {}) }}
+            >
+              <Image draggable={false} src={url} alt="" fill className="object-contain p-1" unoptimized />
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Default: single image
+  return (
+    <div className={`relative w-full h-full transition-all duration-300 ${isActive ? "p-0" : "p-4"}`}>
+      <Image draggable={false} src={imageUrl} alt="" fill className="object-contain" unoptimized />
+    </div>
+  );
+};
+
 const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = false, autoScrollInterval = 3000 }) => {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [virtualActiveIndex, setVirtualActiveIndex] = React.useState(0);
+  const [isHovered, setIsHovered] = React.useState(false);
   const scrollRef = React.useRef(null);
+
+  // Mouse drag-to-scroll
+  const isDragging = React.useRef(false);
+  const dragStartX = React.useRef(0);
+  const dragScrollLeft = React.useRef(0);
+  const hasDragged = React.useRef(false);
+
+  const handleMouseDown = (e) => {
+    isDragging.current = true;
+    hasDragged.current = false;
+    dragStartX.current = e.pageX;
+    dragScrollLeft.current = scrollRef.current.scrollLeft;
+    scrollRef.current.style.cursor = "grabbing";
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return;
+    e.preventDefault();
+    const dx = e.pageX - dragStartX.current;
+    if (Math.abs(dx) > 5) hasDragged.current = true;
+    scrollRef.current.scrollLeft = dragScrollLeft.current - dx;
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+  };
+
+  const handleLinkClick = (e) => {
+    if (hasDragged.current) e.preventDefault();
+  };
 
   const originalLength = images.length;
 
@@ -40,7 +116,7 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
   }, [virtualActiveIndex]);
 
   React.useEffect(() => {
-    if (!autoScroll || originalLength <= 1) return;
+    if (!autoScroll || originalLength <= 1 || isHovered) return;
 
     const interval = setInterval(() => {
       const container = scrollRef.current;
@@ -72,7 +148,7 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
     }, autoScrollInterval);
 
     return () => clearInterval(interval);
-  }, [autoScroll, autoScrollInterval, isLooping, originalLength, virtualActiveIndex, virtualImages.length]);
+  }, [autoScroll, autoScrollInterval, isLooping, originalLength, virtualActiveIndex, virtualImages.length, isHovered]);
 
   const handleScroll = (e) => {
     const container = e.target;
@@ -126,7 +202,13 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex items-center h-full overflow-x-auto snap-x snap-mandatory w-full no-scrollbar px-[10%] py-4">
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={(e) => { setIsHovered(false); handleMouseUp(e); }}
+        onMouseEnter={() => setIsHovered(true)}
+        className="flex items-center h-full overflow-x-auto snap-x snap-mandatory w-full no-scrollbar px-[10%] py-4"
+        style={{ cursor: "grab" }}>
         {virtualImages.map((item, idx) => {
           const isActive = idx === virtualActiveIndex;
           const distance = Math.abs(idx - virtualActiveIndex);
@@ -135,7 +217,7 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
           return (
             <div
               key={idx}
-              className={`carousel-item h-full flex-shrink-0 w-[80%] flex items-center justify-center pointer-events-none ${!isSpacer || isLooping ? "snap-center snap-always" : ""}`}
+              className={`carousel-item h-full shrink-0 w-[80%] flex items-center justify-center ${!isSpacer || isLooping ? "snap-center snap-always" : ""}`}
               style={{
                 perspective: "1000px",
                 zIndex: isActive ? 50 : 20 - distance,
@@ -145,9 +227,10 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
                 href={item?.product_url || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={handleLinkClick}
                 className={`
                   transition-all duration-500 ease-in-out relative
-                  box-border bg-[#F1F2F4] rounded-[24px] overflow-hidden flex items-center justify-center shadow-md
+                  box-border bg-[#F1F2F4] rounded-[16px] overflow-hidden flex items-center justify-center shadow-md
                   ${isSpacer ? "opacity-0" : ""}
                 `}
                 style={{
@@ -162,9 +245,7 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
                   pointerEvents: isActive && !isSpacer ? "auto" : "none",
                 }}>
                 {!isSpacer && (
-                  <div className={`relative w-full h-full transition-all duration-300 ${isActive ? "p-0" : "p-4"}`}>
-                    <Image src={item.product_image_url} alt="" fill className="object-contain" unoptimized />
-                  </div>
+                  <ProductImageContent imageUrl={item.product_image_url} isActive={isActive} />
                 )}
               </a>
             </div>
