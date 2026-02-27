@@ -8,7 +8,7 @@ const ProductImageContent = ({ imageUrl }) => {
     return (
       <div className="w-full h-full flex gap-[2.5%] p-[3%]" style={{ boxSizing: "border-box" }}>
         {slots.map((url, i) => (
-          <div key={i} className="relative flex-1 h-full overflow-hidden" style={{ background: "#FFFFFF", borderRadius: "6px" }}>
+          <div key={i} className="relative flex-1 h-full overflow-hidden" style={{ background: "#FFFFFF", borderRadius: "12px" }}>
             <Image draggable={false} src={url} alt="" fill className="object-contain p-[8%]" unoptimized />
           </div>
         ))}
@@ -26,7 +26,7 @@ const CardShell = ({ children, isSpacer, href, onClick }) => {
   const inner = (
     <div
       className="w-full h-full overflow-hidden relative"
-      style={{ background: "#1A1A1A12", borderRadius: "6px", opacity: isSpacer ? 0 : 1 }}
+      style={{ background: "#E2E5EE", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", opacity: isSpacer ? 0 : 1 }}
     >
       {children}
     </div>
@@ -245,7 +245,7 @@ const ProductRecommendationGallery = ({
   return (
     <div
       className="flex flex-col items-center justify-center w-full h-full overflow-hidden"
-      style={{ background: "#F8FAFF", borderRadius: "4px" }}
+      style={{ background: "#EEF1F8", borderRadius: "16px" }}
     >
       <div
         ref={scrollRef}
@@ -256,14 +256,14 @@ const ProductRecommendationGallery = ({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className="flex items-center h-full overflow-x-hidden w-full no-scrollbar"
-        style={{ cursor: "grab", paddingLeft: "10%", paddingRight: "10%" }}
+        style={{ cursor: "grab", paddingLeft: "10%", paddingRight: "10%", gap: "3%" }}
       >
         {virtualImages.map((item, idx) => {
           const isActive = idx === virtualActiveIndex;
           const distance = Math.abs(idx - virtualActiveIndex);
           const isSpacer = item === null;
 
-          const scale      = isActive ? 1.05 : Math.max(0.38, 1 - distance * 0.28);
+          const scale      = isActive ? 1 : Math.max(0.38, 1 - distance * 0.28);
           const translateX = isActive ? 0 : idx < virtualActiveIndex ? (1 - scale) * 48 : -(1 - scale) * 48;
           const opacity    = isSpacer ? 0 : isActive ? 1 : Math.max(0.08, 1 - distance * 0.45);
 
@@ -271,12 +271,12 @@ const ProductRecommendationGallery = ({
             <div
               key={idx}
               className="carousel-item shrink-0 flex items-center justify-center h-full"
-              style={{ width: "80%", zIndex: isActive ? 50 : Math.max(1, 20 - distance), position: "relative" }}
+              style={{ width: "76%", zIndex: isActive ? 50 : Math.max(1, 20 - distance), position: "relative" }}
             >
               <div
                 className="w-full"
                 style={{
-                  aspectRatio: "378/270",
+                  aspectRatio: "378/245",
                   transform: `scale(${scale}) translateX(${translateX}%)`,
                   opacity,
                   pointerEvents: isActive && !isSpacer ? "auto" : "none",
