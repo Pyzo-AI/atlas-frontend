@@ -1,57 +1,106 @@
 import React from "react";
 import Image from "next/image";
 
-// Renders product image(s) — supports both string (single) and array (multi-grid) modes
-const ProductImageContent = ({ imageUrl, isActive }) => {
+/**
+ * Renders product image(s).
+ * Single: centered product on light-gray card bg.
+ * Multi:  two white panels side-by-side inside a light-gray card bg.
+ * Wing (neighbour card): same layout but visually smaller due to scale transform.
+ */
+const ProductImageContent = ({ imageUrl, isActive, isWing = false }) => {
   const isMultiple = Array.isArray(imageUrl);
 
   if (isMultiple) {
-    const count = imageUrl.length;
+    const slots = imageUrl.slice(0, Math.min(imageUrl.length, 2));
 
-    // Grid layout:
-    // 2 → 1 row: [half | half]
-    // 3 → 2 rows: [half | half] + [full]
-    // 4 → 2 rows: [half | half] + [half | half]
     return (
+      // Gray container fills entire card shell inner area, panels sit inside with padding
       <div
-        className="w-full h-full grid gap-1.5 p-2"
-        style={{
-          gridTemplateColumns: "1fr 1fr",
-          gridTemplateRows: count <= 2 ? "1fr" : "1fr 1fr",
-        }}
+        className="w-full h-full flex gap-[2.5%] p-[3%]"
+        style={{ boxSizing: "border-box" }}
       >
-        {imageUrl.map((url, i) => {
-          // For 3 images: last item spans full width
-          const spanFull = count === 3 && i === 2;
-          return (
-            <div
-              key={i}
-              className="relative bg-[#E8E9EB] overflow-hidden min-h-0"
-              style={{ borderRadius: "12px", ...(spanFull ? { gridColumn: "1 / -1" } : {}) }}
-            >
-              <Image draggable={false} src={url} alt="" fill className="object-contain p-1" unoptimized />
-            </div>
-          );
-        })}
+        {slots.map((url, i) => (
+          <div
+            key={i}
+            className="relative flex-1 h-full overflow-hidden"
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "12px",
+            }}
+          >
+            <Image
+              draggable={false}
+              src={url}
+              alt=""
+              fill
+              className="object-contain p-[8%]"
+              unoptimized
+            />
+          </div>
+        ))}
       </div>
     );
   }
 
-  // Default: single image
+  // Single image — centered, no extra wrapper
   return (
-    <div className={`relative w-full h-full transition-all duration-300 ${isActive ? "p-0" : "p-4"}`}>
-      <Image draggable={false} src={imageUrl} alt="" fill className="object-contain" unoptimized />
+    <div className="relative w-full h-full p-[8%]">
+      <Image
+        draggable={false}
+        src={imageUrl}
+        alt=""
+        fill
+        className="object-contain"
+        unoptimized
+      />
     </div>
   );
 };
 
-const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = false, autoScrollInterval = 3000 }) => {
+/**
+ * Card shell.
+ * Active card  : white bg, subtle border, rounded-2xl — matches Figma center card.
+ * Wing card    : same shell but scaled down externally via transform.
+ * Spacer       : invisible placeholder so the first/last real cards can be centred.
+ */
+const CardShell = ({ children, isSpacer, isActive, href, onClick }) => {
+  const inner = (
+    <div
+      className="w-full h-full overflow-hidden relative"
+      style={{
+        background: "#1A1A1A12",
+        borderRadius: "16px",
+        boxSizing: "border-box",
+        opacity: isSpacer ? 0 : 1,
+        // border: "1px solid rgba(0,0,0,0.06)",
+      }}
+    >
+      {children}
+    </div>
+  );
+
+  if (href && href !== "#") {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" onClick={onClick} className="w-full h-full block">
+        {inner}
+      </a>
+    );
+  }
+  return inner;
+};
+
+const ProductRecommendationGallery = ({
+  images,
+  isLooping = true,
+  autoScroll = false,
+  autoScrollInterval = 3000,
+}) => {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [virtualActiveIndex, setVirtualActiveIndex] = React.useState(0);
   const [isHovered, setIsHovered] = React.useState(false);
   const scrollRef = React.useRef(null);
 
-  // Mouse drag-to-scroll
+  // Drag-to-scroll
   const isDragging = React.useRef(false);
   const dragStartX = React.useRef(0);
   const dragScrollLeft = React.useRef(0);
@@ -82,21 +131,34 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
     if (hasDragged.current) e.preventDefault();
   };
 
+  // Touch
+  const touchStartX = React.useRef(0);
+  const touchScrollLeft = React.useRef(0);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchScrollLeft.current = scrollRef.current.scrollLeft;
+    hasDragged.current = false;
+  };
+
+  const handleTouchMove = (e) => {
+    const dx = e.touches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 5) hasDragged.current = true;
+    scrollRef.current.scrollLeft = touchScrollLeft.current - dx;
+  };
+
   const originalLength = images.length;
 
-  // Create virtual list: 5 sets for looping, or [null, ...images, null] for non-looping spacers
   const virtualImages = React.useMemo(() => {
     if (originalLength === 0) return [];
     if (isLooping) {
       return [...images, ...images, ...images, ...images, ...images];
     }
-    // Add spacers to the start and end to keep the 'stack' wings visible at the edges
     return [null, ...images, null];
   }, [images, isLooping]);
 
   const middleStart = isLooping ? originalLength * 2 : originalLength > 0 ? 1 : 0;
 
-  // Initialize scroll position
   React.useEffect(() => {
     if (scrollRef.current && originalLength > 0) {
       const container = scrollRef.current;
@@ -109,7 +171,6 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
     }
   }, [originalLength, isLooping]);
 
-  // Handle Auto Scroll
   const activeIndexRef = React.useRef(virtualActiveIndex);
   React.useEffect(() => {
     activeIndexRef.current = virtualActiveIndex;
@@ -117,48 +178,29 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
 
   React.useEffect(() => {
     if (!autoScroll || originalLength <= 1 || isHovered) return;
-
     const interval = setInterval(() => {
       const container = scrollRef.current;
       if (!container) return;
-
       const items = container.querySelectorAll(".carousel-item");
       if (!items.length) return;
-
-      // Determine next index
-      let nextIndex = virtualActiveIndex + 1;
-
-      if (isLooping) {
-        // Continuous flow
-      } else {
-        if (nextIndex >= virtualImages.length - 1) {
-          nextIndex = 1; // Jump back to first image
-        }
-      }
-
+      let nextIndex = activeIndexRef.current + 1;
+      if (!isLooping && nextIndex >= virtualImages.length - 1) nextIndex = 1;
       const targetItem = items[nextIndex];
       if (targetItem) {
         const itemCenter = targetItem.offsetLeft + targetItem.offsetWidth / 2;
-        const containerCenter = container.offsetWidth / 2;
-        container.scrollTo({
-          left: itemCenter - containerCenter,
-          behavior: "smooth",
-        });
+        container.scrollTo({ left: itemCenter - container.offsetWidth / 2, behavior: "smooth" });
       }
     }, autoScrollInterval);
-
     return () => clearInterval(interval);
-  }, [autoScroll, autoScrollInterval, isLooping, originalLength, virtualActiveIndex, virtualImages.length, isHovered]);
+  }, [autoScroll, autoScrollInterval, isLooping, originalLength, virtualImages.length, isHovered]);
 
   const handleScroll = (e) => {
     const container = e.target;
     const scrollLeft = container.scrollLeft;
     const firstItem = container.querySelector(".carousel-item");
     if (!firstItem) return;
-
     const itemWidth = firstItem.offsetWidth;
 
-    // Looping silent reset
     if (isLooping) {
       const originalWidth = itemWidth * originalLength;
       if (scrollLeft < originalWidth) {
@@ -169,13 +211,10 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
         return;
       }
     }
-    // Clamping is managed naturally by CSS scroll-snap on .carousel-item
-    // Spacer items (null) do not have snap-center, so they won't be centered by the browser.
 
     const center = scrollLeft + container.offsetWidth / 2;
     let closestIndex = isLooping ? 0 : 1;
     let minDistance = Infinity;
-
     const items = container.querySelectorAll(".carousel-item");
     items.forEach((item, index) => {
       const itemCenter = item.offsetLeft + item.offsetWidth / 2;
@@ -191,14 +230,18 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
       const realIndex = isLooping
         ? closestIndex % originalLength
         : Math.max(0, Math.min(originalLength - 1, closestIndex - 1));
-      if (realIndex !== activeIndex) {
-        setActiveIndex(realIndex);
-      }
+      if (realIndex !== activeIndex) setActiveIndex(realIndex);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full bg-white rounded-xl overflow-hidden border border-gray-100">
+    <div
+      className="flex flex-col items-center justify-center w-full h-full overflow-hidden"
+      style={{
+        background: "#F8FAFF",
+        borderRadius: "16px",
+      }}
+    >
       <div
         ref={scrollRef}
         onScroll={handleScroll}
@@ -207,47 +250,71 @@ const ProductRecommendationGallery = ({ images, isLooping = true, autoScroll = f
         onMouseUp={handleMouseUp}
         onMouseLeave={(e) => { setIsHovered(false); handleMouseUp(e); }}
         onMouseEnter={() => setIsHovered(true)}
-        className="flex items-center h-full overflow-x-auto snap-x snap-mandatory w-full no-scrollbar px-[10%] py-4"
-        style={{ cursor: "grab" }}>
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        className="flex items-center h-full overflow-x-auto snap-x snap-mandatory w-full no-scrollbar"
+        style={{ cursor: "grab", paddingLeft: "10%", paddingRight: "10%" }}
+      >
         {virtualImages.map((item, idx) => {
           const isActive = idx === virtualActiveIndex;
           const distance = Math.abs(idx - virtualActiveIndex);
           const isSpacer = item === null;
+          const isWing = !isSpacer && distance === 1;
+
+          // Active = full size, wings ~0.52, further smaller
+          const scale = isActive ? 1 : Math.max(0.38, 1 - distance * 0.28);
+
+          // Nudge wing cards inward so they peek naturally
+          const translateX = isActive
+            ? 0
+            : idx < virtualActiveIndex
+              ? (1 - scale) * 48
+              : -(1 - scale) * 48;
+
+          // Wings clearly faded
+          const opacity = isSpacer
+            ? 0
+            : isActive
+              ? 1
+              : Math.max(0.08, 1 - distance * 0.45);
 
           return (
             <div
               key={idx}
-              className={`carousel-item h-full shrink-0 w-[80%] flex items-center justify-center ${!isSpacer || isLooping ? "snap-center snap-always" : ""}`}
+              className={`carousel-item shrink-0 flex items-center justify-center h-full ${
+                !isSpacer || isLooping ? "snap-center snap-always" : ""
+              }`}
               style={{
-                perspective: "1000px",
-                zIndex: isActive ? 50 : 20 - distance,
+                width: "80%",
+                zIndex: isActive ? 50 : Math.max(1, 20 - distance),
                 position: "relative",
-              }}>
-              <a
-                href={item?.product_url || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={handleLinkClick}
-                className={`
-                  transition-all duration-500 ease-in-out relative
-                  box-border bg-[#F1F2F4] rounded-[16px] overflow-hidden flex items-center justify-center shadow-md
-                  ${isSpacer ? "opacity-0" : ""}
-                `}
+              }}
+            >
+              <div
+                className="w-full transition-all duration-500 ease-in-out"
                 style={{
-                  width: "100%",
-                  aspectRatio: "182/119",
-                  transform: isActive
-                    ? "scale(1.15) translateX(0) translateZ(0)"
-                    : idx < virtualActiveIndex
-                      ? "scale(0.85) translateX(35%) translateZ(-150px)"
-                      : "scale(0.85) translateX(-35%) translateZ(-150px)",
-                  opacity: isSpacer ? 0 : isActive ? 1 : Math.max(0.1, 1 - distance * 0.3),
+                  // Aspect ratio from Figma: 378/245
+                  aspectRatio: "378/245",
+                  transform: `scale(${scale}) translateX(${translateX}%)`,
+                  opacity,
                   pointerEvents: isActive && !isSpacer ? "auto" : "none",
-                }}>
-                {!isSpacer && (
-                  <ProductImageContent imageUrl={item.product_image_url} isActive={isActive} />
-                )}
-              </a>
+                }}
+              >
+                <CardShell
+                  isSpacer={isSpacer}
+                  isActive={isActive}
+                  href={item?.product_url || "#"}
+                  onClick={handleLinkClick}
+                >
+                  {!isSpacer && (
+                    <ProductImageContent
+                      imageUrl={item.product_image_url}
+                      isActive={isActive}
+                      isWing={isWing}
+                    />
+                  )}
+                </CardShell>
+              </div>
             </div>
           );
         })}
