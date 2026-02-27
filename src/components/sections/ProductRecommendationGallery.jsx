@@ -8,7 +8,7 @@ const ProductImageContent = ({ imageUrl }) => {
     return (
       <div className="w-full h-full flex gap-[2.5%] p-[3%]" style={{ boxSizing: "border-box" }}>
         {slots.map((url, i) => (
-          <div key={i} className="relative flex-1 h-full overflow-hidden" style={{ background: "#FFFFFF", borderRadius: "12px" }}>
+          <div key={i} className="relative flex-1 h-full overflow-hidden" style={{ background: "#FFFFFF", borderRadius: "6px" }}>
             <Image draggable={false} src={url} alt="" fill className="object-contain p-[8%]" unoptimized />
           </div>
         ))}
@@ -26,7 +26,7 @@ const CardShell = ({ children, isSpacer, href, onClick }) => {
   const inner = (
     <div
       className="w-full h-full overflow-hidden relative"
-      style={{ background: "#E2E5EE", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", opacity: isSpacer ? 0 : 1 }}
+      style={{ background: "#E2E5EE", borderRadius: "8px", border: "1px solid rgba(0,0,0,0.06)", opacity: isSpacer ? 0 : 1 }}
     >
       {children}
     </div>
@@ -245,7 +245,7 @@ const ProductRecommendationGallery = ({
   return (
     <div
       className="flex flex-col items-center justify-center w-full h-full overflow-hidden"
-      style={{ background: "#EEF1F8", borderRadius: "16px" }}
+      style={{ background: "#EEF1F8", borderRadius: "4px" }}
     >
       <div
         ref={scrollRef}
