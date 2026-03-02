@@ -17,25 +17,16 @@ const PasswordInput = ({ value, onChange, error, placeholder = "***************"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            style={
+            className={`flex-1 bg-transparent outline-none font-normal text-black placeholder:text-black/50 autofill:shadow-[inset_0_0_0px_1000px_white] ${
               !showPassword
-                ? {
-                    fontFamily: "Verdana, sans-serif", // Verdana dots are smaller & centered
-                    fontSize: "10px",
-                    letterSpacing: "4px",
-                    lineHeight: "44px",
-                  }
-                : {
-                    fontSize: "14px",
-                    lineHeight: "44px",
-                  }
-            }
-            className={`flex-1 bg-transparent outline-none font-normal text-black placeholder:text-black/50 placeholder:text-[14px] placeholder:font-sans placeholder:tracking-normal autofill:shadow-[inset_0_0_0px_1000px_white]`}
+                ? `text-[21px] tracking-[2px] placeholder:text-[14px] ${value ? "" : "-translate-y-[-3px]"}`
+                : `text-[14px] ${value ? "" : "-translate-y-[-4px]"}`
+            }`}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="flex items-center justify-center p-1 cursor-pointer">
+            className="flex items-center justify-center p-1">
             {showPassword ? (
               <FiEye className="w-5 h-5 text-[#111827]" />
             ) : (
