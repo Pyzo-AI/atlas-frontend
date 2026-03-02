@@ -173,7 +173,7 @@ function LoginForm() {
           ) : isUpdatePassword ? (
             <UpdatePasswordForm onSuccess={() => router.push("/login")} token={token} />
           ) : (
-            <div className="w-[440px] flex flex-col gap-6">
+            <div className="max-w-[440px] w-full flex flex-col gap-6">
               {/* Headline and Subhead */}
               <div className="flex flex-col gap-2">
                 <h1 className="font-semibold text-[32px] leading-[38px] text-[#111827]">Hi, Welcome! 👋</h1>
@@ -206,7 +206,7 @@ function LoginForm() {
                     <button
                       type="button"
                       onClick={() => router.push("/login?view=forgot-password")}
-                      className="font-medium text-[16px] leading-[16px] text-[#2762EA] hover:underline transition-all">
+                      className="font-medium text-[16px] leading-[16px] text-[#2762EA] hover:underline transition-all cursor-pointer">
                       Forgot password?
                     </button>
                   </div>

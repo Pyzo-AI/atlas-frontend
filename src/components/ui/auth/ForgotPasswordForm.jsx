@@ -70,7 +70,7 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
       <div className="w-[440px] flex flex-col gap-9">
         <button
           onClick={onBackToLogin}
-          className="flex flex-row items-center gap-[10px] w-fit group hover:bg-[#F9FAFB] px-3 py-2 -ml-3 rounded-[8px] transition-all duration-200">
+          className="flex flex-row items-center gap-[10px] w-fit group hover:bg-[#F9FAFB] px-3 py-2 -ml-3 rounded-[8px] transition-all duration-200 cursor-pointer">
           <FiArrowLeft className="w-5 h-5 text-[#111827] group-hover:-translate-x-1 transition-transform duration-200" />
           <span className="font-semibold text-[14px] leading-[19px] text-[#333333]">Back to login</span>
         </button>
@@ -80,7 +80,9 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
           <div className="flex flex-wrap items-center gap-1 font-normal text-[14px] leading-[17px] text-[#4B5563]">
             <span>We’ve sent a password reset link to</span>
             <span className="text-[#111827] font-medium">{email}</span>
-            <button onClick={() => setSuccess(false)} className="text-[#2877EE] font-semibold hover:underline">
+            <button
+              onClick={() => setSuccess(false)}
+              className="text-[#2877EE] font-semibold hover:underline cursor-pointer">
               Change
             </button>
           </div>
@@ -118,7 +120,9 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
             }}
             disabled={resendTimer > 0 || loading}
             className={`font-semibold text-[14px] leading-[17px] ${
-              resendTimer > 0 || loading ? "text-[#9CA3AF] cursor-not-allowed" : "text-[#2877EE] hover:underline"
+              resendTimer > 0 || loading
+                ? "text-[#9CA3AF] cursor-not-allowed"
+                : "text-[#2877EE] hover:underline cursor-pointer"
             }`}>
             {loading ? "Sending..." : resendTimer > 0 ? `Resend in ${resendTimer}s` : "Click to resend"}
           </button>
@@ -133,7 +137,7 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
       <button
         type="button"
         onClick={onBackToLogin}
-        className="flex flex-row items-center gap-[10px] w-fit group hover:bg-[#F9FAFB] px-3 py-2 -ml-3 rounded-[8px] transition-all duration-200">
+        className="flex flex-row items-center gap-[10px] w-fit group hover:bg-[#F9FAFB] px-3 py-2 -ml-3 rounded-[8px] transition-all duration-200 cursor-pointer">
         <FiArrowLeft className="w-5 h-5 text-[#111827] " />
         <span className="font-semibold text-[14px] leading-[19px] text-[#333333]">Back to login</span>
       </button>

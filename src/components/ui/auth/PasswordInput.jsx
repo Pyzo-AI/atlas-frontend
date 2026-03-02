@@ -26,7 +26,7 @@ const PasswordInput = ({ value, onChange, error, placeholder = "***************"
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="flex items-center justify-center p-1">
+            className="flex items-center justify-center p-1 cursor-pointer">
             {showPassword ? (
               <FiEye className="w-5 h-5 text-[#111827]" />
             ) : (
