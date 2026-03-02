@@ -17,11 +17,20 @@ const PasswordInput = ({ value, onChange, error, placeholder = "***************"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className={`flex-1 bg-transparent outline-none font-normal text-black placeholder:text-black/50 autofill:shadow-[inset_0_0_0px_1000px_white] ${
+            style={
               !showPassword
-                ? "text-[21px] tracking-[2px] placeholder:text-[14px] -translate-y-[0px]"
-                : "text-[14px] -translate-y-[-2px]"
-            }`}
+                ? {
+                    fontFamily: "Verdana, sans-serif", // Verdana dots are smaller & centered
+                    fontSize: "10px",
+                    letterSpacing: "4px",
+                    lineHeight: "44px",
+                  }
+                : {
+                    fontSize: "14px",
+                    lineHeight: "44px",
+                  }
+            }
+            className={`flex-1 bg-transparent outline-none font-normal text-black placeholder:text-black/50 placeholder:text-[14px] placeholder:font-sans placeholder:tracking-normal autofill:shadow-[inset_0_0_0px_1000px_white]`}
           />
           <button
             type="button"
