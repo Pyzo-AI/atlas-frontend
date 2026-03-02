@@ -151,11 +151,11 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex w-full min-h-screen bg-white font-lato">
+    <div className="flex flex-col lg:flex-row w-full min-h-screen bg-white font-lato">
       {/* Left side Section */}
       <div className="flex flex-col flex-1">
         {/* Logo - Normal Flow */}
-        <div className="pt-[30px] pl-[40px]">
+        <div className="pt-[30px] px-[20px] lg:pl-[40px]">
           <Image
             src={logo}
             alt="Pyzo Logo"
@@ -167,7 +167,7 @@ function LoginForm() {
         </div>
 
         {/* Login/Forgot Password/Update Password Form Container - Centered in remaining space using Normal CSS */}
-        <div className="flex-1 flex items-center justify-start pl-[60px] mt-[-5vh]">
+        <div className="flex-1 flex items-center justify-center lg:justify-start px-[20px] lg:pl-[60px] lg:mt-[-5vh] py-10 lg:py-0">
           {isForgotPassword ? (
             <ForgotPasswordForm onBackToLogin={() => router.push("/login")} initialEmail={email} />
           ) : isUpdatePassword ? (
@@ -176,20 +176,24 @@ function LoginForm() {
             <div className="max-w-[440px] w-full flex flex-col gap-6">
               {/* Headline and Subhead */}
               <div className="flex flex-col gap-2">
-                <h1 className="font-semibold text-[32px] leading-[38px] text-[#111827]">Hi, Welcome! 👋</h1>
-                <p className="font-normal text-[16px] leading-[24px] text-[#4B5563]">Lets login to your account</p>
+                <h1 className="font-semibold text-[28px] lg:text-[32px] leading-[34px] lg:leading-[38px] text-[#111827]">
+                  Hi, Welcome! 👋
+                </h1>
+                <p className="font-normal text-[14px] lg:text-[16px] leading-[20px] lg:leading-[24px] text-[#4B5563]">
+                  Lets login to your account
+                </p>
               </div>
 
               {/* General Error Alert - Normal Flow */}
               {error && (
                 <div
-                  className="w-full h-[40px] flex items-center px-[12px] gap-[4px] rounded-[9px] border border-[rgba(214,87,69,0.2)]"
+                  className="w-full min-h-[40px] flex items-center px-[12px] py-2 gap-[4px] rounded-[9px] border border-[rgba(214,87,69,0.2)]"
                   style={{
                     background: "linear-gradient(0deg, rgba(214, 87, 69, 0.1), rgba(214, 87, 69, 0.1)), #FFFFFF",
                   }}>
                   <div className="flex items-center gap-[4px] w-full">
                     <FiAlertCircle className="w-4 h-4 text-[#D65745] flex-shrink-0" />
-                    <span className="font-normal text-[12px] leading-[14px] text-[#D65745]">{error}</span>
+                    <span className="font-normal text-[12px] leading-[14px] text-[#D65745] font-lato">{error}</span>
                   </div>
                 </div>
               )}
@@ -206,7 +210,7 @@ function LoginForm() {
                     <button
                       type="button"
                       onClick={() => router.push("/login?view=forgot-password")}
-                      className="font-medium text-[16px] leading-[16px] text-[#2762EA] hover:underline transition-all cursor-pointer">
+                      className="font-medium text-[14px] lg:text-[16px] leading-[16px] text-[#2762EA] hover:underline transition-all cursor-pointer">
                       Forgot password?
                     </button>
                   </div>

@@ -67,7 +67,7 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
 
   if (success) {
     return (
-      <div className="w-[440px] flex flex-col gap-9">
+      <div className="max-w-[440px] w-full flex flex-col gap-9">
         <button
           onClick={onBackToLogin}
           className="flex flex-row items-center gap-[10px] w-fit group hover:bg-[#F9FAFB] px-3 py-2 -ml-3 rounded-[8px] transition-all duration-200 cursor-pointer">
@@ -76,7 +76,9 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
         </button>
 
         <div className="flex flex-col gap-2">
-          <h2 className="font-bold text-[32px] leading-[38px] text-[#111827]">Check your email</h2>
+          <h2 className="font-bold text-[28px] lg:text-[32px] leading-[34px] lg:leading-[38px] text-[#111827]">
+            Check your email
+          </h2>
           <div className="flex flex-wrap items-center gap-1 font-normal text-[14px] leading-[17px] text-[#4B5563]">
             <span>We’ve sent a password reset link to</span>
             <span className="text-[#111827] font-medium">{email}</span>
@@ -132,7 +134,7 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
   }
 
   return (
-    <div className="w-[440px] flex flex-col gap-9 mt-[-5vh]">
+    <div className="max-w-[440px] w-full flex flex-col gap-9 lg:mt-[-5vh]">
       {/* Back to login */}
       <button
         type="button"
@@ -144,7 +146,9 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
 
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <h2 className="font-semibold text-[32px] leading-[38px] text-[#111827]">Forgot your password?</h2>
+        <h2 className="font-semibold text-[28px] lg:text-[32px] leading-[34px] lg:leading-[38px] text-[#111827]">
+          Forgot your password?
+        </h2>
         <p className="font-normal text-[14px] leading-[17px] text-[#4B5563]">
           No worries, we’ll send you reset instructions to your email.
         </p>

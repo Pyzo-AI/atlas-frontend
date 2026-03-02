@@ -55,11 +55,15 @@ const UpdatePasswordForm = ({ onSuccess, token }) => {
   };
 
   return (
-    <div className="w-[400px] flex flex-col gap-9 mt-[-5vh]">
+    <div className="max-w-[400px] w-full flex flex-col gap-9 lg:mt-[-5vh]">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <h2 className="font-semibold text-[32px] leading-[38px] text-[#111827]">Reset Password?</h2>
-        <p className="font-normal text-[16px] leading-[24px] text-[#4B5563]">Create a new password for your account.</p>
+        <h2 className="font-semibold text-[28px] lg:text-[32px] leading-[34px] lg:leading-[38px] text-[#111827]">
+          Reset Password?
+        </h2>
+        <p className="font-normal text-[14px] lg:text-[16px] leading-[20px] lg:leading-[24px] text-[#4B5563]">
+          Create a new password for your account.
+        </p>
       </div>
 
       {/* General Error */}
