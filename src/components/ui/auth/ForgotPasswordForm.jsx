@@ -134,7 +134,7 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
   }
 
   return (
-    <div className="max-w-[440px] w-full flex flex-col gap-9 lg:mt-[-5vh]">
+    <div className="max-w-[440px] w-full flex flex-col gap-9 mt-[-5vh]">
       {/* Back to login */}
       <button
         type="button"
