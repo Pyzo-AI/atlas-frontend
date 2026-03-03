@@ -167,7 +167,7 @@ function LoginForm() {
         </div>
 
         {/* Login/Forgot Password/Update Password Form Container - Centered in remaining space using Normal CSS */}
-        <div className="flex-1 flex items-center justify-center lg:justify-start px-[20px] lg:pl-[60px] lg:mt-[-5vh] py-10 lg:py-0">
+        <div className="flex-1 flex items-center justify-center lg:justify-start px-[20px] lg:pl-[60px] mt-[-5vh] py-10 lg:py-0">
           {isForgotPassword ? (
             <ForgotPasswordForm onBackToLogin={() => router.push("/login")} initialEmail={email} />
           ) : isUpdatePassword ? (

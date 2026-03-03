@@ -55,7 +55,7 @@ const UpdatePasswordForm = ({ onSuccess, token }) => {
   };
 
   return (
-    <div className="max-w-[400px] w-full flex flex-col gap-9 lg:mt-[-5vh]">
+    <div className="max-w-[400px] w-full flex flex-col gap-9 mt-[-5vh]">
       {/* Header */}
       <div className="flex flex-col gap-2">
         <h2 className="font-semibold text-[28px] lg:text-[32px] leading-[34px] lg:leading-[38px] text-[#111827]">
