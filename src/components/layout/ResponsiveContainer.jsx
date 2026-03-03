@@ -1,31 +1,28 @@
-'use client'
-import { useDeviceType } from '@/hooks/useDeviceType'
-import { usePortraitMode } from '@/hooks/usePortraitMode'
-import { usePathname } from 'next/navigation'
-import Header from './Header'
-import { useSidebar } from './LayoutWrapper'
+"use client";
+import { useDeviceType } from "@/hooks/useDeviceType";
+import { usePortraitMode } from "@/hooks/usePortraitMode";
+import { usePathname } from "next/navigation";
+import Header from "./Header";
+import { useSidebar } from "./LayoutWrapper";
 
 const ResponsiveContainer = ({ children }) => {
-  const { isDesktop } = useDeviceType()
-  const isPortrait = usePortraitMode()
-  const pathname = usePathname()
-  const containLecture = pathname.includes('/lectures/')
-  const { toggleSidebar } = useSidebar()
+  const { isDesktop } = useDeviceType();
+  const isPortrait = usePortraitMode();
+  const pathname = usePathname();
+  const containLecture = pathname.includes("/lectures/");
+  const { toggleSidebar } = useSidebar();
 
-  const shouldShowPadding =
-    isDesktop || (!isDesktop && isPortrait) || !containLecture
+  const shouldShowPadding = (isDesktop || (!isDesktop && isPortrait) || !containLecture) && pathname !== "/login";
 
   // Don't show header on login page
-  const showHeader = pathname !== '/login'
+  const showHeader = pathname !== "/login";
 
   return (
     <>
       {showHeader && <Header onMenuClick={toggleSidebar} />}
-      <div className={`min-h-screen ${shouldShowPadding ? 'pt-[45px]' : ''}`}>
-        {children}
-      </div>
+      <div className={`min-h-screen ${shouldShowPadding ? "pt-[45px]" : ""}`}>{children}</div>
     </>
-  )
-}
+  );
+};
 
-export default ResponsiveContainer
+export default ResponsiveContainer;
