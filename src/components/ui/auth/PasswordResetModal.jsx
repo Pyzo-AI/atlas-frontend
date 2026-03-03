@@ -79,8 +79,12 @@ export default function PasswordResetModal({ isOpen, email, onClose }) {
               variant="secondary"
               onClick={handleResend}
               disabled={resendTimer > 0 || isLoading}
-              className="!px-3 !py-1.5 !bg-[#E8F0F9] !rounded-[6px] !border-none !text-[#2762EA] !text-[12px] !leading-[14px] min-w-[95px] flex items-center justify-center">
-              {resendTimer > 0 ? `Resend ${resendTimer}s` : "Resend Email"}
+              className={`!px-3 !py-1.5 !rounded-[6px] !border-none !text-[12px] !leading-[14px] min-w-[95px] flex items-center justify-center transition-all ${
+                resendTimer > 0 || isLoading
+                  ? "!bg-[#F5F8FF] !text-[#A8C5F4]"
+                  : "!bg-[#E8F0F9] !text-[#2762EA] hover:!opacity-90 cursor-pointer"
+              }`}>
+              {isLoading ? "Resending..." : resendTimer > 0 ? `Resend ${resendTimer}s` : "Resend Email"}
             </Button>
 
             {/* Close Button */}
