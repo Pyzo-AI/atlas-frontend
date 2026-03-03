@@ -16,6 +16,7 @@ import { useForgotPasswordMutation } from "@/store/api/authApi";
 import { toast } from "react-toastify";
 import PasswordResetModal from "@/components/ui/auth/PasswordResetModal";
 import LogoutModal from "@/components/ui/auth/LogoutModal";
+import { FiChevronDown } from "react-icons/fi";
 
 const navigation = [
   // { name: "Home", href: "/" },
@@ -191,16 +192,12 @@ const Header = ({ onMenuClick }) => {
             className="flex items-center gap-1 cursor-pointer py-[5px] px-[5px] bg-white border border-[#E3E7EF] rounded-full hover:bg-gray-50 transition-colors"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
             <Image src={user_icon} alt="user-icon" width={22} height={22} />
-            <span className="font-mulish font-semibold text-[12px] leading-[15px] text-[#1D1F2C]">
+            <span className="hidden lg:block font-mulish font-semibold text-[12px] leading-[15px] text-[#1D1F2C]">
               {userInfo.name || "User"}
             </span>
-            <svg
-              className={`w-4 h-4 text-[#4A4C56] transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={0.8} d="M19 9l-7 7-7-7" />
-            </svg>
+            <FiChevronDown
+              className={`hidden lg:block w-4 h-4 text-[#4A4C56] transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+            />
           </div>
 
           {isDropdownOpen && (
