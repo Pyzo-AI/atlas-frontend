@@ -1,14 +1,42 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { useDispatch } from 'react-redux'
-import { setIsQuestionMode, setProductRecommendations, setShowChat, setSlideNumbers } from '@/store/features/videoSlice'
-import back_to_session from '@/assets/svg/back_to_session.svg'
-import interaction_mode from '@/assets/svg/interaction_mode.svg'
-import ai_answer_icon from '@/assets/svg/ai_answer_icon.svg'
-import close_icon from '@/assets/svg/close.svg'
-import Image from 'next/image'
-import MicrophonePermissionPopup from '@/components/ui/MicrophonePermissionPopup'
-import { clearOverlayImage } from '@/store/features/imageSlice'
-import { useGetConversationHistoryQuery } from '@/store/api/questionsApi'
+import React, { useState, useEffect, useRef } from "react";
+import { useDispatch } from "react-redux";
+import {
+  setIsQuestionMode,
+  setProductRecommendations,
+  setShowChat,
+  setSlideNumbers,
+} from "@/store/features/videoSlice";
+import back_to_session from "@/assets/svg/back_to_session.svg";
+import interaction_mode from "@/assets/svg/interaction_mode.svg";
+import ai_answer_icon from "@/assets/svg/ai_answer_icon.svg";
+import close_icon from "@/assets/svg/close.svg";
+import Image from "next/image";
+import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup";
+import { clearOverlayImage } from "@/store/features/imageSlice";
+import { useGetConversationHistoryQuery } from "@/store/api/questionsApi";
+
+const dummyRecommendations = [
+  {
+    product_url: "#",
+    product_image_url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&h=100&fit=crop",
+  },
+  {
+    product_url: "#",
+    product_image_url: "https://images.unsplash.com/photo-1539109132381-31a15b2974ea?w=100&h=100&fit=crop",
+  },
+  {
+    product_url: "#",
+    product_image_url: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=100&h=100&fit=crop",
+  },
+  {
+    product_url: "#",
+    product_image_url: "https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?w=100&h=100&fit=crop",
+  },
+  {
+    product_url: "#",
+    product_image_url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=100&h=100&fit=crop",
+  },
+];
 
 const ChatUI = ({
   onClose,
@@ -114,10 +142,10 @@ const ChatUI = ({
   };
 
   const handleContinueLesson = () => {
-    dispatch(setIsQuestionMode(false))
-    dispatch(setSlideNumbers([]))
-    dispatch(setShowChat(false))
-    setIsJumpedOnChatFromInteractionMode(false)
+    dispatch(setIsQuestionMode(false));
+    dispatch(setSlideNumbers([]));
+    dispatch(setShowChat(false));
+    setIsJumpedOnChatFromInteractionMode(false);
     if (isConnected && onStopConversation) {
       onStopConversation();
     }
@@ -206,11 +234,32 @@ const ChatUI = ({
                               <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-b from-gradient-start to-gradient-end flex items-center justify-center flex-shrink-0">
                                 <Image src={ai_answer_icon} alt="AI Answer Icon" />
                               </div>
-                              <div className="flex-1 max-w-[301px]">
+                              <div className="flex flex-col gap-1 lg:gap-1.5 flex-1 max-w-[301px]">
+                                {/* Image Row */}
+                                {(item.product_recommendations || dummyRecommendations).length > 0 && (
+                                  <div className="flex flex-row gap-1 lg:gap-1.5 w-full overflow-x-auto pb-1 scrollbar-hide">
+                                    {(item.product_recommendations || dummyRecommendations)
+                                      .slice(0, 5)
+                                      .map((rec, idx) => (
+                                        <a
+                                          key={idx}
+                                          href={rec.product_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="w-10 h-8 lg:w-[58px] lg:h-[48px] bg-[rgba(26,26,26,0.07)] rounded-[6px] flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                                          <img
+                                            src={rec.product_image_url}
+                                            alt="Product"
+                                            className="w-full h-full object-cover"
+                                          />
+                                        </a>
+                                      ))}
+                                  </div>
+                                )}
                                 <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-primary-text">
                                   {item.content || "No text answer found"}
                                 </p>
-                                {item.time && <p className="text-xs text-gray-500 mt-1">{formatTime(item.time)}</p>}
+                                {item.time && <p className="text-[10px] text-gray-500 mt-1">{formatTime(item.time)}</p>}
                               </div>
                             </div>
                           ) : null}
@@ -239,7 +288,26 @@ const ChatUI = ({
                         <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-b from-gradient-start to-gradient-end flex items-center justify-center flex-shrink-0">
                           <Image src={ai_answer_icon} alt="AI Answer Icon" />
                         </div>
-                        <div className="flex-1 max-w-[301px]">
+                        <div className="flex flex-col gap-1 lg:gap-1.5 flex-1 max-w-[301px]">
+                          {/* Image Row */}
+                          {(item.product_recommendations || dummyRecommendations).length > 0 && (
+                            <div className="flex flex-row gap-1 lg:gap-1.5 w-full overflow-x-auto pb-1 scrollbar-hide">
+                              {(item.product_recommendations || dummyRecommendations).slice(0, 5).map((rec, idx) => (
+                                <a
+                                  key={idx}
+                                  href={rec.product_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-10 h-8 lg:w-[58px] lg:h-[48px] bg-[rgba(26,26,26,0.07)] rounded-[6px] flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                                  <img
+                                    src={rec.product_image_url}
+                                    alt="Product"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </a>
+                              ))}
+                            </div>
+                          )}
                           <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-primary-text">
                             {item.content || "No text answer found"}
                           </p>
