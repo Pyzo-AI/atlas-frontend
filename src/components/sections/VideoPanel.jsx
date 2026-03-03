@@ -665,13 +665,11 @@ const VideoPanel = forwardRef(
           // Handle product recommendations
           if (recommendations && recommendations.length > 0) {
             console.log("[VideoPanel] Product recommendations:", recommendations);
-            const images = "https://assets.myntassets.com/h_720,q_90,w_540/v1/assets/images/2026/JANUARY/23/F6d2q2LF_b12b67e4ba024036ab58b8a1edb77ad3.jpg | https://assets.myntassets.com/h_720,q_90,w_540/v1/assets/images/2026/JANUARY/23/BNQwY5lT_9262d275d4d14f15a41321d722de190d.jpg | https://assets.myntassets.com/h_720,q_90,w_540/v1/assets/images/2026/JANUARY/23/6IiHnGga_e8fceff27a584889aff962a98c7b70f0.jpg | https://assets.myntassets.com/h_720,q_90,w_540/v1/assets/images/2026/JANUARY/23/jA41BBzU_41aa094089ca4ae0b8c9dd5224339805.jpg"
-
-            console.log("processedRecommendations", images?.split(" | "));
+         
             // Process recommendations - split pipe-separated image URLs and use the first one
             const processedRecommendations = recommendations.map((rec) => ({
               product_url: rec.product_url,
-              product_image_url: rec.product_image_url?.split(" | ")?.[0]?.trim() || rec.product_image_url,
+              product_image_url: rec.product_image_url,
             }));
             console.log("processedRecommendations", processedRecommendations);
             dispatch(setProductRecommendations(processedRecommendations));
