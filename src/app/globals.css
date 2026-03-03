@@ -80,6 +80,10 @@
   --color-light: #ffffff;
   --color-dark: #000000;
 
+  /* Fonts */
+  --font-lato: var(--font-lato);
+  --font-montserrat: var(--font-montserrat);
+
   /* Video Player Colors */
   --color-video-text-hover: #f0f0f0;
   --color-border-input: #d1d5db;

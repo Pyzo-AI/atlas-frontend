@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Lato, Montserrat } from "next/font/google";
 import "./globals.css";
 import "../styles/fullscreen.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -20,6 +20,18 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const lato = Lato({
+  weight: ["300", "400", "700", "900"],
+  subsets: ["latin"],
+  variable: "--font-lato",
+});
+
+const montserrat = Montserrat({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-montserrat",
 });
 
 export const metadata = {
@@ -54,8 +66,7 @@ export default function RootLayout({ children }) {
         <link rel="icon" type="image/png" href="/icon.png" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+        className={`${geistSans.variable} ${geistMono.variable} ${lato.variable} ${montserrat.variable} antialiased font-lato`}>
         <PostHogProvider>
           <ReduxProvider>
             <ElevenLabsProviderWrapper>
