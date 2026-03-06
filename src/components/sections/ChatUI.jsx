@@ -15,29 +15,6 @@ import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup
 import { clearOverlayImage } from "@/store/features/imageSlice";
 import { useGetConversationHistoryQuery } from "@/store/api/questionsApi";
 
-const dummyRecommendations = [
-  {
-    product_url: "#",
-    product_image_url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&h=100&fit=crop",
-  },
-  {
-    product_url: "#",
-    product_image_url: "https://images.unsplash.com/photo-1539109132381-31a15b2974ea?w=100&h=100&fit=crop",
-  },
-  {
-    product_url: "#",
-    product_image_url: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=100&h=100&fit=crop",
-  },
-  {
-    product_url: "#",
-    product_image_url: "https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?w=100&h=100&fit=crop",
-  },
-  {
-    product_url: "#",
-    product_image_url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=100&h=100&fit=crop",
-  },
-];
-
 const ChatUI = ({
   onClose,
   conversation = [],
@@ -159,7 +136,7 @@ const ChatUI = ({
       {showMicPopup && (
         <MicrophonePermissionPopup onCancel={() => setShowMicPopup(false)} onAllowMicrophone={handleAllowMicrophone} />
       )}
-      <div className="flex flex-col w-full bg-white h-full max-h-full">
+      <div className="flex flex-col w-full bg-white h-full max-h-full overflow-hidden">
         {/* Chat Container */}
         <div className="flex flex-col h-full border border-border-light rounded-xl overflow-hidden">
           {/* Header */}
@@ -173,7 +150,7 @@ const ChatUI = ({
           </div>
 
           {/* Messages Container */}
-          <div ref={messagesContainerRef} className="flex-1 px-3 py-4 overflow-y-auto min-h-0">
+          <div ref={messagesContainerRef} className="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden min-h-0">
             {isLoadingHistory ? (
               <div className="space-y-3 sm:space-y-4 lg:space-y-6">
                 {Array.from({ length: 4 }).map((_, index) => (
@@ -185,7 +162,7 @@ const ChatUI = ({
                     ) : (
                       <>
                         <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gray-300 animate-pulse flex-shrink-0"></div>
-                        <div className="flex-1 max-w-[301px]">
+                        <div className="flex-1 min-w-0">
                           <div className="h-3 bg-gray-300 rounded w-32 lg:w-48 animate-pulse"></div>
                         </div>
                       </>
@@ -219,7 +196,7 @@ const ChatUI = ({
                             <div className="flex justify-end">
                               <div className="max-w-[75%]">
                                 <div className="bg-bg-chat-bubble rounded-[10px_10px_10px_0px] px-2.5 py-2">
-                                  <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-primary-text">
+                                  <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-primary-text break-words">
                                     {item.content}
                                   </p>
                                 </div>
@@ -234,29 +211,45 @@ const ChatUI = ({
                               <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-b from-gradient-start to-gradient-end flex items-center justify-center flex-shrink-0">
                                 <Image src={ai_answer_icon} alt="AI Answer Icon" />
                               </div>
-                              <div className="flex flex-col gap-1 lg:gap-1.5 flex-1 max-w-[301px]">
+                              <div className="flex flex-col gap-1 lg:gap-1.5 flex-1 min-w-0">
                                 {/* Image Row */}
-                                {(item.product_recommendations || dummyRecommendations).length > 0 && (
+                                {(item.metadata?.product_recommendations || []).length > 0 && (
                                   <div className="flex flex-row gap-1 lg:gap-1.5 w-full overflow-x-auto pb-1 scrollbar-hide">
-                                    {(item.product_recommendations || dummyRecommendations)
-                                      .slice(0, 5)
-                                      .map((rec, idx) => (
-                                        <a
-                                          key={idx}
-                                          href={rec.product_url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="w-10 h-8 lg:w-[58px] lg:h-[48px] bg-[rgba(26,26,26,0.07)] rounded-[6px] flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                                          <img
-                                            src={rec.product_image_url}
-                                            alt="Product"
-                                            className="w-full h-full object-cover"
-                                          />
-                                        </a>
-                                      ))}
+                                    {(item.metadata?.product_recommendations || []).slice(0, 5).map((rec, idx) => (
+                                      <a
+                                        key={idx}
+                                        href={rec.product_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-10 h-8 lg:w-[58px] lg:h-[48px] bg-[#E2E5EE] rounded-[6px] flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                                        {Array.isArray(rec.product_image_url) ? (
+                                          <div className="w-full h-full flex gap-[2px] p-[2px]">
+                                            {rec.product_image_url.slice(0, 2).map((url, i) => (
+                                              <div
+                                                key={i}
+                                                className="relative flex-1 h-full overflow-hidden bg-white rounded-[2px]">
+                                                <img
+                                                  src={url}
+                                                  alt=""
+                                                  className="w-full h-full object-contain p-[1px]"
+                                                />
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <div className="relative w-full h-full flex items-center justify-center">
+                                            <img
+                                              src={rec.product_image_url}
+                                              alt="Product"
+                                              className="w-full h-full object-contain"
+                                            />
+                                          </div>
+                                        )}
+                                      </a>
+                                    ))}
                                   </div>
                                 )}
-                                <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-primary-text">
+                                <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-primary-text break-words">
                                   {item.content || "No text answer found"}
                                 </p>
                                 {item.time && <p className="text-[10px] text-gray-500 mt-1">{formatTime(item.time)}</p>}
@@ -277,7 +270,7 @@ const ChatUI = ({
                       /* User Message */
                       <div className="flex justify-end">
                         <div className="max-w-[75%] bg-bg-chat-bubble rounded-[10px_10px_10px_0px] px-2.5 py-2">
-                          <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-primary-text">
+                          <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-primary-text break-words">
                             {item.content}
                           </p>
                         </div>
@@ -288,27 +281,41 @@ const ChatUI = ({
                         <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-b from-gradient-start to-gradient-end flex items-center justify-center flex-shrink-0">
                           <Image src={ai_answer_icon} alt="AI Answer Icon" />
                         </div>
-                        <div className="flex flex-col gap-1 lg:gap-1.5 flex-1 max-w-[301px]">
+                        <div className="flex flex-col gap-1 lg:gap-1.5 flex-1 min-w-0">
                           {/* Image Row */}
-                          {(item.product_recommendations || dummyRecommendations).length > 0 && (
+                          {(item.metadata?.product_recommendations || []).length > 0 && (
                             <div className="flex flex-row gap-1 lg:gap-1.5 w-full overflow-x-auto pb-1 scrollbar-hide">
-                              {(item.product_recommendations || dummyRecommendations).slice(0, 5).map((rec, idx) => (
+                              {(item.metadata?.product_recommendations || []).slice(0, 5).map((rec, idx) => (
                                 <a
                                   key={idx}
                                   href={rec.product_url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="w-10 h-8 lg:w-[58px] lg:h-[48px] bg-[rgba(26,26,26,0.07)] rounded-[6px] flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                                  <img
-                                    src={rec.product_image_url}
-                                    alt="Product"
-                                    className="w-full h-full object-cover"
-                                  />
+                                  className="w-10 h-8 lg:w-[58px] lg:h-[48px] bg-[#E2E5EE] rounded-[6px] flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                                  {Array.isArray(rec.product_image_url) ? (
+                                    <div className="w-full h-full flex gap-[2px] p-[2px]">
+                                      {rec.product_image_url.slice(0, 2).map((url, i) => (
+                                        <div
+                                          key={i}
+                                          className="relative flex-1 h-full overflow-hidden bg-white rounded-[2px]">
+                                          <img src={url} alt="" className="w-full h-full object-contain p-[1px]" />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="relative w-full h-full flex items-center justify-center">
+                                      <img
+                                        src={rec.product_image_url}
+                                        alt="Product"
+                                        className="w-full h-full object-contain"
+                                      />
+                                    </div>
+                                  )}
                                 </a>
                               ))}
                             </div>
                           )}
-                          <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-primary-text">
+                          <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-primary-text break-words">
                             {item.content || "No text answer found"}
                           </p>
                         </div>
@@ -319,7 +326,7 @@ const ChatUI = ({
                         <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
                           <span className="text-white text-xs">!</span>
                         </div>
-                        <div className="flex-1 max-w-[301px]">
+                        <div className="flex-1 min-w-0">
                           <p className="font-lato font-normal text-[10px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-red-600">
                             {item.content}
                           </p>
