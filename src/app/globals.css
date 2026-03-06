@@ -179,7 +179,7 @@ body {
   input[type="search"],
   input[type="tel"],
   input[type="color"] {
-    font-size: 16px !important;
+    font-size: 16px;
   }
 }
 /* Utility to hide scrollbar but allow scrolling */

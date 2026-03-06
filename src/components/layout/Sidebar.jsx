@@ -31,6 +31,12 @@ const Sidebar = ({ isOpen = false, onClose }) => {
       activeIcon: modulesActive,
     },
     {
+      name: "Certificates",
+      href: "/certificates",
+      icon: assessment, // Reusing assessment icon for now
+      activeIcon: assessmentActive,
+    },
+    {
       name: "Analytics",
       href: "/analytics?tab=learning",
       icon: analytics,
