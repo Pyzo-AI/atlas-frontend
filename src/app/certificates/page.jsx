@@ -17,6 +17,8 @@ const GERTIFICATES_DATA = [
     category: "Communication",
     icon: "https://cdn-icons-png.flaticon.com/512/3112/3112946.png",
     pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    certificateImageUrl:
+      "https://img.freepik.com/free-vector/modern-certificate-template-with-golden-frame_53876-116743.jpg",
   },
   {
     id: 2,
@@ -26,6 +28,8 @@ const GERTIFICATES_DATA = [
     category: "Psychology",
     icon: "https://cdn-icons-png.flaticon.com/512/3112/3112946.png",
     pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    certificateImageUrl:
+      "https://img.freepik.com/free-vector/elegant-certificate-template-with-golden-seal_23-2148202022.jpg",
   },
   {
     id: 3,
@@ -35,6 +39,8 @@ const GERTIFICATES_DATA = [
     category: "Communication",
     icon: "https://cdn-icons-png.flaticon.com/512/3112/3112946.png",
     pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    certificateImageUrl:
+      "https://img.freepik.com/free-vector/modern-certificate-template-flat-design_23-2148216335.jpg",
   },
   {
     id: 4,
@@ -44,6 +50,8 @@ const GERTIFICATES_DATA = [
     category: "Communication",
     icon: "https://cdn-icons-png.flaticon.com/512/3112/3112946.png",
     pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    certificateImageUrl:
+      "https://img.freepik.com/free-vector/classic-certificate-template-horizontal-orientation_23-2148200673.jpg",
   },
 ];
 
@@ -162,7 +170,7 @@ export default function CertificatesPage() {
         <CertificatePreviewModal
           isOpen={isPreviewModalOpen}
           onClose={() => setIsPreviewModalOpen(false)}
-          pdfUrl={selectedCertificate.pdfUrl}
+          imageUrl={selectedCertificate.certificateImageUrl}
           title={selectedCertificate.title}
           onDownload={() => handleDownload(selectedCertificate.pdfUrl, selectedCertificate.title)}
         />

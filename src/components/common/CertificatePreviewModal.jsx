@@ -2,10 +2,9 @@
 
 import React from "react";
 import Modal from "./Modal";
-import PrimaryButton from "./PrimaryButton";
-import SecondaryButton from "./SecondaryButton";
+import Image from "next/image";
 
-export default function CertificatePreviewModal({ isOpen, onClose, pdfUrl, title, onDownload }) {
+export default function CertificatePreviewModal({ isOpen, onClose, imageUrl, title, onDownload }) {
   return (
     <Modal
       isOpen={isOpen}
@@ -15,12 +14,8 @@ export default function CertificatePreviewModal({ isOpen, onClose, pdfUrl, title
       <div className="flex flex-col w-full h-full">
         {/* Certificate Container */}
         <div className="w-[697px] h-[504px] bg-[#E5EAEF] flex items-center justify-center p-5">
-          <div className="w-[657px] h-[464.28px] bg-[#FDFDF7] shadow-sm overflow-hidden">
-            <iframe
-              src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
-              title={title}
-              className="w-full h-full border-none"
-            />
+          <div className="w-[657px] h-[464.28px] bg-white shadow-sm overflow-hidden relative">
+            <Image src={imageUrl} alt={title} fill className="object-contain" priority />
           </div>
         </div>
 
