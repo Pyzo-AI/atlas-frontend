@@ -191,10 +191,9 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
       <button
         onClick={() => !disabled && setIsOpen(true)}
         disabled={disabled}
-        className={`flex items-center gap-1 px-3 py-2 bg-white rounded-[6px] hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-          hasAppliedFilters ? "border border-[#2762EA]" : "border border-[#E0E2E7]"
-        }`}
-        style={{ height: "30px" }}>
+        className={`flex items-center justify-center md:justify-start gap-1 px-0 md:px-3 py-2 bg-white rounded-[6px] hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed w-[32px] h-[32px] md:w-auto md:h-[30px] ${
+          hasAppliedFilters ? "border border-[#2762EA]" : "border border-[#E5E7EB]"
+        }`}>
         <Image
           src={filterIcon}
           alt="Filter Icon"
@@ -207,7 +206,9 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
           }}
         />
         <span
-          className={`text-xs font-regular font-lato whitespace-nowrap ${hasAppliedFilters ? "text-[#2762EA]" : "text-[#667085]"}`}>
+          className={`hidden md:inline text-xs font-regular font-lato whitespace-nowrap ${
+            hasAppliedFilters ? "text-[#2762EA]" : "text-[#667085]"
+          }`}>
           More Filters{hasAppliedFilters ? ` (${appliedFilterCount})` : ""}
         </span>
       </button>
@@ -220,7 +221,7 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
               className="absolute inset-0 bg-black/50"
               onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}
             />
-            <div className="absolute right-0 top-0 h-full bg-white flex flex-col shadow-xl" style={{ width: "352px" }}>
+            <div className="absolute right-0 top-0 h-full bg-white flex flex-col shadow-xl w-[90%] md:w-[352px]">
               <div className="h-12 bg-white border-b border-[#E5E5E5] flex items-center justify-between px-4 flex-shrink-0">
                 <span className="font-lato font-semibold text-base text-[#2C313B]">
                   Filter by {hasSelectedFilters ? ` (${selectedFilterCount})` : ""}

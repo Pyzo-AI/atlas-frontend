@@ -92,89 +92,93 @@ export default function CertificatesPage() {
   };
 
   return (
-    <div className="flex flex-col p-4 lg:p-5 lg:pl-4 bg-[#F9F9FC] min-h-screen">
+    <div className="flex flex-col bg-[#F9F9FC] min-h-screen">
       {/* Header Section */}
-      <div className="flex flex-col gap-1 mb-[20px]">
-        <h1 className="font-lato font-bold text-base leading-[19px] text-[#111827]">Reports</h1>
-        <p className="font-lato font-normal text-xs leading-[14px] text-[#4B5563]">
-          View and download your earned certificates from completed courses
-        </p>
+      <div className="flex flex-col gap-3 p-4 md:p-5 md:pl-4 bg-[#F2F2F8] md:bg-transparent">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-lato font-bold text-base leading-[19px] text-[#111827]">Reports</h1>
+          <p className="font-lato font-normal text-xs leading-[14px] text-[#4B5563]">
+            View and download your earned certificates from completed courses
+          </p>
+        </div>
+
+        {/* Search and Filter Row */}
+        <SearchFilter
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search by certificate name"
+          filterSections={FILTER_SECTIONS}
+          appliedFilters={appliedFilters}
+          onFilterChange={setAppliedFilters}
+          marginTop="0px"
+        />
       </div>
 
-      {/* Search and Filter */}
-      <SearchFilter
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search by certificate name"
-        filterSections={FILTER_SECTIONS}
-        appliedFilters={appliedFilters}
-        onFilterChange={setAppliedFilters}
-        marginTop="0px"
-      />
+      <div className="flex flex-col p-4 md:p-5 md:pl-4 pt-0 md:pt-0">
+        {/* Certificates Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-4 md:mt-[0px]">
+          {filteredCertificates.map((cert) => (
+            <div
+              key={cert.id}
+              className="bg-white rounded-lg p-3 flex flex-col gap-[10px] md:gap-4 shadow-[0px_1px_12px_rgba(0,0,0,0.04)] border border-[#E5E7EB]">
+              {/* Top Icon and Label */}
+              <div className="flex flex-col gap-2">
+                <Image src={cert.icon} alt="Award" width={40} height={40} className="object-contain rounded-lg" />
+                <div className="flex flex-col gap-[5px]">
+                  <h3 className="font-lato font-semibold text-sm leading-[17px] text-[#1D1F2C] line-clamp-2">
+                    {cert.title}
+                  </h3>
+                  <p className="font-lato font-normal text-xs leading-[14px] text-[#585858] truncate">
+                    {cert.instructor}
+                  </p>
+                  <p className="font-lato font-normal text-[10px] leading-[12px] text-[#4B5563]">
+                    Issued On {cert.issuedDate}
+                  </p>
+                </div>
+              </div>
 
-      {/* Certificates Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-[16px]">
-        {filteredCertificates.map((cert) => (
-          <div
-            key={cert.id}
-            className="bg-white rounded-lg p-3 flex flex-col gap-4 shadow-[0px_2px_8px_rgba(0,0,0,0.04)] border border-[#E5E7EB]">
-            {/* Top Icon and Label */}
-            <div className="flex flex-col gap-2">
-              <Image src={cert.icon} alt="Award" width={40} height={40} className="object-contain rounded-lg" />
-              <div className="flex flex-col gap-[5px]">
-                <h3 className="font-lato font-semibold text-sm leading-[17px] text-[#1D1F2C] line-clamp-2">
-                  {cert.title}
-                </h3>
-                <p className="font-lato font-normal text-xs leading-[14px] text-[#585858] truncate">
-                  {cert.instructor}
-                </p>
-                <p className="font-lato font-normal text-[10px] leading-[12px] text-[#4B5563]">
-                  Issued On {cert.issuedDate}
-                </p>
+              {/* Actions */}
+              <div className="flex items-center gap-3">
+                <SecondaryButton
+                  className="flex-1"
+                  onClick={() => {
+                    setSelectedCertificate(cert);
+                    setIsPreviewModalOpen(true);
+                  }}>
+                  View Certificate
+                </SecondaryButton>
+                <PrimaryButton className="flex-1" onClick={() => handleDownload(cert.pdfUrl, cert.title)}>
+                  Download
+                </PrimaryButton>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-3">
-              <SecondaryButton
-                className="flex-1"
-                onClick={() => {
-                  setSelectedCertificate(cert);
-                  setIsPreviewModalOpen(true);
-                }}>
-                View Certificate
-              </SecondaryButton>
-              <PrimaryButton className="flex-1" onClick={() => handleDownload(cert.pdfUrl, cert.title)}>
-                Download
-              </PrimaryButton>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {filteredCertificates.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 gap-2">
-          <p className="font-lato font-medium text-gray-400">No certificates found matching your criteria</p>
-          <button
-            onClick={() => {
-              setSearchTerm("");
-              setAppliedFilters({});
-            }}
-            className="text-[#2762EA] text-sm hover:underline cursor-pointer">
-            Clear all filters
-          </button>
+          ))}
         </div>
-      )}
 
-      {selectedCertificate && (
-        <CertificatePreviewModal
-          isOpen={isPreviewModalOpen}
-          onClose={() => setIsPreviewModalOpen(false)}
-          imageUrl={selectedCertificate.certificateImageUrl}
-          title={selectedCertificate.title}
-          onDownload={() => handleDownload(selectedCertificate.pdfUrl, selectedCertificate.title)}
-        />
-      )}
+        {filteredCertificates.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 gap-2">
+            <p className="font-lato font-medium text-gray-400">No certificates found matching your criteria</p>
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setAppliedFilters({});
+              }}
+              className="text-[#2762EA] text-sm hover:underline cursor-pointer">
+              Clear all filters
+            </button>
+          </div>
+        )}
+
+        {selectedCertificate && (
+          <CertificatePreviewModal
+            isOpen={isPreviewModalOpen}
+            onClose={() => setIsPreviewModalOpen(false)}
+            imageUrl={selectedCertificate.certificateImageUrl}
+            title={selectedCertificate.title}
+            onDownload={() => handleDownload(selectedCertificate.pdfUrl, selectedCertificate.title)}
+          />
+        )}
+      </div>
     </div>
   );
 }

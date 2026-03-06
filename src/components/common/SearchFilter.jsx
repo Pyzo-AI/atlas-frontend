@@ -20,8 +20,8 @@ export default function SearchFilter({
 }) {
   return (
     <div>
-      <div className="flex justify-between items-end" style={{ marginTop }}>
-        <div className="flex gap-2.5 items-end">
+      <div className="flex justify-between items-center md:items-end" style={{ marginTop }}>
+        <div className="flex flex-1 gap-3 md:gap-2.5 items-center md:items-end w-full md:w-auto">
           {showSearch && (
             <SearchBar
               searchTerm={searchTerm}

@@ -10,7 +10,9 @@ export default function SearchBar({
 }) {
   return (
     <div
-      className={`relative w-[320px] h-[30px] bg-white border border-[#E5E7EB] rounded-[6px] overflow-hidden ${disabled ? "opacity-60" : ""}`}>
+      className={`relative w-full md:w-[320px] h-[30px] bg-white border border-[#E5E7EB] rounded-[6px] overflow-hidden ${
+        disabled ? "opacity-60" : ""
+      }`}>
       <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-[6px] pointer-events-none">
         <svg className="w-3 h-3 text-[#4B5563]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <circle cx="11" cy="11" r="8" />
