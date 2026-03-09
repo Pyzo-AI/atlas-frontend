@@ -12,7 +12,13 @@ export const certificatesApi = createApi({
         body: body,
       }),
     }),
+    generateCertificate: builder.mutation({
+      query: (presentationId) => ({
+        url: `presentations/${presentationId}/certificate`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
-export const { useGetCertificatesMutation } = certificatesApi;
+export const { useGetCertificatesMutation, useGenerateCertificateMutation } = certificatesApi;
