@@ -1,59 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SearchFilter from "@/components/common/SearchFilter";
 import Image from "next/image";
 import PrimaryButton from "@/components/common/PrimaryButton";
 import SecondaryButton from "@/components/common/SecondaryButton";
 import CertificatePreviewModal from "@/components/common/CertificatePreviewModal";
-
-// Dummy data
-const GERTIFICATES_DATA = [
-  {
-    id: 1,
-    title: "Mastering the Art of Conversation",
-    instructor: "Dr. Ananya Mehta",
-    issuedDate: "21 Sept 2025",
-    category: "Communication",
-    icon: "https://cdn-icons-png.flaticon.com/512/3112/3112946.png",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    certificateImageUrl:
-      "https://img.freepik.com/free-vector/modern-certificate-template-with-golden-frame_53876-116743.jpg",
-  },
-  {
-    id: 2,
-    title: "The Psychology of Dialogue",
-    instructor: "Dr. Sarah Elman",
-    issuedDate: "10 Jun 2025",
-    category: "Psychology",
-    icon: "https://cdn-icons-png.flaticon.com/512/3112/3112946.png",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    certificateImageUrl:
-      "https://img.freepik.com/free-vector/elegant-certificate-template-with-golden-seal_23-2148202022.jpg",
-  },
-  {
-    id: 3,
-    title: "Introduction to Effective Communication",
-    instructor: "Prof. Liam Johnson",
-    issuedDate: "15 Apr 2025",
-    category: "Communication",
-    icon: "https://cdn-icons-png.flaticon.com/512/3112/3112946.png",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    certificateImageUrl:
-      "https://img.freepik.com/free-vector/modern-certificate-template-flat-design_23-2148216335.jpg",
-  },
-  {
-    id: 4,
-    title: "The Power of Clear Communication",
-    instructor: "Dr. Alok Singh",
-    issuedDate: "21 Mar 2025",
-    category: "Communication",
-    icon: "https://cdn-icons-png.flaticon.com/512/3112/3112946.png",
-    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    certificateImageUrl:
-      "https://img.freepik.com/free-vector/classic-certificate-template-horizontal-orientation_23-2148200673.jpg",
-  },
-];
+import noDataFoundIcon from "@/assets/svg/no-data-found.svg";
+import { useGetCertificatesMutation } from "@/store/api/certificatesApi";
+import CertificateCardSkeleton from "@/components/common/CertificateCardSkeleton";
 
 const FILTER_SECTIONS = [
   {
@@ -72,14 +27,26 @@ export default function CertificatesPage() {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [selectedCertificate, setSelectedCertificate] = useState(null);
 
-  const filteredCertificates = GERTIFICATES_DATA.filter((cert) => {
-    const matchesSearch = cert.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      !appliedFilters.category ||
-      appliedFilters.category.length === 0 ||
-      appliedFilters.category.includes(cert.category);
-    return matchesSearch && matchesCategory;
-  });
+  const [getCertificates, { data, isLoading }] = useGetCertificatesMutation();
+
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        await getCertificates({
+          from: "2026-03-02",
+          to: "2026-03-09",
+          // sort_order: "newest",
+          search: searchTerm,
+          ...appliedFilters,
+        }).unwrap();
+      } catch (err) {
+        console.error("Failed to fetch certificates:", err);
+      }
+    };
+    fetchCertificates();
+  }, [searchTerm, appliedFilters, getCertificates]);
+
+  const certificates = data?.certificates || [];
 
   const handleDownload = (url, title) => {
     const link = document.createElement("a");
@@ -114,58 +81,76 @@ export default function CertificatesPage() {
         />
       </div>
 
-      <div className="flex flex-col p-4 md:p-5 md:pl-4 pt-0 md:pt-0">
-        {/* Certificates Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-4 md:mt-[0px]">
-          {filteredCertificates.map((cert) => (
-            <div
-              key={cert.id}
-              className="bg-white rounded-lg p-3 flex flex-col gap-[10px] md:gap-4 shadow-[0px_1px_12px_rgba(0,0,0,0.04)] border border-[#E5E7EB]">
-              {/* Top Icon and Label */}
-              <div className="flex flex-col gap-2">
-                <Image src={cert.icon} alt="Award" width={40} height={40} className="object-contain rounded-lg" />
-                <div className="flex flex-col gap-[5px]">
-                  <h3 className="font-lato font-semibold text-sm leading-[17px] text-[#1D1F2C] line-clamp-2">
-                    {cert.title}
-                  </h3>
-                  <p className="font-lato font-normal text-xs leading-[14px] text-[#585858] truncate">
-                    {cert.instructor}
-                  </p>
-                  <p className="font-lato font-normal text-[10px] leading-[12px] text-[#4B5563]">
-                    Issued On {cert.issuedDate}
-                  </p>
+      <div className="flex-1 flex flex-col p-4 md:p-5 md:pl-4 pt-0 md:pt-0">
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-4 md:mt-[0px]">
+            {[...Array(8)].map((_, i) => (
+              <CertificateCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col">
+            {certificates.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-4 md:mt-[0px]">
+                {certificates.map((cert) => (
+                  <div
+                    key={cert.id}
+                    className="bg-white rounded-lg p-3 flex flex-col gap-[10px] md:gap-4 shadow-[0px_1px_12px_rgba(0,0,0,0.04)] border border-[#E5E7EB]">
+                    {/* Top Icon and Label */}
+                    <div className="flex flex-col gap-2">
+                      <Image src={cert.icon} alt="Award" width={40} height={40} className="object-contain rounded-lg" />
+                      <div className="flex flex-col gap-[5px]">
+                        <h3 className="font-lato font-semibold text-sm leading-[17px] text-[#1D1F2C] line-clamp-2">
+                          {cert.title}
+                        </h3>
+                        <p className="font-lato font-normal text-xs leading-[14px] text-[#585858] truncate">
+                          {cert.instructor}
+                        </p>
+                        <p className="font-lato font-normal text-[10px] leading-[12px] text-[#4B5563]">
+                          Issued On {cert.issuedDate}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3">
+                      <SecondaryButton
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedCertificate(cert);
+                          setIsPreviewModalOpen(true);
+                        }}>
+                        View Certificate
+                      </SecondaryButton>
+                      <PrimaryButton className="flex-1" onClick={() => handleDownload(cert.pdfUrl, cert.title)}>
+                        Download
+                      </PrimaryButton>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center mt-[-15vh]">
+                <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in duration-500 w-[300px] mx-auto">
+                  {/* Icon (72x72 container) */}
+                  <Image src={noDataFoundIcon} alt="No Data Found" width={72} height={72} />
+
+                  {/* Text Frame (gap 12px from icon) */}
+                  <div className="flex flex-col items-center gap-[6px]">
+                    <h2 className="font-lato font-bold text-[16px] leading-[19px] text-[#1A1C29] text-center capitalize">
+                      No Results Found
+                    </h2>
+                    <p className="font-lato font-normal text-[12px] leading-[16px] text-[#4B5563] text-center w-[300px]">
+                      {searchTerm
+                        ? "No certificates match your search. Try a different keyword."
+                        : Object.values(appliedFilters).some((v) => (Array.isArray(v) ? v.length > 0 : !!v))
+                          ? "No certificates match your filters. Try different filter."
+                          : "Complete your assessments to earn certificates and see them here."}
+                    </p>
+                  </div>
                 </div>
               </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-3">
-                <SecondaryButton
-                  className="flex-1"
-                  onClick={() => {
-                    setSelectedCertificate(cert);
-                    setIsPreviewModalOpen(true);
-                  }}>
-                  View Certificate
-                </SecondaryButton>
-                <PrimaryButton className="flex-1" onClick={() => handleDownload(cert.pdfUrl, cert.title)}>
-                  Download
-                </PrimaryButton>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {filteredCertificates.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 gap-2">
-            <p className="font-lato font-medium text-gray-400">No certificates found matching your criteria</p>
-            <button
-              onClick={() => {
-                setSearchTerm("");
-                setAppliedFilters({});
-              }}
-              className="text-[#2762EA] text-sm hover:underline cursor-pointer">
-              Clear all filters
-            </button>
+            )}
           </div>
         )}
 
