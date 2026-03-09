@@ -12,11 +12,33 @@ import CertificateCardSkeleton from "@/components/common/CertificateCardSkeleton
 
 const FILTER_SECTIONS = [
   {
-    title: "Category",
-    paramName: "category",
+    title: "Sort By",
+    paramName: "sort_order",
+    type: "radio",
+    gridCols: 1,
     options: [
-      { label: "Communication", value: "Communication" },
-      { label: "Psychology", value: "Psychology" },
+      { label: "Newest First", value: "newest" },
+      { label: "Oldest First", value: "oldest" },
+    ],
+  },
+  {
+    title: "Date Range",
+    paramName: "date_range",
+    type: "radio",
+    gridCols: 2,
+    options: [
+      { label: "All Time", value: "all_time" },
+      { label: "Last 7 Days", value: "last_7_days" },
+      { label: "Last 30 Days", value: "last_30_days" },
+      { label: "Last 3 Months", value: "last_3_months" },
+      { label: "Last 6 Months", value: "last_6_months" },
+      { label: "Last 1 Year", value: "last_1_year" },
+      { label: "Custom Range", value: "custom" },
+    ],
+    customTriggerValue: "custom",
+    customDateFields: [
+      { label: "From", paramName: "custom_from" },
+      { label: "To", paramName: "custom_to" },
     ],
   },
 ];
@@ -32,13 +54,45 @@ export default function CertificatesPage() {
   useEffect(() => {
     const fetchCertificates = async () => {
       try {
-        await getCertificates({
-          from: "2026-03-02",
-          to: "2026-03-09",
-          // sort_order: "newest",
-          search: searchTerm,
-          ...appliedFilters,
-        }).unwrap();
+        const body = { search: searchTerm };
+
+        // Sort order
+        const sortOrder = appliedFilters.sort_order?.[0];
+        if (sortOrder) {
+          body.sort_order = sortOrder;
+        }
+
+        // Date range
+        const dateRange = appliedFilters.date_range?.[0];
+        if (dateRange && dateRange !== "all_time") {
+          const today = new Date();
+          const to = today.toISOString().split("T")[0];
+          let from;
+
+          if (dateRange === "custom") {
+            from = appliedFilters.custom_from || undefined;
+            body.from = from;
+            body.to = appliedFilters.custom_to || to;
+          } else {
+            const daysMap = {
+              last_7_days: 7,
+              last_30_days: 30,
+              last_3_months: 90,
+              last_6_months: 180,
+              last_1_year: 365,
+            };
+            const days = daysMap[dateRange];
+            if (days) {
+              const fromDate = new Date();
+              fromDate.setDate(fromDate.getDate() - days);
+              from = fromDate.toISOString().split("T")[0];
+            }
+            body.from = from;
+            body.to = to;
+          }
+        }
+
+        await getCertificates(body).unwrap();
       } catch (err) {
         console.error("Failed to fetch certificates:", err);
       }
@@ -130,7 +184,7 @@ export default function CertificatesPage() {
                 ))}
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center mt-[-15vh]">
+              <div className="flex-1 flex items-center justify-center pb-[15vh]">
                 <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in duration-500 w-[300px] mx-auto">
                   {/* Icon (72x72 container) */}
                   <Image src={noDataFoundIcon} alt="No Data Found" width={72} height={72} />

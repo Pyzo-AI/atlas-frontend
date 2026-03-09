@@ -5,6 +5,8 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import MultiSelectDropdown from "./MultiSelectDropdown";
 import Checkbox from "./Checkbox";
+import RadioButton from "@/components/ui/RadioButton";
+import DateRangePicker from "@/components/ui/DateRangePicker";
 import filterIcon from "@/assets/svg/filter.svg";
 
 export default function Filter({ sections = [], onFilterChange, appliedFilters = {}, disabled = false }) {
@@ -59,11 +61,28 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
     });
   };
 
-  const clearSection = (paramName) => {
+  const selectRadio = (paramName, value) => {
+    setSelectedFilters((prev) => ({ ...prev, [paramName]: [value] }));
+  };
+
+  const handleDateChange = (paramName, value) => {
     setSelectedFilters((prev) => ({
       ...prev,
-      [paramName]: [],
+      [paramName]: value,
     }));
+  };
+
+  const clearSection = (section) => {
+    setSelectedFilters((prev) => {
+      const next = { ...prev, [section.paramName]: [] };
+      // If section has customDateFields, clear those too
+      if (section.customDateFields) {
+        section.customDateFields.forEach((f) => {
+          next[f.paramName] = "";
+        });
+      }
+      return next;
+    });
   };
 
   const clearAll = () => {
@@ -71,17 +90,39 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
     setHierarchySelections({});
   };
 
-  const hasSelectedFilters = Object.values(selectedFilters).some((filters) => filters.length > 0);
-  const selectedFilterCount = Object.values(selectedFilters).filter((filters) => filters.length > 0).length;
-  const hasAppliedFilters = Object.values(appliedFilters).some((filters) => filters.length > 0);
-  const appliedFilterCount = Object.values(appliedFilters).filter((filters) => filters.length > 0).length;
+  const hasValue = (v) => (Array.isArray(v) ? v.length > 0 : !!v);
+
+  // Get all custom date field param names to exclude them from the main count
+  const subParamNames = new Set();
+  sections.forEach((s) => {
+    if (s.customDateFields) {
+      s.customDateFields.forEach((f) => subParamNames.add(f.paramName));
+    }
+  });
+
+  const hasSelectedFilters = Object.values(selectedFilters).some(hasValue);
+  const selectedFilterCount = Object.entries(selectedFilters).filter(
+    ([p, v]) => !subParamNames.has(p) && hasValue(v)
+  ).length;
+  const hasAppliedFilters = Object.values(appliedFilters).some(hasValue);
+  const appliedFilterCount = Object.entries(appliedFilters).filter(
+    ([p, v]) => !subParamNames.has(p) && hasValue(v)
+  ).length;
 
   const hasLocalChanges = (() => {
     const allParams = new Set([...Object.keys(selectedFilters), ...Object.keys(appliedFilters)]);
     for (const param of allParams) {
-      const sVal = selectedFilters[param] || [];
-      const aVal = appliedFilters[param] || [];
-      if (sVal.length !== aVal.length || !sVal.every((v) => aVal.includes(v)) || !aVal.every((v) => sVal.includes(v))) {
+      const sVal = selectedFilters[param] ?? "";
+      const aVal = appliedFilters[param] ?? "";
+      if (Array.isArray(sVal) && Array.isArray(aVal)) {
+        if (
+          sVal.length !== aVal.length ||
+          !sVal.every((v) => aVal.includes(v)) ||
+          !aVal.every((v) => sVal.includes(v))
+        ) {
+          return true;
+        }
+      } else if (String(sVal) !== String(aVal)) {
         return true;
       }
     }
@@ -89,8 +130,7 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
   })();
 
   const hasLocalSelectedFilters =
-    Object.values(selectedFilters).some((f) => f.length > 0) ||
-    Object.values(hierarchySelections).some((s) => s.length > 0);
+    Object.values(selectedFilters).some(hasValue) || Object.values(hierarchySelections).some((s) => s.length > 0);
 
   const toggleSection = (sectionTitle) => {
     setExpandedSections((prev) => ({
@@ -191,9 +231,14 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
       <button
         onClick={() => !disabled && setIsOpen(true)}
         disabled={disabled}
-        className={`flex items-center justify-center md:justify-start gap-1 px-0 md:px-3 py-2 bg-white rounded-[6px] hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed w-[32px] h-[32px] md:w-auto md:h-[30px] ${
+        className={`relative flex items-center justify-center md:justify-start gap-1 px-0 md:px-3 py-2 bg-white rounded-[6px] hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed w-[32px] h-[32px] md:w-auto md:h-[30px] ${
           hasAppliedFilters ? "border border-[#2762EA]" : "border border-[#E5E7EB]"
         }`}>
+        {hasAppliedFilters && appliedFilterCount > 0 && (
+          <div className="absolute -top-[7px] -right-[7px] w-[18px] h-[18px] bg-[#1A1C29] text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white md:hidden animate-in zoom-in duration-300">
+            {appliedFilterCount}
+          </div>
+        )}
         <Image
           src={filterIcon}
           alt="Filter Icon"
@@ -236,7 +281,7 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
               {hasLocalSelectedFilters && (
                 <div className="flex flex-col gap-3 px-4 py-4 border-b border-[#F9F9FC] max-h-[160px] overflow-y-auto">
                   {Object.entries(selectedFilters)
-                    .filter(([_, v]) => v.length > 0)
+                    .filter(([_, v]) => Array.isArray(v) && v.length > 0)
                     .map(([p, values]) => (
                       <div key={p} className="flex flex-col gap-1.5">
                         <span className="font-lato font-semibold text-xs text-[#0B1B32]">{getSectionTitle(p)}</span>
@@ -320,16 +365,47 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
                                 );
                               })}
                             </div>
+                          ) : section.type === "radio" ? (
+                            <>
+                              <div
+                                className={section.gridCols === 1 ? "flex flex-col gap-3" : "grid grid-cols-2 gap-3"}>
+                                {section.options.map((option) => (
+                                  <label
+                                    key={option.value}
+                                    className="flex items-center cursor-pointer"
+                                    onClick={() => selectRadio(section.paramName, option.value)}>
+                                    <RadioButton
+                                      name={section.paramName}
+                                      value={option.value}
+                                      checked={(selectedFilters[section.paramName] || [])[0] === option.value}
+                                      onChange={() => {}}
+                                    />
+                                    <span className="font-lato text-xs text-[#1D1F2C]">{option.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              {/* Custom Date Range Picker */}
+                              {section.customDateFields &&
+                                (selectedFilters[section.paramName] || [])[0] === section.customTriggerValue && (
+                                  <DateRangePicker
+                                    fromDate={selectedFilters[section.customDateFields[0]?.paramName] || ""}
+                                    toDate={selectedFilters[section.customDateFields[1]?.paramName] || ""}
+                                    onFromChange={(val) =>
+                                      handleDateChange(section.customDateFields[0]?.paramName, val)
+                                    }
+                                    onToChange={(val) => handleDateChange(section.customDateFields[1]?.paramName, val)}
+                                  />
+                                )}
+                            </>
                           ) : (
                             <div className="grid grid-cols-2 gap-4">
                               {section.options.map((option) => (
                                 <label
                                   key={option.value}
                                   className="flex items-center gap-2 cursor-pointer"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    toggleFilter(section.paramName, option.value, section.multipleChoice !== false);
-                                  }}>
+                                  onClick={() =>
+                                    toggleFilter(section.paramName, option.value, section.multipleChoice !== false)
+                                  }>
                                   <Checkbox
                                     checked={(selectedFilters[section.paramName] || []).includes(option.value)}
                                     onChange={() => {}}
@@ -340,7 +416,7 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
                             </div>
                           )}
                           <button
-                            onClick={() => clearSection(section.paramName)}
+                            onClick={() => clearSection(section)}
                             className="text-left font-lato text-xs underline text-[#1D1F2C] cursor-pointer">
                             Clear
                           </button>

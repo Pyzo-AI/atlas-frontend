@@ -11,7 +11,16 @@ export default function AppliedFilters({
   disabled = false,
   showDeleteButton = true,
 }) {
-  const hasAppliedFilters = Object.values(appliedFilters).some((filters) => filters.length > 0);
+  const hasValue = (v) => (Array.isArray(v) ? v.length > 0 : !!v);
+  const hasAppliedFilters = Object.values(appliedFilters).some(hasValue);
+
+  // Collect custom date field param names to exclude from chips
+  const customDateParamNames = new Set();
+  sections.forEach((s) => {
+    if (s.customDateFields) {
+      s.customDateFields.forEach((f) => customDateParamNames.add(f.paramName));
+    }
+  });
 
   if (!hasAppliedFilters) {
     return null;
@@ -21,8 +30,8 @@ export default function AppliedFilters({
 
   const clearAllFilters = () => {
     const clearedFilters = {};
-    Object.keys(appliedFilters).forEach((key) => {
-      clearedFilters[key] = [];
+    Object.entries(appliedFilters).forEach(([key, value]) => {
+      clearedFilters[key] = Array.isArray(value) ? [] : "";
     });
     onFilterChange(clearedFilters);
   };
@@ -32,6 +41,14 @@ export default function AppliedFilters({
       ...appliedFilters,
       [paramName]: value ? appliedFilters[paramName]?.filter((f) => !matches(f, value)) || [] : [],
     };
+
+    // If removing the parent of a date range, clear the custom dates too
+    const section = sections.find((s) => s.paramName === paramName);
+    if (section?.customDateFields) {
+      section.customDateFields.forEach((f) => {
+        updatedFilters[f.paramName] = "";
+      });
+    }
 
     if (value) {
       const clearDependentChildren = (parentParam, parentValue) => {
@@ -114,26 +131,29 @@ export default function AppliedFilters({
     <div className="bg-white border border-[#EDF0F6] rounded-lg px-2.5 py-1.5 mb-0 flex items-center justify-between mt-3">
       <div className="flex items-center gap-1 flex-wrap">
         {Object.entries(appliedFilters)
-          .filter(([_, values]) => values.length > 0)
-          .map(([paramName, values]) => (
-            <div
-              key={paramName}
-              className="flex items-center bg-[#FCFCFC] border-[0.5px] border-[#EDF0F6] rounded-md px-2 py-1 gap-1">
-              <span className="text-[10px] leading-3 font-lato">
-                <span className="text-[#636974]">{getSectionTitle(paramName)}: </span>
-                <span className="text-[#0B1B32]">
-                  {values.map((value) => getOptionLabel(paramName, value)).join(", ")}
+          .filter(([paramName, values]) => !customDateParamNames.has(paramName) && hasValue(values))
+          .map(([paramName, values]) => {
+            const displayValues = Array.isArray(values) ? values : [values];
+            return (
+              <div
+                key={paramName}
+                className="flex items-center bg-[#FCFCFC] border-[0.5px] border-[#EDF0F6] rounded-md px-2 py-1 gap-1">
+                <span className="text-[10px] leading-3 font-lato">
+                  <span className="text-[#636974]">{getSectionTitle(paramName)}: </span>
+                  <span className="text-[#0B1B32]">
+                    {displayValues.map((value) => getOptionLabel(paramName, value)).join(", ")}
+                  </span>
                 </span>
-              </span>
-              {showDeleteButton && (
-                <button
-                  onClick={() => !disabled && removeFilter(paramName)}
-                  className={`w-3 h-3 flex items-center justify-center ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
-                  <Image src={cross} alt="Remove filter" width={10} height={10} />
-                </button>
-              )}
-            </div>
-          ))}
+                {showDeleteButton && (
+                  <button
+                    onClick={() => !disabled && removeFilter(paramName)}
+                    className={`w-3 h-3 flex items-center justify-center ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
+                    <Image src={cross} alt="Remove filter" width={10} height={10} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
       </div>
       <button
         onClick={clearAllFilters}
