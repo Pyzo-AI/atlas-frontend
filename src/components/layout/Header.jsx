@@ -116,27 +116,23 @@ const Header = ({ onMenuClick }) => {
   return (
     <header
       className={`fixed top-0 right-0 h-12 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#E5E7EB] px-4 md:px-5 bg-white backdrop-blur-sm z-50 ${shouldHideMenuButton ? "left-0" : "left-0 md:left-[200px]"} ${pathname.startsWith("/lectures") ? "hidden lg:flex" : ""}`}>
-      <div className="flex items-center gap-3 md:flex-1">
+      <div className="flex items-center gap-2 md:gap-3 md:flex-1">
+        {/* Mobile Menu Button - Hidden on certain routes */}
         {!shouldHideMenuButton && (
           <button
             onClick={onMenuClick}
-            className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
+            className="md:hidden p-1.5 rounded-md hover:bg-gray-100 transition-colors"
             aria-label="Toggle menu">
             <Image src={hamburger} alt="Menu" width={24} height={24} />
           </button>
         )}
 
-        {pathname.includes("/lectures/") && (
-          <div className="hidden md:block cursor-pointer" onClick={() => router.push("/")}>
-            <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
-          </div>
-        )}
-      </div>
-
-      <div
-        className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-        onClick={() => router.push("/")}>
-        <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
+        {/* Logo - Always visible on mobile, visible on desktop for /lectures page */}
+        <div
+          className={`cursor-pointer ${pathname.includes("/lectures/") ? "" : "md:hidden"}`}
+          onClick={() => router.push("/")}>
+          <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
