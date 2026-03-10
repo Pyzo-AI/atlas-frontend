@@ -180,7 +180,7 @@ const Header = ({ onMenuClick }) => {
           </div>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-[244px] bg-white border border-[#ECECEC] shadow-[0px_3px_8px_rgba(0,0,0,0.12)] rounded-[10px] p-[12px] flex flex-col gap-[10px] z-[70] font-lato">
+            <div className="absolute right-0 mt-2 w-[244px] bg-white border border-[#ECECEC] shadow-[0px_3px_8px_rgba(0,0,0,0.12)] rounded-[10px] px-3 pt-3 pb-2 flex flex-col gap-[10px] z-[70] font-lato">
               <div className="flex items-center gap-[6px] w-full">
                 <Image src={user_icon} alt="user-icon" width={36} height={36} />
                 <div className="flex flex-col gap-[1px] overflow-hidden">
@@ -206,12 +206,12 @@ const Header = ({ onMenuClick }) => {
                   </span>
                 </button>
 
-                <div className="flex flex-col gap-[10px] w-full">
+                <div className="flex flex-col gap-1.5 w-full">
                   <div className="w-full h-[1px] bg-[#E5E7EB]" />
                   <button
                     onClick={handleLogoutClick}
                     disabled={isLoggingOut}
-                    className="flex items-center gap-[8px] w-full cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[#F04638]">
+                    className="py-1 flex items-center gap-[8px] w-full cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[#F04638]">
                     <Image src={logout_icon} alt="logout-icon" width={16} height={16} />
                     <span className="text-[12px] font-normal leading-[14px] text-[#F04638]">
                       {isLoggingOut ? "Signing out..." : "Log Out"}
