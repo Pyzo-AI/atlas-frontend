@@ -7,28 +7,52 @@ import {
   setUnreadCount,
   markRead,
   setConnected,
+  resetPagination,
+  setLoading,
 } from "../store/features/notificationsSlice";
 
 export function useNotifications(token) {
   const dispatch = useDispatch();
-  const { items: notifications, unreadCount, isConnected } = useSelector((state) => state.notifications);
+  const { 
+    items: notifications, 
+    unreadCount, 
+    isConnected,
+    page,
+    hasMore,
+    total,
+    loading
+  } = useSelector((state) => state.notifications);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const fetchNotifications = useCallback(async () => {
+  const fetchNotifications = useCallback(async (pageNum = 1) => {
     if (!token) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/api/notifications`, {
+      dispatch(setLoading(true));
+      const perPage = 20;
+      const response = await fetch(`${API_BASE_URL}/api/notifications?page=${pageNum}&per_page=${perPage}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
-      dispatch(setNotifications(data.notifications || []));
-      dispatch(setUnreadCount(data.unread_count || 0));
+      
+      // We pass the whole data object to handle replacement (page 1) or appending (page > 1)
+      dispatch(setNotifications({
+        notifications: data.notifications || [],
+        total: data.total || 0,
+        page: data.page || pageNum,
+        unread_count: data.unread_count
+      }));
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
     }
   }, [token, dispatch, API_BASE_URL]);
+
+  const loadMore = useCallback(() => {
+    if (hasMore && token && !loading) {
+      fetchNotifications(page + 1);
+    }
+  }, [hasMore, page, token, fetchNotifications, loading]);
 
   useEffect(() => {
     if (!token) return;
@@ -41,7 +65,7 @@ export function useNotifications(token) {
       dispatch(setConnected(status));
       // Re-fetch on reconnect to catch missed notifications
       if (status) {
-        fetchNotifications();
+        fetchNotifications(1);
       }
     });
 
@@ -64,7 +88,7 @@ export function useNotifications(token) {
     });
 
     // Initial fetch
-    fetchNotifications();
+    fetchNotifications(1);
 
     // Request permissions
     if (typeof window !== "undefined" && window.Notification && window.Notification.permission === "default") {
@@ -101,7 +125,14 @@ export function useNotifications(token) {
     notifications,
     unreadCount,
     isConnected,
+    hasMore,
+    total,
+    loading,
     markAsRead,
-    refresh: fetchNotifications,
+    loadMore,
+    refresh: () => {
+      dispatch(resetPagination());
+      fetchNotifications(1);
+    },
   };
 }

@@ -38,7 +38,7 @@ const Header = ({ onMenuClick }) => {
   const [showResetModal, setShowResetModal] = useState(false);
   const dropdownRef = useRef(null);
   const [token, setToken] = useState(null);
-  const { notifications, unreadCount, markAsRead, refresh } = useNotifications(token);
+  const { notifications, unreadCount, markAsRead, refresh, loadMore, hasMore, loading } = useNotifications(token);
 
   useEffect(() => {
     // Request browser notification permission
@@ -242,6 +242,9 @@ const Header = ({ onMenuClick }) => {
         notifications={notifications}
         unreadCount={unreadCount}
         markAsRead={markAsRead}
+        hasMore={hasMore}
+        loadMore={loadMore}
+        loading={loading}
       />
 
       <PasswordResetModal
