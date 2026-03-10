@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import SearchFilter from "@/components/common/SearchFilter";
 import Image from "next/image";
 import PrimaryButton from "@/components/common/PrimaryButton";
@@ -8,56 +9,85 @@ import SecondaryButton from "@/components/common/SecondaryButton";
 import CertificatePreviewModal from "@/components/common/CertificatePreviewModal";
 import noDataFoundIcon from "@/assets/svg/no-data-found.svg";
 import noCertificatesIcon from "@/assets/svg/no-certificate.svg";
-import { useGetCertificatesMutation } from "@/store/api/certificatesApi";
+import { useGetCertificatesMutation, useGetUserMetadataQuery } from "@/store/api/certificatesApi";
 import CertificateCardSkeleton from "@/components/common/CertificateCardSkeleton";
 
-const FILTER_SECTIONS = [
-  {
-    title: "Sort By",
-    paramName: "sort_order",
-    type: "radio",
-    gridCols: 1,
-    options: [
-      { label: "Newest First", value: "newest" },
-      { label: "Oldest First", value: "oldest" },
-    ],
-  },
-  {
-    title: "Date Range",
-    paramName: "date_range",
-    type: "radio",
-    gridCols: 2,
-    options: [
-      { label: "All Time", value: "all_time" },
-      { label: "Last 7 Days", value: "last_7_days" },
-      { label: "Last 30 Days", value: "last_30_days" },
-      { label: "Last 3 Months", value: "last_3_months" },
-      { label: "Last 6 Months", value: "last_6_months" },
-      { label: "Last 1 Year", value: "last_1_year" },
-      { label: "Custom Range", value: "custom" },
-    ],
-    customTriggerValue: "custom",
-    customDateFields: [
-      { label: "From", paramName: "custom_from" },
-      { label: "To", paramName: "custom_to" },
-    ],
-  },
-];
-
 export default function CertificatesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const isInitialMount = useRef(true);
+
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [appliedFilters, setAppliedFilters] = useState({});
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [selectedCertificate, setSelectedCertificate] = useState(null);
 
   const [getCertificates, { data, isLoading }] = useGetCertificatesMutation();
+  const { data: metadata } = useGetUserMetadataQuery();
+  const filterSections = metadata || [];
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Initialize state from URL
+  useEffect(() => {
+    if (!filterSections.length) return; // Wait for metadata to be ready
+
+    const filters = {};
+    searchParams.forEach((value, key) => {
+      // Decide if it's an array or string based on filterSections
+      const section = filterSections.find((s) => s.paramName === key);
+      if (section) {
+        if (section.type === "radio") {
+          filters[key] = [value];
+        } else {
+          filters[key] = value.split(",");
+        }
+      } else {
+        // Check if it's a custom date field
+        const isDateField = filterSections.some((s) => s.customDateFields?.some((f) => f.paramName === key));
+        if (isDateField) {
+          filters[key] = value;
+        } else {
+          filters[key] = value.split(",");
+        }
+      }
+    });
+    setAppliedFilters(filters);
+    isInitialMount.current = false;
+  }, [filterSections]); // Trigger when metadata is loaded
+
+  // Sync state to URL (Only appliedFilters)
+  useEffect(() => {
+    if (isInitialMount.current) return;
+
+    const params = new URLSearchParams();
+    Object.entries(appliedFilters).forEach(([key, value]) => {
+      if (Array.isArray(value) && value.length > 0) {
+        params.set(key, value.join(","));
+      } else if (typeof value === "string" && value) {
+        params.set(key, value);
+      }
+    });
+
+    const queryString = params.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    router.replace(newUrl, { scroll: false });
+  }, [appliedFilters, pathname, router]);
 
   const isFilterApplied = !!searchTerm || Object.values(appliedFilters).some((values) => values.length > 0);
 
   useEffect(() => {
     const fetchCertificates = async () => {
       try {
-        const body = { search: searchTerm };
+        const body = { search: debouncedSearchTerm };
 
         // Sort order
         const sortOrder = appliedFilters.sort_order?.[0];
@@ -101,7 +131,7 @@ export default function CertificatesPage() {
       }
     };
     fetchCertificates();
-  }, [searchTerm, appliedFilters, getCertificates]);
+  }, [debouncedSearchTerm, appliedFilters, getCertificates]);
 
   const certificates = data?.certificates || [];
 
@@ -131,7 +161,7 @@ export default function CertificatesPage() {
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           searchPlaceholder="Search by certificate name"
-          filterSections={FILTER_SECTIONS}
+          filterSections={filterSections}
           appliedFilters={appliedFilters}
           onFilterChange={setAppliedFilters}
           marginTop="0px"
@@ -190,7 +220,12 @@ export default function CertificatesPage() {
               <div className="flex-1 flex items-center justify-center pb-[15vh]">
                 <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in duration-500 w-[300px] mx-auto">
                   {/* Icon (72x72 container) */}
-                  <Image src={isFilterApplied ? noDataFoundIcon : noCertificatesIcon} alt="No Data Found" width={72} height={72} />
+                  <Image
+                    src={isFilterApplied ? noDataFoundIcon : noCertificatesIcon}
+                    alt="No Data Found"
+                    width={72}
+                    height={72}
+                  />
 
                   {/* Text Frame (gap 12px from icon) */}
                   <div className="flex flex-col items-center gap-[6px]">

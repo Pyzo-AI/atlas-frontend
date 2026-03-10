@@ -18,7 +18,13 @@ export const certificatesApi = createApi({
         method: "GET",
       }),
     }),
+    getUserMetadata: builder.query({
+      query: () => ({
+        url: "api/users/metadata",
+        method: "GET",
+      }),
+    }),
   }),
 });
 
-export const { useGetCertificatesMutation, useGenerateCertificateMutation } = certificatesApi;
+export const { useGetCertificatesMutation, useGenerateCertificateMutation, useGetUserMetadataQuery } = certificatesApi;
