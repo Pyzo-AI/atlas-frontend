@@ -7,6 +7,7 @@ import PrimaryButton from "@/components/common/PrimaryButton";
 import SecondaryButton from "@/components/common/SecondaryButton";
 import CertificatePreviewModal from "@/components/common/CertificatePreviewModal";
 import noDataFoundIcon from "@/assets/svg/no-data-found.svg";
+import noCertificatesIcon from "@/assets/svg/no-certificate.svg";
 import { useGetCertificatesMutation } from "@/store/api/certificatesApi";
 import CertificateCardSkeleton from "@/components/common/CertificateCardSkeleton";
 
@@ -50,6 +51,8 @@ export default function CertificatesPage() {
   const [selectedCertificate, setSelectedCertificate] = useState(null);
 
   const [getCertificates, { data, isLoading }] = useGetCertificatesMutation();
+
+  const isFilterApplied = !!searchTerm || Object.values(appliedFilters).some((values) => values.length > 0);
 
   useEffect(() => {
     const fetchCertificates = async () => {
@@ -187,12 +190,12 @@ export default function CertificatesPage() {
               <div className="flex-1 flex items-center justify-center pb-[15vh]">
                 <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in duration-500 w-[300px] mx-auto">
                   {/* Icon (72x72 container) */}
-                  <Image src={noDataFoundIcon} alt="No Data Found" width={72} height={72} />
+                  <Image src={isFilterApplied ? noDataFoundIcon : noCertificatesIcon} alt="No Data Found" width={72} height={72} />
 
                   {/* Text Frame (gap 12px from icon) */}
                   <div className="flex flex-col items-center gap-[6px]">
                     <h2 className="font-lato font-bold text-[16px] leading-[19px] text-[#1A1C29] text-center capitalize">
-                      No Results Found
+                      {isFilterApplied ? "No Results Found" : "No Certificates Yet"}
                     </h2>
                     <p className="font-lato font-normal text-[12px] leading-[16px] text-[#4B5563] text-center w-[300px]">
                       {searchTerm
