@@ -9,6 +9,7 @@ import videoReducer from "./features/videoSlice";
 import resultModalReducer from "./features/resultModalSlice";
 import feedbackModalReducer from "./features/feedbackModalSlice";
 import imageReducer from "./features/imageSlice";
+import notificationsReducer from "./features/notificationsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -21,6 +22,7 @@ export const store = configureStore({
     resultModal: resultModalReducer,
     feedbackModal: feedbackModalReducer,
     image: imageReducer,
+    notifications: notificationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
