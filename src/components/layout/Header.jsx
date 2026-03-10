@@ -17,6 +17,7 @@ import LogoutModal from "@/components/ui/auth/LogoutModal";
 import { FiChevronDown } from "react-icons/fi";
 import NotificationDrawer from "./NotificationDrawer";
 import notification from "@/assets/svg/notification.svg";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const navigation = [
   // { name: "Home", href: "/" },
@@ -36,7 +37,15 @@ const Header = ({ onMenuClick }) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const dropdownRef = useRef(null);
-  const unreadCount = 2;
+  const [token, setToken] = useState(null);
+  const { notifications, unreadCount, markAsRead, refresh } = useNotifications(token);
+
+  useEffect(() => {
+    // Request browser notification permission
+    if (typeof window !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -51,6 +60,7 @@ const Header = ({ onMenuClick }) => {
   useEffect(() => {
     const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
     if (tokens.access_token) {
+      setToken(tokens.access_token);
       const decoded = decodeJWT(tokens.access_token);
       if (decoded) {
         setUserInfo({
@@ -226,7 +236,13 @@ const Header = ({ onMenuClick }) => {
 
       <LogoutModal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} onConfirm={confirmLogout} />
 
-      <NotificationDrawer isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
+      <NotificationDrawer
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        markAsRead={markAsRead}
+      />
 
       <PasswordResetModal
         isOpen={showResetModal}

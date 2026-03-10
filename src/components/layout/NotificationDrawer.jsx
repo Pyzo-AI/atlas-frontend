@@ -8,52 +8,7 @@ import unreadNotification from "@/assets/svg/unread_notification.svg";
 import back from "@/assets/svg/back.svg";
 import close from "@/assets/svg/close.svg";
 
-const DUMMY_NOTIFICATIONS = [
-  {
-    id: 1,
-    title: "Admin reminded you to start the module 'Python Basics' in the course 'Learn Python'",
-    time: "2h ago",
-    isRead: false,
-    slide_url: "/modules",
-  },
-  {
-    id: 2,
-    title: "Admin reminded you to complete the assessment 'Loops Quiz' in the course 'Learn Python'",
-    time: "2h ago",
-    isRead: true,
-    slide_url: "/assessment",
-  },
-  {
-    id: 3,
-    title: "Admin reminded you to start the module 'Python Basics' in the course 'Learn Python'",
-    time: "2h ago",
-    isRead: false,
-    slide_url: "/modules",
-  },
-  {
-    id: 4,
-    title: "Admin reminded you to complete the assessment 'Loops Quiz' in the course 'Learn Python'",
-    time: "2h ago",
-    isRead: true,
-    slide_url: "/assessment",
-  },
-  {
-    id: 5,
-    title: "Admin reminded you to start the module 'Python Basics' in the course 'Learn Python'",
-    time: "2h ago",
-    isRead: false,
-    slide_url: "/modules",
-  },
-  {
-    id: 6,
-    title: "Admin reminded you to complete the assessment 'Loops Quiz' in the course 'Learn Python'",
-    time: "2h ago",
-    isRead: true,
-    slide_url: "/assessment",
-  },
-];
-
-const NotificationDrawer = ({ isOpen, onClose }) => {
+const NotificationDrawer = ({ isOpen, onClose, notifications = [], unreadCount = 0, markAsRead }) => {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
@@ -71,11 +26,36 @@ const NotificationDrawer = ({ isOpen, onClose }) => {
 
   if (!mounted || !isOpen) return null;
 
-  const unreadCount = DUMMY_NOTIFICATIONS.filter((n) => !n.isRead).length;
+  const timeAgo = (dateString) => {
+    const now = new Date();
+    const past = new Date(dateString);
+    const msPerMinute = 60 * 1000;
+    const msPerHour = msPerMinute * 60;
+    const msPerDay = msPerHour * 24;
 
-  const handleNotificationClick = (url) => {
-    if (url) {
-      router.push(url);
+    const diff = now - past;
+
+    if (diff < msPerMinute) {
+      return "just now";
+    } else if (diff < msPerHour) {
+      return Math.round(diff / msPerMinute) + "m ago";
+    } else if (diff < msPerDay) {
+      return Math.round(diff / msPerHour) + "h ago";
+    } else {
+      return Math.round(diff / msPerDay) + "d ago";
+    }
+  };
+
+  const handleNotificationClick = (notification) => {
+    if (!notification.is_read && markAsRead) {
+      markAsRead(notification.id);
+    }
+
+    if (notification.type === "module_assigned" && notification.metadata?.presentation_id) {
+      router.push(`${notification.metadata.redirect_url}`);
+      onClose();
+    } else if (notification.type === "certificate_ready") {
+      router.push("/certificates");
       onClose();
     }
   };
@@ -113,31 +93,39 @@ const NotificationDrawer = ({ isOpen, onClose }) => {
 
         {/* Notification List */}
         <div className="flex-1 overflow-y-auto pb-4 flex flex-col">
-          {DUMMY_NOTIFICATIONS.map((notif, index) => (
-            <div
-              key={notif.id}
-              className={`px-4 flex gap-3 relative cursor-pointer hover:bg-gray-50 p-1 rounded-md transition-colors ${
-                index < DUMMY_NOTIFICATIONS.length - 1 ? "border-b border-dashed border-[#E5E7EB] py-4" : ""
-              }`}
-              onClick={() => handleNotificationClick(notif.slide_url)}>
-              {/* Bell Icon container */}
-              <Image
-                src={notif.isRead ? readNotification : unreadNotification}
-                alt="Notification Bell"
-                width={36}
-                height={36}
-              />
-
-              {/* Text content */}
-              <div className="flex flex-col gap-2 flex-grow">
-                <p
-                  className={`text-[12px] leading-4 ${notif.isRead ? "text-[#4B5563] font-normal" : "text-[#1D1F2C] font-medium"}`}>
-                  {notif.title}
-                </p>
-                <span className="text-[12px] text-[#585858] font-normal">{notif.time}</span>
-              </div>
+          {notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-8 gap-2">
+              <p className="text-gray-500 font-medium">No notifications yet</p>
+              <p className="text-xs text-gray-400">We'll notify you when something important happens.</p>
             </div>
-          ))}
+          ) : (
+            notifications.map((notif, index) => (
+              <div
+                key={notif.id}
+                className={`px-4 flex gap-3 relative cursor-pointer hover:bg-gray-50 p-1 rounded-md transition-colors ${
+                  index < notifications.length - 1 ? "border-b border-dashed border-[#E5E7EB] py-4" : "py-4"
+                }`}
+                onClick={() => handleNotificationClick(notif)}>
+                {/* Bell Icon container */}
+                <Image
+                  src={notif.is_read ? readNotification : unreadNotification}
+                  alt="Notification Bell"
+                  width={36}
+                  height={36}
+                />
+
+                {/* Text content */}
+                <div className="flex flex-col gap-2 flex-grow">
+                  <p
+                    className={`text-[12px] leading-4 ${notif.is_read ? "text-[#4B5563] font-normal" : "text-[#1D1F2C] font-medium"}`}>
+                    {notif.title}
+                  </p>
+                  <p className="text-[12px] text-[#585858] font-normal">{notif.message}</p>
+                  <span className="text-[12px] text-[#585858] font-normal">{timeAgo(notif.created_at)}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>,
