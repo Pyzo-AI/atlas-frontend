@@ -5,6 +5,7 @@ import { analyticsApi } from "./api/analyticsApi";
 import { liveKitApi } from "./api/liveKitApi";
 import { authApi } from "./api/authApi";
 import { certificatesApi } from "./api/certificatesApi";
+import { notificationsApi } from "./api/notificationsApi";
 import videoReducer from "./features/videoSlice";
 import resultModalReducer from "./features/resultModalSlice";
 import feedbackModalReducer from "./features/feedbackModalSlice";
@@ -18,6 +19,7 @@ export const store = configureStore({
     [liveKitApi.reducerPath]: liveKitApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
     [certificatesApi.reducerPath]: certificatesApi.reducer,
+    [notificationsApi.reducerPath]: notificationsApi.reducer,
     video: videoReducer,
     resultModal: resultModalReducer,
     feedbackModal: feedbackModalReducer,
@@ -30,7 +32,8 @@ export const store = configureStore({
       analyticsApi.middleware,
       liveKitApi.middleware,
       authApi.middleware,
-      certificatesApi.middleware
+      certificatesApi.middleware,
+      notificationsApi.middleware
     ),
   devTools: process.env.NODE_ENV !== "production",
 });
