@@ -1,21 +1,18 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import notificationService from "../services/notificationService";
 import {
+  setNotifications,
   addNotification,
   setConnected,
   resetPagination,
   setLoading,
+  markRead,
 } from "../store/features/notificationsSlice";
-import { 
-  useGetNotificationsQuery, 
-  useMarkNotificationAsReadMutation 
-} from "../store/api/notificationsApi";
+import { useLazyGetNotificationsQuery, useMarkNotificationAsReadMutation } from "../store/api/notificationApi";
 
 export function useNotifications(token) {
   const dispatch = useDispatch();
-  const [pageToFetch, setPageToFetch] = useState(1);
-  
   const { 
     items: notifications, 
     unreadCount, 
@@ -26,22 +23,32 @@ export function useNotifications(token) {
     loading
   } = useSelector((state) => state.notifications);
 
-  // RTK Query hooks
-  const { isFetching } = useGetNotificationsQuery(
-    { page: pageToFetch, perPage: 20 },
-    { skip: !token, refetchOnMountOrArgChange: true }
-  );
+  const [triggerGetNotifications] = useLazyGetNotificationsQuery();
+  const [triggerMarkRead] = useMarkNotificationAsReadMutation();
 
-  const [markAsReadMutation] = useMarkNotificationAsReadMutation();
-
-  // Sync loading state with RTK Query's isFetching
-  useEffect(() => {
-    dispatch(setLoading(isFetching));
-  }, [isFetching, dispatch]);
-
-  const fetchNotifications = useCallback((pageNum = 1) => {
-    setPageToFetch(pageNum);
-  }, []);
+  const fetchNotifications = useCallback(async (pageNum = 1) => {
+    if (!token) return;
+    try {
+      dispatch(setLoading(true));
+      const perPage = 20;
+      const result = await triggerGetNotifications({ 
+        page: pageNum, 
+        per_page: perPage, 
+        admin: true 
+      }).unwrap();
+      
+      dispatch(setNotifications({
+        notifications: result.notifications || [],
+        total: result.total || 0,
+        page: result.page || pageNum,
+        unread_count: result.unread_count
+      }));
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+    } finally {
+        dispatch(setLoading(false));
+    }
+  }, [token, dispatch, triggerGetNotifications]);
 
   const loadMore = useCallback(() => {
     if (hasMore && token && !loading) {
@@ -74,13 +81,16 @@ export function useNotifications(token) {
         try {
           new window.Notification(notification.title, {
             body: notification.message,
-            icon: "/icon.png", // Use the app icon
+            icon: "/icon.png", 
           });
         } catch (e) {
           console.error("Failed to show browser notification:", e);
         }
       }
     });
+
+    // Initial fetch
+    fetchNotifications(1);
 
     // Request permissions
     if (typeof window !== "undefined" && window.Notification && window.Notification.permission === "default") {
@@ -95,8 +105,10 @@ export function useNotifications(token) {
   }, [token, dispatch, fetchNotifications]);
 
   const markAsRead = async (notificationId) => {
+    if (!token) return;
     try {
-      await markAsReadMutation(notificationId).unwrap();
+      dispatch(markRead(notificationId)); // Optimistic update
+      await triggerMarkRead(notificationId).unwrap();
     } catch (error) {
       console.error("Failed to mark as read:", error);
     }
