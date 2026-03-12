@@ -406,8 +406,9 @@ const VideoPlayer = forwardRef(
     useImperativeHandle(ref, () => ({
       play: () => {
         if (playerRef.current) {
-          playerRef.current.play();
+          return playerRef.current.play();
         }
+        return Promise.resolve();
       },
       pause: () => {
         if (playerRef.current) {
@@ -427,6 +428,12 @@ const VideoPlayer = forwardRef(
       },
       get paused() {
         return playerRef.current ? playerRef.current.paused() : true;
+      },
+      get seeking() {
+        return playerRef.current ? playerRef.current.seeking() : false;
+      },
+      get readyState() {
+        return playerRef.current ? playerRef.current.readyState() : 0;
       },
       get muted() {
         return playerRef.current ? playerRef.current.muted() : false;
@@ -762,6 +769,7 @@ const VideoPlayer = forwardRef(
           videoElement.addEventListener(
             "click",
             (e) => {
+              if (!controls) return;
               e.stopPropagation();
               if (playerRef.current.paused()) {
                 playerRef.current.play();
@@ -776,6 +784,7 @@ const VideoPlayer = forwardRef(
         // Add spacebar to play/pause
         const handleKeyDown = (e) => {
           if (e.code === "Space") {
+            if (!controls) return;
             e.preventDefault();
             if (playerRef.current.paused()) {
               playerRef.current.play();
@@ -1132,6 +1141,7 @@ const VideoPlayer = forwardRef(
           };
 
           const handleVideoTap = (e) => {
+            if (!controls) return;
             const rect = videoElement.getBoundingClientRect();
             const touch = e.touches[0] || e.changedTouches[0];
             const x = touch.clientX - rect.left;
@@ -1207,6 +1217,7 @@ const VideoPlayer = forwardRef(
           // When seeking is allowed, add simple mobile touch handler
           const videoElementForTouch = playerRef.current.el();
           const handleMobileTouch = (e) => {
+            if (!controls) return;
             if (playerRef.current.paused()) {
               playerRef.current.play();
             } else {
