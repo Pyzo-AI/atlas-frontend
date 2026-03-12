@@ -40,12 +40,15 @@ const Header = ({ onMenuClick }) => {
   const [token, setToken] = useState(null);
   const { notifications, unreadCount, markAsRead, refresh, loadMore, hasMore, loading } = useNotifications(token);
 
-  useEffect(() => {
-    // Request browser notification permission
-    if (typeof window !== "undefined" && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }, []);
+useEffect(() => {
+  if (
+    typeof window !== "undefined" &&
+    typeof Notification !== "undefined" &&
+    Notification.permission === "default"
+  ) {
+    Notification.requestPermission();
+  }
+}, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);

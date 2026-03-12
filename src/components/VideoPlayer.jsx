@@ -199,14 +199,15 @@ const getSourceUrlWithToken = (url) => {
   });
 
   // Only iPhone/iPod needs native HLS which bypasses ALL JavaScript
-  // We MUST add token to the source URL for iOS
+  // We MUST route through our proxy to inject the token into Key URIs
   if (needsTokenInUrl && isHLS) {
     const accessToken = getAccessToken();
     if (accessToken) {
-      const tokenizedUrl = appendTokenToUrl(url, accessToken);
-      console.log("[iOS] ✅ Token added to source URL for native HLS playback");
-      console.log("[iOS] Tokenized URL:", tokenizedUrl.substring(0, 80) + "...");
-      return tokenizedUrl;
+      // Use the Next.js API route proxy to dynamically inject the token into the EXT-X-KEY URI
+      const proxyUrl = `/api/hls?url=${encodeURIComponent(url)}&token=${encodeURIComponent(accessToken)}`;
+      console.log("[iOS] ✅ Using HLS proxy for native HLS playback");
+      console.log("[iOS] Proxy URL:", proxyUrl.substring(0, 80) + "...");
+      return proxyUrl;
     } else {
       console.warn("[iOS] ⚠️ No access token available! HLS playback will likely fail.");
     }
