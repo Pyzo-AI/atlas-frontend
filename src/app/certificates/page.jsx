@@ -150,7 +150,7 @@ export default function CertificatesPage() {
       {/* Header Section */}
       <div className="flex flex-col gap-3 p-4 md:p-5 md:pl-4 bg-[#F2F2F8] md:bg-transparent">
         <div className="flex flex-col gap-1">
-          <h1 className="font-lato font-bold text-base leading-[19px] text-[#111827]">Reports</h1>
+          <h1 className="font-lato font-bold text-base leading-[19px] text-[#111827]">Certificates</h1>
           <p className="font-lato font-normal text-xs leading-[14px] text-[#4B5563]">
             View and download your earned certificates from completed courses
           </p>
