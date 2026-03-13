@@ -127,13 +127,23 @@ export default function AppliedFilters({
     return value;
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+  };
+
   const getCustomDateRange = (paramName, value) => {
     const section = sections.find((s) => s.paramName === paramName);
     if (section?.customDateFields && section.customTriggerValue === value) {
       const fromDate = appliedFilters[section.customDateFields[0]?.paramName];
       const toDate = appliedFilters[section.customDateFields[1]?.paramName];
       if (fromDate && toDate) {
-        return ` (${fromDate} to ${toDate})`;
+        return ` (${formatDate(fromDate)} to ${formatDate(toDate)})`;
       }
     }
     return "";
