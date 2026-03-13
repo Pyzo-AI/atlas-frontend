@@ -49,7 +49,7 @@ export default function ResultModal({
           const response = await generateCertificate(presentationId).unwrap();
           setCertificatePdfUrl(response.certificate_pdf_url);
         } catch (error) {
-          console.error("Failed to generate certificate:", error);
+          console.log("Failed to generate certificate:", error);
           const errorMessage =
             error?.data?.details || error?.data?.error || "Unable to generate certificate. Try again.";
           toast.error(errorMessage);

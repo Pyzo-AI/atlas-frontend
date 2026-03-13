@@ -247,7 +247,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
           setResultData(modalData);
           setShowResultModalLocal(true);
         } catch (summaryError) {
-          console.error("Failed to fetch assessment summary:", summaryError);
+          console.log("Failed to fetch assessment summary:", summaryError);
           // Don't show result modal if summary API fails
         }
       } else {
@@ -308,7 +308,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
         toast.success("Assessment submitted successfully!");
       }
     } catch (error) {
-      console.error("Assessment submission failed:", error);
+      console.log("Assessment submission failed:", error);
       toast.error("Failed to submit assessment. Please try again.");
     }
   };

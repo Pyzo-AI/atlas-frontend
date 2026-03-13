@@ -43,7 +43,7 @@ export class LiveKitService {
       this.updateConnectionState({ isConnected: true, isConnecting: false, isAudioPlaying: false, error: null });
       console.log("Connected to LiveKit room");
     } catch (error) {
-      console.error("Failed to connect to LiveKit:", error);
+      console.log("Failed to connect to LiveKit:", error);
       this.updateConnectionState({
         isConnected: false,
         isConnecting: false,
@@ -125,7 +125,7 @@ export class LiveKitService {
           this.onSlideMetadataReceived?.(data.data, slideNumbers, null);
         }
       } catch (error) {
-        console.error("Failed to parse data message:", error);
+        console.log("Failed to parse data message:", error);
       }
     });
   }
@@ -157,7 +157,7 @@ export class LiveKitService {
       }
       this.updateConnectionState({ isConnected: false, isConnecting: false, isAudioPlaying: false, error: null });
     } catch (error) {
-      console.error("Error disconnecting:", error);
+      console.log("Error disconnecting:", error);
       this.room = null;
       this.localParticipant = null;
       this.updateConnectionState({ isConnected: false, isConnecting: false, isAudioPlaying: false, error: null });

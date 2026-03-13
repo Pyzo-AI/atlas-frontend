@@ -282,7 +282,7 @@ const Home = () => {
         console.log("Video progress submitted successfully");
       }
     } catch (error) {
-      console.error("Failed to submit video progress:", error);
+      console.log("Failed to submit video progress:", error);
     }
   };
 
@@ -485,7 +485,7 @@ const Home = () => {
         }
       }
     } catch (err) {
-      console.error("Failed to init current video from API data", err);
+      console.log("Failed to init current video from API data", err);
     }
   }, [data, dispatch]);
 

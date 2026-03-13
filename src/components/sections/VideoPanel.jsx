@@ -60,7 +60,7 @@ const getStoredConversationHistory = () => {
 
     return cleanedHistory;
   } catch (error) {
-    console.error("Error loading conversation history:", error);
+    console.log("Error loading conversation history:", error);
     return [];
   }
 };
@@ -72,7 +72,7 @@ const saveConversationHistory = (history) => {
     const trimmedHistory = history.slice(-MAX_HISTORY_MESSAGES);
     localStorage.setItem(CONVERSATION_STORAGE_KEY, JSON.stringify(trimmedHistory));
   } catch (error) {
-    console.error("Error saving conversation history:", error);
+    console.log("Error saving conversation history:", error);
   }
 };
 
@@ -187,7 +187,7 @@ const VideoPanel = forwardRef(
 
       // Only log actual errors, not normal disconnections
       if (!state.isConnected && state.error && !state.error.includes("Disconnected:")) {
-        console.error("LiveKit connection error:", state.error);
+        console.log("LiveKit connection error:", state.error);
       }
     };
 
@@ -216,11 +216,11 @@ const VideoPanel = forwardRef(
                 );
                 setContextSent(true);
               } catch (error) {
-                console.error("Error sending context:", error);
+                console.log("Error sending context:", error);
               }
             }
           } catch (error) {
-            console.error("Could not send context on connect:", error.message);
+            console.log("Could not send context on connect:", error.message);
           }
         }, 2000);
       },
@@ -303,11 +303,11 @@ const VideoPanel = forwardRef(
                     `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
                   );
                 } catch (error) {
-                  console.error("Error sending backup context:", error);
+                  console.log("Error sending backup context:", error);
                 }
               }
             } catch (error) {
-              console.error("Could not send backup context:", error.message);
+              console.log("Could not send backup context:", error.message);
             }
           }, 2000);
         }
@@ -330,7 +330,7 @@ const VideoPanel = forwardRef(
         }
       },
       onError: (error) => {
-        console.error("ElevenLabs Error:", error);
+        console.log("ElevenLabs Error:", error);
         setConversationState((prev) => ({
           ...prev,
           isLoading: false,
@@ -394,11 +394,11 @@ const VideoPanel = forwardRef(
                   );
                   setContextSent(true);
                 } catch (error) {
-                  console.error("Error sending initial context:", error);
+                  console.log("Error sending initial context:", error);
                 }
               }
             } catch (error) {
-              console.error("Could not send initial context:", error.message);
+              console.log("Could not send initial context:", error.message);
             }
           }, 1500);
         }
@@ -422,7 +422,7 @@ const VideoPanel = forwardRef(
           isAudioPlaying: false,
         }));
       } catch (error) {
-        console.error("Failed to stop conversation:", error);
+        console.log("Failed to stop conversation:", error);
       }
     };
 
@@ -649,7 +649,7 @@ const VideoPanel = forwardRef(
               }
             }
           } catch (error) {
-            console.error("Failed to parse data packet:", error);
+            console.log("Failed to parse data packet:", error);
           }
         });
       }

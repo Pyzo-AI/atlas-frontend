@@ -127,7 +127,7 @@ export default function CertificatesPage() {
 
         await getCertificates(body).unwrap();
       } catch (err) {
-        console.error("Failed to fetch certificates:", err);
+        console.log("Failed to fetch certificates:", err);
       }
     };
     fetchCertificates();

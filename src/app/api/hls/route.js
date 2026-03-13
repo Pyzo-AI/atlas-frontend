@@ -91,7 +91,7 @@ export async function GET(request) {
       }
     });
   } catch (error) {
-    console.error('HLS proxy error:', error);
+    console.log('HLS proxy error:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

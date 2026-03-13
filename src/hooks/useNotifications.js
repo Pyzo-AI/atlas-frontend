@@ -44,7 +44,7 @@ export function useNotifications(token) {
         unread_count: result.unread_count
       }));
     } catch (error) {
-      console.error("Failed to fetch notifications:", error);
+      console.log("Failed to fetch notifications:", error);
     } finally {
         dispatch(setLoading(false));
     }
@@ -84,7 +84,7 @@ export function useNotifications(token) {
             icon: "/icon.png", 
           });
         } catch (e) {
-          console.error("Failed to show browser notification:", e);
+          console.log("Failed to show browser notification:", e);
         }
       }
     });
@@ -110,7 +110,7 @@ export function useNotifications(token) {
       dispatch(markRead(notificationId)); // Optimistic update
       await triggerMarkRead(notificationId).unwrap();
     } catch (error) {
-      console.error("Failed to mark as read:", error);
+      console.log("Failed to mark as read:", error);
     }
   };
 
