@@ -11,6 +11,8 @@ import assessment from "@/assets/svg/assessment.svg";
 import assessmentActive from "@/assets/svg/assessment_active.svg";
 import analytics from "@/assets/svg/analytics.svg";
 import analyticsActive from "@/assets/svg/analytics_active.svg";
+import certificate from "@/assets/svg/certificate.svg";
+import certificateActive from "@/assets/svg/certificate_active.svg";
 
 const Sidebar = ({ isOpen = false, onClose }) => {
   const pathname = usePathname();
@@ -33,8 +35,8 @@ const Sidebar = ({ isOpen = false, onClose }) => {
     {
       name: "Certificates",
       href: "/certificates",
-      icon: assessment, // Reusing assessment icon for now
-      activeIcon: assessmentActive,
+      icon: certificate,
+      activeIcon: certificateActive,
     },
     {
       name: "Analytics",

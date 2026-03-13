@@ -127,6 +127,18 @@ export default function AppliedFilters({
     return value;
   };
 
+  const getCustomDateRange = (paramName, value) => {
+    const section = sections.find((s) => s.paramName === paramName);
+    if (section?.customDateFields && section.customTriggerValue === value) {
+      const fromDate = appliedFilters[section.customDateFields[0]?.paramName];
+      const toDate = appliedFilters[section.customDateFields[1]?.paramName];
+      if (fromDate && toDate) {
+        return ` (${fromDate} to ${toDate})`;
+      }
+    }
+    return "";
+  };
+
   return (
     <div className="bg-white border border-[#EDF0F6] rounded-lg px-2.5 py-1.5 mb-0 flex items-center justify-between mt-3">
       <div className="flex items-center gap-1 flex-wrap">
@@ -141,7 +153,7 @@ export default function AppliedFilters({
                 <span className="text-[10px] leading-3 font-lato">
                   <span className="text-[#636974]">{getSectionTitle(paramName)}: </span>
                   <span className="text-[#0B1B32]">
-                    {displayValues.map((value) => getOptionLabel(paramName, value)).join(", ")}
+                    {displayValues.map((value) => getOptionLabel(paramName, value) + getCustomDateRange(paramName, value)).join(", ")}
                   </span>
                 </span>
                 {showDeleteButton && (

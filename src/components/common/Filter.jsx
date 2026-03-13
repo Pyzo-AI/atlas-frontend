@@ -254,7 +254,7 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
           className={`hidden md:inline text-xs font-regular font-lato whitespace-nowrap ${
             hasAppliedFilters ? "text-[#2762EA]" : "text-[#667085]"
           }`}>
-          More Filters{hasAppliedFilters ? ` (${appliedFilterCount})` : ""}
+           Filters{hasAppliedFilters ? ` (${appliedFilterCount})` : ""}
         </span>
       </button>
 
