@@ -7,7 +7,7 @@ const PPTSection = React.forwardRef(
     {
       videos = [],
       loading = false,
-      height = "calc(100vh - 240px)",
+      height = null,
       width = "70%",
       currentVideoIndex = 0,
       currentVideoTime = 0,
@@ -37,6 +37,10 @@ const PPTSection = React.forwardRef(
         }
       },
     }));
+    const effectiveHeight =
+      height ||
+      (isPhoneView ? "calc(100vh - 130px)" : isMobileView ? "calc(100vh - 180px)" : "calc(100vh - 280px)");
+
     return (
       <div
         className={`flex flex-col ${isOnlyVideoMode ? "overflow-y-auto" : ""} ${
@@ -57,12 +61,18 @@ const PPTSection = React.forwardRef(
                   ? "flex-shrink-0 overflow-hidden mb-3 aspect-video"
                   : "rounded-xl border border-border-light flex-shrink-0 aspect-video relative"
               : isPhoneView
-                ? "flex-1 overflow-hidden mb-2"
+                ? "flex-shrink-0 overflow-hidden mb-2 aspect-video"
                 : isMobileView
-                  ? "flex-1 overflow-hidden mb-3"
-                  : "rounded-xl border border-border-light min-h-[400px] relative"
+                  ? "flex-shrink-0 overflow-hidden mb-3 aspect-video"
+                  : "rounded-xl border border-border-light aspect-video relative mx-auto"
           }`}
-          style={!isOnlyVideoMode ? { height: isPhoneView ? "auto" : isMobileView ? "auto" : height } : undefined}>
+          style={{
+            width: "100%",
+            aspectRatio: "16 / 9",
+            maxHeight: effectiveHeight,
+            maxWidth: `calc((${effectiveHeight}) * 16 / 9)`,
+            margin: "0 auto",
+          }}>
           <SlideVideoSection
             ref={slideVideoRef}
             videos={videos}
@@ -82,7 +92,7 @@ const PPTSection = React.forwardRef(
 
         {/* Title and Author Info */}
         <div
-          className={`flex justify-between items-center ${isPhoneView ? "mt-0" : isMobileView ? "mt-2" : "mt-3 pr-1"}`}>
+          className={`flex justify-between items-center ${isPhoneView ? "mt-2" : isMobileView ? "mt-2" : "mt-3 pr-1"}`}>
           <p
             className={`font-bold font-lato leading-[100%] tracking-[0.02em] m-0 ${
               isPhoneView

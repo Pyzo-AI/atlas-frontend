@@ -863,8 +863,8 @@ const VideoPanel = forwardRef(
             } ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "blur-[1px] relative" : ""}`}
             onClick={selectedAssessmentId ? undefined : togglePlayPause}>
             <div
-              className={`relative w-full bg-black overflow-hidden ${
-                isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
+              className={`relative w-full bg-black overflow-hidden aspect-video ${
+                isMobile ? (isPhone ? "rounded" : "rounded-lg") : "rounded-lg"
               }`}>
               <VideoPlayerContainer
                 ref={videoRef}
