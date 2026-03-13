@@ -133,12 +133,13 @@ const NotificationDrawer = ({
                   />
 
                   {/* Text content */}
-                  <div className="flex flex-col gap-2 flex-grow">
-                    <p
+                  <div className="flex flex-col gap-1 flex-grow">
+                    {/* <p
                       className={`text-[12px] leading-4 ${notif.is_read ? "text-[#4B5563] font-normal" : "text-[#1D1F2C] font-medium"}`}>
                       {notif.title}
-                    </p>
-                    <p className="text-[12px] text-[#585858] font-normal">{notif.message}</p>
+                    </p> */}
+                    <p  className={`text-[12px] leading-4 ${notif.is_read ? "text-[#4B5563] font-normal" : "text-[#1D1F2C] font-medium"}`}>
+                      {notif.message}</p>
                     <span className="text-[12px] text-[#585858] font-normal">{timeAgo(notif.created_at)}</span>
                   </div>
                 </div>
