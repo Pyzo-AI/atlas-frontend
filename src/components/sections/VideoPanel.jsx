@@ -856,16 +856,12 @@ const VideoPanel = forwardRef(
           <div
             className={`${selectedAssessmentId ? "" : "cursor-pointer"} bg-white border border-border-light ${
               isMobile
-                ? isPhone
-                  ? "p-1 md:p-[6px] lg:p-3 rounded-lg flex-shrink-0"
-                  : "p-2 pb-1 rounded-lg"
+                ? "p-2 pb-1 rounded-lg flex-shrink-0"
                 : "p-3 pb-2 rounded-xl"
             } ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "blur-[1px] relative" : ""}`}
             onClick={selectedAssessmentId ? undefined : togglePlayPause}>
             <div
-              className={`relative w-full bg-black overflow-hidden aspect-video ${
-                isMobile ? (isPhone ? "rounded" : "rounded-lg") : "rounded-lg"
-              }`}>
+              className="relative w-full bg-black overflow-hidden aspect-video rounded-lg">
               <VideoPlayerContainer
                 ref={videoRef}
                 videos={videos}
@@ -899,7 +895,7 @@ const VideoPanel = forwardRef(
             <div
               className={`px-1 flex justify-between font-lato text-gray-600 ${
                 isMobile
-                  ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
+                  ? "mt-1 text-[10px] leading-4"
                   : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
               }`}>
               <span>

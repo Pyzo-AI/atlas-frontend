@@ -2052,19 +2052,19 @@ const VideoPlayer = forwardRef(
               flex-shrink: 0;
             }
             
-            /* Optimize spacing for mobile - add more space between controls */
+            /* Optimize spacing for mobile - reduce space between controls to expand seekbar */
             .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
-              margin: 0 0.2em;
+              margin: 0 0.05em;
             }
             
             /* Add extra spacing for skip backward button */
             .video-js .vjs-skip-backward {
-              margin-right: 0.3em !important;
+              margin-right: 0.1em !important;
             }
             
             /* Ensure volume panel has adequate space */
             .video-js .vjs-volume-panel {
-              margin-left: 0.3em !important;
+              margin-left: 0.1em !important;
             }
           }
 
@@ -2083,20 +2083,20 @@ const VideoPlayer = forwardRef(
             
             /* Better spacing for landscape */
             .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
-              margin: 0 0.15em;
+              margin: 0 0.05em;
             }
             
             /* Add extra spacing for skip backward button */
             .video-js .vjs-skip-backward {
-              margin-right: 0.25em !important;
+              margin-right: 0.1em !important;
               margin-top: 2.5px !important;
             }
             
             /* Ensure volume panel has enough space */
             .video-js .vjs-volume-panel {
               flex-shrink: 0 !important;
-              min-width: 6em !important;
-              margin-left: 0.25em !important;
+              min-width: 5em !important;
+              margin-left: 0.1em !important;
             }
           }
 
@@ -2113,17 +2113,17 @@ const VideoPlayer = forwardRef(
             
             /* Better spacing for very small screens */
             .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
-              margin: 0 0.15em;
+              margin: 0 0.05em;
             }
             
             /* Add extra spacing for skip backward button */
             .video-js .vjs-skip-backward {
-              margin-right: 0.25em !important;
+              margin-right: 0.1em !important;
             }
             
             /* Ensure volume panel has space */
             .video-js .vjs-volume-panel {
-              margin-left: 0.25em !important;
+              margin-left: 0.1em !important;
             }
             
             /* Compact layout for very small screens */
@@ -2168,7 +2168,7 @@ const VideoPlayer = forwardRef(
           /* Ensure volume panel gets adequate space */
           .video-js .vjs-volume-panel {
             flex-shrink: 0 !important;
-            min-width: 5em !important;
+            min-width: 4em !important;
           }
 
           /* Hide or minimize the custom control spacer that's taking up space */
