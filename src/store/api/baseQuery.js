@@ -18,7 +18,7 @@ export const baseQueryWithReauth = fetchBaseQuery({
         headers.set('Authorization', `Bearer ${accessToken}`);
       }
     } catch (error) {
-      console.error('Failed to get valid access token:', error);
+      console.log('Failed to get valid access token:', error);
       // Token refresh failed, user will be redirected to login
     }
     
@@ -42,7 +42,7 @@ export const baseQueryWithReauthAndRetry = async (args, api, extraOptions) => {
       }
       // If no valid token, user has been logged out automatically
     } catch (error) {
-      console.error('Token refresh failed during retry:', error);
+      console.log('Token refresh failed during retry:', error);
       // User has been logged out automatically in getValidAccessToken
     }
   }

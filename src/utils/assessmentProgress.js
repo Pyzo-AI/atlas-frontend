@@ -9,7 +9,7 @@ export const getAssessmentProgress = (presentationId) => {
     const allProgress = JSON.parse(stored);
     return allProgress[presentationId] || null;
   } catch (error) {
-    console.error("Error getting assessment progress:", error);
+    console.log("Error getting assessment progress:", error);
     return null;
   }
 };
@@ -26,7 +26,7 @@ export const setAssessmentCompleted = (presentationId, assessmentId) => {
     allProgress[presentationId][assessmentId] = true;
     localStorage.setItem(ASSESSMENT_PROGRESS_KEY, JSON.stringify(allProgress));
   } catch (error) {
-    console.error("Error setting assessment completed:", error);
+    console.log("Error setting assessment completed:", error);
   }
 };
 
@@ -48,6 +48,6 @@ export const clearAssessmentProgress = (presentationId) => {
       localStorage.setItem(ASSESSMENT_PROGRESS_KEY, JSON.stringify(allProgress));
     }
   } catch (error) {
-    console.error("Error clearing assessment progress:", error);
+    console.log("Error clearing assessment progress:", error);
   }
 };

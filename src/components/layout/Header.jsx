@@ -8,8 +8,6 @@ import user_icon from "@/assets/svg/user-icon.svg";
 import { trackLogout } from "@/utils/authTracking";
 import Image from "next/image";
 import hamburger from "@/assets/svg/hamburger.svg";
-import Lottie from "lottie-react";
-import spinnerAnimation from "@/assets/json/spinner.json";
 import logout_icon from "@/assets/svg/logout.svg";
 import reset_password_icon from "@/assets/svg/reset-password.svg";
 import { useForgotPasswordMutation } from "@/store/api/authApi";
@@ -17,6 +15,9 @@ import { toast } from "react-toastify";
 import PasswordResetModal from "@/components/ui/auth/PasswordResetModal";
 import LogoutModal from "@/components/ui/auth/LogoutModal";
 import { FiChevronDown } from "react-icons/fi";
+import NotificationDrawer from "./NotificationDrawer";
+import notification from "@/assets/svg/notification.svg";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const navigation = [
   // { name: "Home", href: "/" },
@@ -29,12 +30,25 @@ const Header = ({ onMenuClick }) => {
   const router = useRouter();
   const pathname = usePathname();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [userInfo, setUserInfo] = useState({ name: "", email: "" });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [forgotPassword, { isLoading: isResetLoading }] = useForgotPasswordMutation();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const dropdownRef = useRef(null);
+  const [token, setToken] = useState(null);
+  const { notifications, unreadCount, markAsRead, refresh, loadMore, hasMore, loading } = useNotifications(token);
+
+useEffect(() => {
+  if (
+    typeof window !== "undefined" &&
+    typeof Notification !== "undefined" &&
+    Notification.permission === "default"
+  ) {
+    Notification.requestPermission();
+  }
+}, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -43,14 +57,13 @@ const Header = ({ onMenuClick }) => {
     }
   }, []);
 
-  // Check if sidebar should be hidden (and thus menu button too)
   const hideSidebarRoutes = ["/lectures/", "/assessment/", "/login"];
   const shouldHideMenuButton = hideSidebarRoutes.some((route) => pathname.includes(route));
 
-  // Get user info from JWT token
   useEffect(() => {
     const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
     if (tokens.access_token) {
+      setToken(tokens.access_token);
       const decoded = decodeJWT(tokens.access_token);
       if (decoded) {
         setUserInfo({
@@ -61,7 +74,6 @@ const Header = ({ onMenuClick }) => {
     }
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -82,7 +94,6 @@ const Header = ({ onMenuClick }) => {
       setIsDropdownOpen(false);
       toast.success("Password reset link sent successfully.");
 
-      // Add param to URL and open modal
       const url = new URL(window.location.href);
       url.searchParams.set("reset_pending", "true");
       window.history.pushState({}, "", url.toString());
@@ -100,77 +111,44 @@ const Header = ({ onMenuClick }) => {
   const confirmLogout = async () => {
     setIsLoggingOut(true);
     setIsLogoutModalOpen(false);
-
-    // Get user ID for tracking before clearing tokens
     const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
     let userId = null;
     if (tokens.access_token) {
       const decoded = decodeJWT(tokens.access_token);
       userId = decoded?.sub;
     }
-
-    // Track session end event
     if (userId) {
       trackLogout(userId);
     }
-
-    // try {
-    //   if (tokens.refresh_token) {
-    //     const response = await fetch('https://xstk67r5-3001.inc1.devtunnels.ms/auth/logout', {
-    //       method: 'POST',
-    //       headers: {
-    //         'Content-Type': 'application/json',
-    //       },
-    //       body: JSON.stringify({ refresh_token: tokens.refresh_token }),
-    //     });
-
-    //     if (response.ok) {
     localStorage.removeItem("trainboost_tokens");
-    // Clear conversation history on logout
     localStorage.removeItem("trainboost_conversation_history");
     setIsDropdownOpen(false);
     router.push("/login");
-    //     }
-    //   }
-    // } catch (error) {
-    //   console.log('Logout API error:', error);
-    // } finally {
-    //   setIsLoggingOut(false);
-    // }
   };
 
   return (
     <header
       className={`fixed top-0 right-0 h-12 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#E5E7EB] px-4 md:px-5 bg-white backdrop-blur-sm z-50 ${shouldHideMenuButton ? "left-0" : "left-0 md:left-[200px]"} ${pathname.startsWith("/lectures") ? "hidden lg:flex" : ""}`}>
-      {/* Left side - Menu button */}
-      <div className="flex items-center gap-3 md:flex-1">
+      <div className="flex items-center gap-2 md:gap-3 md:flex-1">
         {/* Mobile Menu Button - Hidden on certain routes */}
         {!shouldHideMenuButton && (
           <button
             onClick={onMenuClick}
-            className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
+            className="md:hidden p-1.5 rounded-md hover:bg-gray-100 transition-colors"
             aria-label="Toggle menu">
             <Image src={hamburger} alt="Menu" width={24} height={24} />
           </button>
         )}
 
-        {/* Logo - Only visible on desktop for /lectures page */}
-        {pathname.includes("/lectures/") && (
-          <div className="hidden md:block cursor-pointer" onClick={() => router.push("/")}>
-            <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
-          </div>
-        )}
+        {/* Logo - Always visible on mobile, visible on desktop for /lectures page */}
+        <div
+          className={`cursor-pointer ${pathname.includes("/lectures/") ? "" : "md:hidden"}`}
+          onClick={() => router.push("/")}>
+          <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
+        </div>
       </div>
 
-      {/* Center - Logo on mobile only */}
-      <div
-        className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-        onClick={() => router.push("/")}>
-        <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
-      </div>
-
-      {/* Right side */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
         <nav className="flex items-center gap-5">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
@@ -187,6 +165,20 @@ const Header = ({ onMenuClick }) => {
           })}
         </nav>
 
+        {/* Notification Icon */}
+        <div
+          className="flex items-center justify-center w-10 h-10 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors p-2"
+          onClick={() => setIsNotificationOpen(true)}>
+          <div className="relative w-6 h-6 flex items-center justify-center">
+            <Image src={notification} alt="Notification" width={18} height={18} className="object-contain" />
+            {unreadCount > 0 && (
+              <div className="absolute left-[13px] top-[-3px] flex flex-col justify-center items-center px-1.5 py-0.5 bg-[#FF7676] rounded-[4px] min-w-[14px] h-[14px] z-10">
+                <span className="font-lato font-semibold text-[10px] leading-tight text-white">{unreadCount}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="relative" ref={dropdownRef}>
           <div
             className="flex items-center gap-1 cursor-pointer py-[5px] px-[5px] bg-white border border-[#E3E7EF] rounded-full hover:bg-gray-50 transition-colors"
@@ -201,8 +193,7 @@ const Header = ({ onMenuClick }) => {
           </div>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-[244px] bg-white border border-[#ECECEC] shadow-[0px_3px_8px_rgba(0,0,0,0.12)] rounded-[10px] p-[12px] flex flex-col gap-[10px] z-[70] font-lato">
-              {/* User Info Section */}
+            <div className="absolute right-0 mt-2 w-[244px] bg-white border border-[#ECECEC] shadow-[0px_3px_8px_rgba(0,0,0,0.12)] rounded-[10px] px-3 pt-3 pb-2 flex flex-col gap-[10px] z-[70] font-lato">
               <div className="flex items-center gap-[6px] w-full">
                 <Image src={user_icon} alt="user-icon" width={36} height={36} />
                 <div className="flex flex-col gap-[1px] overflow-hidden">
@@ -218,7 +209,6 @@ const Header = ({ onMenuClick }) => {
               </div>
 
               <div className="flex flex-col gap-[10px] items-start w-full">
-                {/* Reset Password */}
                 <button
                   className="flex items-center gap-[4px] w-full cursor-pointer hover:bg-gray-50 transition-colors py-1 disabled:opacity-50"
                   onClick={handleResetPassword}
@@ -229,15 +219,12 @@ const Header = ({ onMenuClick }) => {
                   </span>
                 </button>
 
-                <div className="flex flex-col gap-[10px] w-full">
-                  {/* Divider */}
+                <div className="flex flex-col gap-1.5 w-full">
                   <div className="w-full h-[1px] bg-[#E5E7EB]" />
-
-                  {/* Logout Button */}
                   <button
                     onClick={handleLogoutClick}
                     disabled={isLoggingOut}
-                    className="flex items-center gap-[8px] w-full cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[#F04638]">
+                    className="py-1 flex items-center gap-[8px] w-full cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[#F04638]">
                     <Image src={logout_icon} alt="logout-icon" width={16} height={16} />
                     <span className="text-[12px] font-normal leading-[14px] text-[#F04638]">
                       {isLoggingOut ? "Signing out..." : "Log Out"}
@@ -251,6 +238,17 @@ const Header = ({ onMenuClick }) => {
       </div>
 
       <LogoutModal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} onConfirm={confirmLogout} />
+
+      <NotificationDrawer
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        markAsRead={markAsRead}
+        hasMore={hasMore}
+        loadMore={loadMore}
+        loading={loading}
+      />
 
       <PasswordResetModal
         isOpen={showResetModal}

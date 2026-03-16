@@ -21,7 +21,7 @@ export const getUserDetailsFromToken = () => {
     // Return the username from the token payload
     return payload;
   } catch (error) {
-    console.error('Error decoding token:', error);
+    console.log('Error decoding token:', error);
     return null;
   }
 };

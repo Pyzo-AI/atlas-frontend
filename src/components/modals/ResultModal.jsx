@@ -6,6 +6,9 @@ import Modal from "@/components/common/Modal";
 import { setCurrentVideoIndex } from "@/store/features/videoSlice";
 import { showFeedbackModal } from "@/store/features/feedbackModalSlice";
 import ProgressCircle from "@/components/ui/ProgressCircle";
+import { useGenerateCertificateMutation } from "@/store/api/certificatesApi";
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 
 export default function ResultModal({
   isOpen,
@@ -28,6 +31,34 @@ export default function ResultModal({
   const actualPercentage = score || 0;
 
   const isPerfectScore = actualPercentage >= passingScore;
+  const [generateCertificate, { isLoading: isGeneratingCertificate }] = useGenerateCertificateMutation();
+  const [certificatePdfUrl, setCertificatePdfUrl] = useState(null);
+  const generatingRef = React.useRef(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      generatingRef.current = false;
+      setCertificatePdfUrl(null);
+      return;
+    }
+
+    const handleGenerateCertificate = async () => {
+      if (isPerfectScore && presentationId && !certificatePdfUrl && !generatingRef.current) {
+        generatingRef.current = true;
+        try {
+          const response = await generateCertificate(presentationId).unwrap();
+          setCertificatePdfUrl(response.certificate_pdf_url);
+        } catch (error) {
+          console.log("Failed to generate certificate:", error);
+          const errorMessage =
+            error?.data?.details || error?.data?.error || "Unable to generate certificate. Try again.";
+          toast.error(errorMessage);
+          generatingRef.current = false;
+        }
+      }
+    };
+    handleGenerateCertificate();
+  }, [isOpen, presentationId, isPerfectScore, certificatePdfUrl]);
 
   // Debug logging
   console.log("ResultModal received props:", {
@@ -37,8 +68,16 @@ export default function ResultModal({
       actualTotalQuestions,
       actualCorrectAnswers,
       isPerfectScore,
+      isGeneratingCertificate,
+      certificatePdfUrl,
     },
   });
+
+  const handleDownloadCertificate = () => {
+    if (certificatePdfUrl) {
+      window.open(certificatePdfUrl, "_blank");
+    }
+  };
 
   const handleRetry = () => {
     onRetry?.();
@@ -93,7 +132,7 @@ export default function ResultModal({
         {/* Subtitle */}
         <p className="font-lato font-medium text-[14px] leading-[100%] tracking-[0em] text-center text-primary-text-muted mb-2">
           {isPerfectScore ? (
-            "You've mastered the training with a perfect score!"
+            "You’ve successfully completed the training. Download your certificate and share your feedback."
           ) : (
             <>
               You correctly answered{" "}
@@ -119,23 +158,38 @@ export default function ResultModal({
         )}
 
         {/* Action Buttons */}
-        <div className="space-y-3">
+        <div className="space-y-3 mt-6">
           {isPerfectScore ? (
-            <button
-              onClick={showFeedback}
-              className="cursor-pointer w-full bg-accent hover:bg-accent-hover text-light py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg mt-5">
-              Continue
-            </button>
+            // <button
+            //   onClick={showFeedback}
+            //   className="cursor-pointer w-full bg-accent hover:bg-accent-hover text-light py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg mt-5">
+            //   Share Feedback
+            // </button>
+            <div className="flex gap-3">
+              <button
+                onClick={showFeedback}
+                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent-light hover:bg-accent-light-hover text-accent font-lato font-semibold text-[14px] leading-[16px] rounded-[73.75px] transition-all duration-200 flex-1 whitespace-nowrap">
+                Share Feedback
+              </button>
+              <button
+                onClick={handleDownloadCertificate}
+                disabled={isGeneratingCertificate || !certificatePdfUrl}
+                className={`cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent hover:bg-accent-hover text-light font-lato font-semibold text-[14px] leading-[16px] rounded-[73.75px] transition-all duration-200 flex-1 whitespace-nowrap ${
+                  isGeneratingCertificate || !certificatePdfUrl ? "opacity-50 cursor-not-allowed" : ""
+                }`}>
+                {isGeneratingCertificate ? "Generating Certificate..." : "Download Certificate"}
+              </button>
+            </div>
           ) : (
             <div className="flex gap-3">
               <button
                 onClick={showFeedback}
-                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent-light hover:bg-accent-light-hover text-accent font-semibold text-base rounded-[73.75px] transition-all duration-200 flex-1">
+                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent-light hover:bg-accent-light-hover text-accent font-lato font-semibold text-[14px] leading-[16px] rounded-[73.75px] transition-all duration-200 flex-1 whitespace-nowrap">
                 Give Feedback
               </button>
               <button
                 onClick={handleRestartTraining}
-                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent hover:bg-accent-hover text-light font-semibold text-base rounded-[73.75px] transition-all duration-200 flex-1">
+                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent hover:bg-accent-hover text-light font-lato font-semibold text-[14px] leading-[16px] rounded-[73.75px] transition-all duration-200 flex-1 whitespace-nowrap">
                 Restart Training
               </button>
             </div>

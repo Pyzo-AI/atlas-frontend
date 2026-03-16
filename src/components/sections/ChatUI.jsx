@@ -113,7 +113,7 @@ const ChatUI = ({
       onClose();
       onStartConversation();
     } catch (error) {
-      console.error("Microphone permission denied:", error);
+      console.log("Microphone permission denied:", error);
       setShowMicPopup(false);
     }
   };

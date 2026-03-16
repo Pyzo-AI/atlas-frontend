@@ -19,7 +19,7 @@ const PasswordInput = ({ value, onChange, error, placeholder = "***************"
             placeholder={placeholder}
             className={`flex-1 bg-transparent outline-none font-normal text-black placeholder:text-black/50 autofill:shadow-[inset_0_0_0px_1000px_white] ${
               !showPassword
-                ? `text-[21px] tracking-[2px] placeholder:text-[14px] ${value ? "" : "-translate-y-[-3px]"}`
+                ? `text-[21px] tracking-[2px] placeholder:text-[14px] ${value ? "-translate-y-[0.5px]" : "-translate-y-[-3px]"}`
                 : `text-[14px] ${value ? "" : "-translate-y-[-4px]"}`
             }`}
           />

@@ -18,6 +18,9 @@ import { HiBookOpen, HiChevronDown } from "react-icons/hi2";
 
 const PresentationCard = ({ presentation, onClick, currentTime }) => {
   const formatDuration = (seconds) => {
+    if (seconds < 60) {
+      return `${Math.round(seconds)}s`;
+    }
     const totalMinutes = Math.floor(seconds / 60);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
