@@ -8,6 +8,7 @@ import Checkbox from "./Checkbox";
 import RadioButton from "@/components/ui/RadioButton";
 import DateRangePicker from "@/components/ui/DateRangePicker";
 import filterIcon from "@/assets/svg/filter.svg";
+import closeIcon from "@/assets/svg/close.svg";
 
 export default function Filter({ sections = [], onFilterChange, appliedFilters = {}, disabled = false }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -272,9 +273,7 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
                   Filter by {hasSelectedFilters ? ` (${selectedFilterCount})` : ""}
                 </span>
                 <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+               <Image src={closeIcon} alt="Close Icon" width={24} height={24}/>
                 </button>
               </div>
 
