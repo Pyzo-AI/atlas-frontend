@@ -182,12 +182,12 @@ const Home = () => {
   const { data, isLoading } = useGetAllVideoQuery(presentationId, {
     refetchOnMountOrArgChange: true,
   });
-  //  const videos = data?.data
-  const videos = data?.data.map((video) => ({
-    ...video,
-    slide_video: "https://api.assets.uat.trainboost.esmagico.com/assets/videos/slide_574/master.m3u8",
-    trainer_video: "https://api.assets.uat.trainboost.esmagico.com/assets/videos/slide_574/master.m3u8",
-  }));
+  const videos = data?.data;
+  // const videos = data?.data.map((video) => ({
+  //   ...video,
+  //   slide_video: "https://api.assets.uat.trainboost.esmagico.com/assets/videos/slide_574/master.m3u8",
+  //   trainer_video: "https://api.assets.uat.trainboost.esmagico.com/assets/videos/slide_574/master.m3u8",
+  // }));
   console.log("videos", videos);
   const userName = getUserDetailsFromToken()?.preferred_username;
   const assessmentId = data?.assessment_details?.[0]?.id;
