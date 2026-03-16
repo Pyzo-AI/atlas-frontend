@@ -214,38 +214,46 @@ const ChatUI = ({
                               <div className="flex flex-col gap-1 lg:gap-1.5 flex-1 min-w-0">
                                 {/* Image Row */}
                                 {(item.metadata?.product_recommendations || []).length > 0 && (
-                                  <div className="flex flex-row gap-1 lg:gap-1.5 w-full overflow-x-auto pb-1 scrollbar-hide">
+                                  <div className="flex flex-row gap-2 lg:gap-3 w-full overflow-x-auto pb-1 scrollbar-hide">
                                     {(item.metadata?.product_recommendations || []).slice(0, 5).map((rec, idx) => (
-                                      <a
-                                        key={idx}
-                                        href={rec.product_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="w-10 h-8 lg:w-[58px] lg:h-[48px] bg-[#E2E5EE] rounded-[6px] flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                                        {Array.isArray(rec.product_image_url) ? (
-                                          <div className="w-full h-full flex gap-[2px] p-[2px]">
-                                            {rec.product_image_url.slice(0, 2).map((url, i) => (
-                                              <div
-                                                key={i}
-                                                className="relative flex-1 h-full overflow-hidden bg-white rounded-[2px]">
-                                                <img
-                                                  src={url}
-                                                  alt=""
-                                                  className="w-full h-full object-contain p-[1px]"
-                                                />
-                                              </div>
-                                            ))}
-                                          </div>
-                                        ) : (
-                                          <div className="relative w-full h-full flex items-center justify-center">
-                                            <img
-                                              src={rec.product_image_url}
-                                              alt="Product"
-                                              className="w-full h-full object-contain"
-                                            />
-                                          </div>
+                                      <div key={idx} className="flex flex-col items-center gap-1 flex-shrink-0">
+                                        <a
+                                          href={rec.product_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="w-10 h-8 lg:w-[58px] lg:h-[48px] bg-[#E2E5EE] rounded-[6px] flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                                          {Array.isArray(rec.product_image_url) ? (
+                                            <div className="w-full h-full flex gap-[2px] p-[2px]">
+                                              {rec.product_image_url.slice(0, 2).map((url, i) => (
+                                                <div
+                                                  key={i}
+                                                  className="relative flex-1 h-full overflow-hidden bg-white rounded-[2px]">
+                                                  <Image
+                                                    src={url}
+                                                    alt="Product"
+                                                    fill
+                                                    className="object-contain p-[1px]"
+                                                  />
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <div className="relative w-full h-full">
+                                              <Image
+                                                src={rec.product_image_url}
+                                                alt="Product"
+                                                fill
+                                                className="object-contain"
+                                              />
+                                            </div>
+                                          )}
+                                        </a>
+                                        {rec.area && (
+                                          <span className="font-lato font-medium text-[6px] lg:text-[10px] leading-tight text-primary-text-muted text-center max-w-[58px] truncate">
+                                            {rec.area}
+                                          </span>
                                         )}
-                                      </a>
+                                      </div>
                                     ))}
                                   </div>
                                 )}
@@ -284,34 +292,46 @@ const ChatUI = ({
                         <div className="flex flex-col gap-1 lg:gap-1.5 flex-1 min-w-0">
                           {/* Image Row */}
                           {(item.metadata?.product_recommendations || []).length > 0 && (
-                            <div className="flex flex-row gap-1 lg:gap-1.5 w-full overflow-x-auto pb-1 scrollbar-hide">
+                            <div className="flex flex-row gap-2 lg:gap-3 w-full overflow-x-auto pb-1 scrollbar-hide">
                               {(item.metadata?.product_recommendations || []).slice(0, 5).map((rec, idx) => (
-                                <a
-                                  key={idx}
-                                  href={rec.product_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="w-10 h-8 lg:w-[58px] lg:h-[48px] bg-[#E2E5EE] rounded-[6px] flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                                  {Array.isArray(rec.product_image_url) ? (
-                                    <div className="w-full h-full flex gap-[2px] p-[2px]">
-                                      {rec.product_image_url.slice(0, 2).map((url, i) => (
-                                        <div
-                                          key={i}
-                                          className="relative flex-1 h-full overflow-hidden bg-white rounded-[2px]">
-                                          <img src={url} alt="" className="w-full h-full object-contain p-[1px]" />
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <div className="relative w-full h-full flex items-center justify-center">
-                                      <img
-                                        src={rec.product_image_url}
-                                        alt="Product"
-                                        className="w-full h-full object-contain"
-                                      />
-                                    </div>
+                                <div key={idx} className="flex flex-col items-center gap-1 flex-shrink-0">
+                                  <a
+                                    href={rec.product_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-10 h-8 lg:w-[58px] lg:h-[48px] bg-[#E2E5EE] rounded-[6px] flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                                    {Array.isArray(rec.product_image_url) ? (
+                                      <div className="w-full h-full flex gap-[2px] p-[2px]">
+                                        {rec.product_image_url.slice(0, 2).map((url, i) => (
+                                          <div
+                                            key={i}
+                                            className="relative flex-1 h-full overflow-hidden bg-white rounded-[2px]">
+                                            <Image
+                                              src={url}
+                                              alt="Product"
+                                              fill
+                                              className="object-contain p-[1px]"
+                                            />
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="relative w-full h-full">
+                                        <Image
+                                          src={rec.product_image_url}
+                                          alt="Product"
+                                          fill
+                                          className="object-contain"
+                                        />
+                                      </div>
+                                    )}
+                                  </a>
+                                  {rec.area && (
+                                    <span className="font-lato font-medium text-[6px] lg:text-[10px] leading-tight text-primary-text-muted text-center max-w-[58px] truncate">
+                                      {rec.area}
+                                    </span>
                                   )}
-                                </a>
+                                </div>
                               ))}
                             </div>
                           )}
