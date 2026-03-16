@@ -150,7 +150,7 @@ export default function AppliedFilters({
   };
 
   return (
-    <div className="bg-white border border-[#EDF0F6] rounded-lg px-2.5 py-1.5 mb-0 flex items-center justify-between mt-3">
+    <div className="bg-white border border-[#EDF0F6] rounded-lg px-2.5 py-1.5 mb-0 flex items-center justify-between mt-3 gap-2">
       <div className="flex items-center gap-1 flex-wrap">
         {Object.entries(appliedFilters)
           .filter(([paramName, values]) => !customDateParamNames.has(paramName) && hasValue(values))
