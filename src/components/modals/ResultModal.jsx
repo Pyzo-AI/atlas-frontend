@@ -174,8 +174,10 @@ export default function ResultModal({
               <button
                 onClick={handleDownloadCertificate}
                 disabled={isGeneratingCertificate || !certificatePdfUrl}
-                className={`cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent hover:bg-accent-hover text-light font-lato font-semibold text-[14px] leading-[16px] rounded-[73.75px] transition-all duration-200 flex-1 whitespace-nowrap ${
-                  isGeneratingCertificate || !certificatePdfUrl ? "opacity-50 cursor-not-allowed" : ""
+                className={`flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent text-light font-lato font-semibold text-[14px] leading-[16px] rounded-[73.75px] transition-all duration-200 flex-1 whitespace-nowrap ${
+                  isGeneratingCertificate || !certificatePdfUrl
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer hover:bg-accent-hover"
                 }`}>
                 {isGeneratingCertificate ? "Generating Certificate..." : "Download Certificate"}
               </button>

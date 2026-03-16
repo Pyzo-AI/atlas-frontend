@@ -106,6 +106,7 @@ export default function CertificatesPage() {
             from = appliedFilters.custom_from || undefined;
             body.from = from;
             body.to = appliedFilters.custom_to || to;
+            body.date_range = "custom";
           } else {
             const daysMap = {
               last_7_days: 7,
@@ -122,6 +123,7 @@ export default function CertificatesPage() {
             }
             body.from = from;
             body.to = to;
+            body.date_range = "custom"; // Set to custom so backend uses the from/to we send
           }
         }
 
