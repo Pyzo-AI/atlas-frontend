@@ -10,17 +10,17 @@ export default function CertificatePreviewModal({ isOpen, onClose, imageUrl, tit
       isOpen={isOpen}
       onClose={onClose}
       size="custom"
-      className="w-[697px] h-[566px] bg-white rounded-[16px] shadow-xl overflow-hidden">
+      className="w-[95vw] md:w-[697px] h-auto bg-white rounded-[16px] shadow-xl overflow-hidden">
       <div className="flex flex-col w-full h-full">
         {/* Certificate Container */}
-        <div className="w-[697px] h-[504px] bg-[#E5EAEF] flex items-center justify-center p-5">
-          <div className="w-[657px] h-[464.28px] bg-white shadow-sm overflow-hidden relative">
+        <div className="w-full aspect-[697/504] bg-[#E5EAEF] flex items-center justify-center p-4 md:p-5">
+          <div className="w-full h-full bg-white shadow-sm overflow-hidden relative">
             <Image src={imageUrl} alt={title} fill className="object-contain" priority />
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="flex-1 flex items-center justify-center bg-white px-4">
+        <div className="flex-1 flex items-center justify-center bg-white px-4 pt-3 pb-4">
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
