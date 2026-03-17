@@ -274,9 +274,8 @@ const ProductRecommendationGallery = ({
               style={{ width: "76%", zIndex: isActive ? 50 : Math.max(1, 20 - distance), position: "relative" }}
             >
               <div
-                className="w-full"
+                className="w-full flex flex-col items-center"
                 style={{
-                  aspectRatio: "378/245",
                   transform: `scale(${scale}) translateX(${translateX}%)`,
                   opacity,
                   pointerEvents: isActive && !isSpacer ? "auto" : "none",
@@ -284,9 +283,16 @@ const ProductRecommendationGallery = ({
                   willChange: "transform, opacity",
                 }}
               >
-                <CardShell isSpacer={isSpacer} href={item?.product_url || "#"} onClick={handleLinkClick}>
-                  {!isSpacer && <ProductImageContent imageUrl={item.product_image_url} />}
-                </CardShell>
+                <div className="w-full" style={{ aspectRatio: "378/245" }}>
+                  <CardShell isSpacer={isSpacer} href={item?.product_url || "#"} onClick={handleLinkClick}>
+                    {!isSpacer && <ProductImageContent imageUrl={item.product_image_url} />}
+                  </CardShell>
+                </div>
+                {!isSpacer && item?.area && (
+                  <span className="mt-2 font-lato font-medium text-[10px] lg:text-[14px] leading-tight text-primary-text text-center w-full truncate">
+                    {item.area} 
+                  </span>
+                )}
               </div>
             </div>
           );

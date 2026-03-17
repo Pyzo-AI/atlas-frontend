@@ -666,10 +666,11 @@ const VideoPanel = forwardRef(
           if (recommendations && recommendations.length > 0) {
             console.log("[VideoPanel] Product recommendations:", recommendations);
          
-            // Process recommendations - split pipe-separated image URLs and use the first one
+            // Process recommendations
             const processedRecommendations = recommendations.map((rec) => ({
               product_url: rec.product_url,
               product_image_url: rec.product_image_url,
+              area: rec.area,
             }));
             console.log("processedRecommendations", processedRecommendations);
             dispatch(setProductRecommendations(processedRecommendations));
