@@ -46,13 +46,13 @@
   --color-border-light: #e5e7eb;
   --color-border-card: #e4e6e8;
 
-  /* Accent/Brand Colors (Purple) */
-  --color-accent: #744fff;
-  --color-accent-hover: #6b46e5;
-  --color-accent-light: rgba(116, 79, 255, 0.12);
-  --color-accent-light-hover: rgba(116, 79, 255, 0.2);
-  --color-accent-secondary: #6e60df;
-  --color-accent-dark: #5f3fcc;
+  /* Accent/Brand Colors (Blue) */
+  --color-accent: #2762ea;
+  --color-accent-hover: #1e55e6;
+  --color-accent-light: #e9effd;
+  --color-accent-light-hover: #dce4f9;
+  --color-accent-secondary: #2762ea;
+  --color-accent-dark: #1e55e6;
 
   /* Gradient Colors */
   --color-gradient-start: #685edd;
