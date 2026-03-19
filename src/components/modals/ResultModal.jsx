@@ -21,6 +21,7 @@ export default function ResultModal({
   onRestartTraining,
   onShowFeedback,
   passingScore,
+  isNoAssessmentModule = false,
 }) {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -29,8 +30,7 @@ export default function ResultModal({
   const actualTotalQuestions = totalQuestions || 0;
   const actualCorrectAnswers = correctAnswers || 0;
   const actualPercentage = score || 0;
-
-  const isPerfectScore = actualPercentage >= passingScore;
+  const isPerfectScore = isNoAssessmentModule || actualPercentage >= passingScore;
   const [generateCertificate, { isLoading: isGeneratingCertificate }] = useGenerateCertificateMutation();
   const [certificatePdfUrl, setCertificatePdfUrl] = useState(null);
   const generatingRef = React.useRef(false);
@@ -107,7 +107,12 @@ export default function ResultModal({
       <div className="p-6 bg-white text-center">
         {/* Score Circle */}
         <div className="relative flex justify-center mx-auto mb-5">
-          {isPerfectScore ? (
+          {isNoAssessmentModule ? (
+            // No Assessment Module - Party Popper Icon
+            <div className="w-20 h-20 bg-[#FFF9E5] rounded-full flex items-center justify-center text-4xl">
+              🎉
+            </div>
+          ) : isPerfectScore ? (
             // Perfect Score - Simple Green Circle
             <div className="w-20 h-20 border-4 border-success rounded-full flex items-center justify-center">
               <span className="text-2xl font-bold text-success">{Math.round(actualPercentage)}%</span>
@@ -126,7 +131,7 @@ export default function ResultModal({
 
         {/* Title */}
         <h1 className="font-lato font-bold text-[20px] leading-[100%] tracking-[0em] text-primary-text mb-2">
-          {isPerfectScore ? "Congratulations! 🎉" : "You're on the right track!"}
+          {isPerfectScore ? (isNoAssessmentModule ? "Congratulations!" : "Congratulations! 🎉") : "You're on the right track!"}
         </h1>
 
         {/* Subtitle */}

@@ -5,6 +5,8 @@ import InModuleAssessment from "./InModuleAssessment";
 import VideoPlayerContainer from "../VideoPlayerContainer";
 import VideoPlayer from "../VideoPlayer";
 import Image from "next/image";
+import ResultModal from "../modals/ResultModal";
+import FeedbackModal from "../modals/FeedbackModal";
 
 const SlideVideoSection = React.forwardRef(
   (
@@ -38,6 +40,8 @@ const SlideVideoSection = React.forwardRef(
     const playPromiseRef = useRef(null);
     const { answerPptIndex, selectedAssessmentId, isQuestionMode } = useSelector((state) => state.video);
     const { overlayImageUrl, isImageLoading } = useSelector((state) => state.image);
+    const [showResultModal, setShowResultModal] = useState(false);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
     // Expose pause method to parent component
     React.useImperativeHandle(ref, () => ({
@@ -251,8 +255,31 @@ const SlideVideoSection = React.forwardRef(
                 onVideoIndexChange(nextIndex);
                 setAutoPlayEnabled(true);
               } else {
+                // Last video
+                const isFinalAssessmentPresent =
+                  assessmentDetails && assessmentDetails.length > 0 && assessmentDetails[0].id;
+                if (!isFinalAssessmentPresent) {
+                  setShowResultModal(true);
+                }
                 dispatch(setSelectedAssessmentId(assessmentId));
               }
+            }}
+          />
+          <FeedbackModal
+            isOpen={showFeedbackModal}
+            onClose={() => setShowFeedbackModal(false)}
+            presentationId={presentationId}
+          />
+          <ResultModal
+            isOpen={showResultModal}
+            onClose={() => setShowResultModal(false)}
+            presentationId={presentationId}
+            score={100}
+            passingScore={0}
+            isNoAssessmentModule={true}
+            onShowFeedback={() => {
+              setShowResultModal(false);
+              setShowFeedbackModal(true);
             }}
           />
         </div>
