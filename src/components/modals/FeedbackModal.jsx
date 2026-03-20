@@ -75,7 +75,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
       onClose();
       router.push("/?feedback=success");
     } catch (error) {
-      console.error("Error submitting review:", error);
+      console.log("Error submitting review:", error);
     } finally {
       setIsSubmitting(false);
     }

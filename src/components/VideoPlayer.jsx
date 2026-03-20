@@ -199,14 +199,15 @@ const getSourceUrlWithToken = (url) => {
   });
 
   // Only iPhone/iPod needs native HLS which bypasses ALL JavaScript
-  // We MUST add token to the source URL for iOS
+  // We MUST route through our proxy to inject the token into Key URIs
   if (needsTokenInUrl && isHLS) {
     const accessToken = getAccessToken();
     if (accessToken) {
-      const tokenizedUrl = appendTokenToUrl(url, accessToken);
-      console.log("[iOS] ✅ Token added to source URL for native HLS playback");
-      console.log("[iOS] Tokenized URL:", tokenizedUrl.substring(0, 80) + "...");
-      return tokenizedUrl;
+      // Use the Next.js API route proxy to dynamically inject the token into the EXT-X-KEY URI
+      const proxyUrl = `/api/hls?url=${encodeURIComponent(url)}&token=${encodeURIComponent(accessToken)}`;
+      console.log("[iOS] ✅ Using HLS proxy for native HLS playback");
+      console.log("[iOS] Proxy URL:", proxyUrl.substring(0, 80) + "...");
+      return proxyUrl;
     } else {
       console.warn("[iOS] ⚠️ No access token available! HLS playback will likely fail.");
     }
@@ -405,8 +406,9 @@ const VideoPlayer = forwardRef(
     useImperativeHandle(ref, () => ({
       play: () => {
         if (playerRef.current) {
-          playerRef.current.play();
+          return playerRef.current.play();
         }
+        return Promise.resolve();
       },
       pause: () => {
         if (playerRef.current) {
@@ -426,6 +428,12 @@ const VideoPlayer = forwardRef(
       },
       get paused() {
         return playerRef.current ? playerRef.current.paused() : true;
+      },
+      get seeking() {
+        return playerRef.current ? playerRef.current.seeking() : false;
+      },
+      get readyState() {
+        return playerRef.current ? playerRef.current.readyState() : 0;
       },
       get muted() {
         return playerRef.current ? playerRef.current.muted() : false;
@@ -508,8 +516,8 @@ const VideoPlayer = forwardRef(
 
       // Critical check
       if (!vhsModule) {
-        console.error("[VideoPlayer] ❌ VHS MODULE NOT FOUND! HLS will not work.");
-        console.error("[VideoPlayer] Available videojs properties:", Object.keys(videojs).slice(0, 20));
+        console.log("[VideoPlayer] ❌ VHS MODULE NOT FOUND! HLS will not work.");
+        console.log("[VideoPlayer] Available videojs properties:", Object.keys(videojs).slice(0, 20));
       } else {
         console.log("[VideoPlayer] ✅ VHS module found:", vhsModule.VERSION);
       }
@@ -643,7 +651,7 @@ const VideoPlayer = forwardRef(
       // Add error event handler for debugging
       playerRef.current.on("error", () => {
         const error = playerRef.current.error();
-        console.error("[VideoPlayer] ❌ Playback error:", {
+        console.log("[VideoPlayer] ❌ Playback error:", {
           code: error?.code,
           message: error?.message,
           userAgent: navigator.userAgent,
@@ -761,6 +769,7 @@ const VideoPlayer = forwardRef(
           videoElement.addEventListener(
             "click",
             (e) => {
+              if (!controls) return;
               e.stopPropagation();
               if (playerRef.current.paused()) {
                 playerRef.current.play();
@@ -775,6 +784,7 @@ const VideoPlayer = forwardRef(
         // Add spacebar to play/pause
         const handleKeyDown = (e) => {
           if (e.code === "Space") {
+            if (!controls) return;
             e.preventDefault();
             if (playerRef.current.paused()) {
               playerRef.current.play();
@@ -1131,6 +1141,7 @@ const VideoPlayer = forwardRef(
           };
 
           const handleVideoTap = (e) => {
+            if (!controls) return;
             const rect = videoElement.getBoundingClientRect();
             const touch = e.touches[0] || e.changedTouches[0];
             const x = touch.clientX - rect.left;
@@ -1206,6 +1217,7 @@ const VideoPlayer = forwardRef(
           // When seeking is allowed, add simple mobile touch handler
           const videoElementForTouch = playerRef.current.el();
           const handleMobileTouch = (e) => {
+            if (!controls) return;
             if (playerRef.current.paused()) {
               playerRef.current.play();
             } else {
@@ -1358,7 +1370,7 @@ const VideoPlayer = forwardRef(
         const tech = playerRef.current.tech({ IWillNotUseThisInPlugins: true });
 
         if (error) {
-          console.error("[VideoPlayer] Playback error:", {
+          console.log("[VideoPlayer] Playback error:", {
             code: error.code,
             message: error.message,
             src: src?.substring(0, 100),
@@ -1371,22 +1383,22 @@ const VideoPlayer = forwardRef(
 
           // Check for specific HLS/encryption errors
           if (error.code === 4) {
-            console.error("[VideoPlayer] MEDIA_ERR_SRC_NOT_SUPPORTED - Possible causes:");
-            console.error("  1. VHS not loaded or initialized");
-            console.error("  2. MSE not supported in browser");
-            console.error("  3. MIME type mismatch");
-            console.error("  4. HLS manifest parsing failed");
+            console.log("[VideoPlayer] MEDIA_ERR_SRC_NOT_SUPPORTED - Possible causes:");
+            console.log("  1. VHS not loaded or initialized");
+            console.log("  2. MSE not supported in browser");
+            console.log("  3. MIME type mismatch");
+            console.log("  4. HLS manifest parsing failed");
 
             // Check if VHS is actually available
             if (!(videojs.Vhs || videojs.VHS)) {
-              console.error("  ❌ VHS module not found! HLS playback will not work.");
+              console.log("  ❌ VHS module not found! HLS playback will not work.");
             } else {
               console.log("  ✅ VHS module is available");
             }
 
             // Check MSE support
             if (typeof window !== "undefined" && !("MediaSource" in window)) {
-              console.error("  ❌ MediaSource API not supported in this browser");
+              console.log("  ❌ MediaSource API not supported in this browser");
             } else {
               console.log("  ✅ MediaSource API is supported");
             }
@@ -1398,7 +1410,7 @@ const VideoPlayer = forwardRef(
       const tech = playerRef.current.tech({ IWillNotUseThisInPlugins: true });
       if (tech && tech.vhs) {
         tech.vhs.on("error", (err) => {
-          console.error("[VHS] HLS streaming error:", err);
+          console.log("[VHS] HLS streaming error:", err);
         });
 
         // Log when segments are being loaded (useful for debugging)
@@ -2040,19 +2052,19 @@ const VideoPlayer = forwardRef(
               flex-shrink: 0;
             }
             
-            /* Optimize spacing for mobile - add more space between controls */
+            /* Optimize spacing for mobile - reduce space between controls to expand seekbar */
             .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
-              margin: 0 0.2em;
+              margin: 0 0.05em;
             }
             
             /* Add extra spacing for skip backward button */
             .video-js .vjs-skip-backward {
-              margin-right: 0.3em !important;
+              margin-right: 0.1em !important;
             }
             
             /* Ensure volume panel has adequate space */
             .video-js .vjs-volume-panel {
-              margin-left: 0.3em !important;
+              margin-left: 0.1em !important;
             }
           }
 
@@ -2071,20 +2083,20 @@ const VideoPlayer = forwardRef(
             
             /* Better spacing for landscape */
             .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
-              margin: 0 0.15em;
+              margin: 0 0.05em;
             }
             
             /* Add extra spacing for skip backward button */
             .video-js .vjs-skip-backward {
-              margin-right: 0.25em !important;
+              margin-right: 0.1em !important;
               margin-top: 2.5px !important;
             }
             
             /* Ensure volume panel has enough space */
             .video-js .vjs-volume-panel {
               flex-shrink: 0 !important;
-              min-width: 6em !important;
-              margin-left: 0.25em !important;
+              min-width: 5em !important;
+              margin-left: 0.1em !important;
             }
           }
 
@@ -2101,17 +2113,17 @@ const VideoPlayer = forwardRef(
             
             /* Better spacing for very small screens */
             .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
-              margin: 0 0.15em;
+              margin: 0 0.05em;
             }
             
             /* Add extra spacing for skip backward button */
             .video-js .vjs-skip-backward {
-              margin-right: 0.25em !important;
+              margin-right: 0.1em !important;
             }
             
             /* Ensure volume panel has space */
             .video-js .vjs-volume-panel {
-              margin-left: 0.25em !important;
+              margin-left: 0.1em !important;
             }
             
             /* Compact layout for very small screens */
@@ -2156,7 +2168,7 @@ const VideoPlayer = forwardRef(
           /* Ensure volume panel gets adequate space */
           .video-js .vjs-volume-panel {
             flex-shrink: 0 !important;
-            min-width: 5em !important;
+            min-width: 4em !important;
           }
 
           /* Hide or minimize the custom control spacer that's taking up space */

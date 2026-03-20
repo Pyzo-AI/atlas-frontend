@@ -16,6 +16,7 @@ const initialState = {
   autoPlayEnabled: false,
   showChat: false,
   slideNumbers: [],
+  productRecommendations: [],
 };
 
 const videoSlice = createSlice({
@@ -68,6 +69,10 @@ const videoSlice = createSlice({
     setSlideNumbers: (state, action) => {
       state.slideNumbers = action.payload;
     },
+    setProductRecommendations: (state, action) => {
+      console.log("action.payload", action.payload);
+      state.productRecommendations = action.payload;
+    },
   },
 });
 
@@ -87,5 +92,6 @@ export const {
   setAutoPlayEnabled,
   setShowChat,
   setSlideNumbers,
+  setProductRecommendations,
 } = videoSlice.actions;
 export default videoSlice.reducer;
