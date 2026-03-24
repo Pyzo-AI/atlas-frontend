@@ -135,17 +135,17 @@ export default function ResultModal({
         </h1>
 
         {/* Subtitle */}
-        <p className="font-lato font-medium text-[14px] leading-[100%] tracking-[0em] text-center text-primary-text-muted mb-2">
+        <p className="font-lato font-normal text-[14px] leading-[20px] tracking-[0em] text-center text-primary-text-muted mb-2">
           {isPerfectScore ? (
             "You’ve successfully completed the training. Download your certificate and share your feedback."
           ) : (
             <>
               You correctly answered{" "}
-              <span className="font-lato font-bold text-[14px] leading-[100%] tracking-[0em] text-center text-accent">
+              <span className="font-lato font-bold text-[14px] leading-[20px] tracking-[0em] text-center text-accent">
                 {actualCorrectAnswers}
               </span>{" "}
               out of{" "}
-              <span className="font-lato font-bold text-[14px] leading-[100%] tracking-[0em] text-center text-accent">
+              <span className="font-lato font-bold text-[14px] leading-[20px] tracking-[0em] text-center text-accent">
                 {actualTotalQuestions}
               </span>{" "}
               questions across all assessments.
