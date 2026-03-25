@@ -351,7 +351,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                   ).map(([option, text]) => (
                     <div key={option} className="group">
                       <label
-                        className={`flex items-start cursor-pointer p-1 sm:p-2 rounded-lg border transition-all duration-200 ${
+                        className={`flex items-center cursor-pointer p-1 sm:p-2 rounded-lg border transition-all duration-200 ${
                           answers[currentQuestion.question_id] === option
                             ? "border-accent bg-accent-light"
                             : "border-gray-200 hover:border-accent hover:bg-accent-light"
@@ -362,6 +362,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                           value={option}
                           checked={answers[currentQuestion.question_id] === option}
                           onChange={() => handleAnswer(currentQuestion.question_id, option)}
+                          className="!mt-0"
                         />
                         <span className="text-xs sm:text-sm md:text-sm text-gray-700 leading-relaxed flex-1">
                           {option}. {text}

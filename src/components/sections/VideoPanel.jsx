@@ -30,6 +30,7 @@ import redirecting_logo from "@/assets/svg/redirecting.svg";
 import Image from "next/image";
 import VideoPlayerContainer from "@/components/VideoPlayerContainer";
 import FeedbackModal from "../modals/FeedbackModal";
+import ResultModal from "../modals/ResultModal";
 import { useGenerateImageMutation } from "@/store/api/questionsApi";
 import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
@@ -120,6 +121,7 @@ const VideoPanel = forwardRef(
     const [lastVideoSrc, setLastVideoSrc] = useState("");
     const [videoStartTime, setVideoStartTime] = useState(0);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [showResultModal, setShowResultModal] = useState(false);
     const [preloadedVideoIndex, setPreloadedVideoIndex] = useState(-1);
     const [initialVideoTime, setInitialVideoTime] = useState(0);
     const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
@@ -781,7 +783,7 @@ const VideoPanel = forwardRef(
       } else {
         // setShowRedirectPopup(true);
         if (!isFinalAssessmentPresent) {
-          setShowFeedbackModal(true);
+          setShowResultModal(true);
         }
         dispatch(setAutoPlayEnabled(false));
         dispatch(setSelectedAssessmentId(assessmentId));
@@ -978,6 +980,18 @@ const VideoPanel = forwardRef(
           isOpen={showFeedbackModal}
           onClose={() => setShowFeedbackModal(false)}
           presentationId={presentationId}
+        />
+        <ResultModal
+          isOpen={showResultModal}
+          onClose={() => setShowResultModal(false)}
+          presentationId={presentationId}
+          score={100}
+          passingScore={0}
+          isNoAssessmentModule={true}
+          onShowFeedback={() => {
+            setShowResultModal(false);
+            setShowFeedbackModal(true);
+          }}
         />
       </div>
     );
