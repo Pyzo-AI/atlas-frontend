@@ -319,12 +319,10 @@ const VideoPlayerContainer = forwardRef(
 
     const handleRateChange = (e) => {
       const newRate = e.target.playbackRate;
-      if (newRate !== videoSettings.playbackRate) {
-        setVideoSettings((prev) => ({
-          ...prev,
-          playbackRate: newRate,
-        }));
-      }
+      setVideoSettings((prev) => ({
+        ...prev,
+        playbackRate: newRate,
+      }));
 
       // Track playback rate change event
       const userDetails = getUserDetailsFromToken();
@@ -341,11 +339,11 @@ const VideoPlayerContainer = forwardRef(
     const handleVolumeChange = (e) => {
       const newMuted = e.target.muted;
       const newVolume = e.target.volume;
-      setVideoSettings({
-        ...videoSettings,
+      setVideoSettings((prev) => ({
+        ...prev,
         muted: newMuted,
         volume: newVolume,
-      });
+      }));
     };
 
     if ((isOnlyVideoMode && !currentVideo?.slide_video) || (!isOnlyVideoMode && !currentVideo?.trainer_video)) {
