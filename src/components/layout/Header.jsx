@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import logo from "@/assets/svg/pyzo-logo.svg";
+import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import { decodeJWT } from "@/utils/jwt";
 import userIcon from "@/assets/svg/user.svg";
 import { trackLogout } from "@/utils/authTracking";
@@ -117,7 +117,7 @@ const Header = ({ onMenuClick }) => {
         {/* Logo - Only visible on desktop for /lectures page */}
         {pathname.includes("/lectures/") && (
           <div className="hidden md:block cursor-pointer" onClick={() => router.push("/")}>
-            <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
+            <Image src={logo} height={20} width={74} alt="Pyzo Logo" />
           </div>
         )}
       </div>
@@ -126,7 +126,7 @@ const Header = ({ onMenuClick }) => {
       <div
         className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer"
         onClick={() => router.push("/")}>
-        <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
+        <Image src={logo} height={20} width={74} alt="Pyzo Logo" />
       </div>
 
       {/* Right side */}

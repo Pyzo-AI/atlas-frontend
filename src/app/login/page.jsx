@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import Lottie from "lottie-react";
-import trainBoostLogo from "@/assets/svg/train-boost-logo.svg";
+import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import spinnerAnimation from "@/assets/json/spinner.json";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
@@ -116,12 +116,7 @@ const LoginPage = () => {
           <div className="flex flex-col items-center gap-1">
             {/* Logo and brand */}
             <div className="flex items-center gap-1 mb-1">
-              <div className="w-6 h-6">
-                <Image src={trainBoostLogo} alt="Atlas Logo" className="w-6 h-6" />
-              </div>
-              <span className="text-[20px] font-lato font-bold leading-[19px] tracking-[0.02em] text-primary-text">
-                Atlas
-              </span>
+              <Image src={logo} alt="Pyzo Logo" width={110} height={30} priority />
             </div>
 
             {/* Main heading */}

@@ -27,8 +27,8 @@ export const metadata = {
   description: "Training Using AI",
   manifest: "/manifest.json",
   icons: {
-    icon: "/icon.png",
-    "apple-touch-icon": "/icon.png",
+    icon: "/favicon.svg",
+    "apple-touch-icon": "/favicon.svg",
   },
   viewport: {
     width: "device-width",
@@ -49,9 +49,9 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Atlas" />
-        <link rel="apple-touch-icon" href="/icon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icon.png" />
-        <link rel="icon" type="image/png" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/favicon.svg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
