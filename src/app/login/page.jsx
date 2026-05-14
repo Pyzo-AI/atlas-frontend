@@ -159,9 +159,9 @@ function LoginForm() {
           <Image
             src={logo}
             alt="Pyzo Logo"
-            width={140}
-            height={30}
-            className="object-contain cursor-pointer"
+            width={180}
+            height={49}
+            className="object-contain cursor-pointer w-[160px] lg:w-[140px] h-auto"
             onClick={() => router.push("/")}
           />
         </div>

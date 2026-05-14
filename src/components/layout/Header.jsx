@@ -144,7 +144,7 @@ useEffect(() => {
         <div
           className={`cursor-pointer ${pathname.includes("/lectures/") ? "" : "md:hidden"}`}
           onClick={() => router.push("/")}>
-          <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
+          <Image src={logo} height={28} width={103} alt="Pyzo Logo" />
         </div>
       </div>
 
