@@ -6,6 +6,9 @@ import Modal from "@/components/common/Modal";
 import { setCurrentVideoIndex } from "@/store/features/videoSlice";
 import { showFeedbackModal } from "@/store/features/feedbackModalSlice";
 import ProgressCircle from "@/components/ui/ProgressCircle";
+import { useGenerateCertificateMutation } from "@/store/api/certificatesApi";
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 
 export default function ResultModal({
   isOpen,
@@ -18,6 +21,7 @@ export default function ResultModal({
   onRestartTraining,
   onShowFeedback,
   passingScore,
+  isNoAssessmentModule = false,
 }) {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -26,8 +30,35 @@ export default function ResultModal({
   const actualTotalQuestions = totalQuestions || 0;
   const actualCorrectAnswers = correctAnswers || 0;
   const actualPercentage = score || 0;
+  const isPerfectScore = isNoAssessmentModule || actualPercentage >= passingScore;
+  const [generateCertificate, { isLoading: isGeneratingCertificate }] = useGenerateCertificateMutation();
+  const [certificatePdfUrl, setCertificatePdfUrl] = useState(null);
+  const generatingRef = React.useRef(false);
 
-  const isPerfectScore = actualPercentage >= passingScore;
+  useEffect(() => {
+    if (!isOpen) {
+      generatingRef.current = false;
+      setCertificatePdfUrl(null);
+      return;
+    }
+
+    const handleGenerateCertificate = async () => {
+      if (isPerfectScore && presentationId && !certificatePdfUrl && !generatingRef.current) {
+        generatingRef.current = true;
+        try {
+          const response = await generateCertificate(presentationId).unwrap();
+          setCertificatePdfUrl(response.certificate_pdf_url);
+        } catch (error) {
+          console.log("Failed to generate certificate:", error);
+          const errorMessage =
+            error?.data?.details || error?.data?.error || "Unable to generate certificate. Try again.";
+          // toast.error(errorMessage);
+          generatingRef.current = false;
+        }
+      }
+    };
+    handleGenerateCertificate();
+  }, [isOpen, presentationId, isPerfectScore, certificatePdfUrl]);
 
   // Debug logging
   console.log("ResultModal received props:", {
@@ -37,8 +68,16 @@ export default function ResultModal({
       actualTotalQuestions,
       actualCorrectAnswers,
       isPerfectScore,
+      isGeneratingCertificate,
+      certificatePdfUrl,
     },
   });
+
+  const handleDownloadCertificate = () => {
+    if (certificatePdfUrl) {
+      window.open(certificatePdfUrl, "_blank");
+    }
+  };
 
   const handleRetry = () => {
     onRetry?.();
@@ -68,7 +107,12 @@ export default function ResultModal({
       <div className="p-6 bg-white text-center">
         {/* Score Circle */}
         <div className="relative flex justify-center mx-auto mb-5">
-          {isPerfectScore ? (
+          {isNoAssessmentModule ? (
+            // No Assessment Module - Party Popper Icon
+            <div className="w-20 h-20 bg-[#FFF9E5] rounded-full flex items-center justify-center text-4xl">
+              🎉
+            </div>
+          ) : isPerfectScore ? (
             // Perfect Score - Simple Green Circle
             <div className="w-20 h-20 border-4 border-success rounded-full flex items-center justify-center">
               <span className="text-2xl font-bold text-success">{Math.round(actualPercentage)}%</span>
@@ -87,21 +131,25 @@ export default function ResultModal({
 
         {/* Title */}
         <h1 className="font-lato font-bold text-[20px] leading-[100%] tracking-[0em] text-primary-text mb-2">
-          {isPerfectScore ? "Congratulations! 🎉" : "You're on the right track!"}
+          {isPerfectScore ? (isNoAssessmentModule ? "Congratulations!" : "Congratulations! 🎉") : "You're on the right track!"}
         </h1>
 
         {/* Subtitle */}
-        <p className="font-lato font-medium text-[14px] leading-[100%] tracking-[0em] text-center text-primary-text-muted mb-2">
+        <p className="font-lato font-normal text-[14px] leading-[20px] tracking-[0em] text-center text-primary-text-muted mb-2">
           {isPerfectScore ? (
-            "You've mastered the training with a perfect score!"
+            isNoAssessmentModule ? (
+              "You’ve successfully completed the training. Download your certificate and share your feedback."
+            ) : (
+              "You’ve successfully completed the training and assessment. Download your certificate and share your feedback."
+            )
           ) : (
             <>
               You correctly answered{" "}
-              <span className="font-lato font-bold text-[14px] leading-[100%] tracking-[0em] text-center text-accent">
+              <span className="font-lato font-bold text-[14px] leading-[20px] tracking-[0em] text-center text-accent">
                 {actualCorrectAnswers}
               </span>{" "}
               out of{" "}
-              <span className="font-lato font-bold text-[14px] leading-[100%] tracking-[0em] text-center text-accent">
+              <span className="font-lato font-bold text-[14px] leading-[20px] tracking-[0em] text-center text-accent">
                 {actualTotalQuestions}
               </span>{" "}
               questions across all assessments.
@@ -119,23 +167,35 @@ export default function ResultModal({
         )}
 
         {/* Action Buttons */}
-        <div className="space-y-3">
+        <div className="mt-8 px-4">
           {isPerfectScore ? (
-            <button
-              onClick={showFeedback}
-              className="cursor-pointer w-full bg-accent hover:bg-accent-hover text-light py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg mt-5">
-              Continue
-            </button>
-          ) : (
-            <div className="flex gap-3">
+            <div className="flex gap-[12px] w-full max-w-[326px] mx-auto h-[32px]">
               <button
                 onClick={showFeedback}
-                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent-light hover:bg-accent-light-hover text-accent font-semibold text-base rounded-[73.75px] transition-all duration-200 flex-1">
+                className="cursor-pointer flex justify-center items-center gap-[10px] px-[12px] py-[6px] h-full bg-accent-light text-accent font-lato font-semibold text-[14px] leading-[16px] rounded-[8px] transition-all duration-200 flex-1 whitespace-nowrap">
+                Share Feedback
+              </button>
+              <button
+                onClick={handleDownloadCertificate}
+                disabled={isGeneratingCertificate || !certificatePdfUrl}
+                className={`flex justify-center items-center gap-[10px] px-[12px] py-[6px] h-full bg-accent text-white font-lato font-semibold text-[14px] leading-[16px] rounded-[8px] transition-all duration-200 flex-1 whitespace-nowrap ${
+                  isGeneratingCertificate || !certificatePdfUrl
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer hover:opacity-90"
+                }`}>
+                {isGeneratingCertificate ? "Generating..." : "Download Certificate"}
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-[12px] w-full max-w-[326px] mx-auto h-[32px]">
+              <button
+                onClick={showFeedback}
+                className="cursor-pointer flex justify-center items-center gap-[10px] px-[12px] py-[6px] h-full bg-accent-light text-accent font-lato font-semibold text-[14px] leading-[16px] rounded-[8px] transition-all duration-200 flex-1 whitespace-nowrap">
                 Give Feedback
               </button>
               <button
                 onClick={handleRestartTraining}
-                className="cursor-pointer flex justify-center items-center gap-1 px-4 py-1.5 h-10 bg-accent hover:bg-accent-hover text-light font-semibold text-base rounded-[73.75px] transition-all duration-200 flex-1">
+                className="cursor-pointer flex justify-center items-center gap-[10px] px-[12px] py-[6px] h-full bg-accent text-white font-lato font-semibold text-[14px] leading-[16px] rounded-[8px] transition-all duration-200 flex-1 whitespace-nowrap">
                 Restart Training
               </button>
             </div>

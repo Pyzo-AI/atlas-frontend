@@ -36,7 +36,7 @@ export const updateVideoProgress = (presentationId, slideId, durationSeconds) =>
     
     localStorage.setItem(VIDEO_PROGRESS_KEY, JSON.stringify(progressData));
   } catch (error) {
-    console.error('Error updating video progress:', error);
+    console.log('Error updating video progress:', error);
   }
 };
 
@@ -63,7 +63,7 @@ export const startVideoSession = (presentationId, slideId) => {
     
     localStorage.setItem(VIDEO_PROGRESS_KEY, JSON.stringify(progressData));
   } catch (error) {
-    console.error('Error starting video session:', error);
+    console.log('Error starting video session:', error);
   }
 };
 
@@ -79,7 +79,7 @@ export const getVideoProgress = (presentationId) => {
     const progressData = JSON.parse(stored);
     return progressData[presentationId] || null;
   } catch (error) {
-    console.error('Error getting video progress:', error);
+    console.log('Error getting video progress:', error);
     return null;
   }
 };
@@ -98,6 +98,6 @@ export const clearVideoProgress = (presentationId) => {
       localStorage.setItem(VIDEO_PROGRESS_KEY, JSON.stringify(progressData));
     }
   } catch (error) {
-    console.error('Error clearing video progress:', error);
+    console.log('Error clearing video progress:', error);
   }
 };

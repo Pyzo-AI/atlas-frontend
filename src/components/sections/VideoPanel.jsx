@@ -10,6 +10,7 @@ import {
   setAutoPlayEnabled,
   setShowChat,
   setSlideNumbers,
+  setProductRecommendations,
 } from "@/store/features/videoSlice";
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -29,6 +30,7 @@ import redirecting_logo from "@/assets/svg/redirecting.svg";
 import Image from "next/image";
 import VideoPlayerContainer from "@/components/VideoPlayerContainer";
 import FeedbackModal from "../modals/FeedbackModal";
+import ResultModal from "../modals/ResultModal";
 import { useGenerateImageMutation } from "@/store/api/questionsApi";
 import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
@@ -59,7 +61,7 @@ const getStoredConversationHistory = () => {
 
     return cleanedHistory;
   } catch (error) {
-    console.error("Error loading conversation history:", error);
+    console.log("Error loading conversation history:", error);
     return [];
   }
 };
@@ -71,7 +73,7 @@ const saveConversationHistory = (history) => {
     const trimmedHistory = history.slice(-MAX_HISTORY_MESSAGES);
     localStorage.setItem(CONVERSATION_STORAGE_KEY, JSON.stringify(trimmedHistory));
   } catch (error) {
-    console.error("Error saving conversation history:", error);
+    console.log("Error saving conversation history:", error);
   }
 };
 
@@ -101,9 +103,11 @@ const VideoPanel = forwardRef(
       liveKitAgentEnabled = false,
       showQueryRelatedSlides = false,
       assessmentDetails = [],
+      enableProductRecommendations = true,
     },
     ref
   ) => {
+    // const agentId = 37;
     const [conversationState, setConversationState] = useState({
       isLoading: false,
       isConnected: false,
@@ -117,6 +121,7 @@ const VideoPanel = forwardRef(
     const [lastVideoSrc, setLastVideoSrc] = useState("");
     const [videoStartTime, setVideoStartTime] = useState(0);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [showResultModal, setShowResultModal] = useState(false);
     const [preloadedVideoIndex, setPreloadedVideoIndex] = useState(-1);
     const [initialVideoTime, setInitialVideoTime] = useState(0);
     const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
@@ -127,8 +132,15 @@ const VideoPanel = forwardRef(
     const dispatch = useDispatch();
     const [generateImage] = useGenerateImageMutation();
     const [createSession] = useCreateSessionMutation();
-    const { currentVideoIndex, isQuestionMode, selectedAssessmentId, autoPlayEnabled, currentVideoTime, showChat } =
-      useSelector((state) => state.video);
+    const {
+      currentVideoIndex,
+      isQuestionMode,
+      selectedAssessmentId,
+      autoPlayEnabled,
+      currentVideoTime,
+      showChat,
+      productRecommendations,
+    } = useSelector((state) => state.video);
     const { capture } = usePostHog();
     const isQuestionModeRef = useRef(isQuestionMode);
     // Keep ref updated with current isQuestionMode value
@@ -177,7 +189,7 @@ const VideoPanel = forwardRef(
 
       // Only log actual errors, not normal disconnections
       if (!state.isConnected && state.error && !state.error.includes("Disconnected:")) {
-        console.error("LiveKit connection error:", state.error);
+        console.log("LiveKit connection error:", state.error);
       }
     };
 
@@ -206,11 +218,11 @@ const VideoPanel = forwardRef(
                 );
                 setContextSent(true);
               } catch (error) {
-                console.error("Error sending context:", error);
+                console.log("Error sending context:", error);
               }
             }
           } catch (error) {
-            console.error("Could not send context on connect:", error.message);
+            console.log("Could not send context on connect:", error.message);
           }
         }, 2000);
       },
@@ -293,11 +305,11 @@ const VideoPanel = forwardRef(
                     `Previous conversation history: ${contextSummary}. Please remember this context for our continued conversation.`
                   );
                 } catch (error) {
-                  console.error("Error sending backup context:", error);
+                  console.log("Error sending backup context:", error);
                 }
               }
             } catch (error) {
-              console.error("Could not send backup context:", error.message);
+              console.log("Could not send backup context:", error.message);
             }
           }, 2000);
         }
@@ -320,7 +332,7 @@ const VideoPanel = forwardRef(
         }
       },
       onError: (error) => {
-        console.error("ElevenLabs Error:", error);
+        console.log("ElevenLabs Error:", error);
         setConversationState((prev) => ({
           ...prev,
           isLoading: false,
@@ -384,11 +396,11 @@ const VideoPanel = forwardRef(
                   );
                   setContextSent(true);
                 } catch (error) {
-                  console.error("Error sending initial context:", error);
+                  console.log("Error sending initial context:", error);
                 }
               }
             } catch (error) {
-              console.error("Could not send initial context:", error.message);
+              console.log("Could not send initial context:", error.message);
             }
           }, 1500);
         }
@@ -412,7 +424,7 @@ const VideoPanel = forwardRef(
           isAudioPlaying: false,
         }));
       } catch (error) {
-        console.error("Failed to stop conversation:", error);
+        console.log("Failed to stop conversation:", error);
       }
     };
 
@@ -639,18 +651,32 @@ const VideoPanel = forwardRef(
               }
             }
           } catch (error) {
-            console.error("Failed to parse data packet:", error);
+            console.log("Failed to parse data packet:", error);
           }
         });
       }
 
       // Slide Metadata Handling - Console log the data
       if (liveKitService.setOnSlideMetadataReceived) {
-        liveKitService.setOnSlideMetadataReceived((metadata, slideNumbers) => {
+        liveKitService.setOnSlideMetadataReceived((metadata, slideNumbers, recommendations) => {
           console.log("📊 [VideoPanel] Slide metadata received:", metadata);
           console.log("🎯 [VideoPanel] Referenced slide numbers:", slideNumbers);
 
           dispatch(setSlideNumbers(slideNumbers || []));
+
+          // Handle product recommendations
+          if (recommendations && recommendations.length > 0) {
+            console.log("[VideoPanel] Product recommendations:", recommendations);
+         
+            // Process recommendations
+            const processedRecommendations = recommendations.map((rec) => ({
+              product_url: rec.product_url,
+              product_image_url: rec.product_image_url,
+              area: rec.area,
+            }));
+            console.log("processedRecommendations", processedRecommendations);
+            dispatch(setProductRecommendations(processedRecommendations));
+          }
 
           // Clear generated overlay image when a specific slide redirect or reference is received
           if (
@@ -757,7 +783,7 @@ const VideoPanel = forwardRef(
       } else {
         // setShowRedirectPopup(true);
         if (!isFinalAssessmentPresent) {
-          setShowFeedbackModal(true);
+          setShowResultModal(true);
         }
         dispatch(setAutoPlayEnabled(false));
         dispatch(setSelectedAssessmentId(assessmentId));
@@ -814,7 +840,6 @@ const VideoPanel = forwardRef(
           isMobile ? `${isPhone ? "gap-1" : "gap-3"}` : "gap-4 flex-shrink-0 pl-4 relative"
         }`}
         style={!isMobile ? { width } : undefined}>
-        {/* Video Section or Grid Playlist - Responsive for both mobile and desktop */}
         {isOnlyVideoMode ? (
           <div
             className={`bg-white border border-border-light overflow-y-auto ${
@@ -834,16 +859,12 @@ const VideoPanel = forwardRef(
           <div
             className={`${selectedAssessmentId ? "" : "cursor-pointer"} bg-white border border-border-light ${
               isMobile
-                ? isPhone
-                  ? "p-1 md:p-[6px] lg:p-3 rounded-lg flex-shrink-0"
-                  : "p-2 pb-1 rounded-lg"
+                ? "p-2 pb-1 rounded-lg flex-shrink-0"
                 : "p-3 pb-2 rounded-xl"
             } ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "blur-[1px] relative" : ""}`}
             onClick={selectedAssessmentId ? undefined : togglePlayPause}>
             <div
-              className={`relative w-full bg-black overflow-hidden ${
-                isMobile ? (isPhone ? "pt-[25%] h-32 rounded" : "pt-[40%] h-50 rounded-lg") : "pt-[56.25%] rounded-lg"
-              }`}>
+              className="relative w-full bg-black overflow-hidden aspect-video rounded-lg">
               <VideoPlayerContainer
                 ref={videoRef}
                 videos={videos}
@@ -877,7 +898,7 @@ const VideoPanel = forwardRef(
             <div
               className={`px-1 flex justify-between font-lato text-gray-600 ${
                 isMobile
-                  ? `mt-1 ${isPhone ? "text-[8px] leading-3" : "text-[10px] leading-4"}`
+                  ? "mt-1 text-[10px] leading-4"
                   : "mt-2 text-[12px] leading-4 tracking-normal font-normal text-center"
               }`}>
               <span>
@@ -918,6 +939,7 @@ const VideoPanel = forwardRef(
             isConnected={conversationState.isConnected}
             avatarUrl={avatarUrl}
             isMobile={isMobile && isPhone}
+            enableProductRecommendations={enableProductRecommendations}
           />
         )}
 
@@ -958,6 +980,18 @@ const VideoPanel = forwardRef(
           isOpen={showFeedbackModal}
           onClose={() => setShowFeedbackModal(false)}
           presentationId={presentationId}
+        />
+        <ResultModal
+          isOpen={showResultModal}
+          onClose={() => setShowResultModal(false)}
+          presentationId={presentationId}
+          score={100}
+          passingScore={0}
+          isNoAssessmentModule={true}
+          onShowFeedback={() => {
+            setShowResultModal(false);
+            setShowFeedbackModal(true);
+          }}
         />
       </div>
     );

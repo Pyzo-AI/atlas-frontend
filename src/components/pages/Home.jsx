@@ -18,38 +18,59 @@ import { HiBookOpen, HiChevronDown } from "react-icons/hi2";
 
 const PresentationCard = ({ presentation, onClick, currentTime }) => {
   const formatDuration = (seconds) => {
-    const totalMinutes = Math.floor(seconds / 60);
+    const totalSeconds = Math.max(0, Math.round(seconds));
+    if (totalSeconds < 60) {
+      return `${totalSeconds}s`;
+    }
+    const totalMinutes = Math.floor(totalSeconds / 60);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
 
     if (hours > 0) {
-      // Only show minutes if > 0 (e.g., "1hr" instead of "1hr 0m")
       return minutes > 0 ? `${hours}hr ${minutes}m` : `${hours}hr`;
     }
     return `${minutes}m`;
   };
-  const getUnlockMessage = (targetTime) => {
+  const getTimeDiffMessage = (targetTime, prefix) => {
     const target = new Date(targetTime);
     const diff = target - currentTime;
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    return `Unlocks in ${days} ${days === 1 ? "day" : "days"}`;
+    const absDiff = Math.abs(diff);
+
+    const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+    if (days >= 1) {
+      return `${prefix} ${days} ${days === 1 ? "day" : "days"}`;
+    }
+
+    const hours = Math.floor(absDiff / (1000 * 60 * 60));
+    if (hours >= 1) {
+      return `${prefix} ${hours}hr`;
+    }
+
+    const minutes = Math.floor(absDiff / (1000 * 60));
+    if (minutes >= 1) {
+      return `${prefix} ${minutes}m`;
+    }
+
+    const seconds = Math.floor(absDiff / 1000);
+    return `${prefix} ${seconds}s`;
+  };
+
+  const getUnlockMessage = (targetTime) => {
+    return getTimeDiffMessage(targetTime, "Unlocks in");
   };
 
   const getOverdueMessage = (targetTime) => {
-    const target = new Date(targetTime);
-    const diff = Math.abs(target - currentTime);
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    return `Overdue by ${days} ${days === 1 ? "day" : "days"}`;
+    return getTimeDiffMessage(targetTime, "Overdue by");
   };
 
   const getDueMessage = (targetTime) => {
-    const target = new Date(targetTime);
-    const diff = target - currentTime;
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    return `Due in ${days} ${days === 1 ? "day" : "days"}`;
+    return getTimeDiffMessage(targetTime, "Due in");
   };
 
   const getBadgeInfo = () => {
+    // Status priority: Completed -> Locked -> Overdue -> In Progress
+    
+    // 1. Check completion
     if (presentation.isPresentationCompleted) {
       const completedDate = presentation.presentationCompletedDate
         ? new Date(presentation.presentationCompletedDate).toLocaleDateString("en-GB")
@@ -63,18 +84,29 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
       };
     }
 
-    // Check lock status first - highest priority
+    // 2. Check lock status (only if it's currently locked AND the unlock time is still in the future)
     if (presentation.lock_info?.status === "locked" && presentation.lock_info?.unlock_time) {
-      return {
-        icon: locked,
-        colorClass: "bg-status-locked-bg",
-        textColorClass: "text-primary-text",
-        title: "Locked",
-        subtitle: getUnlockMessage(presentation.lock_info.unlock_time),
-      };
+      const unlockTime = new Date(presentation.lock_info.unlock_time);
+      if (unlockTime > currentTime) {
+        return {
+          icon: locked,
+          colorClass: "bg-status-locked-bg",
+          textColorClass: "text-primary-text",
+          title: "Locked",
+          subtitle: getUnlockMessage(presentation.lock_info.unlock_time),
+        };
+      }
     }
 
-    if (presentation.due_info?.status === "overdue" && presentation.due_info?.due_time) {
+    // 3. Check overdue status (if server says overdue OR the due date has passed)
+    const isActuallyOverdue = 
+      presentation.due_info?.due_time && new Date(presentation.due_info.due_time) < currentTime;
+    
+    if (
+      (presentation.due_info?.status === "overdue" || isActuallyOverdue) && 
+      presentation.due_info?.due_time &&
+      !presentation.isPresentationCompleted
+    ) {
       return {
         icon: overdue,
         colorClass: "bg-status-overdue-bg",
@@ -84,15 +116,16 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
       };
     }
 
-    if (presentation.due_info?.status === "due" && presentation.due_info?.due_time) {
-      return {
-        icon: unlocked,
-        colorClass: "bg-status-progress-bg",
-        textColorClass: "text-status-progress-text",
-        title: "In Progress",
-        subtitle: getDueMessage(presentation.due_info.due_time),
-      };
-    }
+    // 4. Fallback to In Progress
+    return {
+      icon: unlocked,
+      colorClass: "bg-status-progress-bg",
+      textColorClass: "text-status-progress-text",
+      title: "In Progress",
+      subtitle: (presentation.due_info?.due_time && !isActuallyOverdue) 
+        ? getDueMessage(presentation.due_info.due_time) 
+        : null,
+    };
 
     // If no lock_info or due_info available, return minimal info
     if (!presentation.lock_info && !presentation.due_info) {

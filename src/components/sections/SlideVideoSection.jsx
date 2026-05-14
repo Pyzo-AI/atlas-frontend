@@ -3,7 +3,10 @@ import { useSelector, useDispatch } from "react-redux";
 import { setSelectedAssessmentId } from "@/store/features/videoSlice";
 import InModuleAssessment from "./InModuleAssessment";
 import VideoPlayerContainer from "../VideoPlayerContainer";
+import VideoPlayer from "../VideoPlayer";
 import Image from "next/image";
+import ResultModal from "../modals/ResultModal";
+import FeedbackModal from "../modals/FeedbackModal";
 
 const SlideVideoSection = React.forwardRef(
   (
@@ -29,7 +32,6 @@ const SlideVideoSection = React.forwardRef(
     const preloadSlideVideoRef = useRef(null);
     const videoPlayerContainerRef = useRef(null);
     const [isVideoLoading, setIsVideoLoading] = useState(true);
-    const [preloadedSlideIndex, setPreloadedSlideIndex] = useState(-1);
     const [hasSlideInitialized, setHasSlideInitialized] = useState(false);
     const [lastSlideSrc, setLastSlideSrc] = useState("");
     const [canPlay, setCanPlay] = useState(false);
@@ -38,6 +40,8 @@ const SlideVideoSection = React.forwardRef(
     const playPromiseRef = useRef(null);
     const { answerPptIndex, selectedAssessmentId, isQuestionMode } = useSelector((state) => state.video);
     const { overlayImageUrl, isImageLoading } = useSelector((state) => state.image);
+    const [showResultModal, setShowResultModal] = useState(false);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
     // Expose pause method to parent component
     React.useImperativeHandle(ref, () => ({
@@ -50,17 +54,25 @@ const SlideVideoSection = React.forwardRef(
       },
     }));
 
+    const previousTrainerTimeRef = useRef(0);
+
     // Sync slide video with trainer video time
     useEffect(() => {
       if (answerPptIndex !== null) {
         return;
       }
 
+      const masterTimeJump = Math.abs(currentVideoTime - previousTrainerTimeRef.current);
+      previousTrainerTimeRef.current = currentVideoTime;
+
       if (slideVideoRef.current && videos?.[currentVideoIndex]?.slide_video) {
         const slideVideo = slideVideoRef.current;
         const timeDifference = Math.abs(slideVideo.currentTime - currentVideoTime);
 
-        if (timeDifference > 0.1 && slideVideo.readyState >= 2) {
+        // MSE (Video.js VHS) completely flushes its network buffer every time 
+        // a manual seek occurs. We must only seek when a HUGE jump occurs 
+        // (i.e. user scrubbed the timeline $> 1.0$s) or micro-drift > 10.0s.
+        if (canPlay && slideVideo.readyState >= 1 && (masterTimeJump > 1.0 || timeDifference > 10.0) && !slideVideo.seeking) {
           try {
             slideVideo.currentTime = currentVideoTime;
           } catch (error) {
@@ -68,7 +80,7 @@ const SlideVideoSection = React.forwardRef(
           }
         }
       }
-    }, [currentVideoTime, videos, currentVideoIndex, answerPptIndex]);
+    }, [currentVideoTime, videos, currentVideoIndex, answerPptIndex, canPlay]);
 
     // Sync play/pause state with trainer video
     useEffect(() => {
@@ -82,24 +94,31 @@ const SlideVideoSection = React.forwardRef(
           return;
         }
 
-        if (isVideoPlaying && slideVideo.paused && slideVideo.readyState >= 3) {
-          if (playPromiseRef.current) {
+        if (isVideoPlaying && slideVideo.paused && canPlay) {
+          if (playPromiseRef.current && typeof playPromiseRef.current.catch === 'function') {
             playPromiseRef.current.catch(() => {});
           }
 
-          playPromiseRef.current = slideVideo.play();
-          playPromiseRef.current
-            .then(() => {
-              playPromiseRef.current = null;
-            })
-            .catch((error) => {
-              playPromiseRef.current = null;
-              if (error.name !== "AbortError") {
-                console.warn("Failed to play slide video:", error);
-              }
-            });
+          const playResult = slideVideo.play();
+          playPromiseRef.current = playResult;
+          
+          if (playResult !== undefined && typeof playResult.then === 'function') {
+            playResult
+              .then(() => {
+                playPromiseRef.current = null;
+              })
+              .catch((error) => {
+                playPromiseRef.current = null;
+                if (error.name !== "AbortError") {
+                  console.warn("Failed to play slide video:", error);
+                }
+              });
+          } else {
+            // playResult was not a promise, or undefined
+            playPromiseRef.current = null;
+          }
         } else if (!isVideoPlaying && !slideVideo.paused) {
-          if (playPromiseRef.current) {
+          if (playPromiseRef.current && typeof playPromiseRef.current.catch === 'function') {
             playPromiseRef.current.catch(() => {});
             playPromiseRef.current = null;
           }
@@ -139,26 +158,8 @@ const SlideVideoSection = React.forwardRef(
             slideVideo.pause();
           }
 
-          if (
-            preloadedSlideIndex === videoIndex &&
-            preloadSlideVideoRef.current &&
-            preloadSlideVideoRef.current.readyState >= 2
-          ) {
-            try {
-              slideVideo.src = preloadSlideVideoRef.current.src;
-              slideVideo.load();
-              preloadSlideVideoRef.current.src = "";
-              setPreloadedSlideIndex(-1);
-            } catch (error) {
-              slideVideo.load();
-              setPreloadedSlideIndex(-1);
-            }
-          } else {
-            slideVideo.load();
-            if (preloadedSlideIndex === videoIndex) {
-              setPreloadedSlideIndex(-1);
-            }
-          }
+          // With VideoPlayer, when src prop changes, the player automatically re-initializes.
+          // Therefore, we don't need manual load() or src injection calls.
 
           if (answerPptIndex !== null) {
             slideVideo.currentTime = 0;
@@ -167,50 +168,7 @@ const SlideVideoSection = React.forwardRef(
           }
         }
       }
-    }, [currentVideoIndex, videos, preloadedSlideIndex, hasSlideInitialized, answerPptIndex]);
-
-    // Preload next slide video
-    useEffect(() => {
-      const preloadThreshold = 10;
-
-      if (videoDuration > 0 && currentVideoTime > 0 && videos && videos.length > 0) {
-        const timeRemaining = videoDuration - currentVideoTime;
-        const nextVideoIndex = currentVideoIndex + 1;
-
-        if (
-          timeRemaining <= preloadThreshold &&
-          nextVideoIndex < videos.length &&
-          preloadedSlideIndex !== nextVideoIndex &&
-          videos[nextVideoIndex] &&
-          videos[nextVideoIndex].slide_video &&
-          typeof videos[nextVideoIndex].slide_video === "string" &&
-          videos[nextVideoIndex].slide_video.trim() !== ""
-        ) {
-          try {
-            if (!preloadSlideVideoRef.current) {
-              preloadSlideVideoRef.current = document.createElement("video");
-              preloadSlideVideoRef.current.preload = "auto";
-              preloadSlideVideoRef.current.style.display = "none";
-              preloadSlideVideoRef.current.muted = true;
-              document.body.appendChild(preloadSlideVideoRef.current);
-            }
-
-            const nextVideoUrl = videos[nextVideoIndex].slide_video;
-
-            if (nextVideoUrl && typeof nextVideoUrl === "string" && nextVideoUrl.startsWith("http")) {
-              preloadSlideVideoRef.current.src = nextVideoUrl;
-              preloadSlideVideoRef.current.onerror = () => {
-                setPreloadedSlideIndex(-1);
-              };
-              preloadSlideVideoRef.current.load();
-              setPreloadedSlideIndex(nextVideoIndex);
-            }
-          } catch (error) {
-            setPreloadedSlideIndex(-1);
-          }
-        }
-      }
-    }, [currentVideoTime, currentVideoIndex, videos, preloadedSlideIndex, videoDuration]);
+    }, [currentVideoIndex, videos, hasSlideInitialized, answerPptIndex]);
 
     // Cleanup
     useEffect(() => {
@@ -218,10 +176,6 @@ const SlideVideoSection = React.forwardRef(
         if (playPromiseRef.current) {
           playPromiseRef.current.catch(() => {});
           playPromiseRef.current = null;
-        }
-        if (preloadSlideVideoRef.current) {
-          document.body.removeChild(preloadSlideVideoRef.current);
-          preloadSlideVideoRef.current = null;
         }
       };
     }, []);
@@ -301,8 +255,31 @@ const SlideVideoSection = React.forwardRef(
                 onVideoIndexChange(nextIndex);
                 setAutoPlayEnabled(true);
               } else {
+                // Last video
+                const isFinalAssessmentPresent =
+                  assessmentDetails && assessmentDetails.length > 0 && assessmentDetails[0].id;
+                if (!isFinalAssessmentPresent) {
+                  setShowResultModal(true);
+                }
                 dispatch(setSelectedAssessmentId(assessmentId));
               }
+            }}
+          />
+          <FeedbackModal
+            isOpen={showFeedbackModal}
+            onClose={() => setShowFeedbackModal(false)}
+            presentationId={presentationId}
+          />
+          <ResultModal
+            isOpen={showResultModal}
+            onClose={() => setShowResultModal(false)}
+            presentationId={presentationId}
+            score={100}
+            passingScore={0}
+            isNoAssessmentModule={true}
+            onShowFeedback={() => {
+              setShowResultModal(false);
+              setShowFeedbackModal(true);
             }}
           />
         </div>
@@ -346,48 +323,40 @@ const SlideVideoSection = React.forwardRef(
             )}
           </div>
         )} */}
-        <video
+        <VideoPlayer
           key={`slide-video-${videoIndex}`}
           ref={slideVideoRef}
           src={videos[videoIndex].slide_video}
-          className="w-full h-full object-fill"
-          muted
-          playsInline
+          className="w-full h-full [&_.vjs-tech]:!object-fill"
+          muted={true}
+          autoPlay={false}
+          controls={false}
           onLoadStart={() => {
             if (!isVideoLoading) {
               setIsVideoLoading(true);
               setCanPlay(false);
             }
           }}
-          onLoadedData={() => {
-            if (isVideoLoading) {
-              setIsVideoLoading(false);
-              setIsLoadingNewVideo(false);
-            }
+          onLoadedMetadata={() => {
+            setIsVideoLoading(false);
+            setIsLoadingNewVideo(false);
           }}
           onCanPlay={() => {
-            if (!canPlay) {
-              setCanPlay(true);
-              if (slideVideoRef.current) {
-                if (answerPptIndex !== null) {
-                  slideVideoRef.current.currentTime = 0;
-                } else {
-                  slideVideoRef.current.currentTime = currentVideoTime;
+            setIsVideoLoading(false);
+            setIsLoadingNewVideo(false);
+            setCanPlay((prevCanPlay) => {
+              if (!prevCanPlay) {
+                if (slideVideoRef.current) {
+                  if (answerPptIndex !== null) {
+                    slideVideoRef.current.currentTime = 0;
+                  } else {
+                    slideVideoRef.current.currentTime = currentVideoTime;
+                  }
                 }
+                return true;
               }
-            }
-          }}
-          onCanPlayThrough={() => {
-            if (!canPlay) {
-              setCanPlay(true);
-              if (slideVideoRef.current) {
-                if (answerPptIndex !== null) {
-                  slideVideoRef.current.currentTime = 0;
-                } else {
-                  slideVideoRef.current.currentTime = currentVideoTime;
-                }
-              }
-            }
+              return prevCanPlay;
+            });
           }}
           onError={() => {
             setIsVideoLoading(false);
