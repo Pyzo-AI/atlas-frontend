@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import logo from "@/assets/svg/pyzo-logo.svg";
+import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import modules from "@/assets/svg/modules.svg";
 import modulesActive from "@/assets/svg/modules_active.svg";
 import assessment from "@/assets/svg/assessment.svg";
@@ -79,7 +79,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
           <div className="flex flex-col justify-center items-start p-3 px-4 h-[68px]">
             <div className="flex items-center gap-1">
               {/* Logo Icon */}
-              <Image src={logo} height={25} width={58} alt="Pyzo Logo" />
+              <Image src={logo} height={25} width={92} alt="Pyzo Logo" />
             </div>
           </div>
 
