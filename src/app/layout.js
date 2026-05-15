@@ -38,6 +38,7 @@ export const metadata = {
   title: "Atlas",
   description: "Training Using AI",
   manifest: "/manifest.json",
+  themeColor: "#ffffff",
   icons: {
     icon: "/favicon.svg",
     "apple-touch-icon": "/favicon.svg",
