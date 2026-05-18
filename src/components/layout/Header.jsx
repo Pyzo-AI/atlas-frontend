@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import { decodeJWT } from "@/utils/jwt";
+import { getAuthTokens, clearAuthTokens } from "@esmagico/pyzo-auth-sdk";
 import user_icon from "@/assets/svg/user-icon.svg";
 import { trackLogout } from "@/utils/authTracking";
 import Image from "next/image";
@@ -61,7 +62,7 @@ useEffect(() => {
   const shouldHideMenuButton = hideSidebarRoutes.some((route) => pathname.includes(route));
 
   useEffect(() => {
-    const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
+    const tokens = getAuthTokens() || {};
     if (tokens.access_token) {
       setToken(tokens.access_token);
       const decoded = decodeJWT(tokens.access_token);
@@ -111,7 +112,7 @@ useEffect(() => {
   const confirmLogout = async () => {
     setIsLoggingOut(true);
     setIsLogoutModalOpen(false);
-    const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
+    const tokens = getAuthTokens() || {};
     let userId = null;
     if (tokens.access_token) {
       const decoded = decodeJWT(tokens.access_token);
@@ -120,7 +121,7 @@ useEffect(() => {
     if (userId) {
       trackLogout(userId);
     }
-    localStorage.removeItem("trainboost_tokens");
+    clearAuthTokens();
     localStorage.removeItem("trainboost_conversation_history");
     setIsDropdownOpen(false);
     router.push("/login");

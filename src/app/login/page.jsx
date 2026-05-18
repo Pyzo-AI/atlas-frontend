@@ -9,17 +9,6 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleLoginSuccess = (response) => {
-    const tokens = response.data.tokens;
-    
-    // Store tokens in the existing key used by train-boost
-    localStorage.setItem(
-      "trainboost_tokens",
-      JSON.stringify({
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-      }),
-    );
-
     toast.success("Login successful!");
     router.push("/");
   };

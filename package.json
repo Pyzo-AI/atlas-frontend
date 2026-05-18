@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@elevenlabs/react": "^0.6.1",
-    "@esmagico/pyzo-auth-sdk": "^1.0.8",
+    "@esmagico/pyzo-auth-sdk": "^1.0.10",
     "@reduxjs/toolkit": "^2.8.2",
     "livekit-client": "^2.16.0",
     "lottie-react": "^2.4.1",
