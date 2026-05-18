@@ -1,5 +1,5 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { getValidAccessToken } from '@/utils/auth';
+import { getValidAccessToken, logout } from '@/utils/auth';
 
 // Get environment variables with fallbacks
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -30,20 +30,26 @@ export const baseQueryWithReauth = fetchBaseQuery({
 export const baseQueryWithReauthAndRetry = async (args, api, extraOptions) => {
   let result = await baseQueryWithReauth(args, api, extraOptions);
   
-  // If we get a 401, try to refresh token and retry once
   if (result.error && result.error.status === 401) {
     try {
-      // Force token refresh
+      // Try to get a valid token (refreshes if needed)
       const newToken = await getValidAccessToken();
       
       if (newToken) {
         // Retry the original request with new token
         result = await baseQueryWithReauth(args, api, extraOptions);
+        
+        // If it STILL fails with 401 after retry, logout
+        if (result.error && result.error.status === 401) {
+          logout();
+        }
+      } else {
+        // If getValidAccessToken returned null, it means refresh failed
+        logout();
       }
-      // If no valid token, user has been logged out automatically
     } catch (error) {
       console.log('Token refresh failed during retry:', error);
-      // User has been logged out automatically in getValidAccessToken
+      logout();
     }
   }
   
