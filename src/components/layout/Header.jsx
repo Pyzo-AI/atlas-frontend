@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import logo from "@/assets/svg/pyzo-logo.svg";
+import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import { decodeJWT } from "@/utils/jwt";
 import user_icon from "@/assets/svg/user-icon.svg";
 import { trackLogout } from "@/utils/authTracking";
@@ -144,7 +144,7 @@ useEffect(() => {
         <div
           className={`cursor-pointer ${pathname.includes("/lectures/") ? "" : "md:hidden"}`}
           onClick={() => router.push("/")}>
-          <Image src={logo} height={20} width={46} alt="Pyzo Logo" />
+          <Image src={logo} height={28} width={103} alt="Pyzo Logo" />
         </div>
       </div>
 
