@@ -38,17 +38,18 @@ export const metadata = {
   title: "Atlas",
   description: "Training Using AI",
   manifest: "/manifest.json",
-  themeColor: "#ffffff",
   icons: {
     icon: "/favicon.svg",
     "apple-touch-icon": "/favicon.svg",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport = {
+  themeColor: "#ffffff",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({ children }) {
