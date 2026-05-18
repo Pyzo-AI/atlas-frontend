@@ -52,7 +52,7 @@ export default function ResultModal({
           console.log("Failed to generate certificate:", error);
           const errorMessage =
             error?.data?.details || error?.data?.error || "Unable to generate certificate. Try again.";
-          toast.error(errorMessage);
+          // toast.error(errorMessage);
           generatingRef.current = false;
         }
       }
@@ -137,7 +137,11 @@ export default function ResultModal({
         {/* Subtitle */}
         <p className="font-lato font-normal text-[14px] leading-[20px] tracking-[0em] text-center text-primary-text-muted mb-2">
           {isPerfectScore ? (
-            "You’ve successfully completed the training. Download your certificate and share your feedback."
+            isNoAssessmentModule ? (
+              "You’ve successfully completed the training. Download your certificate and share your feedback."
+            ) : (
+              "You’ve successfully completed the training and assessment. Download your certificate and share your feedback."
+            )
           ) : (
             <>
               You correctly answered{" "}

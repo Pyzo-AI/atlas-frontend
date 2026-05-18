@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FiAlertCircle } from "react-icons/fi";
 import Image from "next/image";
-import logo from "@/assets/svg/pyzo-logo.svg";
+import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import login_image from "@/assets/svg/login-image.svg";
 import EmailInput from "@/components/ui/auth/EmailInput";
 import PasswordInput from "@/components/ui/auth/PasswordInput";
@@ -155,13 +155,13 @@ function LoginForm() {
       {/* Left side Section */}
       <div className="flex flex-col flex-1">
         {/* Logo - Normal Flow */}
-        <div className="pt-[30px] px-[20px] lg:pl-[40px]">
+        <div className="pt-[30px] px-[20px] lg:pl-[60px]">
           <Image
             src={logo}
             alt="Pyzo Logo"
-            width={84.54}
-            height={36}
-            className="object-contain cursor-pointer"
+            width={180}
+            height={49}
+            className="object-contain cursor-pointer w-[160px] lg:w-[140px] h-auto"
             onClick={() => router.push("/")}
           />
         </div>
@@ -240,7 +240,7 @@ function LoginForm() {
         />
 
         {/* Bottom Info Panel (Remains Absolute as requested) */}
-        <div className="absolute bottom-0 left-0 w-full h-[368px] flex flex-col justify-center items-center px-[127px] text-center z-10">
+        <div className="absolute bottom-0 left-0 w-full h-[368px] flex flex-col justify-center items-center px-[40px] xl:px-[127px] text-center z-10">
           {/* Multi-layered Gradients as per Figma */}
           <div
             className="absolute inset-0 scale-y-[-1]"
