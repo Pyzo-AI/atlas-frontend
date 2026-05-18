@@ -25,7 +25,8 @@ export default function LoginPage() {
   };
 
   const handleLoginFailure = (error) => {
-    toast.error(error?.message || "Login failed. Please check your credentials.");
+    console.log(error?.message || "Login failed. Please check your credentials.")
+    // toast.error(error?.message || "Login failed. Please check your credentials.");
   };
 
   return (
