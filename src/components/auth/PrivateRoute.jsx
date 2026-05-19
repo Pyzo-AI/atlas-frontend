@@ -9,6 +9,7 @@ import { usePyzoSessionSync } from '@esmagico/pyzo-auth-sdk'
 const PrivateRoute = ({ children }) => {
   const router = useRouter()
   const pathname = usePathname()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   usePyzoSessionSync({
     onLogout: logout,
     onLogin: () => router.push('/'),
