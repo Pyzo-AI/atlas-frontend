@@ -2,9 +2,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { getTokens, getUserDetailsFromToken } from '@/store/utils/token'
+import { logout } from '@/utils/auth'
 import { usePostHog } from '@/hooks/usePostHog'
+import { usePyzoSessionSync } from '@esmagico/pyzo-auth-sdk'
 
 const PrivateRoute = ({ children }) => {
+  usePyzoSessionSync(logout)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
