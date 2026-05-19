@@ -7,10 +7,12 @@ import { usePostHog } from '@/hooks/usePostHog'
 import { usePyzoSessionSync } from '@esmagico/pyzo-auth-sdk'
 
 const PrivateRoute = ({ children }) => {
-  usePyzoSessionSync(logout)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+  usePyzoSessionSync({
+    onLogout: logout,
+    onLogin: () => router.push('/'),
+  })
   const { identify } = usePostHog()
 
   useEffect(() => {
