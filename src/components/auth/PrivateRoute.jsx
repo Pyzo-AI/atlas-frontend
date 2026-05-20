@@ -27,6 +27,9 @@ const PrivateRoute = ({ children }) => {
         setPermissionDenied(true)
       }
     },
+    onPermissionGranted: () => {
+      setPermissionDenied(false)
+    },
   })
 
   const { identify } = usePostHog()
