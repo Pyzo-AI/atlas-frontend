@@ -4,16 +4,31 @@ import { useRouter, usePathname } from 'next/navigation'
 import { getTokens, getUserDetailsFromToken } from '@/store/utils/token'
 import { logout } from '@/utils/auth'
 import { usePostHog } from '@/hooks/usePostHog'
-import { usePyzoSessionSync } from '@esmagico/pyzo-auth-sdk'
+import { usePyzoSessionSync, AccessDeniedScreen, hasProductAccess, refreshSession, getAuthTokens } from '@esmagico/pyzo-auth-sdk'
+
+const PRODUCT_NAME = 'atlas'
+const REFRESH_URL = `${process.env.NEXT_PUBLIC_LOGIN_BASE_URL}/auth/refresh`
 
 const PrivateRoute = ({ children }) => {
   const router = useRouter()
   const pathname = usePathname()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [permissionDenied, setPermissionDenied] = useState(false)
+
+  // Cross-tab session sync: refreshes tokens on every tab switch to get latest permissions,
+  // then checks product access (no admin check for user app).
   usePyzoSessionSync({
     onLogout: logout,
     onLogin: () => router.push('/'),
+    productName: PRODUCT_NAME,
+    refreshUrl: REFRESH_URL,
+    onPermissionDenied: () => {
+      if (pathname !== '/login') {
+        setPermissionDenied(true)
+      }
+    },
   })
+
   const { identify } = usePostHog()
 
   useEffect(() => {
@@ -22,10 +37,24 @@ const PrivateRoute = ({ children }) => {
       return
     }
 
-    const tokens = getTokens()
+    const checkAuth = async () => {
+      const tokens = getTokens()
 
-    // Simple check: if access token exists, user is authenticated
-    if (tokens.access_token) {
+      if (!tokens.access_token) {
+        router.push('/login')
+        return
+      }
+
+      // Refresh tokens to get latest permissions on page load
+      await refreshSession(REFRESH_URL)
+      const freshTokens = getAuthTokens() || tokens
+
+      // Check product access on the refreshed token
+      if (freshTokens.access_token && !hasProductAccess(freshTokens.access_token, PRODUCT_NAME)) {
+        setPermissionDenied(true)
+        return
+      }
+
       setIsAuthenticated(true)
 
       // Identify user in PostHog for existing sessions
@@ -38,14 +67,26 @@ const PrivateRoute = ({ children }) => {
           session_start: new Date().toISOString(),
         })
       }
-    } else {
-      router.push('/login')
     }
+
+    checkAuth()
   }, [pathname, router])
 
   // For login page, render without auth check
   if (pathname === '/login') {
     return children
+  }
+
+  // Access denied — show screen without clearing the session cookie
+  if (permissionDenied) {
+    return (
+      <AccessDeniedScreen
+        productName="Atlas"
+        onSwitchAccount={() => {
+          logout()
+        }}
+      />
+    )
   }
 
   // For other pages, render if authenticated
