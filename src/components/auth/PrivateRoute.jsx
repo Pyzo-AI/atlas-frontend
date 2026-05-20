@@ -23,8 +23,11 @@ const PrivateRoute = ({ children }) => {
     productName: PRODUCT_NAME,
     refreshUrl: REFRESH_URL,
     onPermissionDenied: () => {
-      if (pathname !== '/login') {
-        setPermissionDenied(true)
+      // Token exists but product check failed — user IS logged in, just lacks access.
+      // If on /login, navigate to home first so AccessDeniedScreen renders there.
+      setPermissionDenied(true)
+      if (window.location.pathname === '/login') {
+        router.push('/')
       }
     },
     onPermissionGranted: () => {
