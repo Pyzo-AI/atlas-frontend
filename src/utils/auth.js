@@ -1,14 +1,13 @@
 import { decodeJWT } from "./jwt";
 import { trackLogout } from "./authTracking";
+import { getAuthTokens, setAuthTokens, clearAuthTokens } from "@esmagico/pyzo-auth-sdk";
 
 // Get the refresh token URL from environment or fallback
 const REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_LOGIN_BASE_URL}/auth/refresh-token`;
 
 export const refreshAccessToken = async () => {
   try {
-    const tokens = JSON.parse(
-      localStorage.getItem("trainboost_tokens") || "{}"
-    );
+    const tokens = getAuthTokens() || {};
 
     if (!tokens.refresh_token) {
       throw new Error("No refresh token available");
@@ -26,13 +25,10 @@ export const refreshAccessToken = async () => {
       const data = await response.json();
 
       // Store new tokens
-      localStorage.setItem(
-        "trainboost_tokens",
-        JSON.stringify({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-        })
-      );
+      setAuthTokens({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      });
 
       return data.access_token;
     } else {
@@ -51,7 +47,7 @@ export const refreshAccessToken = async () => {
 };
 
 export const getValidAccessToken = async () => {
-  const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
+  const tokens = getAuthTokens() || {};
 
   if (!tokens.access_token) {
     return null;
@@ -87,7 +83,7 @@ export const isTokenExpired = (token) => {
 // Logout utility
 export const logout = () => {
   // Get user ID for tracking before clearing tokens
-  const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
+  const tokens = getAuthTokens() || {};
   let userId = null;
   if (tokens.access_token) {
     const decoded = decodeJWT(tokens.access_token);
@@ -99,6 +95,6 @@ export const logout = () => {
     trackLogout(userId);
   }
   
-  localStorage.removeItem("trainboost_tokens");
+  clearAuthTokens();
   window.location.href = "/login";
 };

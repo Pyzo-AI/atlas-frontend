@@ -4,15 +4,13 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import { decodeJWT } from "@/utils/jwt";
+import { getAuthTokens, clearAuthTokens } from "@esmagico/pyzo-auth-sdk";
 import user_icon from "@/assets/svg/user-icon.svg";
 import { trackLogout } from "@/utils/authTracking";
 import Image from "next/image";
 import hamburger from "@/assets/svg/hamburger.svg";
 import logout_icon from "@/assets/svg/logout.svg";
-import reset_password_icon from "@/assets/svg/reset-password.svg";
-import { useForgotPasswordMutation } from "@/store/api/authApi";
 import { toast } from "react-toastify";
-import PasswordResetModal from "@/components/ui/auth/PasswordResetModal";
 import LogoutModal from "@/components/ui/auth/LogoutModal";
 import { FiChevronDown } from "react-icons/fi";
 import NotificationDrawer from "./NotificationDrawer";
@@ -33,9 +31,7 @@ const Header = ({ onMenuClick }) => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [userInfo, setUserInfo] = useState({ name: "", email: "" });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [forgotPassword, { isLoading: isResetLoading }] = useForgotPasswordMutation();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-  const [showResetModal, setShowResetModal] = useState(false);
   const dropdownRef = useRef(null);
   const [token, setToken] = useState(null);
   const { notifications, unreadCount, markAsRead, refresh, loadMore, hasMore, loading } = useNotifications(token);
@@ -50,18 +46,13 @@ useEffect(() => {
   }
 }, []);
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("reset_pending") === "true") {
-      setShowResetModal(true);
-    }
-  }, []);
+
 
   const hideSidebarRoutes = ["/lectures/", "/assessment/", "/login"];
   const shouldHideMenuButton = hideSidebarRoutes.some((route) => pathname.includes(route));
 
   useEffect(() => {
-    const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
+    const tokens = getAuthTokens() || {};
     if (tokens.access_token) {
       setToken(tokens.access_token);
       const decoded = decodeJWT(tokens.access_token);
@@ -87,21 +78,7 @@ useEffect(() => {
     };
   }, []);
 
-  const handleResetPassword = async () => {
-    if (!userInfo.email || isResetLoading) return;
-    try {
-      await forgotPassword({ email: userInfo.email }).unwrap();
-      setIsDropdownOpen(false);
-      toast.success("Password reset link sent successfully.");
 
-      const url = new URL(window.location.href);
-      url.searchParams.set("reset_pending", "true");
-      window.history.pushState({}, "", url.toString());
-      setShowResetModal(true);
-    } catch (error) {
-      toast.error(error?.data?.error || error?.data?.message || "Failed to initiate reset password.");
-    }
-  };
 
   const handleLogoutClick = () => {
     setIsDropdownOpen(false);
@@ -111,7 +88,7 @@ useEffect(() => {
   const confirmLogout = async () => {
     setIsLoggingOut(true);
     setIsLogoutModalOpen(false);
-    const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
+    const tokens = getAuthTokens() || {};
     let userId = null;
     if (tokens.access_token) {
       const decoded = decodeJWT(tokens.access_token);
@@ -120,7 +97,7 @@ useEffect(() => {
     if (userId) {
       trackLogout(userId);
     }
-    localStorage.removeItem("trainboost_tokens");
+    clearAuthTokens();
     localStorage.removeItem("trainboost_conversation_history");
     setIsDropdownOpen(false);
     router.push("/login");
@@ -208,18 +185,7 @@ useEffect(() => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-[10px] items-start w-full">
-                <button
-                  className="flex items-center gap-[4px] w-full cursor-pointer hover:bg-gray-50 transition-colors py-1 disabled:opacity-50"
-                  onClick={handleResetPassword}
-                  disabled={isResetLoading}>
-                  <Image src={reset_password_icon} alt="reset-password-icon" width={16} height={16} />
-                  <span className="text-[12px] font-medium text-[rgba(26,28,41,0.7)] leading-[14px]">
-                    {isResetLoading ? "Initialising..." : "Reset Password"}
-                  </span>
-                </button>
-
-                <div className="flex flex-col gap-1.5 w-full">
+              <div className="flex flex-col gap-[10px] items-start w-full">                <div className="flex flex-col gap-1.5 w-full">
                   <div className="w-full h-[1px] bg-[#E5E7EB]" />
                   <button
                     onClick={handleLogoutClick}
@@ -248,17 +214,6 @@ useEffect(() => {
         hasMore={hasMore}
         loadMore={loadMore}
         loading={loading}
-      />
-
-      <PasswordResetModal
-        isOpen={showResetModal}
-        email={userInfo.email}
-        onClose={() => {
-          setShowResetModal(false);
-          const url = new URL(window.location.href);
-          url.searchParams.delete("reset_pending");
-          window.history.pushState({}, "", url.toString());
-        }}
       />
     </header>
   );
