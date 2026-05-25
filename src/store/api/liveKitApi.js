@@ -12,7 +12,17 @@ export const liveKitApi = createApi({
         body: { agent_id, user_id, presentation_id },
       }),
     }),
+    createChatbotSession: builder.mutation({
+      query: ({ agent_id, user_id }) => ({
+        url: 'session/',
+        method: 'POST',
+        body: { agent_id, user_id },
+      }),
+    }),
+    getChatbotConversations: builder.query({
+      query: () => 'session/conversations?limit=-1',
+    }),
   }),
 });
 
-export const { useCreateSessionMutation } = liveKitApi;
+export const { useCreateSessionMutation, useCreateChatbotSessionMutation, useGetChatbotConversationsQuery } = liveKitApi;
