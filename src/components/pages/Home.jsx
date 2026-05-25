@@ -12,6 +12,7 @@ import unlocked from "../../assets/svg/unlocked.svg";
 import completed from "../../assets/svg/completed.svg";
 import dueSoon from "../../assets/svg/due-soon.svg";
 import FeedbackSuccessModal from "../modals/FeedbackSuccessModal";
+import FloatingChatbot from "../common/FloatingChatbot";
 import { useDispatch } from "react-redux";
 import { setAutoPlayEnabled, setSelectedAssessmentId } from "@/store/features/videoSlice";
 import { HiBookOpen, HiChevronDown } from "react-icons/hi2";
@@ -531,6 +532,9 @@ const Home = () => {
 
       {/* Success Modal */}
       <FeedbackSuccessModal isOpen={showSuccessModal} onClose={handleSuccessModalClose} />
+      
+      {/* Floating Chatbot */}
+      <FloatingChatbot />
     </>
   );
 };
