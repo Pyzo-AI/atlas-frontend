@@ -4,6 +4,7 @@ import { liveKitService } from "@/lib/livekit";
 import { useCreateChatbotSessionMutation } from "@/store/api/liveKitApi";
 import Lottie from "lottie-react";
 import userWaveAnimation from "@/assets/json/user_wave.json";
+import loaderAnimation from "@/assets/json/loader.json";
 import chatHistory from "@/assets/svg/chat-history.svg";
 import chatbotIcon from "@/assets/svg/chatbot-icon.svg";
 import chatbotCloseIcon from "@/assets/svg/chatbot-close-icon.svg";
@@ -53,7 +54,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
         user_id: userDetails?.sub || 0,
       });
       sessionPromiseRef.current = sessionPromise;
-      
+
       const sessionResponse = await sessionPromise.unwrap();
       if (signal.aborted) return;
 
@@ -90,7 +91,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
         token: sessionResponse.token,
         roomName: sessionResponse.room_name,
       });
-      
+
       if (signal.aborted) {
         liveKitService.disconnect();
         return;
@@ -99,7 +100,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
       // Reset mute state on connect
       setIsMuted(false);
     } catch (error) {
-      if (error?.name === 'AbortError' || error?.isAborted) {
+      if (error?.name === "AbortError" || error?.isAborted) {
         console.log("Conversation start aborted");
         return;
       }
@@ -201,7 +202,13 @@ const FloatingChatbot = ({ agentId = 1 }) => {
         <button
           onClick={stopConversation}
           className="hidden sm:flex cursor-pointer fixed bottom-6 right-6 w-[60px] h-[60px] rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 z-50 items-center justify-center bg-white overflow-hidden">
-          <Image src={chatbotCloseIcon} alt="close chatbot" width={60} height={60} className="w-full h-full object-cover" />
+          <Image
+            src={chatbotCloseIcon}
+            alt="close chatbot"
+            width={60}
+            height={60}
+            className="w-full h-full object-cover"
+          />
         </button>
       </>
     );
@@ -211,19 +218,19 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     <>
       <div className="fixed bottom-0 right-0 w-full h-[349px] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-[#FFFFFF] rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-50 border border-[#E9EFFD] transition-all duration-300">
         {/* Background Gradient matching the screenshot */}
-        <div className="absolute top-[-90px] left-1/2 -translate-x-1/2 w-[180px] h-[180px] bg-[#2762EA] blur-[102px] pointer-events-none" />
+        <div className="absolute top-[-90px] left-1/2 -translate-x-1/2 w-[180px] h-[120px] bg-[#2762EA] blur-[102px] pointer-events-none" />
 
         {/* Center Animation Area */}
         <div className="flex-1 flex flex-col items-center justify-center relative">
           <div className="relative w-[150px] h-[150px] flex items-center justify-center">
             {isConnecting ? (
-              <div className="flex flex-col items-center space-y-3">
-                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-gray-500 text-sm font-lato">Connecting...</p>
+              <div className="flex flex-col items-center justify-center">
+                <Lottie animationData={loaderAnimation} style={{ width: 180, height: 80 }} loop={true} />
+                <p className="text-gray-500 text-sm font-lato mt-[-15px]">Connecting...</p>
               </div>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center scale-125">
-                <Lottie animationData={userWaveAnimation} style={{ width: 120, height: 120 }} loop={true} />
+                <Lottie animationData={userWaveAnimation} style={{ width: 150, height: 150 }} loop={true} />
               </div>
             )}
           </div>
@@ -246,13 +253,25 @@ const FloatingChatbot = ({ agentId = 1 }) => {
           <button
             onClick={stopConversation}
             className="sm:hidden w-[56px] h-[56px] rounded-full flex items-center justify-center transition-colors cursor-pointer flex-shrink-0 shadow-sm hover:shadow-md bg-white border border-gray-100 overflow-hidden">
-            <Image src={chatbotCloseIcon} alt="close chatbot" width={56} height={56} className="w-full h-full object-cover" />
+            <Image
+              src={chatbotCloseIcon}
+              alt="close chatbot"
+              width={56}
+              height={56}
+              className="w-full h-full object-cover"
+            />
           </button>
 
           <button
             onClick={() => setShowChatHistory(true)}
             className="w-[56px] h-[56px] sm:w-[64px] sm:h-[64px] flex items-center justify-center flex-shrink-0 cursor-pointer">
-            <Image src={chatHistory} alt="chat history" width={64} height={64} className="w-full h-full object-contain" />
+            <Image
+              src={chatHistory}
+              alt="chat history"
+              width={64}
+              height={64}
+              className="w-full h-full object-contain"
+            />
           </button>
 
           <button
@@ -269,7 +288,6 @@ const FloatingChatbot = ({ agentId = 1 }) => {
               className="w-full h-full object-contain"
             />
           </button>
-
         </div>
       </div>
 
@@ -277,7 +295,13 @@ const FloatingChatbot = ({ agentId = 1 }) => {
       <button
         onClick={stopConversation}
         className="hidden sm:flex cursor-pointer fixed bottom-6 right-6 w-[60px] h-[60px] rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 z-50 items-center justify-center bg-white overflow-hidden">
-        <Image src={chatbotCloseIcon} alt="close chatbot" width={60} height={60} className="w-full h-full object-cover" />
+        <Image
+          src={chatbotCloseIcon}
+          alt="close chatbot"
+          width={60}
+          height={60}
+          className="w-full h-full object-cover"
+        />
       </button>
     </>
   );
