@@ -50,6 +50,7 @@ const FloatingChatbot = () => {
 
       liveKitService.onConnectionStateChanged = handleLiveKitStateChange;
       liveKitService.setOnAgentStateChanged((state) => {
+        console.log(state, "liveKitAgentState");
         setLiveKitAgentState(state);
       });
 
@@ -182,7 +183,7 @@ const FloatingChatbot = () => {
     <>
       <div className="fixed bottom-0 right-0 w-full h-[349px] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-[#FFFFFF] rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-50 border border-[#E9EFFD] transition-all duration-300">
         {/* Background Gradient matching the screenshot */}
-        <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[212px] h-[212px] bg-[#7191FF] blur-[102px] pointer-events-none" />
+        <div className="absolute top-[-90px] left-1/2 -translate-x-1/2 w-[180px] h-[180px] bg-[#2762EA] blur-[102px] pointer-events-none" />
 
         {/* Center Animation Area */}
         <div className="flex-1 flex flex-col items-center justify-center relative">
@@ -203,11 +204,11 @@ const FloatingChatbot = () => {
           {!isConnecting && (
             <div className="mt-[32px] sm:mt-[42px] flex flex-col items-center gap-[4px] sm:gap-[8px]">
               <p className="text-[12px] sm:text-[14px] leading-[16px] font-semibold sm:font-bold text-[#2762EA] sm:text-[#0888E6] font-lato">
-                {isMuted ? "Muted" : (liveKitAgentState === "listening" ? "Listening..." : "Speaking...")}
+                {liveKitAgentState === "listening" ? (isMuted ? "Muted" : "Listening...") : "Speaking..."}
               </p>
-              {liveKitAgentState === "listening" && !isMuted && (
+              {/* {liveKitAgentState === "listening" && !isMuted && (
                 <p className="text-[10px] sm:text-[12px] leading-[12px] sm:leading-[16px] font-medium text-[#4B5563] sm:text-[#1A1C29]/60 font-lato">You can speak now</p>
-              )}
+              )} */}
             </div>
           )}
         </div>
@@ -218,6 +219,12 @@ const FloatingChatbot = () => {
             onClick={stopConversation}
             className="sm:hidden w-[56px] h-[56px] rounded-full flex items-center justify-center transition-colors cursor-pointer flex-shrink-0 shadow-sm hover:shadow-md bg-white border border-gray-100 overflow-hidden">
             <Image src={chatbotCloseIcon} alt="close chatbot" width={56} height={56} className="w-full h-full object-cover" />
+          </button>
+
+          <button
+            onClick={() => setShowChatHistory(true)}
+            className="w-[56px] h-[56px] sm:w-[64px] sm:h-[64px] flex items-center justify-center flex-shrink-0 cursor-pointer">
+            <Image src={chatHistory} alt="chat history" width={64} height={64} className="w-full h-full object-contain" />
           </button>
 
           <button
@@ -235,11 +242,6 @@ const FloatingChatbot = () => {
             />
           </button>
 
-          <button
-            onClick={() => setShowChatHistory(true)}
-            className="w-[56px] h-[56px] sm:w-[64px] sm:h-[64px] flex items-center justify-center flex-shrink-0 cursor-pointer">
-            <Image src={chatHistory} alt="chat history" width={64} height={64} className="w-full h-full object-contain" />
-          </button>
         </div>
       </div>
 
