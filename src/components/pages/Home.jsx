@@ -15,6 +15,7 @@ import FeedbackSuccessModal from "../modals/FeedbackSuccessModal";
 import { useDispatch } from "react-redux";
 import { setAutoPlayEnabled, setSelectedAssessmentId } from "@/store/features/videoSlice";
 import { HiBookOpen, HiChevronDown } from "react-icons/hi2";
+import FloatingChatbot from "../common/FloatingChatbot";
 
 const PresentationCard = ({ presentation, onClick, currentTime }) => {
   const formatDuration = (seconds) => {
@@ -531,6 +532,11 @@ const Home = () => {
 
       {/* Success Modal */}
       <FeedbackSuccessModal isOpen={showSuccessModal} onClose={handleSuccessModalClose} />
+
+       {/* Floating Chatbot */}
+      {presentations?.organization?.agent?.enabled && (
+        <FloatingChatbot agentId={presentations.organization.agent.id} />
+      )}
     </>
   );
 };

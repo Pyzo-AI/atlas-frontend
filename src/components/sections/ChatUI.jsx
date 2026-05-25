@@ -14,6 +14,7 @@ import Image from "next/image";
 import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup";
 import { clearOverlayImage } from "@/store/features/imageSlice";
 import { useGetConversationHistoryQuery } from "@/store/api/questionsApi";
+import { useGetChatbotConversationsQuery } from "@/store/api/liveKitApi";
 
 const ChatUI = ({
   onClose,
@@ -27,16 +28,26 @@ const ChatUI = ({
   onPauseSlideVideo,
   liveKitAgentEnabled = false,
   presentationId,
+  useChatbotHistory = false,
+  hideFooter = false,
 }) => {
   const dispatch = useDispatch();
   const [showMicPopup, setShowMicPopup] = useState(false);
   const messagesContainerRef = useRef(null);
 
-  // Fetch conversation history when liveKitAgentEnabled is true
-  const { data: apiConversation = [], isLoading: isLoadingHistory } = useGetConversationHistoryQuery(presentationId, {
-    skip: !liveKitAgentEnabled || !presentationId,
+  // Fetch conversation history — use chatbot endpoint when useChatbotHistory is true
+  const { data: presentationConversation = [], isLoading: isLoadingPresentationHistory } = useGetConversationHistoryQuery(presentationId, {
+    skip: !liveKitAgentEnabled || !presentationId || useChatbotHistory,
     refetchOnMountOrArgChange: true,
   });
+
+  const { data: chatbotConversation = [], isLoading: isLoadingChatbotHistory } = useGetChatbotConversationsQuery(undefined, {
+    skip: !liveKitAgentEnabled || !useChatbotHistory,
+    refetchOnMountOrArgChange: true,
+  });
+
+  const apiConversation = useChatbotHistory ? chatbotConversation : presentationConversation;
+  const isLoadingHistory = useChatbotHistory ? isLoadingChatbotHistory : isLoadingPresentationHistory;
 
   // Format time with AM/PM
   const formatTime = (time) => {
@@ -360,33 +371,35 @@ const ChatUI = ({
           </div>
 
           {/* Bottom Actions Container */}
-          <div className="flex justify-center items-center gap-1 sm:gap-2 w-full bg-white px-2 sm:px-3 py-1.5 lg:py-2 flex-shrink-0 border-t border-border-light">
-            {/* Interaction Mode Button */}
-            <button
-              onClick={agentId ? handleInteractionMode : undefined}
-              disabled={!agentId}
-              className={`flex items-center justify-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-[74px] ${
-                agentId ? "bg-bg-accent-subtle cursor-pointer" : "bg-gray-100 cursor-not-allowed opacity-50"
-              }`}>
-              <Image className="w-4 h-4 lg:w-5 lg:h-5" src={interaction_mode} alt="interaction_mode" />
+          {!hideFooter && (
+            <div className="flex justify-center items-center gap-1 sm:gap-2 w-full bg-white px-2 sm:px-3 py-1.5 lg:py-2 flex-shrink-0 border-t border-border-light">
+              {/* Interaction Mode Button */}
+              <button
+                onClick={agentId ? handleInteractionMode : undefined}
+                disabled={!agentId}
+                className={`flex items-center justify-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-[74px] ${
+                  agentId ? "bg-bg-accent-subtle cursor-pointer" : "bg-gray-100 cursor-not-allowed opacity-50"
+                }`}>
+                <Image className="w-4 h-4 lg:w-5 lg:h-5" src={interaction_mode} alt="interaction_mode" />
 
-              {!isMobile && (
-                <span className="font-lato font-medium text-[8px] sm:text-[9px] lg:text-[10px] leading-3 text-center text-accent-secondary whitespace-nowrap">
-                  Interaction Mode
+                {!isMobile && (
+                  <span className="font-lato font-medium text-[8px] sm:text-[9px] lg:text-[10px] leading-3 text-center text-accent-secondary whitespace-nowrap">
+                    Interaction Mode
+                  </span>
+                )}
+              </button>
+
+              {/* Continue Lesson Button */}
+              <button
+                onClick={handleContinueLesson}
+                className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-accent-secondary rounded-[73.75px]">
+                <Image className="w-4 h-4 lg:w-5 lg:h-5" src={back_to_session} alt="back_to_session" />
+                <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
+                  Continue Lesson
                 </span>
-              )}
-            </button>
-
-            {/* Continue Lesson Button */}
-            <button
-              onClick={handleContinueLesson}
-              className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-accent-secondary rounded-[73.75px]">
-              <Image className="w-4 h-4 lg:w-5 lg:h-5" src={back_to_session} alt="back_to_session" />
-              <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
-                Continue Lesson
-              </span>
-            </button>
-          </div>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>
