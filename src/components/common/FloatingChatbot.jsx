@@ -238,8 +238,8 @@ const FloatingChatbot = ({ agentId = 1 }) => {
           {/* State Text */}
           {!isConnecting && (
             <div className="mt-[32px] sm:mt-[42px] flex flex-col items-center gap-[4px] sm:gap-[8px]">
-              <p className="text-[12px] sm:text-[14px] leading-[16px] font-semibold sm:font-bold text-[#2762EA] sm:text-[#0888E6] font-lato">
-                {liveKitAgentState === "listening" ? (isMuted ? "Muted" : "Listening...") : "Speaking..."}
+              <p className="text-[12px] sm:text-[14px] leading-[16px] font-semibold sm:font-bold text-[#2762EA] sm:text-[#0888E6] font-lato ">
+                {liveKitAgentState === "listening" ? (isMuted ? "Muted" : "Listening...") : liveKitAgentState.charAt(0).toUpperCase() + liveKitAgentState.slice(1)+"..."}
               </p>
               {/* {liveKitAgentState === "listening" && !isMuted && (
                 <p className="text-[10px] sm:text-[12px] leading-[12px] sm:leading-[16px] font-medium text-[#4B5563] sm:text-[#1A1C29]/60 font-lato">You can speak now</p>
