@@ -67,6 +67,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
       // Detect call_ending from agent side and auto-close the chatbot
       if (liveKitService.setOnDataReceived) {
         liveKitService.setOnDataReceived((payload) => {
+          console.log(payload,"payload")
           try {
             const decoder = new TextDecoder();
             const strData = decoder.decode(payload);
@@ -180,7 +181,10 @@ const FloatingChatbot = ({ agentId = 1 }) => {
   if (showChatHistory) {
     return (
       <>
-        <div className="fixed bottom-0 right-0 w-full h-[90vh] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-white rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-50 transition-all duration-300">
+        {/* Mobile backdrop overlay */}
+        <div className="sm:hidden fixed inset-0 bg-black/40 z-[9998] pointer-events-auto" />
+
+        <div className="fixed bottom-0 right-0 w-full h-[90vh] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-white rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-[9999] transition-all duration-300 overscroll-contain">
           <ChatUI
             onClose={() => setShowChatHistory(false)}
             conversation={[]}
@@ -216,7 +220,10 @@ const FloatingChatbot = ({ agentId = 1 }) => {
 
   return (
     <>
-      <div className="fixed bottom-0 right-0 w-full h-[349px] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-[#FFFFFF] rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-50 border border-[#E9EFFD] transition-all duration-300">
+      {/* Mobile backdrop overlay */}
+      <div className="sm:hidden fixed inset-0 bg-black/40 z-[9998] pointer-events-auto" />
+
+      <div className="fixed bottom-0 right-0 w-full h-[349px] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-[#FFFFFF] rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-[9999] border border-[#E9EFFD] transition-all duration-300 overscroll-contain">
         {/* Background Gradient matching the screenshot */}
         <div className="absolute top-[-90px] left-1/2 -translate-x-1/2 w-[180px] h-[120px] bg-[#2762EA] blur-[102px] pointer-events-none" />
 

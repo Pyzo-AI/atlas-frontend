@@ -161,7 +161,7 @@ const ChatUI = ({
           </div>
 
           {/* Messages Container */}
-          <div ref={messagesContainerRef} className="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden min-h-0">
+          <div ref={messagesContainerRef} className="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden min-h-0 overscroll-contain">
             {isLoadingHistory ? (
               <div className="space-y-3 sm:space-y-4 lg:space-y-6">
                 {Array.from({ length: 4 }).map((_, index) => (
