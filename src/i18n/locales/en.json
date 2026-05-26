@@ -68,5 +68,26 @@
       "invalidEmailOrPassword": "Invalid email or password."
     },
     "success": "Login successful!"
+  },
+  "certificates": {
+    "title": "Certificates",
+    "subtitle": "View and download your earned certificates from completed courses",
+    "searchPlaceholder": "Search by certificate name",
+    "issuedOn": "Issued On",
+    "viewCertificate": "View Certificate",
+    "download": "Download",
+    "noResults": "No Results Found",
+    "noCertificates": "No Certificates Yet",
+    "searchEmptyState": "No certificates match your search. Try a different keyword.",
+    "filterEmptyState": "No certificates match your filters. Try different filter.",
+    "defaultEmptyState": "Complete your assessments to earn certificates and see them here."
+  },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Track user progress and achievements",
+    "learningTab": "Learning",
+    "assessmentsTab": "Assessments",
+    "learningError": "Failed to load learning analytics. Please try again.",
+    "assessmentsError": "Failed to load assessment analytics. Please try again."
   }
 }

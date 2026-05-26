@@ -11,9 +11,11 @@ import Tabs from "@/components/common/Tabs";
 import ErrorState from "@/components/common/ErrorState";
 import Learning from "@/components/pages/Learning";
 import Assessments from "@/components/pages/Assessments";
+import { useTranslation } from "react-i18next";
 
 export default function Analytics() {
   const router = useLocalizedRouter();
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
 
   const initializeActiveTabFromURL = () => {
@@ -35,8 +37,8 @@ export default function Analytics() {
   const [appliedFilters, setAppliedFilters] = useState(initializeFiltersFromURL());
 
   const tabs = [
-    { id: "learning", label: "Learning" },
-    { id: "assessments", label: "Assessments" },
+    { id: "learning", label: t("analytics.learningTab") },
+    { id: "assessments", label: t("analytics.assessmentsTab") },
   ];
 
   const handleTabChange = (tabId) => {
@@ -147,10 +149,10 @@ export default function Analytics() {
         <div className="flex justify-between items-start">
           <div className="space-y-1 mb-4">
             <h2 className="font-lato font-bold text-[16px] md:text-[20px] leading-[100%] tracking-[0.01em] text-text-heading">
-              Analytics
+              {t("analytics.title")}
             </h2>
             <p className="font-lato font-normal text-[12px] leading-[15px] md:leading-[100%] tracking-[0em] text-text-body">
-              Track user progress and achievements
+              {t("analytics.subtitle")}
             </p>
           </div>
           {/* <div>
@@ -184,14 +186,14 @@ export default function Analytics() {
         </div>
         {activeTab === "learning" &&
           (statsError ? (
-            <ErrorState message="Failed to load learning analytics. Please try again." onRetry={refetchStats} />
+            <ErrorState message={t("analytics.learningError")} onRetry={refetchStats} />
           ) : (
             <Learning isLoading={isLoadingStats} analyticsData={learningData} />
           ))}
         {activeTab === "assessments" &&
           (assessmentStatsError ? (
             <ErrorState
-              message="Failed to load assessment analytics. Please try again."
+              message={t("analytics.assessmentsError")}
               onRetry={refetchAssessmentStats}
             />
           ) : (

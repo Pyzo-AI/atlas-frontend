@@ -68,5 +68,26 @@
       "invalidEmailOrPassword": "Ungültige E-Mail oder ungültiges Passwort."
     },
     "success": "Anmeldung erfolgreich!"
+  },
+  "certificates": {
+    "title": "Zertifikate",
+    "subtitle": "Zertifikate anzeigen und herunterladen, die Sie in abgeschlossenen Kursen erworben haben",
+    "searchPlaceholder": "Nach Zertifikatsnamen suchen",
+    "issuedOn": "Ausgestellt am",
+    "viewCertificate": "Zertifikat ansehen",
+    "download": "Herunterladen",
+    "noResults": "Keine Ergebnisse gefunden",
+    "noCertificates": "Noch keine Zertifikate",
+    "searchEmptyState": "Keine Zertifikate entsprechen Ihrer Suche. Versuchen Sie ein anderes Schlüsselwort.",
+    "filterEmptyState": "Keine Zertifikate entsprechen Ihren Filtern. Versuchen Sie einen anderen Filter.",
+    "defaultEmptyState": "Schließen Sie Ihre Bewertungen ab, um Zertifikate zu erwerben und sie hier zu sehen."
+  },
+  "analytics": {
+    "title": "Analysen",
+    "subtitle": "Benutzerfortschritt und -erfolge verfolgen",
+    "learningTab": "Lernen",
+    "assessmentsTab": "Bewertungen",
+    "learningError": "Lernanalysen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "assessmentsError": "Bewertungsanalysen konnten nicht geladen werden. Bitte versuchen Sie es erneut."
   }
 }

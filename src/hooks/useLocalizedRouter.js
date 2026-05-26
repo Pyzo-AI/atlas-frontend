@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useRouter, useParams, usePathname } from "next/navigation";
 
 export const useLocalizedRouter = () => {
@@ -25,7 +26,7 @@ export const useLocalizedRouter = () => {
     return path === "/" ? `/${locale}` : `/${locale}${path.startsWith('/') ? path : `/${path}`}`;
   };
 
-  return {
+  return useMemo(() => ({
     ...router,
     push: (href, options) => {
       return router.push(localizePath(href), options);
@@ -35,5 +36,5 @@ export const useLocalizedRouter = () => {
     },
     // Expose the helper for Link components or other uses
     localizePath,
-  };
+  }), [router, locale]); // localizePath depends on locale
 };
