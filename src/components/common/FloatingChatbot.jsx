@@ -24,6 +24,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     isConnected: false,
     isAudioPlaying: false,
   });
+  const [liveMessages, setLiveMessages] = useState([]);
 
   const abortControllerRef = useRef(null);
   const sessionPromiseRef = useRef(null);
@@ -44,6 +45,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
       abortControllerRef.current = new AbortController();
       const signal = abortControllerRef.current.signal;
 
+      setLiveMessages([]);
       setConnectionState((prev) => ({ ...prev, isLoading: true }));
       await navigator.mediaDevices.getUserMedia({ audio: true });
       if (signal.aborted) return;
@@ -67,12 +69,23 @@ const FloatingChatbot = ({ agentId = 1 }) => {
       // Detect call_ending from agent side and auto-close the chatbot
       if (liveKitService.setOnDataReceived) {
         liveKitService.setOnDataReceived((payload) => {
-          console.log(payload,"payload")
           try {
             const decoder = new TextDecoder();
             const strData = decoder.decode(payload);
             const data = JSON.parse(strData);
-            if (data.type === "status" && data.message === "call_ending") {
+
+            if (data.type === "user_response" || data.type === "agent_response") {
+              const now = new Date();
+              setLiveMessages((prev) => [
+                ...prev,
+                {
+                  type: data.type === "user_response" ? "question" : "answer",
+                  content: data.text,
+                  time: now.toTimeString().slice(0, 5),
+                  date: now.toISOString().split("T")[0],
+                },
+              ]);
+            } else if (data.type === "status" && data.message === "call_ending") {
               if (liveKitService.isConnected()) {
                 liveKitService.disconnect();
               }
@@ -164,6 +177,40 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     };
   }, [isOpen]);
 
+  // Lock body scroll on mobile when chatbot is open (iOS-safe approach)
+  useEffect(() => {
+    const isMobileWidth = window.innerWidth < 640;
+    if (!isMobileWidth) return;
+
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+      document.body.dataset.scrollY = String(scrollY);
+    } else {
+      const scrollY = parseInt(document.body.dataset.scrollY || "0", 10);
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      delete document.body.dataset.scrollY;
+      window.scrollTo(0, scrollY);
+    }
+
+    return () => {
+      const scrollY = parseInt(document.body.dataset.scrollY || "0", 10);
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      delete document.body.dataset.scrollY;
+      if (scrollY) window.scrollTo(0, scrollY);
+    };
+  }, [isOpen]);
+
+
   if (!isOpen) {
     return (
       <button
@@ -199,6 +246,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
             presentationId={1}
             useChatbotHistory={true}
             hideFooter={true}
+            liveMessages={liveMessages}
           />
         </div>
 

@@ -30,6 +30,7 @@ const ChatUI = ({
   presentationId,
   useChatbotHistory = false,
   hideFooter = false,
+  liveMessages = [],
 }) => {
   const dispatch = useDispatch();
   const [showMicPopup, setShowMicPopup] = useState(false);
@@ -48,6 +49,9 @@ const ChatUI = ({
 
   const apiConversation = useChatbotHistory ? chatbotConversation : presentationConversation;
   const isLoadingHistory = useChatbotHistory ? isLoadingChatbotHistory : isLoadingPresentationHistory;
+
+  // Merge API history with live messages from the current session
+  const mergedConversation = [...apiConversation, ...liveMessages];
 
   // Format time with AM/PM
   const formatTime = (time) => {
@@ -82,16 +86,16 @@ const ChatUI = ({
     }));
   };
 
-  // Use API conversation if liveKitAgentEnabled, otherwise use passed conversation
-  const displayConversation = liveKitAgentEnabled ? apiConversation : conversation;
-  const groupedConversation = liveKitAgentEnabled ? groupMessagesByDate(apiConversation) : null;
+  // Use merged conversation if liveKitAgentEnabled, otherwise use passed conversation
+  const displayConversation = liveKitAgentEnabled ? mergedConversation : conversation;
+  const groupedConversation = liveKitAgentEnabled ? groupMessagesByDate(mergedConversation) : null;
 
-  // Position at bottom on mount without visible scrolling
+  // Scroll to bottom when conversation updates or new live messages arrive
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
-  }, [displayConversation]);
+  }, [displayConversation, liveMessages]);
 
   const handleInteractionMode = async () => {
     if (!agentId) return;
