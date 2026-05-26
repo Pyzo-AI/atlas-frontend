@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { liveKitService } from "@/lib/livekit";
 import { useCreateChatbotSessionMutation } from "@/store/api/liveKitApi";
@@ -15,6 +16,8 @@ import { toast } from "react-toastify";
 import ChatUI from "@/components/sections/ChatUI";
 
 const FloatingChatbot = ({ agentId = 1 }) => {
+  const { t } = useTranslation();
+
   const [isOpen, setIsOpen] = useState(false);
   const [showChatHistory, setShowChatHistory] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -281,7 +284,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
             {isConnecting ? (
               <div className="flex flex-col items-center justify-center">
                 <Lottie animationData={loaderAnimation} style={{ width: 180, height: 80 }} loop={true} />
-                <p className="text-gray-500 text-sm font-lato mt-[-15px]">Connecting...</p>
+                <p className="text-gray-500 text-sm font-lato mt-[-15px]">{t("floatingChatbot.connecting")}</p>
               </div>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center scale-125">
@@ -296,9 +299,9 @@ const FloatingChatbot = ({ agentId = 1 }) => {
               <p className="text-[12px] sm:text-[14px] leading-[16px] font-semibold sm:font-bold text-[#2762EA] sm:text-[#0888E6] font-lato capitalize">
                 {liveKitAgentState === "listening"
                   ? isMuted
-                    ? "Muted"
-                    : "Listening..."
-                  : liveKitAgentState + "..."}
+                    ? t("floatingChatbot.muted")
+                    : t("floatingChatbot.listening")
+                  : t("floatingChatbot.speaking")}
               </p>
               {/* {liveKitAgentState === "listening" && !isMuted && (
                 <p className="text-[10px] sm:text-[12px] leading-[12px] sm:leading-[16px] font-medium text-[#4B5563] sm:text-[#1A1C29]/60 font-lato">You can speak now</p>

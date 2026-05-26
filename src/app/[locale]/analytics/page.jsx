@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 
@@ -12,7 +13,7 @@ import Learning from "@/components/pages/Learning";
 import Assessments from "@/components/pages/Assessments";
 
 export default function Analytics() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const searchParams = useSearchParams();
 
   const initializeActiveTabFromURL = () => {

@@ -14,7 +14,7 @@ import {
 } from "@/store/features/videoSlice";
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import { useConversation } from "@elevenlabs/react";
 import { CONVERSATION_CONFIG, cleanExpiredMessages } from "@/config/conversationConfig";
 import { liveKitService } from "@/lib/livekit";
@@ -128,7 +128,7 @@ const VideoPanel = forwardRef(
     const [contextSent, setContextSent] = useState(false);
     const videoRef = useRef(null);
     const activeVideoRef = useRef(null);
-    const router = useRouter();
+    const router = useLocalizedRouter();
     const dispatch = useDispatch();
     const [generateImage] = useGenerateImageMutation();
     const [createSession] = useCreateSessionMutation();

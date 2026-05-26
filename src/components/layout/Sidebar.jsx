@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import Image from "next/image";
 import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import modules from "@/assets/svg/modules.svg";
@@ -13,9 +14,12 @@ import analytics from "@/assets/svg/analytics.svg";
 import analyticsActive from "@/assets/svg/analytics_active.svg";
 import certificate from "@/assets/svg/certificate.svg";
 import certificateActive from "@/assets/svg/certificate_active.svg";
+import { useTranslation } from "react-i18next";
 
 const Sidebar = ({ isOpen = false, onClose }) => {
   const pathname = usePathname();
+  const { localizePath } = useLocalizedRouter();
+  const { t } = useTranslation();
 
   // Hide sidebar on certain routes
   const hideSidebarRoutes = ["/lectures/", "/login"];
@@ -27,25 +31,25 @@ const Sidebar = ({ isOpen = false, onClose }) => {
 
   const menuItems = [
     {
-      name: "Modules",
+      name: t("sidebar.modules"),
       href: "/",
       icon: modules,
       activeIcon: modulesActive,
     },
     {
-      name: "Certificates",
+      name: t("sidebar.certificates"),
       href: "/certificates",
       icon: certificate,
       activeIcon: certificateActive,
     },
     {
-      name: "Analytics",
+      name: t("sidebar.analytics"),
       href: "/analytics?tab=learning",
       icon: analytics,
       activeIcon: analyticsActive,
     },
     // {
-    //   name: "Assessments",
+    //   name: t("sidebar.assessments"),
     //   href: "/assessments",
     //   icon: assessment,
     //   activeIcon: assessmentActive,
@@ -54,7 +58,12 @@ const Sidebar = ({ isOpen = false, onClose }) => {
 
   const isActive = (href) => {
     const basePath = href.split("?")[0];
-    return pathname === basePath || pathname.startsWith(basePath + "/");
+    // Strip locale from pathname for comparison (e.g. /en/analytics -> /analytics)
+    let normalizedPath = pathname.replace(/^\/[a-z]{2}(\/|$)/, "/");
+    if (normalizedPath !== "/" && normalizedPath.endsWith("/")) {
+      normalizedPath = normalizedPath.slice(0, -1);
+    }
+    return normalizedPath === basePath || normalizedPath.startsWith(basePath + "/");
   };
 
   const handleLinkClick = () => {
@@ -90,7 +99,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
               return (
                 <Link
                   key={item.name}
-                  href={item.href}
+                  href={localizePath(item.href)}
                   onClick={handleLinkClick}
                   className={`relative flex items-center px-4 py-2 mx-0 h-9 rounded-md transition-all duration-200 ${
                     active ? "bg-bg-primary-light text-primary" : "text-text-subtle-alt hover:bg-gray-50"

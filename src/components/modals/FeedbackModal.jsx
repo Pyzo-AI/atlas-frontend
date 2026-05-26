@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import Modal from "@/components/common/Modal";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
@@ -20,7 +21,8 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
   const [review, setReview] = useState("");
   const [hoveredStar, setHoveredStar] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
+  const dispatch = useDispatch();
+  const router = useLocalizedRouter();
   const { capture } = usePostHog();
   const [submitFeedback] = useSubmitFeedbackMutation();
 

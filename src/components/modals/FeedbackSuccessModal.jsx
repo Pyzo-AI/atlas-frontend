@@ -1,11 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import React from "react";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
+import { useTranslation } from "react-i18next";
 import Modal from "@/components/common/Modal";
 import feedback_success_image from "@/assets/svg/feedback_success.svg";
 import Image from "next/image";
+
 export default function FeedbackSuccessModal({ isOpen, onClose }) {
-  const router = useRouter();
+  const router = useLocalizedRouter();
+  const { t } = useTranslation();
 
   const handleClose = () => {
     onClose();

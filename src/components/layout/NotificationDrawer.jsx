@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import readNotification from "@/assets/svg/read_notification.svg";
 import unreadNotification from "@/assets/svg/unread_notification.svg";
 import back from "@/assets/svg/back.svg";
@@ -19,7 +19,7 @@ const NotificationDrawer = ({
   loading,
 }) => {
   const [mounted, setMounted] = useState(false);
-  const router = useRouter();
+  const router = useLocalizedRouter();
 
   useEffect(() => {
     setMounted(true);

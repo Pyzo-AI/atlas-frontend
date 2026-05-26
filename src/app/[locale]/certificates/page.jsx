@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import SearchFilter from "@/components/common/SearchFilter";
 import Image from "next/image";
 import PrimaryButton from "@/components/common/PrimaryButton";
@@ -13,7 +14,7 @@ import { useGetCertificatesMutation, useGetUserMetadataQuery } from "@/store/api
 import CertificateCardSkeleton from "@/components/common/CertificateCardSkeleton";
 
 export default function CertificatesPage() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const isInitialMount = useRef(true);

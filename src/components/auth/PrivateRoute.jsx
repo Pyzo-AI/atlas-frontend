@@ -1,18 +1,22 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter"
 import { getTokens, getUserDetailsFromToken } from '@/store/utils/token'
 import { usePostHog } from '@/hooks/usePostHog'
 
 const PrivateRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const router = useRouter()
+  const router = useLocalizedRouter()
   const pathname = usePathname()
   const { identify } = usePostHog()
 
+  // Match /login, /en/login, /de/login etc.
+  const isLoginPage = pathname === '/login' || pathname.endsWith('/login')
+
   useEffect(() => {
     // Skip auth check for login page
-    if (pathname === '/login') {
+    if (isLoginPage) {
       return
     }
 
@@ -33,12 +37,13 @@ const PrivateRoute = ({ children }) => {
         })
       }
     } else {
+      // Redirect to login — middleware will prepend the locale automatically
       router.push('/login')
     }
-  }, [pathname, router])
+  }, [pathname, router, isLoginPage])
 
   // For login page, render without auth check
-  if (pathname === '/login') {
+  if (isLoginPage) {
     return children
   }
 

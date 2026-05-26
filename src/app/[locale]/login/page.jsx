@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import { FiAlertCircle } from "react-icons/fi";
 import Image from "next/image";
 import logo from "@/assets/svg/pyzo-atlas-logo.svg";
@@ -15,6 +16,7 @@ import { useLoginMutation } from "@/store/api/authApi";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -24,10 +26,11 @@ function LoginForm() {
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const searchParams = useSearchParams();
   const [login] = useLoginMutation();
   const { capture, identify } = usePostHog();
+  const { t } = useTranslation();
 
   const view = searchParams.get("view");
   const token = searchParams.get("token") || "";
@@ -43,21 +46,21 @@ function LoginForm() {
 
   const validateEmail = (email) => {
     if (!email) {
-      return "Email is required";
+      return t("login.errors.emailRequired");
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return "Invalid email. Check and try again or contact admin.";
+      return t("login.errors.invalidEmail");
     }
     return "";
   };
 
   const validatePassword = (password) => {
     if (!password) {
-      return "Password is required";
+      return t("login.errors.passwordRequired");
     }
     if (password.length < 6) {
-      return "Password must be at least 6 characters";
+      return t("login.errors.passwordLength");
     }
     return "";
   };
@@ -92,23 +95,23 @@ function LoginForm() {
       setEmailError(emailValidationError);
       setPasswordError(passwordValidationError);
 
-      let errorMessage = "Please enter your ";
-      const isFormatError = emailValidationError === "Invalid email. Check and try again or contact admin.";
+      let errorMessage = t("login.errors.enterCredentials", { missing: "" });
+      const isFormatError = emailValidationError === t("login.errors.invalidEmail");
 
       if (emailValidationError && passwordValidationError) {
         if (isFormatError) {
-          errorMessage = "Invalid email and missing password.";
+          errorMessage = t("login.errors.invalidEmailMissingPassword");
         } else {
-          errorMessage += "email and password to continue.";
+          errorMessage = t("login.errors.enterCredentials", { missing: "email and password" });
         }
       } else if (emailValidationError) {
         if (isFormatError) {
           errorMessage = emailValidationError;
         } else {
-          errorMessage += "email to continue.";
+          errorMessage = t("login.errors.enterCredentials", { missing: "email" });
         }
       } else {
-        errorMessage += "password to continue.";
+        errorMessage = t("login.errors.enterCredentials", { missing: "password" });
       }
 
       setError(errorMessage);
@@ -140,11 +143,11 @@ function LoginForm() {
         });
       }
 
-      toast.success("Login successful!");
+      toast.success(t("login.success"));
       router.push("/");
     } catch (error) {
-      setError("Invalid email or password. Please check your credentials.");
-      toast.error("Invalid email or password.");
+      setError(t("login.errors.invalidCredentials"));
+      toast.error(t("login.errors.invalidEmailOrPassword"));
     }
 
     setLoading(false);
@@ -177,10 +180,10 @@ function LoginForm() {
               {/* Headline and Subhead */}
               <div className="flex flex-col gap-2">
                 <h1 className="font-semibold text-[28px] lg:text-[32px] leading-[34px] lg:leading-[38px] text-[#111827]">
-                  Hi, Welcome! 👋
+                  {t("login.welcome")}
                 </h1>
                 <p className="font-normal text-[14px] lg:text-[16px] leading-[20px] lg:leading-[24px] text-[#4B5563]">
-                  Lets login to your account
+                  {t("login.subtitle")}
                 </p>
               </div>
 
@@ -211,13 +214,13 @@ function LoginForm() {
                       type="button"
                       onClick={() => router.push("/login?view=forgot-password")}
                       className="font-medium text-[14px] lg:text-[16px] leading-[16px] text-[#2762EA] hover:underline transition-all cursor-pointer">
-                      Forgot password?
+                      {t("login.forgotPassword")}
                     </button>
                   </div>
                 </div>
 
                 {/* Log In Button */}
-                <AuthButton title="Log In" loadingTitle="Signing in..." isLoading={loading} />
+                <AuthButton title={t("login.logIn")} loadingTitle={t("login.signingIn")} isLoading={loading} />
               </form>
             </div>
           )}
@@ -258,10 +261,9 @@ function LoginForm() {
 
           {/* Text Content - Frame 1707479085 */}
           <div className="relative z-10 flex flex-col gap-[10px] items-center mt-10">
-            <h2 className="font-bold text-[26px] leading-[31px] text-white">All-in-One Training Dashboard</h2>
+            <h2 className="font-bold text-[26px] leading-[31px] text-white">{t("login.bannerTitle")}</h2>
             <p className="font-normal text-[16px] leading-[23px] text-white opacity-80 max-w-[494px]">
-              Quickly onboard your team, create modules and assessments, assign them to users, and track progress
-              effortlessly all from a single dashboard
+              {t("login.bannerDesc")}
             </p>
           </div>
         </div>

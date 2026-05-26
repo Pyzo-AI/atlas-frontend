@@ -1,0 +1,72 @@
+{
+  "chatUI": {
+    "interactionHistory": "Interaction History"
+  },
+  "floatingChatbot": {
+    "connecting": "Connecting to interviewer...",
+    "listening": "Listening...",
+    "speaking": "Speaking...",
+    "muted": "Muted"
+  },
+  "home": {
+    "hello": "Hello, {{name}}!",
+    "browseDescription": "Browse your courses and get instant answers to your questions with our AI guide.",
+    "availableCourses": "Available Courses",
+    "searchCourses": "Search courses...",
+    "tabs": {
+      "all": "All",
+      "locked": "Locked",
+      "inProgress": "In Progress",
+      "overdue": "Overdue",
+      "completed": "Completed"
+    }
+  },
+  "courseCard": {
+    "completed": "Completed",
+    "completedDate": "Completed {{date}}",
+    "unknownDate": "Unknown date",
+    "locked": "Locked",
+    "unlocksIn": "Unlocks in",
+    "overdueBy": "Overdue by",
+    "dueIn": "Due in",
+    "inProgress": "In Progress",
+    "day": "day",
+    "days": "days",
+    "hr": "hr",
+    "m": "m",
+    "s": "s"
+  },
+  "sidebar": {
+    "modules": "Modules",
+    "certificates": "Certificates",
+    "analytics": "Analytics",
+    "assessments": "Assessments"
+  },
+  "header": {
+    "resetPassword": "Reset Password",
+    "initialising": "Initialising...",
+    "logOut": "Log Out",
+    "signingOut": "Signing out...",
+    "user": "User"
+  },
+  "login": {
+    "welcome": "Hi, Welcome! 👋",
+    "subtitle": "Lets login to your account",
+    "forgotPassword": "Forgot password?",
+    "logIn": "Log In",
+    "signingIn": "Signing in...",
+    "bannerTitle": "All-in-One Training Dashboard",
+    "bannerDesc": "Quickly onboard your team, create modules and assessments, assign them to users, and track progress effortlessly all from a single dashboard",
+    "errors": {
+      "emailRequired": "Email is required",
+      "invalidEmail": "Invalid email. Check and try again or contact admin.",
+      "passwordRequired": "Password is required",
+      "passwordLength": "Password must be at least 6 characters",
+      "enterCredentials": "Please enter your {{missing}} to continue.",
+      "invalidEmailMissingPassword": "Invalid email and missing password.",
+      "invalidCredentials": "Invalid email or password. Please check your credentials.",
+      "invalidEmailOrPassword": "Invalid email or password."
+    },
+    "success": "Login successful!"
+  }
+}

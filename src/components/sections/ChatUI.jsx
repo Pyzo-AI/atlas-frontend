@@ -11,6 +11,7 @@ import interaction_mode from "@/assets/svg/interaction_mode.svg";
 import ai_answer_icon from "@/assets/svg/ai_answer_icon.svg";
 import close_icon from "@/assets/svg/close.svg";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup";
 import { clearOverlayImage } from "@/store/features/imageSlice";
 import { useGetConversationHistoryQuery } from "@/store/api/questionsApi";
@@ -33,6 +34,7 @@ const ChatUI = ({
   liveMessages = [],
 }) => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const [showMicPopup, setShowMicPopup] = useState(false);
   const messagesContainerRef = useRef(null);
 
@@ -157,7 +159,7 @@ const ChatUI = ({
           {/* Header */}
           <div className="flex justify-between items-center px-3 py-1 lg:py-3 pb-1 md:pb-2 border-b border-border-light flex-shrink-0">
             <h2 className="font-lato font-bold text-[12px] lg:text-base leading-[19px] tracking-[0.02em] text-primary-text">
-              Interaction History
+              {t("chatUI.interactionHistory")}
             </h2>
             <button onClick={onClose} className="w-6 h-6 flex items-center justify-center cursor-pointer">
               <Image src={close_icon} alt="Close Icon" />

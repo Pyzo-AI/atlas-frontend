@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import { useDispatch } from "react-redux";
 import Modal from "@/components/common/Modal";
 import { setCurrentVideoIndex } from "@/store/features/videoSlice";
@@ -23,7 +23,7 @@ export default function ResultModal({
   passingScore,
   isNoAssessmentModule = false,
 }) {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const dispatch = useDispatch();
 
   // Use the actual values from API response

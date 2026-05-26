@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import Image from "next/image";
 import { useGetPresentationsQuery } from "../../store/api/questionsApi";
 import chat_star from "../../assets/svg/chat_star.svg";
@@ -16,21 +17,24 @@ import { useDispatch } from "react-redux";
 import { setAutoPlayEnabled, setSelectedAssessmentId } from "@/store/features/videoSlice";
 import { HiBookOpen, HiChevronDown } from "react-icons/hi2";
 import FloatingChatbot from "../common/FloatingChatbot";
+import { useTranslation } from "react-i18next";
 
 const PresentationCard = ({ presentation, onClick, currentTime }) => {
+  const { t } = useTranslation();
+
   const formatDuration = (seconds) => {
     const totalSeconds = Math.max(0, Math.round(seconds));
     if (totalSeconds < 60) {
-      return `${totalSeconds}s`;
+      return `${totalSeconds}${t("courseCard.s")}`;
     }
     const totalMinutes = Math.floor(totalSeconds / 60);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
 
     if (hours > 0) {
-      return minutes > 0 ? `${hours}hr ${minutes}m` : `${hours}hr`;
+      return minutes > 0 ? `${hours}${t("courseCard.hr")} ${minutes}${t("courseCard.m")}` : `${hours}${t("courseCard.hr")}`;
     }
-    return `${minutes}m`;
+    return `${minutes}${t("courseCard.m")}`;
   };
   const getTimeDiffMessage = (targetTime, prefix) => {
     const target = new Date(targetTime);
@@ -39,33 +43,33 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
 
     const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
     if (days >= 1) {
-      return `${prefix} ${days} ${days === 1 ? "day" : "days"}`;
+      return `${prefix} ${days} ${days === 1 ? t("courseCard.day") : t("courseCard.days")}`;
     }
 
     const hours = Math.floor(absDiff / (1000 * 60 * 60));
     if (hours >= 1) {
-      return `${prefix} ${hours}hr`;
+      return `${prefix} ${hours}${t("courseCard.hr")}`;
     }
 
     const minutes = Math.floor(absDiff / (1000 * 60));
     if (minutes >= 1) {
-      return `${prefix} ${minutes}m`;
+      return `${prefix} ${minutes}${t("courseCard.m")}`;
     }
 
     const seconds = Math.floor(absDiff / 1000);
-    return `${prefix} ${seconds}s`;
+    return `${prefix} ${seconds}${t("courseCard.s")}`;
   };
 
   const getUnlockMessage = (targetTime) => {
-    return getTimeDiffMessage(targetTime, "Unlocks in");
+    return getTimeDiffMessage(targetTime, t("courseCard.unlocksIn"));
   };
 
   const getOverdueMessage = (targetTime) => {
-    return getTimeDiffMessage(targetTime, "Overdue by");
+    return getTimeDiffMessage(targetTime, t("courseCard.overdueBy"));
   };
 
   const getDueMessage = (targetTime) => {
-    return getTimeDiffMessage(targetTime, "Due in");
+    return getTimeDiffMessage(targetTime, t("courseCard.dueIn"));
   };
 
   const getBadgeInfo = () => {
@@ -75,13 +79,13 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
     if (presentation.isPresentationCompleted) {
       const completedDate = presentation.presentationCompletedDate
         ? new Date(presentation.presentationCompletedDate).toLocaleDateString("en-GB")
-        : "Unknown date";
+        : t("courseCard.unknownDate");
       return {
         icon: completed,
         colorClass: "bg-status-completed",
         textColorClass: "text-light",
-        title: "Completed",
-        subtitle: `Completed ${completedDate}`,
+        title: t("courseCard.completed"),
+        subtitle: t("courseCard.completedDate", { date: completedDate }),
       };
     }
 
@@ -93,7 +97,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
           icon: locked,
           colorClass: "bg-status-locked-bg",
           textColorClass: "text-primary-text",
-          title: "Locked",
+          title: t("courseCard.locked"),
           subtitle: getUnlockMessage(presentation.lock_info.unlock_time),
         };
       }
@@ -109,12 +113,12 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
       !presentation.isPresentationCompleted
     ) {
       return {
-        icon: overdue,
-        colorClass: "bg-status-overdue-bg",
-        textColorClass: "text-status-overdue-text",
-        title: "Overdue",
-        subtitle: getOverdueMessage(presentation.due_info.due_time),
-      };
+          icon: overdue,
+          colorClass: "bg-status-error",
+          textColorClass: "text-status-error-text",
+          title: t("courseCard.overdue"),
+          subtitle: getOverdueMessage(presentation.due_info.due_time),
+        };
     }
 
     // 4. Fallback to In Progress
@@ -206,7 +210,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
 };
 
 const Home = () => {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const searchParams = useSearchParams();
   const [filter, setFilter] = useState("all");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -215,6 +219,7 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { capture } = usePostHog();
   const dispatch = useDispatch();
+  const { t } = useTranslation();
 
   // Check for feedback success parameter
   useEffect(() => {
@@ -361,10 +366,10 @@ const Home = () => {
             />
             <div className="flex flex-col justify-center items-start gap-1 sm:gap-[4px] min-w-0 flex-1">
               <span className="font-lato font-semibold text-base sm:text-[17px] leading-tight sm:leading-[20px] text-light truncate">
-                Hello, {userDetails?.name}
+                {t("home.hello", { name: userDetails?.name })}
               </span>
               <span className="font-lato font-normal text-xs sm:text-[12px] leading-tight sm:leading-[14px] text-light opacity-70">
-                Browse your courses and get instant answers to your questions with our AI guide.
+                {t("home.browseDescription")}
               </span>
             </div>
           </div>
@@ -383,13 +388,13 @@ const Home = () => {
           <div className="flex justify-between items-center gap-4 sm:gap-[16px] w-full">
             <div className="flex items-center gap-4">
               <h2 className="font-lato font-bold text-base sm:text-[16px] leading-tight sm:leading-[19px] text-primary-text">
-                Available Courses
+                {t("home.availableCourses")}
               </h2>
 
               {/* Search Box - Hidden on mobile, visible on iPad and desktop */}
               <input
                 type="text"
-                placeholder="Search courses..."
+                placeholder={t("home.searchCourses")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="hidden md:block w-64 px-3 h-[32px] border border-border-dark rounded-[6px] font-lato text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -410,14 +415,14 @@ const Home = () => {
                       filter === tab ? "text-light" : "text-text-muted"
                     }`}>
                     {tab === "all"
-                      ? `All`
+                      ? t("home.tabs.all")
                       : tab === "locked"
-                        ? `Locked`
+                        ? t("home.tabs.locked")
                         : tab === "in-progress"
-                          ? `In Progress`
+                          ? t("home.tabs.inProgress")
                           : tab === "overdue"
-                            ? `Overdue`
-                            : `Completed`}
+                            ? t("home.tabs.overdue")
+                            : t("home.tabs.completed")}
                   </span>
                 </button>
               ))}
@@ -430,14 +435,14 @@ const Home = () => {
                 className="flex items-center justify-between px-3 py-2 w-32 h-[30px] bg-white border border-border rounded-[6px]">
                 <span className="font-lato font-medium text-[12px] text-text-muted">
                   {filter === "all"
-                    ? `All`
+                    ? t("home.tabs.all")
                     : filter === "locked"
-                      ? `Locked`
+                      ? t("home.tabs.locked")
                       : filter === "in-progress"
-                        ? `In Progress`
+                        ? t("home.tabs.inProgress")
                         : filter === "overdue"
-                          ? `Overdue`
-                          : `Completed`}
+                          ? t("home.tabs.overdue")
+                          : t("home.tabs.completed")}
                 </span>
                 <HiChevronDown
                   className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
@@ -455,15 +460,17 @@ const Home = () => {
                       className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${
                         filter === tab ? "bg-primary text-light" : "text-text-muted"
                       }`}>
-                      {tab === "all"
-                        ? `All`
-                        : tab === "locked"
-                          ? `Locked`
-                          : tab === "in-progress"
-                            ? `In Progress`
-                            : tab === "overdue"
-                              ? `Overdue`
-                              : `Completed`}
+                      <span className="font-lato font-medium text-[12px] leading-4">
+                        {tab === "all"
+                          ? t("home.tabs.all")
+                          : tab === "locked"
+                            ? t("home.tabs.locked")
+                            : tab === "in-progress"
+                              ? t("home.tabs.inProgress")
+                              : tab === "overdue"
+                                ? t("home.tabs.overdue")
+                                : t("home.tabs.completed")}
+                      </span>
                     </button>
                   ))}
                 </div>

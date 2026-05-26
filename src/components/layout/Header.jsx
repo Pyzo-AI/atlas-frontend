@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import { decodeJWT } from "@/utils/jwt";
 import user_icon from "@/assets/svg/user-icon.svg";
@@ -18,6 +19,7 @@ import { FiChevronDown } from "react-icons/fi";
 import NotificationDrawer from "./NotificationDrawer";
 import notification from "@/assets/svg/notification.svg";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useTranslation } from "react-i18next";
 
 const navigation = [
   // { name: "Home", href: "/" },
@@ -27,7 +29,8 @@ const navigation = [
 ];
 
 const Header = ({ onMenuClick }) => {
-  const router = useRouter();
+  const router = useLocalizedRouter();
+  const { localizePath } = router;
   const pathname = usePathname();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -39,6 +42,7 @@ const Header = ({ onMenuClick }) => {
   const dropdownRef = useRef(null);
   const [token, setToken] = useState(null);
   const { notifications, unreadCount, markAsRead, refresh, loadMore, hasMore, loading } = useNotifications(token);
+  const { t } = useTranslation();
 
 useEffect(() => {
   if (
@@ -67,7 +71,7 @@ useEffect(() => {
       const decoded = decodeJWT(tokens.access_token);
       if (decoded) {
         setUserInfo({
-          name: decoded.name || decoded.preferred_username || "User",
+          name: decoded.name || decoded.preferred_username || t("header.user"),
           email: decoded.email || "",
         });
       }
@@ -155,7 +159,7 @@ useEffect(() => {
             return (
               <Link
                 key={item.name}
-                href={item.href}
+                href={localizePath(item.href)}
                 className={`font-lato font-semibold text-[14px] leading-[100%] tracking-[0.02em] ${
                   isActive ? "text-primary " : "text-primary-text hover:text-primary"
                 }`}>
@@ -185,7 +189,7 @@ useEffect(() => {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
             <Image src={user_icon} alt="user-icon" width={22} height={22} />
             <span className="hidden lg:block font-mulish font-semibold text-[12px] leading-[15px] text-[#1D1F2C]">
-              {userInfo.name || "User"}
+              {userInfo.name || t("header.user")}
             </span>
             <FiChevronDown
               className={`hidden lg:block w-4 h-4 text-[#4A4C56] transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
@@ -215,7 +219,7 @@ useEffect(() => {
                   disabled={isResetLoading}>
                   <Image src={reset_password_icon} alt="reset-password-icon" width={16} height={16} />
                   <span className="text-[12px] font-medium text-[rgba(26,28,41,0.7)] leading-[14px]">
-                    {isResetLoading ? "Initialising..." : "Reset Password"}
+                    {isResetLoading ? t("header.initialising") : t("header.resetPassword")}
                   </span>
                 </button>
 
@@ -227,7 +231,7 @@ useEffect(() => {
                     className="py-1 flex items-center gap-[8px] w-full cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[#F04638]">
                     <Image src={logout_icon} alt="logout-icon" width={16} height={16} />
                     <span className="text-[12px] font-normal leading-[14px] text-[#F04638]">
-                      {isLoggingOut ? "Signing out..." : "Log Out"}
+                      {isLoggingOut ? t("header.signingOut") : t("header.logOut")}
                     </span>
                   </button>
                 </div>

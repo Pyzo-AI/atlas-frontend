@@ -12,10 +12,11 @@ const ResponsiveContainer = ({ children }) => {
   const containLecture = pathname.includes("/lectures/");
   const { toggleSidebar } = useSidebar();
 
-  const shouldShowPadding = (isDesktop || (!isDesktop && isPortrait) || !containLecture) && pathname !== "/login";
+  const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
+  const shouldShowPadding = (isDesktop || (!isDesktop && isPortrait) || !containLecture) && !isLoginPage;
 
   // Don't show header on login page
-  const showHeader = pathname !== "/login";
+  const showHeader = !isLoginPage;
 
   return (
     <>
