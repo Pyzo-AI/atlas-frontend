@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import cross from "@/assets/svg/filter_cross.svg";
+import { useTranslation } from "react-i18next";
 
 export default function AppliedFilters({
   appliedFilters = {},
@@ -11,6 +12,7 @@ export default function AppliedFilters({
   disabled = false,
   showDeleteButton = true,
 }) {
+  const { t } = useTranslation();
   const hasValue = (v) => (Array.isArray(v) ? v.length > 0 : !!v);
   const hasAppliedFilters = Object.values(appliedFilters).some(hasValue);
 
@@ -181,7 +183,7 @@ export default function AppliedFilters({
         onClick={clearAllFilters}
         disabled={disabled}
         className="bg-[#FCFCFC] border-[0.5px] border-[#6B7685] rounded-md px-2 py-1 text-[10px] leading-3 text-[#0B1B32] font-lato whitespace-nowrap cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-        Clear All
+        {t("filter.clearAll")}
       </button>
     </div>
   );

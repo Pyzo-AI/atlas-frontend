@@ -2,10 +2,11 @@ import React from "react";
 import back_arrow from "../../assets/svg/back_arrow.svg";
 import BreadCrumbConnect from "../../assets/svg/BreadCrumbConnect.svg";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 
 export default function BreadCrumb({ paths = [] }) {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const pathname = usePathname();
   const isLecturesPage = pathname?.startsWith("/lectures/");
   const handleBack = () => {

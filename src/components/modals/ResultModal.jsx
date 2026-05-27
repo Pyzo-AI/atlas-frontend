@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import { useDispatch } from "react-redux";
 import Modal from "@/components/common/Modal";
 import { setCurrentVideoIndex } from "@/store/features/videoSlice";
@@ -9,6 +9,7 @@ import ProgressCircle from "@/components/ui/ProgressCircle";
 import { useGenerateCertificateMutation } from "@/store/api/certificatesApi";
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 export default function ResultModal({
   isOpen,
@@ -23,8 +24,9 @@ export default function ResultModal({
   passingScore,
   isNoAssessmentModule = false,
 }) {
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const dispatch = useDispatch();
+  const { t } = useTranslation();
 
   // Use the actual values from API response
   const actualTotalQuestions = totalQuestions || 0;
@@ -131,28 +133,28 @@ export default function ResultModal({
 
         {/* Title */}
         <h1 className="font-lato font-bold text-[20px] leading-[100%] tracking-[0em] text-primary-text mb-2">
-          {isPerfectScore ? (isNoAssessmentModule ? "Congratulations!" : "Congratulations! 🎉") : "You're on the right track!"}
+          {isPerfectScore ? (isNoAssessmentModule ? t("resultModal.congratulations") : t("resultModal.congratulationsParty")) : t("resultModal.onRightTrack")}
         </h1>
 
         {/* Subtitle */}
         <p className="font-lato font-normal text-[14px] leading-[20px] tracking-[0em] text-center text-primary-text-muted mb-2">
           {isPerfectScore ? (
             isNoAssessmentModule ? (
-              "You’ve successfully completed the training. Download your certificate and share your feedback."
+              t("resultModal.completedTrainingNoAssessment")
             ) : (
-              "You’ve successfully completed the training and assessment. Download your certificate and share your feedback."
+              t("resultModal.completedTrainingWithAssessment")
             )
           ) : (
             <>
-              You correctly answered{" "}
+              {t("resultModal.scoreBreakdown_0")}
               <span className="font-lato font-bold text-[14px] leading-[20px] tracking-[0em] text-center text-accent">
                 {actualCorrectAnswers}
-              </span>{" "}
-              out of{" "}
+              </span>
+              {t("resultModal.scoreBreakdown_1")}
               <span className="font-lato font-bold text-[14px] leading-[20px] tracking-[0em] text-center text-accent">
                 {actualTotalQuestions}
-              </span>{" "}
-              questions across all assessments.
+              </span>
+              {t("resultModal.scoreBreakdown_2")}
             </>
           )}
         </p>
@@ -161,7 +163,7 @@ export default function ResultModal({
         {!isPerfectScore && (
           <div className="bg-warning-bg  rounded-2xl px-1.5 py-2 mb-6">
             <p className="font-lato font-normal text-[14px] leading-[16px] tracking-[0em] text-center text-warning-text">
-              Mastery is within reach. A perfect score of {passingScore}% is needed to complete the module.
+              {t("resultModal.masteryWithinReach", { passingScore })}
             </p>
           </div>
         )}
@@ -173,7 +175,7 @@ export default function ResultModal({
               <button
                 onClick={showFeedback}
                 className="cursor-pointer flex justify-center items-center gap-[10px] px-[12px] py-[6px] h-full bg-accent-light text-accent font-lato font-semibold text-[14px] leading-[16px] rounded-[8px] transition-all duration-200 flex-1 whitespace-nowrap">
-                Share Feedback
+                {t("resultModal.shareFeedback")}
               </button>
               <button
                 onClick={handleDownloadCertificate}
@@ -183,7 +185,7 @@ export default function ResultModal({
                     ? "opacity-50 cursor-not-allowed"
                     : "cursor-pointer hover:opacity-90"
                 }`}>
-                {isGeneratingCertificate ? "Generating..." : "Download Certificate"}
+                {isGeneratingCertificate ? t("resultModal.generating") : t("resultModal.downloadCertificate")}
               </button>
             </div>
           ) : (
@@ -191,12 +193,12 @@ export default function ResultModal({
               <button
                 onClick={showFeedback}
                 className="cursor-pointer flex justify-center items-center gap-[10px] px-[12px] py-[6px] h-full bg-accent-light text-accent font-lato font-semibold text-[14px] leading-[16px] rounded-[8px] transition-all duration-200 flex-1 whitespace-nowrap">
-                Give Feedback
+                {t("resultModal.giveFeedback")}
               </button>
               <button
                 onClick={handleRestartTraining}
                 className="cursor-pointer flex justify-center items-center gap-[10px] px-[12px] py-[6px] h-full bg-accent text-white font-lato font-semibold text-[14px] leading-[16px] rounded-[8px] transition-all duration-200 flex-1 whitespace-nowrap">
-                Restart Training
+                {t("resultModal.restartTraining")}
               </button>
             </div>
           )}

@@ -4,11 +4,12 @@ import React from "react";
 import SearchBar from "./SearchBar";
 import Filter from "./Filter";
 import AppliedFilters from "./AppliedFilters";
+import { useTranslation } from "react-i18next";
 
 export default function SearchFilter({
   searchTerm,
   onSearchChange,
-  searchPlaceholder = "Search...",
+  searchPlaceholder,
   showSearch = true,
   filterSections = [],
   onFilterChange,
@@ -18,6 +19,9 @@ export default function SearchFilter({
   actionButton,
   disabled = false,
 }) {
+  const { t } = useTranslation();
+  const actualSearchPlaceholder = searchPlaceholder || t("search.placeholder");
+
   return (
     <div>
       <div className="flex justify-between items-center md:items-end" style={{ marginTop }}>
@@ -26,7 +30,7 @@ export default function SearchFilter({
             <SearchBar
               searchTerm={searchTerm}
               onSearchChange={onSearchChange}
-              placeholder={searchPlaceholder}
+              placeholder={actualSearchPlaceholder}
               disabled={disabled}
             />
           )}

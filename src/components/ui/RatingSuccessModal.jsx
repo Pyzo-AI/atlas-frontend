@@ -2,8 +2,10 @@ import React from "react";
 import rating_success from "@/assets/svg/rating_success.svg";
 import close_icon from "@/assets/svg/close.svg";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 const RatingSuccessModal = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   return (
@@ -29,11 +31,11 @@ const RatingSuccessModal = ({ isOpen, onClose }) => {
               {/* Text Content */}
               <div className="flex flex-col items-center gap-2 text-center">
                 <h2 className="font-lato font-bold text-2xl text-primary-text leading-[100%] tracking-[0%]">
-                  Rating Submitted
+                  {t("feedback.ratingSubmitted")}
                 </h2>
 
                 <p className="font-lato font-normal text-base text-primary-text-muted leading-[100%] tracking-[0%]">
-                  Thank you! Your feedback has been recorded.
+                  {t("feedback.feedbackRecorded")}
                 </p>
               </div>
             </div>
@@ -42,7 +44,7 @@ const RatingSuccessModal = ({ isOpen, onClose }) => {
             <button
               onClick={onClose}
               className="cursor-pointer bg-accent hover:bg-accent-dark text-light font-semibold text-base px-16 py-3 rounded-full transition-colors min-w-[219px] h-10 flex items-center justify-center">
-              Close
+              {t("feedback.close")}
             </button>
           </div>
         </div>

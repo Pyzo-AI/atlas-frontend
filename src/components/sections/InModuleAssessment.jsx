@@ -18,6 +18,7 @@ import { setAssessmentCompleted } from "@/utils/assessmentProgress";
 import RadioButton from "@/components/ui/RadioButton";
 import TextArea from "@/components/ui/TextArea";
 import { HiExclamationCircle } from "react-icons/hi2";
+import { useTranslation } from "react-i18next";
 
 const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore }) => {
   const dispatch = useDispatch();
@@ -30,6 +31,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
   const [resultData, setResultData] = useState(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const { capture } = usePostHog();
+  const { t } = useTranslation();
 
   // Check if this is a final assessment (from assessment_details)
   const isFinalAssessment = assessmentDetails.some((assessment) => assessment.id === selectedAssessmentId);
@@ -139,18 +141,18 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
             <div className="w-full max-w-2xl text-center">
               <div className="text-red-500 mb-4">
                 <HiExclamationCircle className="w-12 h-12 mx-auto mb-2" />
-                <p className="text-sm font-medium">Failed to load assessment</p>
-                <p className="text-xs text-gray-600 mt-1">Please try again later</p>
+                <p className="text-sm font-medium">{t("lectures.failedLoadAssessment")}</p>
+                <p className="text-xs text-gray-600 mt-1">{t("lectures.pleaseTryAgain")}</p>
               </div>
               <button
                 onClick={() => refetch()}
                 className="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary-hover transition-colors">
-                Retry
+                {t("lectures.retry")}
               </button>
               <button
                 onClick={() => dispatch(setSelectedAssessmentId(null))}
                 className="px-4 py-2 bg-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-300 transition-colors ml-2">
-                Close
+                {t("lectures.close")}
               </button>
             </div>
           </div>
@@ -183,7 +185,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
 
   const handleSubmit = async () => {
     if (!submissionId) {
-      toast.error("No submission ID found. Please try again.");
+      toast.error(t("lectures.noSubmissionId"));
       return;
     }
 
@@ -299,19 +301,19 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
             });
           }
 
-          toast.success("Assessment completed! Moving to next video.");
+            toast.success(t("lectures.assessmentCompletedNextVideo"));
+          } else {
+            // If this was the last video, just show success message
+            toast.success(t("lectures.assessmentSubmittedTrainingCompleted"));
+          }
         } else {
-          // If this was the last video, just show success message
-          toast.success("Assessment submitted successfully! Training completed.");
+          toast.success(t("lectures.assessmentSubmittedSuccessfully"));
         }
-      } else {
-        toast.success("Assessment submitted successfully!");
+      } catch (error) {
+        console.log("Assessment submission failed:", error);
+        toast.error(t("lectures.failedToSubmitAssessment"));
       }
-    } catch (error) {
-      console.log("Assessment submission failed:", error);
-      toast.error("Failed to submit assessment. Please try again.");
-    }
-  };
+    };
 
   return (
     <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">
@@ -321,10 +323,10 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
           {/* Header */}
           <div className="w-full max-w-2xl text-center mb-4">
             <h1 className="text-base sm:text-base md:text-lg font-bold text-gray-800 mb-2">
-              {assessmentData.title || "Assessment"}
+              {assessmentData.title || t("lectures.assessment")}
             </h1>
             <p className="text-xs text-left text-gray-600">
-              Question {currentQuestionIndex + 1} of {assessmentData?.questions?.length}
+              {t("lectures.questionCount", { current: currentQuestionIndex + 1, total: assessmentData?.questions?.length })}
             </p>
           </div>
 
@@ -340,7 +342,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                 <TextArea
                   value={answers[currentQuestion.question_id] || ""}
                   onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
-                  placeholder="Type your answer here..."
+                  placeholder={t("lectures.typeAnswerHere")}
                 />
               ) : (
                 <div className="space-y-1 sm:space-y-2">
@@ -384,7 +386,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-accent-light text-accent hover:bg-accent-light-hover cursor-pointer"
                 }`}>
-                Previous
+                {t("lectures.previous")}
               </button>
 
               {isLastQuestion ? (
@@ -396,7 +398,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                       : "bg-accent text-light hover:bg-accent-hover cursor-pointer"
                   }`}>
-                  {isSubmitting ? "Submitting..." : "Submit"}
+                  {isSubmitting ? t("lectures.submitting") : t("lectures.submit")}
                 </button>
               ) : (
                 <button
@@ -407,7 +409,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                       : "bg-accent text-light hover:bg-accent-hover cursor-pointer"
                   }`}>
-                  Next
+                  {t("lectures.next")}
                 </button>
               )}
             </div>
@@ -526,7 +528,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
             setCurrentQuestionIndex(0);
             setAnswers({});
             setAssessmentStartTime(null);
-            toast.info("Assessment reset. You can try again.");
+            toast.info(t("lectures.assessmentReset"));
           }}
           onRestartTraining={() => {
             // Handle restart training logic
@@ -535,7 +537,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
             setResultData(null);
             dispatch(setSelectedAssessmentId(null));
             dispatch(setCurrentVideoIndex(0));
-            toast.info("Restarting training from the beginning.");
+            toast.info(t("lectures.restartingTraining"));
           }}
           onShowFeedback={() => {
             setShowResultModalLocal(false);

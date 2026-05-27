@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useFullscreenOnLandscape } from '@/hooks/useFullscreenOnLandscape';
 import { GiExpand } from "react-icons/gi";
+import { useTranslation } from 'react-i18next';
 
 const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
+  const { t } = useTranslation();
   const [showLandscapePrompt, setShowLandscapePrompt] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [userExitedFullscreen, setUserExitedFullscreen] = useState(false);
@@ -74,17 +76,17 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
               <GiExpand className="w-12 h-12 mx-auto text-primary" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Better Experience in Fullscreen
+              {t("fullscreen.title")}
             </h3>
             <p className="text-gray-600 mb-4">
-              For the best learning experience, we recommend using fullscreen mode in landscape orientation.
+              {t("fullscreen.description")}
             </p>
             <div className="flex gap-3">
               {/* <button
                 onClick={() => setShowLandscapePrompt(false)}
                 className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                Maybe Later
+                {t("fullscreen.maybeLater")}
               </button> */}
               <button
                 onClick={() => {
@@ -94,7 +96,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
                 }}
                 className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover"
               >
-                Go Fullscreen
+                {t("fullscreen.goFullscreen")}
               </button>
             </div>
           </div>

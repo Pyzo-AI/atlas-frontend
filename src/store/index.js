@@ -11,6 +11,8 @@ import resultModalReducer from "./features/resultModalSlice";
 import feedbackModalReducer from "./features/feedbackModalSlice";
 import imageReducer from "./features/imageSlice";
 import notificationsReducer from "./features/notificationsSlice";
+import { organizationsApi } from "./api/organizationsApi";
+import organizationReducer from "./features/organizationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -20,11 +22,13 @@ export const store = configureStore({
 
     [certificatesApi.reducerPath]: certificatesApi.reducer,
     [notificationApi.reducerPath]: notificationApi.reducer,
+    [organizationsApi.reducerPath]: organizationsApi.reducer,
     video: videoReducer,
     resultModal: resultModalReducer,
     feedbackModal: feedbackModalReducer,
     image: imageReducer,
     notifications: notificationsReducer,
+    organization: organizationReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -32,7 +36,8 @@ export const store = configureStore({
       analyticsApi.middleware,
       liveKitApi.middleware,
       certificatesApi.middleware,
-      notificationApi.middleware
+      notificationApi.middleware,
+      organizationsApi.middleware
     ),
   devTools: process.env.NODE_ENV !== "production",
 });

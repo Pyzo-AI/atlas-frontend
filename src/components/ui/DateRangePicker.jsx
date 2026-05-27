@@ -1,23 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-const DAY_NAMES = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+import { useTranslation } from "react-i18next";
 
 function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate();
@@ -27,11 +11,11 @@ function getFirstDayOfMonth(year, month) {
   return new Date(year, month, 1).getDay();
 }
 
-function formatDate(dateStr) {
+function formatDate(dateStr, monthNames) {
   if (!dateStr) return "";
   const d = new Date(dateStr + "T00:00:00");
   const day = d.getDate();
-  const month = MONTH_NAMES[d.getMonth()].slice(0, 3);
+  const month = monthNames[d.getMonth()].slice(0, 3);
   const year = d.getFullYear();
   return `${day} ${month} ${year}`;
 }
@@ -41,6 +25,10 @@ function toDateString(year, month, day) {
 }
 
 export default function DateRangePicker({ fromDate, toDate, onFromChange, onToChange }) {
+  const { t } = useTranslation();
+  const MONTH_NAMES = t("dateRange.months", { returnObjects: true });
+  const DAY_NAMES = t("dateRange.days", { returnObjects: true });
+
   const today = new Date();
   const initialYear = fromDate ? new Date(fromDate + "T00:00:00").getFullYear() : today.getFullYear();
   const initialMonth = fromDate ? new Date(fromDate + "T00:00:00").getMonth() : today.getMonth();
@@ -152,13 +140,13 @@ export default function DateRangePicker({ fromDate, toDate, onFromChange, onToCh
       {/* From / To display fields */}
       <div className="flex gap-3">
         <div className={`flex-1 flex flex-col gap-1 cursor-pointer`} onClick={() => setSelectingField("from")}>
-          <span className="font-lato font-medium text-xs text-[#535353]">From</span>
+          <span className="font-lato font-medium text-xs text-[#535353]">{t("dateRange.from")}</span>
           <div
             className={`h-[36px] px-3 py-2 border rounded-lg font-lato text-xs bg-white flex items-center justify-between ${
               selectingField === "from" ? "border-[#2762EA]" : "border-[#E5E7EB]"
             }`}>
             <span className={fromDate ? "text-[#1D1F2C]" : "text-[#9CA3AF]"}>
-              {fromDate ? formatDate(fromDate) : "Select date"}
+              {fromDate ? formatDate(fromDate, MONTH_NAMES) : t("dateRange.selectDate")}
             </span>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -173,13 +161,13 @@ export default function DateRangePicker({ fromDate, toDate, onFromChange, onToCh
           </div>
         </div>
         <div className={`flex-1 flex flex-col gap-1 cursor-pointer`} onClick={() => setSelectingField("to")}>
-          <span className="font-lato font-medium text-xs text-[#535353]">To</span>
+          <span className="font-lato font-medium text-xs text-[#535353]">{t("dateRange.to")}</span>
           <div
             className={`h-[36px] px-3 py-2 border rounded-lg font-lato text-xs bg-white flex items-center justify-between ${
               selectingField === "to" ? "border-[#2762EA]" : "border-[#E5E7EB]"
             }`}>
             <span className={toDate ? "text-[#1D1F2C]" : "text-[#9CA3AF]"}>
-              {toDate ? formatDate(toDate) : "Select date"}
+              {toDate ? formatDate(toDate, MONTH_NAMES) : t("dateRange.selectDate")}
             </span>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path

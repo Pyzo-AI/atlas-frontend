@@ -2,11 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import readNotification from "@/assets/svg/read_notification.svg";
 import unreadNotification from "@/assets/svg/unread_notification.svg";
 import back from "@/assets/svg/back.svg";
 import close from "@/assets/svg/close.svg";
+import { useTranslation } from "react-i18next";
 
 const NotificationDrawer = ({
   isOpen,
@@ -19,7 +20,8 @@ const NotificationDrawer = ({
   loading,
 }) => {
   const [mounted, setMounted] = useState(false);
-  const router = useRouter();
+  const router = useLocalizedRouter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     setMounted(true);
@@ -53,13 +55,13 @@ const NotificationDrawer = ({
     const diff = now - past;
 
     if (diff < msPerMinute) {
-      return "just now";
+      return t("notifications.justNow");
     } else if (diff < msPerHour) {
-      return Math.round(diff / msPerMinute) + "m ago";
+      return t("notifications.minsAgo", { count: Math.round(diff / msPerMinute) });
     } else if (diff < msPerDay) {
-      return Math.round(diff / msPerHour) + "h ago";
+      return t("notifications.hoursAgo", { count: Math.round(diff / msPerHour) });
     } else {
-      return Math.round(diff / msPerDay) + "d ago";
+      return t("notifications.daysAgo", { count: Math.round(diff / msPerDay) });
     }
   };
 
@@ -96,7 +98,7 @@ const NotificationDrawer = ({
 
           {/* Title - Centered on mobile, Left-aligned on Desktop */}
           <h2 className="absolute inset-0 flex items-center justify-center text-base font-semibold text-[#111827] pointer-events-none md:static md:justify-start md:pointer-events-auto md:flex-1">
-            Notifications ({unreadCount})
+            {t("notifications.title", { count: unreadCount })}
           </h2>
 
           {/* Close button for desktop */}
@@ -112,8 +114,8 @@ const NotificationDrawer = ({
         <div className="flex-1 overflow-y-auto pb-4 flex flex-col" onScroll={handleScroll}>
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-8 gap-2">
-              <p className="text-gray-500 font-medium">No notifications yet</p>
-              <p className="text-xs text-gray-400">We'll notify you when something important happens.</p>
+              <p className="text-gray-500 font-medium">{t("notifications.emptyTitle")}</p>
+              <p className="text-xs text-gray-400">{t("notifications.emptyDesc")}</p>
             </div>
           ) : (
             <>
@@ -147,7 +149,7 @@ const NotificationDrawer = ({
               {(hasMore || loading) && (
                 <div className="py-2 text-center">
                   <span className="text-xs text-gray-400 animate-pulse">
-                    {loading ? "Loading..." : "Scroll for more"}
+                    {loading ? t("notifications.loading") : t("notifications.scrollMore")}
                   </span>
                 </div>
               )}

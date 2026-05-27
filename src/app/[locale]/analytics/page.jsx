@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 
@@ -10,9 +11,11 @@ import Tabs from "@/components/common/Tabs";
 import ErrorState from "@/components/common/ErrorState";
 import Learning from "@/components/pages/Learning";
 import Assessments from "@/components/pages/Assessments";
+import { useTranslation } from "react-i18next";
 
 export default function Analytics() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
 
   const initializeActiveTabFromURL = () => {
@@ -34,8 +37,8 @@ export default function Analytics() {
   const [appliedFilters, setAppliedFilters] = useState(initializeFiltersFromURL());
 
   const tabs = [
-    { id: "learning", label: "Learning" },
-    { id: "assessments", label: "Assessments" },
+    { id: "learning", label: t("analytics.learningTab") },
+    { id: "assessments", label: t("analytics.assessmentsTab") },
   ];
 
   const handleTabChange = (tabId) => {
@@ -102,7 +105,7 @@ export default function Analytics() {
 
   const learningData = useMemo(() => {
     if (!presentationStatsData?.summary_metrics) {
-      return [{ title: "Total Presentations", value: "0" }];
+      return [{ title: t("analytics.totalPresentations"), value: "0" }];
     }
 
     return presentationStatsData.summary_metrics.map((metric, index) => ({
@@ -114,7 +117,7 @@ export default function Analytics() {
 
   const assessmentsData = useMemo(() => {
     if (!assessmentStatsData?.summary_metrics) {
-      return [{ title: "Total Assessments", value: "0" }];
+      return [{ title: t("analytics.totalAssessments"), value: "0" }];
     }
 
     return assessmentStatsData.summary_metrics.map((metric, index) => ({
@@ -146,10 +149,10 @@ export default function Analytics() {
         <div className="flex justify-between items-start">
           <div className="space-y-1 mb-4">
             <h2 className="font-lato font-bold text-[16px] md:text-[20px] leading-[100%] tracking-[0.01em] text-text-heading">
-              Analytics
+              {t("analytics.title")}
             </h2>
             <p className="font-lato font-normal text-[12px] leading-[15px] md:leading-[100%] tracking-[0em] text-text-body">
-              Track user progress and achievements
+              {t("analytics.subtitle")}
             </p>
           </div>
           {/* <div>
@@ -183,14 +186,14 @@ export default function Analytics() {
         </div>
         {activeTab === "learning" &&
           (statsError ? (
-            <ErrorState message="Failed to load learning analytics. Please try again." onRetry={refetchStats} />
+            <ErrorState message={t("analytics.learningError")} onRetry={refetchStats} />
           ) : (
             <Learning isLoading={isLoadingStats} analyticsData={learningData} />
           ))}
         {activeTab === "assessments" &&
           (assessmentStatsError ? (
             <ErrorState
-              message="Failed to load assessment analytics. Please try again."
+              message={t("analytics.assessmentsError")}
               onRetry={refetchAssessmentStats}
             />
           ) : (

@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { PyzoLoginScreen } from "@esmagico/pyzo-auth-sdk";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 export default function LoginPage() {
   const router = useRouter();

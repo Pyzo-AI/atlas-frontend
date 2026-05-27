@@ -14,7 +14,7 @@ import {
 } from "@/store/features/videoSlice";
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import { useConversation } from "@elevenlabs/react";
 import { CONVERSATION_CONFIG, cleanExpiredMessages } from "@/config/conversationConfig";
 import { liveKitService } from "@/lib/livekit";
@@ -35,6 +35,8 @@ import { useGenerateImageMutation } from "@/store/api/questionsApi";
 import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
+
 
 // Conversation history management for VideoPanel
 const {
@@ -128,8 +130,9 @@ const VideoPanel = forwardRef(
     const [contextSent, setContextSent] = useState(false);
     const videoRef = useRef(null);
     const activeVideoRef = useRef(null);
-    const router = useRouter();
+    const router = useLocalizedRouter();
     const dispatch = useDispatch();
+    const { t } = useTranslation();
     const [generateImage] = useGenerateImageMutation();
     const [createSession] = useCreateSessionMutation();
     const {
@@ -370,7 +373,7 @@ const VideoPanel = forwardRef(
               roomName: sessionResponse.room_name,
             });
           } catch (sessionError) {
-            toast.error("Interaction mode not available. Please try again later.");
+            toast.error(t("lectures.interactionModeUnavailable"));
             dispatch(setIsQuestionMode(false));
             dispatch(setSlideNumbers([]));
             // throw sessionError;

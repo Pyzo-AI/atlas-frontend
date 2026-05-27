@@ -11,6 +11,7 @@ import interaction_mode from "@/assets/svg/interaction_mode.svg";
 import ai_answer_icon from "@/assets/svg/ai_answer_icon.svg";
 import close_icon from "@/assets/svg/close.svg";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup";
 import { clearOverlayImage } from "@/store/features/imageSlice";
 import { useGetConversationHistoryQuery } from "@/store/api/questionsApi";
@@ -30,8 +31,10 @@ const ChatUI = ({
   presentationId,
   useChatbotHistory = false,
   hideFooter = false,
+  liveMessages = [],
 }) => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const [showMicPopup, setShowMicPopup] = useState(false);
   const messagesContainerRef = useRef(null);
 
@@ -48,6 +51,9 @@ const ChatUI = ({
 
   const apiConversation = useChatbotHistory ? chatbotConversation : presentationConversation;
   const isLoadingHistory = useChatbotHistory ? isLoadingChatbotHistory : isLoadingPresentationHistory;
+
+  // Merge API history with live messages from the current session
+  const mergedConversation = [...apiConversation, ...liveMessages];
 
   // Format time with AM/PM
   const formatTime = (time) => {
@@ -82,16 +88,16 @@ const ChatUI = ({
     }));
   };
 
-  // Use API conversation if liveKitAgentEnabled, otherwise use passed conversation
-  const displayConversation = liveKitAgentEnabled ? apiConversation : conversation;
-  const groupedConversation = liveKitAgentEnabled ? groupMessagesByDate(apiConversation) : null;
+  // Use merged conversation if liveKitAgentEnabled, otherwise use passed conversation
+  const displayConversation = liveKitAgentEnabled ? mergedConversation : conversation;
+  const groupedConversation = liveKitAgentEnabled ? groupMessagesByDate(mergedConversation) : null;
 
-  // Position at bottom on mount without visible scrolling
+  // Scroll to bottom when conversation updates or new live messages arrive
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
-  }, [displayConversation]);
+  }, [displayConversation, liveMessages]);
 
   const handleInteractionMode = async () => {
     if (!agentId) return;
@@ -153,7 +159,7 @@ const ChatUI = ({
           {/* Header */}
           <div className="flex justify-between items-center px-3 py-1 lg:py-3 pb-1 md:pb-2 border-b border-border-light flex-shrink-0">
             <h2 className="font-lato font-bold text-[12px] lg:text-base leading-[19px] tracking-[0.02em] text-primary-text">
-              Interaction History
+              {t("chatUI.interactionHistory")}
             </h2>
             <button onClick={onClose} className="w-6 h-6 flex items-center justify-center cursor-pointer">
               <Image src={close_icon} alt="Close Icon" />
@@ -161,7 +167,7 @@ const ChatUI = ({
           </div>
 
           {/* Messages Container */}
-          <div ref={messagesContainerRef} className="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden min-h-0">
+          <div ref={messagesContainerRef} className="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden min-h-0 overscroll-contain">
             {isLoadingHistory ? (
               <div className="space-y-3 sm:space-y-4 lg:space-y-6">
                 {Array.from({ length: 4 }).map((_, index) => (
@@ -384,7 +390,7 @@ const ChatUI = ({
 
                 {!isMobile && (
                   <span className="font-lato font-medium text-[8px] sm:text-[9px] lg:text-[10px] leading-3 text-center text-accent-secondary whitespace-nowrap">
-                    Interaction Mode
+                    {t("lectures.interactionMode")}
                   </span>
                 )}
               </button>
@@ -395,7 +401,7 @@ const ChatUI = ({
                 className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-accent-secondary rounded-[73.75px]">
                 <Image className="w-4 h-4 lg:w-5 lg:h-5" src={back_to_session} alt="back_to_session" />
                 <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
-                  Continue Lesson
+                  {t("lectures.continueLesson")}
                 </span>
               </button>
             </div>

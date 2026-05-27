@@ -4,8 +4,10 @@ import React from "react";
 import Modal from "@/components/common/Modal";
 import { LuLogOut } from "react-icons/lu";
 import Button from "@/components/common/Button";
+import { useTranslation } from "react-i18next";
 
 const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
+  const { t } = useTranslation();
   return (
     <Modal
       isOpen={isOpen}
@@ -26,9 +28,9 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
 
             {/* Text Section */}
             <div className="flex flex-col items-center gap-2 text-center w-full">
-              <h2 className="font-lato font-bold text-[20px] leading-[24px] text-[#1A1C29]">Log Out?</h2>
+              <h2 className="font-lato font-bold text-[20px] leading-[24px] text-[#1A1C29]">{t("auth.logOutTitle")}</h2>
               <p className="font-lato font-normal text-[14px] leading-[19px] text-[rgba(26,28,41,0.8)] w-full">
-                Are you sure you want to log out? You'll need to sign in again to continue.
+                {t("auth.logOutDesc")}
               </p>
             </div>
           </div>
@@ -39,13 +41,13 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
               variant="secondary"
               onClick={onClose}
               className="!w-[67px] !h-[30px] !p-0 !bg-[#E8F0F9] !text-[#2762EA] !rounded-[6px] !border-none !text-[12px] !leading-[14px] flex items-center justify-center">
-              Cancel
+              {t("auth.cancel")}
             </Button>
             <Button
               variant="primary"
               onClick={onConfirm}
               className="!w-[67px] !h-[30px] !p-0 !bg-[#F04638] hover:!bg-[#D6453A] !text-white !rounded-[6px] !border-none !text-[12px] !leading-[14px] flex items-center justify-center">
-              Log Out
+              {t("auth.logOutButton")}
             </Button>
           </div>
         </div>

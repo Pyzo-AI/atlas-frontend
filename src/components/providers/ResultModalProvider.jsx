@@ -4,11 +4,12 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { restoreResultModal, hideResultModal } from '@/store/features/resultModalSlice';
 import ResultModal from '@/components/modals/ResultModal';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 
 export default function ResultModalProvider({ children }) {
   const dispatch = useDispatch();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const pathname = usePathname();
   const { isOpen, score, presentationId, assessmentId, totalQuestions, correctAnswers } = useSelector(
     (state) => state.resultModal

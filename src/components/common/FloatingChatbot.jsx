@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { liveKitService } from "@/lib/livekit";
 import { useCreateChatbotSessionMutation } from "@/store/api/liveKitApi";
@@ -15,6 +16,8 @@ import { toast } from "react-toastify";
 import ChatUI from "@/components/sections/ChatUI";
 
 const FloatingChatbot = ({ agentId = 1 }) => {
+  const { t } = useTranslation();
+
   const [isOpen, setIsOpen] = useState(false);
   const [showChatHistory, setShowChatHistory] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -24,6 +27,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     isConnected: false,
     isAudioPlaying: false,
   });
+  const [liveMessages, setLiveMessages] = useState([]);
 
   const abortControllerRef = useRef(null);
   const sessionPromiseRef = useRef(null);
@@ -44,6 +48,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
       abortControllerRef.current = new AbortController();
       const signal = abortControllerRef.current.signal;
 
+      setLiveMessages([]);
       setConnectionState((prev) => ({ ...prev, isLoading: true }));
       await navigator.mediaDevices.getUserMedia({ audio: true });
       if (signal.aborted) return;
@@ -71,7 +76,19 @@ const FloatingChatbot = ({ agentId = 1 }) => {
             const decoder = new TextDecoder();
             const strData = decoder.decode(payload);
             const data = JSON.parse(strData);
-            if (data.type === "status" && data.message === "call_ending") {
+
+            if (data.type === "user_response" || data.type === "agent_response") {
+              const now = new Date();
+              setLiveMessages((prev) => [
+                ...prev,
+                {
+                  type: data.type === "user_response" ? "question" : "answer",
+                  content: data.text,
+                  time: now.toTimeString().slice(0, 5),
+                  date: now.toISOString().split("T")[0],
+                },
+              ]);
+            } else if (data.type === "status" && data.message === "call_ending") {
               if (liveKitService.isConnected()) {
                 liveKitService.disconnect();
               }
@@ -163,6 +180,40 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     };
   }, [isOpen]);
 
+  // Lock body scroll on mobile when chatbot is open (iOS-safe approach)
+  useEffect(() => {
+    const isMobileWidth = window.innerWidth < 640;
+    if (!isMobileWidth) return;
+
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+      document.body.dataset.scrollY = String(scrollY);
+    } else {
+      const scrollY = parseInt(document.body.dataset.scrollY || "0", 10);
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      delete document.body.dataset.scrollY;
+      window.scrollTo(0, scrollY);
+    }
+
+    return () => {
+      const scrollY = parseInt(document.body.dataset.scrollY || "0", 10);
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      delete document.body.dataset.scrollY;
+      if (scrollY) window.scrollTo(0, scrollY);
+    };
+  }, [isOpen]);
+
+
   if (!isOpen) {
     return (
       <button
@@ -180,7 +231,10 @@ const FloatingChatbot = ({ agentId = 1 }) => {
   if (showChatHistory) {
     return (
       <>
-        <div className="fixed bottom-0 right-0 w-full h-[90vh] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-white rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-50 transition-all duration-300">
+        {/* Mobile backdrop overlay */}
+        <div className="sm:hidden fixed inset-0 bg-black/40 z-[9998] pointer-events-auto" />
+
+        <div className="fixed bottom-0 right-0 w-full h-[90vh] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-white rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-[9999] transition-all duration-300 overscroll-contain">
           <ChatUI
             onClose={() => setShowChatHistory(false)}
             conversation={[]}
@@ -195,6 +249,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
             presentationId={1}
             useChatbotHistory={true}
             hideFooter={true}
+            liveMessages={liveMessages}
           />
         </div>
 
@@ -216,7 +271,10 @@ const FloatingChatbot = ({ agentId = 1 }) => {
 
   return (
     <>
-      <div className="fixed bottom-0 right-0 w-full h-[349px] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-[#FFFFFF] rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-50 border border-[#E9EFFD] transition-all duration-300">
+      {/* Mobile backdrop overlay */}
+      <div className="sm:hidden fixed inset-0 bg-black/40 z-[9998] pointer-events-auto" />
+
+      <div className="fixed bottom-0 right-0 w-full h-[349px] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-[#FFFFFF] rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-[9999] border border-[#E9EFFD] transition-all duration-300 overscroll-contain">
         {/* Background Gradient matching the screenshot */}
         <div className="absolute top-[-90px] left-1/2 -translate-x-1/2 w-[180px] h-[120px] bg-[#2762EA] blur-[102px] pointer-events-none" />
 
@@ -226,7 +284,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
             {isConnecting ? (
               <div className="flex flex-col items-center justify-center">
                 <Lottie animationData={loaderAnimation} style={{ width: 180, height: 80 }} loop={true} />
-                <p className="text-gray-500 text-sm font-lato mt-[-15px]">Connecting...</p>
+                <p className="text-gray-500 text-sm font-lato mt-[-15px]">{t("floatingChatbot.connecting")}</p>
               </div>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center scale-125">
@@ -241,12 +299,12 @@ const FloatingChatbot = ({ agentId = 1 }) => {
               <p className="text-[12px] sm:text-[14px] leading-[16px] font-semibold sm:font-bold text-[#2762EA] sm:text-[#0888E6] font-lato capitalize">
                 {liveKitAgentState === "listening"
                   ? isMuted
-                    ? "Muted"
-                    : "Listening..."
-                  : liveKitAgentState + "..."}
+                    ? t("floatingChatbot.muted")
+                    : t("floatingChatbot.listening")
+                  : t("floatingChatbot.speaking")}
               </p>
               {/* {liveKitAgentState === "listening" && !isMuted && (
-                <p className="text-[10px] sm:text-[12px] leading-[12px] sm:leading-[16px] font-medium text-[#4B5563] sm:text-[#1A1C29]/60 font-lato">You can speak now</p>
+                <p className="text-[10px] sm:text-[12px] leading-[12px] sm:leading-[16px] font-medium text-[#4B5563] sm:text-[#1A1C29]/60 font-lato">{t("floatingChatbot.canSpeakNow")}</p>
               )} */}
             </div>
           )}

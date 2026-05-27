@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import SearchFilter from "@/components/common/SearchFilter";
 import Image from "next/image";
 import PrimaryButton from "@/components/common/PrimaryButton";
@@ -11,9 +12,11 @@ import noDataFoundIcon from "@/assets/svg/no-data-found.svg";
 import noCertificatesIcon from "@/assets/svg/no-certificate.svg";
 import { useGetCertificatesMutation, useGetUserMetadataQuery } from "@/store/api/certificatesApi";
 import CertificateCardSkeleton from "@/components/common/CertificateCardSkeleton";
+import { useTranslation } from "react-i18next";
 
 export default function CertificatesPage() {
-  const router = useRouter();
+  const router = useLocalizedRouter();
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const isInitialMount = useRef(true);
@@ -152,9 +155,9 @@ export default function CertificatesPage() {
       {/* Header Section */}
       <div className="flex flex-col gap-3 p-4 md:p-5 md:pl-4 bg-[#F2F2F8] md:bg-transparent">
         <div className="flex flex-col gap-1">
-          <h1 className="font-lato font-bold text-base leading-[19px] text-[#111827]">Certificates</h1>
+          <h1 className="font-lato font-bold text-base leading-[19px] text-[#111827]">{t("certificates.title")}</h1>
           <p className="font-lato font-normal text-xs leading-[14px] text-[#4B5563]">
-            View and download your earned certificates from completed courses
+            {t("certificates.subtitle")}
           </p>
         </div>
 
@@ -162,7 +165,7 @@ export default function CertificatesPage() {
         <SearchFilter
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
-          searchPlaceholder="Search by certificate name"
+          searchPlaceholder={t("certificates.searchPlaceholder")}
           filterSections={filterSections}
           appliedFilters={appliedFilters}
           onFilterChange={setAppliedFilters}
@@ -196,7 +199,7 @@ export default function CertificatesPage() {
                           {cert.instructor}
                         </p>
                         <p className="font-lato font-normal text-[10px] leading-[12px] text-[#4B5563]">
-                          Issued On {cert.issuedDate}
+                          {t("certificates.issuedOn")} {cert.issuedDate}
                         </p>
                       </div>
                     </div>
@@ -209,10 +212,10 @@ export default function CertificatesPage() {
                           setSelectedCertificate(cert);
                           setIsPreviewModalOpen(true);
                         }}>
-                        View Certificate
+                        {t("certificates.viewCertificate")}
                       </SecondaryButton>
                       <PrimaryButton className="flex-1" onClick={() => handleDownload(cert.pdfUrl, cert.title)}>
-                        Download
+                        {t("certificates.download")}
                       </PrimaryButton>
                     </div>
                   </div>
@@ -232,14 +235,14 @@ export default function CertificatesPage() {
                   {/* Text Frame (gap 12px from icon) */}
                   <div className="flex flex-col items-center gap-[6px]">
                     <h2 className="font-lato font-bold text-[16px] leading-[19px] text-[#1A1C29] text-center capitalize">
-                      {isFilterApplied ? "No Results Found" : "No Certificates Yet"}
+                      {isFilterApplied ? t("certificates.noResults") : t("certificates.noCertificates")}
                     </h2>
                     <p className="font-lato font-normal text-[12px] leading-[16px] text-[#4B5563] text-center w-[300px]">
                       {searchTerm
-                        ? "No certificates match your search. Try a different keyword."
+                        ? t("certificates.searchEmptyState")
                         : Object.values(appliedFilters).some((v) => (Array.isArray(v) ? v.length > 0 : !!v))
-                          ? "No certificates match your filters. Try different filter."
-                          : "Complete your assessments to earn certificates and see them here."}
+                          ? t("certificates.filterEmptyState")
+                          : t("certificates.defaultEmptyState")}
                     </p>
                   </div>
                 </div>

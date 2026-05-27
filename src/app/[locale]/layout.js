@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono, Lato, Montserrat } from "next/font/google";
 import "./globals.css";
-import "../styles/fullscreen.css";
+import "../../styles/fullscreen.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ReduxProvider } from "@/providers/ReduxProvider";
 import ElevenLabsProviderWrapper from "@/providers/ElevenLabsProvider";
@@ -11,6 +11,7 @@ import ResultModalProvider from "@/components/providers/ResultModalProvider";
 import FeedbackModalProvider from "@/components/providers/FeedbackModalProvider";
 import { ToastContainer } from "react-toastify";
 import LayoutWrapper from "@/components/layout/LayoutWrapper";
+import TranslationProvider from "@/providers/TranslationProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,9 +53,12 @@ export const viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children, params }) {
+  const resolvedParams = await params;
+  const locale = resolvedParams.locale || "en";
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <meta
           name="viewport"
@@ -69,8 +73,9 @@ export default function RootLayout({ children }) {
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${lato.variable} ${montserrat.variable} antialiased font-lato`}>
-        <PostHogProvider>
-          <ReduxProvider>
+        <TranslationProvider locale={locale}>
+          <PostHogProvider>
+            <ReduxProvider>
             <ElevenLabsProviderWrapper>
               <ResultModalProvider>
                 <FeedbackModalProvider>
@@ -96,6 +101,7 @@ export default function RootLayout({ children }) {
             </ElevenLabsProviderWrapper>
           </ReduxProvider>
         </PostHogProvider>
+        </TranslationProvider>
       </body>
     </html>
   );

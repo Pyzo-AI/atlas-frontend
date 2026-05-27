@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import VideoPlaylist from "./VideoPlaylist";
 import SlideVideoSection from "./SlideVideoSection";
+import { useTranslation } from "react-i18next";
 
 const PPTSection = React.forwardRef(
   (
@@ -37,6 +38,7 @@ const PPTSection = React.forwardRef(
         }
       },
     }));
+    const { t } = useTranslation();
     const effectiveHeight =
       height ||
       (isOnlyVideoMode
@@ -111,14 +113,14 @@ const PPTSection = React.forwardRef(
                   ? "text-[16px]"
                   : "text-[20px]"
             }`}>
-            {title || (isPhoneView ? "Corporate Finance" : isMobileView ? "Corporate Finance" : "Untitled")}
+            {title || t("lectures.untitledPresentation")}
           </p>
           <p
             className={`font-semibold font-lato leading-[100%] tracking-[0.02em] m-0 ${
               isPhoneView ? "text-[8px]" : isMobileView ? "text-[12px]" : "text-[14px]"
             }`}>
-            <span className="text-primary-text-muted">By:</span>{" "}
-            {author || (isPhoneView ? "Giri Prathap" : isMobileView ? "Giri Prathap" : "Unknown")}
+            <span className="text-primary-text-muted">{t("lectures.by")}</span>{" "}
+            {author || t("lectures.unknownAuthor")}
           </p>
         </div>
 

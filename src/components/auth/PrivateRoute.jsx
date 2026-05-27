@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter"
 import { getTokens, getUserDetailsFromToken } from '@/store/utils/token'
 import { logout } from '@/utils/auth'
 import { usePostHog } from '@/hooks/usePostHog'
@@ -10,9 +11,9 @@ const PRODUCT_NAME = 'atlas'
 const REFRESH_URL = `${process.env.NEXT_PUBLIC_LOGIN_BASE_URL}/auth/refresh`
 
 const PrivateRoute = ({ children }) => {
-  const router = useRouter()
-  const pathname = usePathname()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const router = useLocalizedRouter()
+  const pathname = usePathname()
   const [permissionDenied, setPermissionDenied] = useState(false)
 
   // Cross-tab session sync: refreshes tokens on every tab switch to get latest permissions,
@@ -37,9 +38,12 @@ const PrivateRoute = ({ children }) => {
 
   const { identify } = usePostHog()
 
+  // Match /login, /en/login, /de/login etc.
+  const isLoginPage = pathname === '/login' || pathname.endsWith('/login')
+
   useEffect(() => {
     // Skip auth check for login page
-    if (pathname === '/login') {
+    if (isLoginPage) {
       return
     }
 
@@ -79,7 +83,7 @@ const PrivateRoute = ({ children }) => {
   }, [pathname, router])
 
   // For login page, render without auth check
-  if (pathname === '/login') {
+  if (isLoginPage) {
     return children
   }
 

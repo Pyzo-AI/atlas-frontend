@@ -1,11 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import React from "react";
+import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
+import { useTranslation } from "react-i18next";
 import Modal from "@/components/common/Modal";
 import feedback_success_image from "@/assets/svg/feedback_success.svg";
 import Image from "next/image";
+
 export default function FeedbackSuccessModal({ isOpen, onClose }) {
-  const router = useRouter();
+  const router = useLocalizedRouter();
+  const { t } = useTranslation();
 
   const handleClose = () => {
     onClose();
@@ -31,16 +35,16 @@ export default function FeedbackSuccessModal({ isOpen, onClose }) {
         </div>
 
         {/* Title */}
-        <h2 className="text-xl font-bold text-gray-900">Rating Submitted</h2>
+        <h2 className="text-xl font-bold text-gray-900">{t("feedback.ratingSubmitted")}</h2>
 
         {/* Message */}
-        <p className="text-gray-600 mb-8">Thank you! Your feedback has been recorded.</p>
+        <p className="text-gray-600 mb-8">{t("feedback.feedbackRecorded")}</p>
 
         {/* Close Button */}
         <button
           onClick={handleClose}
           className="cursor-pointer w-2/3 bg-accent hover:bg-accent-hover text-light py-2 rounded-4xl font-semibold text-lg transition-all duration-200 shadow-lg">
-          Close
+          {t("feedback.close")}
         </button>
       </div>
     </Modal>
