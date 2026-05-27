@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import Checkbox from "./Checkbox";
 import dropdownIcon from "@/assets/svg/dropdown-icon.svg";
+import { useTranslation } from "react-i18next";
 
 const MultiSelectDropdown = ({
   options = [],
@@ -13,6 +14,7 @@ const MultiSelectDropdown = ({
   placeholder = "--Select--",
   className = "",
 }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
@@ -20,14 +22,18 @@ const MultiSelectDropdown = ({
 
   const matches = (a, b) => String(a) === String(b);
 
+  const displayPlaceholder = useMemo(() => {
+    return placeholder === "--Select--" ? t("filter.select") : placeholder;
+  }, [placeholder, t]);
+
   const displayLabel = useMemo(() => {
-    if (selectedValues.length === 0) return placeholder;
+    if (selectedValues.length === 0) return displayPlaceholder;
     if (selectedValues.length === 1) {
       const option = options.find((opt) => matches(opt.value, selectedValues[0]));
-      return option ? option.label : placeholder;
+      return option ? option.label : displayPlaceholder;
     }
-    return `${selectedValues.length} selected`;
-  }, [selectedValues, options, placeholder]);
+    return t("filter.selectedCount", { count: selectedValues.length });
+  }, [selectedValues, options, displayPlaceholder, t]);
 
   const filteredOptions = useMemo(() => {
     if (!searchTerm) return options;
@@ -131,7 +137,7 @@ const MultiSelectDropdown = ({
               );
             })
           ) : (
-            <div className="flex items-center justify-center h-8 text-gray-400 text-[10px]">No results found</div>
+            <div className="flex items-center justify-center h-8 text-gray-400 text-[10px]">{t("filter.noResults")}</div>
           )}
         </div>
       )}

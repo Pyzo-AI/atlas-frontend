@@ -7,6 +7,7 @@ import VideoPlayer from "../VideoPlayer";
 import Image from "next/image";
 import ResultModal from "../modals/ResultModal";
 import FeedbackModal from "../modals/FeedbackModal";
+import { useTranslation } from "react-i18next";
 
 const SlideVideoSection = React.forwardRef(
   (
@@ -26,6 +27,7 @@ const SlideVideoSection = React.forwardRef(
     },
     ref
   ) => {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const { currentVideoIndex, currentVideoTime, slideNumbers } = useSelector((state) => state.video);
     const slideVideoRef = useRef(null);
@@ -289,7 +291,7 @@ const SlideVideoSection = React.forwardRef(
     if (!videos?.[videoIndex]?.slide_video) {
       return (
         <div className="w-full h-full bg-gray-100 rounded-xl flex items-center justify-center">
-          <p className="text-gray-500">No slide video available</p>
+          <p className="text-gray-500">{t("lectures.noSlideVideo")}</p>
         </div>
       );
     }
@@ -300,7 +302,7 @@ const SlideVideoSection = React.forwardRef(
           <div className="absolute inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-10">
             <div className="text-white text-center">
               <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-              <p className="text-sm">Loading slide video...</p>
+              <p className="text-sm">{t("lectures.loadingSlideVideo")}</p>
             </div>
           </div>
         )}

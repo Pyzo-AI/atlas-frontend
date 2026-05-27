@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useRouter, useParams, usePathname } from "next/navigation";
 
 export const useLocalizedRouter = () => {
@@ -10,7 +10,7 @@ export const useLocalizedRouter = () => {
   const locale = params?.locale || (pathname?.split('/')[1] || "en");
 
   // Helper to safely prepend locale to paths
-  const localizePath = (path) => {
+  const localizePath = useCallback((path) => {
     if (!path) return path;
     if (path.startsWith(`/${locale}/`) || path === `/${locale}`) return path;
     if (path.startsWith("http") || path.startsWith("mailto:")) return path;
@@ -24,7 +24,7 @@ export const useLocalizedRouter = () => {
 
     // Handle root vs non-root
     return path === "/" ? `/${locale}` : `/${locale}${path.startsWith('/') ? path : `/${path}`}`;
-  };
+  }, [locale]);
 
   return useMemo(() => ({
     ...router,
@@ -36,5 +36,5 @@ export const useLocalizedRouter = () => {
     },
     // Expose the helper for Link components or other uses
     localizePath,
-  }), [router, locale]); // localizePath depends on locale
+  }), [router, localizePath]);
 };

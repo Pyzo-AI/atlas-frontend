@@ -22,9 +22,11 @@ import { clearAssessmentProgress } from "@/utils/assessmentProgress";
 import Image from "next/image";
 import RotateDeviceIcon from "@/assets/svg/rotate_device.svg";
 import RotateArrowIcon from "@/assets/svg/rotate_arrow.svg";
+import { useTranslation } from "react-i18next";
 
 // Portrait Mode Rotation Prompt Component
 const RotationPrompt = () => {
+  const { t } = useTranslation();
   return (
     <div className="absolute top-16 inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
       <div className="text-center text-white px-6">
@@ -37,9 +39,9 @@ const RotationPrompt = () => {
             className="mx-auto mb-4 animate-bounce" 
           />
         </div>
-        <h2 className="text-xl font-semibold mb-2">Better Experience Awaits!</h2>
+        <h2 className="text-xl font-semibold mb-2">{t("lectures.rotateTitle")}</h2>
         <p className="text-gray-300 mb-4">
-          Turn on auto-rotate and rotate your device to landscape mode. This web app works best in Chrome browser.
+          {t("lectures.rotateDesc")}
         </p>
         <div className="flex items-center justify-center space-x-2">
           <div className="w-8 h-12 border-2 border-white rounded-sm"></div>
@@ -58,13 +60,14 @@ const RotationPrompt = () => {
 
 // Combined components moved outside to prevent re-creation on every render
 const CombinedBreadCrumb = React.memo(({ data }) => {
+  const { t } = useTranslation();
   return (
     <BreadCrumb
       paths={[
-        { path: "/", label: "All Courses" },
+        { path: "/", label: t("lectures.allCourses") },
         {
           path: "/lectures/123",
-          label: data?.presentation_name || "Untitled Presentation",
+          label: data?.presentation_name || t("lectures.untitledPresentation"),
         },
       ]}
     />
@@ -90,6 +93,7 @@ const CombinedPPTSection = React.memo(
     passingScore
   }, ref) => {
     const width = isMobile ? "100%" : "70%";
+    const { t } = useTranslation();
 
     return (
       <PPTSection
@@ -101,8 +105,8 @@ const CombinedPPTSection = React.memo(
         isVideoPlaying={pptSyncState.isPlaying}
         videoDuration={videoState.duration}
         width={width}
-        title={data?.presentation_name || "Untitled Presentation"}
-        author={data?.presentation_author || "Unknown"}
+        title={data?.presentation_name || t("lectures.untitledPresentation")}
+        author={data?.presentation_author || t("lectures.unknownAuthor")}
         isMobileView={isMobile}
         isPhoneView={isPhone}
         canSkipVideo={canSkipVideo}

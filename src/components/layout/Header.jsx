@@ -96,14 +96,14 @@ useEffect(() => {
     try {
       await forgotPassword({ email: userInfo.email }).unwrap();
       setIsDropdownOpen(false);
-      toast.success("Password reset link sent successfully.");
+      toast.success(t("auth.resetLinkSentSuccess"));
 
       const url = new URL(window.location.href);
       url.searchParams.set("reset_pending", "true");
       window.history.pushState({}, "", url.toString());
       setShowResetModal(true);
     } catch (error) {
-      toast.error(error?.data?.error || error?.data?.message || "Failed to initiate reset password.");
+      toast.error(error?.data?.error || error?.data?.message || t("auth.failedResetLink"));
     }
   };
 

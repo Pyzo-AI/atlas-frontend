@@ -6,6 +6,7 @@ import chat_star from "../../assets/svg/chat_star.svg";
 import microphone from "../../assets/svg/microphone.svg";
 import Image from "next/image";
 import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup";
+import { useTranslation } from "react-i18next";
 
 const AILearningAssistant = ({
   onStartConversation = () => {},
@@ -18,6 +19,7 @@ const AILearningAssistant = ({
   const { isQuestionMode } = useSelector((state) => state.video);
   const dispatch = useDispatch();
   const [showMicPopup, setShowMicPopup] = useState(false);
+  const { t } = useTranslation();
 
   const handleStartQA = async () => {
     if (!agentId) return;
@@ -96,11 +98,11 @@ const AILearningAssistant = ({
                   className={`w-full text-center font-lato font-bold ${
                     isMobileView ? "text-[10px]" : "text-lg leading-5"
                   }  text-primary-text`}>
-                  AI Assistant
+                  {t("lectures.aiAssistant")}
                 </h3>
                 {!isMobileView && (
                   <p className="w-full text-center font-lato font-normal text-xs leading-4 text-primary-text">
-                    Get instant answers to your questions and personalized learning support.
+                    {t("lectures.aiAssistantDesc")}
                   </p>
                 )}
               </div>
@@ -132,11 +134,11 @@ const AILearningAssistant = ({
                   alt="Microphone"
                   style={!agentId ? { filter: "grayscale(100%)" } : {}}
                 />
-                <span className={`text-[8px] sm:text-[9px] md:text-xs`}>Interaction Mode</span>
+                <span className={`text-[8px] sm:text-[9px] md:text-xs`}>{t("lectures.interactionMode")}</span>
               </button>
               {!agentId && (
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-700 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  Interaction Mode not available
+                  {t("lectures.interactionModeNotAvailable")}
                   <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-0 border-t-4 border-t-gray-700 border-l-transparent border-r-transparent"></div>
                 </div>
               )}

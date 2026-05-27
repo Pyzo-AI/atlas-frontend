@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "re
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import { getTokens } from "@/store/utils/token";
+import { useTranslation } from "react-i18next";
 
 /**
  * Helper to detect if a URL is an HLS stream
@@ -389,6 +390,7 @@ const VideoPlayer = forwardRef(
   ) => {
     const videoRef = useRef(null);
     const playerRef = useRef(null);
+    const { t } = useTranslation();
     const [isClient, setIsClient] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [duration, setDuration] = useState(0);
@@ -1508,7 +1510,7 @@ const VideoPlayer = forwardRef(
             alignItems: "center",
             justifyContent: "center",
           }}>
-          <div style={{ color: "var(--color-light)" }}>Loading...</div>
+          <div style={{ color: "var(--color-light)" }}>{t("notifications.loading")}</div>
         </div>
       );
     }

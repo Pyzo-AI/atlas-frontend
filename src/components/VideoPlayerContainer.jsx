@@ -6,6 +6,7 @@ import { updateVideoProgress } from "@/utils/videoProgress";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
 import VideoPlayer from "./VideoPlayer";
+import { useTranslation } from "react-i18next";
 
 const VideoPlayerContainer = forwardRef(
   (
@@ -28,6 +29,7 @@ const VideoPlayerContainer = forwardRef(
     ref
   ) => {
     const dispatch = useDispatch();
+    const { t } = useTranslation();
     const videoRef = useRef(null);
     const { capture } = usePostHog();
     const { isQuestionMode } = useSelector((state) => state.video);
@@ -349,7 +351,7 @@ const VideoPlayerContainer = forwardRef(
     if ((isOnlyVideoMode && !currentVideo?.slide_video) || (!isOnlyVideoMode && !currentVideo?.trainer_video)) {
       return (
         <div className={`w-full h-full bg-black flex items-center justify-center ${className}`}>
-          <div className="text-white">No video available</div>
+          <div className="text-white">{t("lectures.noVideoAvailable")}</div>
         </div>
       );
     }

@@ -8,8 +8,10 @@ import Modal from "@/components/common/Modal";
 import Button from "@/components/common/Button";
 import Image from "next/image";
 import reset_password_icon from "@/assets/svg/reset-password-modal.svg";
+import { useTranslation } from "react-i18next";
 
 export default function PasswordResetModal({ isOpen, email, onClose }) {
+  const { t } = useTranslation();
   const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
   const [resendTimer, setResendTimer] = useState(0);
 
@@ -30,10 +32,10 @@ export default function PasswordResetModal({ isOpen, email, onClose }) {
     if (resendTimer > 0 || isLoading) return;
     try {
       await forgotPassword({ email }).unwrap();
-      toast.success("Password reset link sent successfully.");
+      toast.success(t("auth.resetLinkSentSuccess"));
       setResendTimer(30);
     } catch (error) {
-      toast.error(error?.data?.error || error?.data?.message || "Failed to resend reset link.");
+      toast.error(error?.data?.error || error?.data?.message || t("auth.failedResendResetLink"));
     }
   };
 
@@ -63,11 +65,10 @@ export default function PasswordResetModal({ isOpen, email, onClose }) {
             {/* Labels Section */}
             <div className="flex flex-col items-center gap-2 w-full">
               <h2 className="font-lato font-bold text-[20px] leading-[24px] text-[#1A1C29] text-center max-w-[240px]">
-                Password Reset Email Sent
+                {t("auth.passwordResetEmailSent")}
               </h2>
               <p className="font-lato font-normal text-[14px] leading-[19px] text-[rgba(26,28,41,0.8)] text-center">
-                We’ve sent a password reset link to your registered email address. Please check your inbox and follow
-                the link to create a new password. The link expires in 10 minutes.
+                {t("auth.passwordResetEmailSentDesc")}
               </p>
             </div>
           </div>
@@ -84,7 +85,7 @@ export default function PasswordResetModal({ isOpen, email, onClose }) {
                   ? "!bg-[#F5F8FF] !text-[#A8C5F4]"
                   : "!bg-[#E8F0F9] !text-[#2762EA] hover:!opacity-90 cursor-pointer"
               }`}>
-              {isLoading ? "Resending..." : resendTimer > 0 ? `Resend ${resendTimer}s` : "Resend Email"}
+              {isLoading ? t("auth.resending") : resendTimer > 0 ? t("auth.resendTimer", { time: resendTimer }) : t("auth.resendEmail")}
             </Button>
 
             {/* Close Button */}
@@ -92,7 +93,7 @@ export default function PasswordResetModal({ isOpen, email, onClose }) {
               variant="primary"
               onClick={handleClose}
               className="!px-3 !py-1.5 !bg-[#2762EA] !rounded-[6px] !text-white !text-[12px] !leading-[14px] min-w-[95px] flex items-center justify-center">
-              Close
+              {t("auth.close")}
             </Button>
           </div>
         </div>

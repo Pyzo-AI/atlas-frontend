@@ -1,9 +1,11 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const EmailInput = ({ value, onChange, error, placeholder = "abc@gmail.com" }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-2">
-      <label className="font-medium text-[16px] leading-[19px] text-[#111827]">Email</label>
+      <label className="font-medium text-[16px] leading-[19px] text-[#111827]">{t("auth.email")}</label>
       <div className="flex flex-col gap-1">
         <div
           className={`w-full h-[44px] bg-white border rounded-[10px] flex items-center px-3 transition-colors ${

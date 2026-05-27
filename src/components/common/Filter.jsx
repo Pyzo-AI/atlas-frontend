@@ -9,8 +9,10 @@ import RadioButton from "@/components/ui/RadioButton";
 import DateRangePicker from "@/components/ui/DateRangePicker";
 import filterIcon from "@/assets/svg/filter.svg";
 import closeIcon from "@/assets/svg/close.svg";
+import { useTranslation } from "react-i18next";
 
 export default function Filter({ sections = [], onFilterChange, appliedFilters = {}, disabled = false }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState(appliedFilters);
   const [expandedSections, setExpandedSections] = useState({});
@@ -255,7 +257,7 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
           className={`hidden md:inline text-xs font-regular font-lato whitespace-nowrap ${
             hasAppliedFilters ? "text-[#2762EA]" : "text-[#667085]"
           }`}>
-           Filters{hasAppliedFilters ? ` (${appliedFilterCount})` : ""}
+           {t("filter.filters")}{hasAppliedFilters ? ` (${appliedFilterCount})` : ""}
         </span>
       </button>
 
@@ -270,7 +272,7 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
             <div className="absolute right-0 top-0 h-full bg-white flex flex-col shadow-xl w-[90%] md:w-[352px]">
               <div className="h-12 bg-white border-b border-[#E5E5E5] flex items-center justify-between px-4 flex-shrink-0">
                 <span className="font-lato font-semibold text-base text-[#2C313B]">
-                  Filter by {hasSelectedFilters ? ` (${selectedFilterCount})` : ""}
+                  {t("filter.filterBy")}{hasSelectedFilters ? ` (${selectedFilterCount})` : ""}
                 </span>
                 <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
                <Image src={closeIcon} alt="Close Icon" width={24} height={24}/>
@@ -417,7 +419,7 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
                           <button
                             onClick={() => clearSection(section)}
                             className="text-left font-lato text-xs underline text-[#1D1F2C] cursor-pointer">
-                            Clear
+                            {t("filter.clear")}
                           </button>
                         </div>
                       )}
@@ -431,7 +433,7 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
                   onClick={clearAll}
                   disabled={!hasLocalSelectedFilters}
                   className="w-[112px] h-[30px] bg-[#E8F0F9] rounded-md flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                  <span className="font-lato font-medium text-xs text-[#2762EA]">Clear All</span>
+                  <span className="font-lato font-medium text-xs text-[#2762EA]">{t("filter.clearAll")}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -440,7 +442,7 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
                   }}
                   disabled={!hasLocalChanges}
                   className="w-[112px] h-[30px] bg-[#2762EA] rounded-md flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                  <span className="font-lato font-medium text-xs text-white">Apply</span>
+                  <span className="font-lato font-medium text-xs text-white">{t("filter.apply")}</span>
                 </button>
               </div>
             </div>

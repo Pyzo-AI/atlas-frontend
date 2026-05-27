@@ -4,6 +4,7 @@ import Image from "next/image";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { useSelector } from "react-redux";
 import ProductRecommendationGallery from "@/components/sections/ProductRecommendationGallery";
+import { useTranslation } from "react-i18next";
 
 const QuestionModeAI = forwardRef(
   (
@@ -26,6 +27,7 @@ const QuestionModeAI = forwardRef(
 
     const userName = getUserDetailsFromToken()?.name;
     const { productRecommendations } = useSelector((state) => state.video);
+    const { t } = useTranslation();
 
     // Show ProductRecommendationGallery when product recommendations are available
     if (enableProductRecommendations && productRecommendations?.length > 0) {
@@ -110,15 +112,15 @@ const QuestionModeAI = forwardRef(
                   <div className="absolute -top-1 -right-1 w-1 h-1 bg-white/30 rounded-full animate-ping"></div>
                 </div>
                 {/* Professor thinking text */}
-                <p className="text-white/90 text-xs font-light animate-pulse">Connecting</p>
+                <p className="text-white/90 text-xs font-light animate-pulse">{t("lectures.connecting")}</p>
               </div>
             ) : isConnected ? (
               <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block capitalize">
-                {liveKitAgentEnabled ? liveKitAgentState : isAudioPlaying ? "Speaking" : "Listening"}
+                {liveKitAgentEnabled ? liveKitAgentState : isAudioPlaying ? t("lectures.speaking") : t("lectures.listening")}
               </p>
             ) : (
               <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block">
-                {"Ask me anything about the presentation, and I'll help with the answers."}
+                {t("lectures.askMeAnything")}
               </p>
             )}
           </div>

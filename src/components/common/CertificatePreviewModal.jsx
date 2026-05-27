@@ -3,8 +3,11 @@
 import React from "react";
 import Modal from "./Modal";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 export default function CertificatePreviewModal({ isOpen, onClose, imageUrl, title, onDownload }) {
+  const { t } = useTranslation();
+
   return (
     <Modal
       isOpen={isOpen}
@@ -25,12 +28,12 @@ export default function CertificatePreviewModal({ isOpen, onClose, imageUrl, tit
             <button
               onClick={onClose}
               className="w-[137px] h-[30px] bg-[#E8F0F9] rounded-[6px] flex items-center justify-center cursor-pointer font-lato font-medium text-[12px] text-[#2762EA] hover:bg-[#dbeafe] transition-colors">
-              Close
+              {t("certificates.close")}
             </button>
             <button
               onClick={onDownload}
               className="w-[137px] h-[30px] bg-[#2762EA] rounded-[6px] flex items-center justify-center cursor-pointer font-lato font-medium text-[12px] text-white hover:bg-primary-hover transition-colors">
-              Download Certificate
+              {t("certificates.downloadCertificate")}
             </button>
           </div>
         </div>

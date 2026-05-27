@@ -5,6 +5,7 @@ import PasswordInput from "./PasswordInput";
 import AuthButton from "./AuthButton";
 import { useResetPasswordMutation } from "@/store/api/authApi";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 const UpdatePasswordForm = ({ onSuccess, token }) => {
   const [newPassword, setNewPassword] = useState("");
@@ -13,24 +14,25 @@ const UpdatePasswordForm = ({ onSuccess, token }) => {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [resetPassword, { isLoading: loading }] = useResetPasswordMutation();
   const [generalError, setGeneralError] = useState("");
+  const { t } = useTranslation();
 
   const validate = () => {
     let isValid = true;
     if (!newPassword) {
-      setNewPasswordError("New password is required");
+      setNewPasswordError(t("auth.newPasswordReq"));
       isValid = false;
     } else if (newPassword.length < 6) {
-      setNewPasswordError("Password must be at least 6 characters");
+      setNewPasswordError(t("auth.passwordLength"));
       isValid = false;
     } else {
       setNewPasswordError("");
     }
 
     if (!confirmPassword) {
-      setConfirmPasswordError("Please confirm your password");
+      setConfirmPasswordError(t("auth.confirmPasswordReq"));
       isValid = false;
     } else if (newPassword !== confirmPassword) {
-      setConfirmPasswordError("Passwords do not match");
+      setConfirmPasswordError(t("auth.passwordsNotMatch"));
       isValid = false;
     } else {
       setConfirmPasswordError("");
@@ -46,10 +48,10 @@ const UpdatePasswordForm = ({ onSuccess, token }) => {
 
     try {
       await resetPassword({ token, password: newPassword }).unwrap();
-      toast.success("New password set successfully.");
+      toast.success(t("auth.newPasswordSet"));
       onSuccess();
     } catch (error) {
-      const errorMessage = error?.data?.error || "Failed to update password. Please try again.";
+      const errorMessage = error?.data?.error || t("auth.failedUpdatePassword");
       setGeneralError(errorMessage);
     }
   };
@@ -59,10 +61,10 @@ const UpdatePasswordForm = ({ onSuccess, token }) => {
       {/* Header */}
       <div className="flex flex-col gap-2">
         <h2 className="font-semibold text-[28px] lg:text-[32px] leading-[34px] lg:leading-[38px] text-[#111827]">
-          Reset Password?
+          {t("auth.resetPasswordTitle")}
         </h2>
         <p className="font-normal text-[14px] lg:text-[16px] leading-[20px] lg:leading-[24px] text-[#4B5563]">
-          Create a new password for your account.
+          {t("auth.createNewPassword")}
         </p>
       </div>
 
@@ -81,7 +83,7 @@ const UpdatePasswordForm = ({ onSuccess, token }) => {
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         <div className="flex flex-col gap-6">
           <PasswordInput
-            label="New Password"
+            labelKey="auth.newPassword"
             value={newPassword}
             onChange={(val) => {
               setNewPassword(val);
@@ -91,7 +93,7 @@ const UpdatePasswordForm = ({ onSuccess, token }) => {
           />
 
           <PasswordInput
-            label="Confirm Password"
+            labelKey="auth.confirmPassword"
             value={confirmPassword}
             onChange={(val) => {
               setConfirmPassword(val);
@@ -102,7 +104,7 @@ const UpdatePasswordForm = ({ onSuccess, token }) => {
         </div>
 
         {/* Update Button */}
-        <AuthButton title="Update Password" loadingTitle="Updating..." isLoading={loading} />
+        <AuthButton title={t("auth.updatePassword")} loadingTitle={t("auth.updating")} isLoading={loading} />
       </form>
     </div>
   );

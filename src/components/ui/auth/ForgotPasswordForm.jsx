@@ -6,6 +6,7 @@ import EmailInput from "./EmailInput";
 import AuthButton from "./AuthButton";
 import { useForgotPasswordMutation } from "@/store/api/authApi";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
   const [email, setEmail] = useState(initialEmail);
@@ -13,6 +14,7 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
   const [success, setSuccess] = useState(false);
   const [forgotPassword, { isLoading: loading }] = useForgotPasswordMutation();
   const [resendTimer, setResendTimer] = useState(0);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (resendTimer <= 0) return;
@@ -28,11 +30,11 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
 
   const validateEmail = (email) => {
     if (!email) {
-      return "Email is required";
+      return t("auth.emailRequired");
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return "Invalid email. Check and try again or contact admin.";
+      return t("auth.invalidEmail");
     }
     return "";
   };
@@ -56,11 +58,11 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
 
     try {
       await forgotPassword({ email }).unwrap();
-      toast.success("Password reset link sent successfully.");
+      toast.success(t("auth.resetLinkSentSuccess"));
       setSuccess(true);
       startResendTimer();
     } catch (error) {
-      const errorMessage = error?.data?.error || "Failed to send reset link. Please try again.";
+      const errorMessage = error?.data?.error || t("auth.failedResetLink");
       setEmailError(errorMessage);
     }
   };
@@ -72,20 +74,20 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
           onClick={onBackToLogin}
           className="flex flex-row items-center gap-[10px] w-fit group hover:bg-[#F9FAFB] px-3 py-2 -ml-3 rounded-[8px] transition-all duration-200 cursor-pointer">
           <FiArrowLeft className="w-5 h-5 text-[#111827] group-hover:-translate-x-1 transition-transform duration-200" />
-          <span className="font-semibold text-[14px] leading-[19px] text-[#333333]">Back to login</span>
+          <span className="font-semibold text-[14px] leading-[19px] text-[#333333]">{t("auth.backToLogin")}</span>
         </button>
 
         <div className="flex flex-col gap-2">
           <h2 className="font-bold text-[28px] lg:text-[32px] leading-[34px] lg:leading-[38px] text-[#111827]">
-            Check your email
+            {t("auth.checkEmailTitle")}
           </h2>
           <div className="flex flex-wrap items-center gap-1 font-normal text-[14px] leading-[17px] text-[#4B5563]">
-            <span>We’ve sent a password reset link to</span>
+            <span>{t("auth.sentResetLinkDesc")}</span>
             <span className="text-[#111827] font-medium">{email}</span>
             <button
               onClick={() => setSuccess(false)}
               className="text-[#2877EE] font-semibold hover:underline cursor-pointer">
-              Change
+              {t("auth.change")}
             </button>
           </div>
         </div>
@@ -97,23 +99,23 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
             background: "linear-gradient(0deg, rgba(40, 119, 238, 0.1), rgba(40, 119, 238, 0.1)), #FFFFFF",
           }}>
           <div className="flex items-center">
-            <span className="font-semibold text-[14px] leading-[17px] text-[#2877EE]">Next Steps</span>
+            <span className="font-semibold text-[14px] leading-[17px] text-[#2877EE]">{t("auth.nextSteps")}</span>
           </div>
           <div className="flex flex-col gap-[8px]">
-            <span className="font-normal text-[12px] leading-[14px] text-[#2877EE]">1. Check your email inbox</span>
+            <span className="font-normal text-[12px] leading-[14px] text-[#2877EE]">{t("auth.step1")}</span>
             <span className="font-normal text-[12px] leading-[14px] text-[#2877EE]">
-              2. Click on the reset password link
+              {t("auth.step2")}
             </span>
-            <span className="font-normal text-[12px] leading-[14px] text-[#2877EE]">3. Create a new password</span>
+            <span className="font-normal text-[12px] leading-[14px] text-[#2877EE]">{t("auth.step3")}</span>
             <span className="font-normal text-[12px] leading-[14px] text-[#2877EE]">
-              4. Sign in with your new password
+              {t("auth.step4")}
             </span>
           </div>
         </div>
 
         {/* Resend Footer */}
         <div className="flex flex-row justify-center items-center gap-[8px] w-full">
-          <span className="font-normal text-[14px] leading-[17px] text-[#4B5563]">Didn’t receive the email?</span>
+          <span className="font-normal text-[14px] leading-[17px] text-[#4B5563]">{t("auth.didntReceiveEmail")}</span>
           <button
             type="button"
             onClick={async (e) => {
@@ -126,7 +128,7 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
                 ? "text-[#9CA3AF] cursor-not-allowed"
                 : "text-[#2877EE] hover:underline cursor-pointer"
             }`}>
-            {loading ? "Sending..." : resendTimer > 0 ? `Resend in ${resendTimer}s` : "Click to resend"}
+            {loading ? t("auth.sending") : resendTimer > 0 ? t("auth.resendIn", { time: resendTimer }) : t("auth.clickToResend")}
           </button>
         </div>
       </div>
@@ -141,16 +143,16 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
         onClick={onBackToLogin}
         className="flex flex-row items-center gap-[10px] w-fit group hover:bg-[#F9FAFB] px-3 py-2 -ml-3 rounded-[8px] transition-all duration-200 cursor-pointer">
         <FiArrowLeft className="w-5 h-5 text-[#111827] " />
-        <span className="font-semibold text-[14px] leading-[19px] text-[#333333]">Back to login</span>
+        <span className="font-semibold text-[14px] leading-[19px] text-[#333333]">{t("auth.backToLogin")}</span>
       </button>
 
       {/* Header */}
       <div className="flex flex-col gap-2">
         <h2 className="font-semibold text-[28px] lg:text-[32px] leading-[34px] lg:leading-[38px] text-[#111827]">
-          Forgot your password?
+          {t("auth.forgotPasswordTitle")}
         </h2>
         <p className="font-normal text-[14px] leading-[17px] text-[#4B5563]">
-          No worries, we’ll send you reset instructions to your email.
+          {t("auth.forgotPasswordDesc")}
         </p>
       </div>
 
@@ -159,7 +161,7 @@ const ForgotPasswordForm = ({ onBackToLogin, initialEmail = "" }) => {
         <EmailInput value={email} onChange={handleEmailChange} error={emailError} />
 
         {/* Submit Button */}
-        <AuthButton title="Send Reset Link" loadingTitle="Sending..." isLoading={loading} />
+        <AuthButton title={t("auth.sendResetLink")} loadingTitle={t("auth.sending")} isLoading={loading} />
       </form>
     </div>
   );

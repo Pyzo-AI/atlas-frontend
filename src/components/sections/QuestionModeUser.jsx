@@ -15,6 +15,7 @@ import {
   setProductRecommendations,
 } from '@/store/features/videoSlice'
 import { clearOverlayImage } from '@/store/features/imageSlice'
+import { useTranslation } from "react-i18next";
 
 const QuestionModeUser = ({
   onPauseVideo,
@@ -31,6 +32,7 @@ const QuestionModeUser = ({
 }) => {
   const dispatch = useDispatch();
   const { question } = useSelector((state) => state.video);
+  const { t } = useTranslation();
   // No need for manual speech recognition as ElevenLabs handles it
 
   const handleTapToSpeak = () => {
@@ -124,7 +126,7 @@ const QuestionModeUser = ({
           }`}>
           <Image className="w-4 h-4 lg:w-5 lg:h-5" src={back_to_session} alt="back_to_session" />
           <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
-            Continue Lesson
+            {t("lectures.continueLesson")}
           </span>
         </button>
       </div>

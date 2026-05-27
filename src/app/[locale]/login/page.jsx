@@ -273,8 +273,9 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>{t("login.loading")}</div>}>
       <LoginForm />
     </Suspense>
   );

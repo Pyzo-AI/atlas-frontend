@@ -15,6 +15,7 @@ import Image from "next/image";
 import TextArea from "@/components/ui/TextArea";
 import Lottie from "lottie-react";
 import spinnerAnimation from "@/assets/json/spinner.json";
+import { useTranslation } from "react-i18next";
 
 export default function FeedbackModal({ isOpen, onClose, presentationId }) {
   const [rating, setRating] = useState(0);
@@ -25,6 +26,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
   const router = useLocalizedRouter();
   const { capture } = usePostHog();
   const [submitFeedback] = useSubmitFeedbackMutation();
+  const { t } = useTranslation();
 
   const handleStarClick = (starIndex, isHalf = false) => {
     setRating(isHalf ? starIndex - 0.5 : starIndex);
@@ -103,7 +105,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
             </div>
 
             {/* Title */}
-            <h2 className="text-xl font-bold text-primary-text text-center">How Was the Training?</h2>
+            <h2 className="text-xl font-bold text-primary-text text-center">{t("feedback.title")}</h2>
           </div>
 
           {/* Rating Section */}
@@ -157,7 +159,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
                 value={review}
                 onChange={handleReviewChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Write a review… (optional)"
+                placeholder={t("feedback.reviewPlaceholder")}
                 className="h-24 text-sm border-gray-300 rounded-xl focus:ring-1 focus:ring-accent"
               />
               <div className="absolute bottom-3 right-3 text-xs text-gray-400">({review.length}/250)</div>
@@ -177,17 +179,17 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
               {isSubmitting ? (
                 <div className="flex items-center justify-center">
                   <Lottie animationData={spinnerAnimation} className="-ml-1 mr-2 h-5 w-5" loop={true} />
-                  Submitting...
+                  {t("feedback.submitting")}
                 </div>
               ) : (
-                "Submit"
+                t("feedback.submit")
               )}
             </button>
 
             {/* Tooltip for disabled state */}
             {isSubmitDisabled && (
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20">
-                Rating is required
+                {t("feedback.ratingRequired")}
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-0 border-t-4 border-solid border-gray-800"></div>
               </div>
             )}

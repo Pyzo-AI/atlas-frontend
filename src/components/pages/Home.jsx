@@ -290,8 +290,8 @@ const Home = () => {
     return (
       <div className="w-full min-h-screen bg-page-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Presentations</h2>
-          <p className="text-gray-600">Failed to fetch data from the server.</p>
+          <h2 className="text-xl font-semibold text-red-600 mb-2">{t("home.errorTitle")}</h2>
+          <p className="text-gray-600">{t("home.errorDesc")}</p>
         </div>
       </div>
     );
@@ -377,7 +377,7 @@ const Home = () => {
           {/* Learning Overview - Hidden by default as per Figma */}
           {/* <div className="absolute flex flex-col items-start gap-3 sm:gap-[12px] w-full h-[138px] px-4 sm:px-[40px] top-[104px] invisible">
             <h3 className="w-full h-[17px] font-lato font-semibold text-sm sm:text-[14px] leading-[17px] text-light">
-              Learning Overview
+              {t("home.learningOverview")}
             </h3>
           </div> */}
         </div>
@@ -512,7 +512,7 @@ const Home = () => {
                       </div>
                       <div className="flex flex-col gap-2">
                         <h3 className="font-lato font-semibold text-lg sm:text-xl text-primary-text">
-                          No Courses Found
+                          {t("home.noCoursesFound")}
                         </h3>
                       </div>
                     </div>

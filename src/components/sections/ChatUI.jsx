@@ -390,7 +390,7 @@ const ChatUI = ({
 
                 {!isMobile && (
                   <span className="font-lato font-medium text-[8px] sm:text-[9px] lg:text-[10px] leading-3 text-center text-accent-secondary whitespace-nowrap">
-                    Interaction Mode
+                    {t("lectures.interactionMode")}
                   </span>
                 )}
               </button>
@@ -401,7 +401,7 @@ const ChatUI = ({
                 className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-accent-secondary rounded-[73.75px]">
                 <Image className="w-4 h-4 lg:w-5 lg:h-5" src={back_to_session} alt="back_to_session" />
                 <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
-                  Continue Lesson
+                  {t("lectures.continueLesson")}
                 </span>
               </button>
             </div>

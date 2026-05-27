@@ -105,7 +105,7 @@ export default function Analytics() {
 
   const learningData = useMemo(() => {
     if (!presentationStatsData?.summary_metrics) {
-      return [{ title: "Total Presentations", value: "0" }];
+      return [{ title: t("analytics.totalPresentations"), value: "0" }];
     }
 
     return presentationStatsData.summary_metrics.map((metric, index) => ({
@@ -117,7 +117,7 @@ export default function Analytics() {
 
   const assessmentsData = useMemo(() => {
     if (!assessmentStatsData?.summary_metrics) {
-      return [{ title: "Total Assessments", value: "0" }];
+      return [{ title: t("analytics.totalAssessments"), value: "0" }];
     }
 
     return assessmentStatsData.summary_metrics.map((metric, index) => ({

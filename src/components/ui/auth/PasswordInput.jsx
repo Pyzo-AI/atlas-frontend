@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 
-const PasswordInput = ({ value, onChange, error, placeholder = "***************", label = "Password" }) => {
+const PasswordInput = ({ value, onChange, error, placeholder = "***************", labelKey = "auth.newPassword" }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="font-medium text-[16px] leading-[19px] text-[#111827]">{label}</label>
+      <label className="font-medium text-[16px] leading-[19px] text-[#111827]">{t(labelKey)}</label>
       <div className="flex flex-col gap-1">
         <div
           className={`relative w-full h-[44px] bg-white border rounded-[10px] flex items-center px-3 transition-colors ${
