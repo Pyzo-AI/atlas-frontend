@@ -19,7 +19,11 @@ const PrivateRoute = ({ children }) => {
   // Cross-tab session sync: refreshes tokens on every tab switch to get latest permissions,
   // then checks product access (no admin check for user app).
   usePyzoSessionSync({
-    onLogout: logout,
+    onLogout: () => {
+      if (!isLoginPage) {
+        logout()
+      }
+    },
     onLogin: () => router.push('/'),
     productName: PRODUCT_NAME,
     refreshUrl: REFRESH_URL,
@@ -51,7 +55,7 @@ const PrivateRoute = ({ children }) => {
       const tokens = getTokens()
 
       if (!tokens.access_token) {
-        router.push('/login')
+        router.push(`/login?redirect=${encodeURIComponent(pathname)}`)
         return
       }
 

@@ -11,7 +11,15 @@ export default function LoginPage() {
 
   const handleLoginSuccess = (response) => {
     toast.success("Login successful!");
-    router.push("/");
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectUrl = urlParams.get("redirect");
+    
+    if (redirectUrl) {
+      router.push(redirectUrl);
+    } else {
+      router.push("/");
+    }
   };
 
   const handleLoginFailure = (error) => {
