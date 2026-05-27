@@ -515,6 +515,8 @@ const Home = () => {
                 }) || [];
 
               if (filteredPresentations.length === 0) {
+                if (orgConfig?.disable_no_course_found) return null;
+
                 return (
                   <div className="flex flex-col items-center justify-center w-full min-h-[50vh]">
                     <div className="flex flex-col items-center gap-4 text-center">
