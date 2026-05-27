@@ -46,13 +46,15 @@ const PrivateRoute = ({ children }) => {
   const isLoginPage = pathname === '/login' || pathname.endsWith('/login')
 
   useEffect(() => {
-    // Skip auth check for login page
-    if (isLoginPage) {
-      return
-    }
-
     const checkAuth = async () => {
       const tokens = getTokens()
+
+      if (isLoginPage) {
+        if (tokens.access_token) {
+          router.push('/')
+        }
+        return
+      }
 
       if (!tokens.access_token) {
         router.push(`/login?redirect=${encodeURIComponent(pathname)}`)
