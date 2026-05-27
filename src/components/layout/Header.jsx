@@ -20,6 +20,7 @@ import NotificationDrawer from "./NotificationDrawer";
 import notification from "@/assets/svg/notification.svg";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useTranslation } from "react-i18next";
+import { useGetOrganizationConfigQuery } from "@/store/api/organizationsApi";
 
 const navigation = [
   // { name: "Home", href: "/" },
@@ -44,6 +45,17 @@ const Header = ({ onMenuClick }) => {
   const { notifications, unreadCount, markAsRead, refresh, loadMore, hasMore, loading } = useNotifications(token);
   const { t } = useTranslation();
 
+  // Fetch organization config
+  const { data: orgConfig } = useGetOrganizationConfigQuery(undefined, {
+    skip: !token, // Only fetch if we have a token
+  });
+
+  useEffect(() => {
+    if (orgConfig) {
+      console.log("Organization Config API Response:", orgConfig);
+    }
+  }, [orgConfig]);
+
 useEffect(() => {
   if (
     typeof window !== "undefined" &&
@@ -62,7 +74,7 @@ useEffect(() => {
   }, []);
 
   const hideSidebarRoutes = ["/lectures/", "/assessment/", "/login"];
-  const shouldHideMenuButton = hideSidebarRoutes.some((route) => pathname.includes(route));
+  const shouldHideMenuButton = orgConfig?.disable_sidebar || hideSidebarRoutes.some((route) => pathname.includes(route));
 
   useEffect(() => {
     const tokens = JSON.parse(localStorage.getItem("trainboost_tokens") || "{}");
@@ -145,11 +157,13 @@ useEffect(() => {
         )}
 
         {/* Logo - Always visible on mobile, visible on desktop for /lectures page */}
-        <div
-          className={`cursor-pointer ${pathname.includes("/lectures/") ? "" : "md:hidden"}`}
-          onClick={() => router.push("/")}>
-          <Image src={logo} height={28} width={103} alt="Pyzo Logo" />
-        </div>
+        {!orgConfig?.disable_logo && (
+          <div
+            className={`cursor-pointer ${pathname.includes("/lectures/") ? "" : "md:hidden"}`}
+            onClick={() => router.push("/")}>
+            <Image src={logo} height={28} width={103} alt="Pyzo Logo" />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-4">
@@ -170,18 +184,20 @@ useEffect(() => {
         </nav>
 
         {/* Notification Icon */}
-        <div
-          className="flex items-center justify-center w-10 h-10 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors p-2"
-          onClick={() => setIsNotificationOpen(true)}>
-          <div className="relative w-6 h-6 flex items-center justify-center">
-            <Image src={notification} alt="Notification" width={18} height={18} className="object-contain" />
-            {unreadCount > 0 && (
-              <div className="absolute left-[13px] top-[-3px] flex flex-col justify-center items-center px-1.5 py-0.5 bg-[#FF7676] rounded-[4px] min-w-[14px] h-[14px] z-10">
-                <span className="font-lato font-semibold text-[10px] leading-tight text-white">{unreadCount}</span>
-              </div>
-            )}
+        {!orgConfig?.disable_notification && (
+          <div
+            className="flex items-center justify-center w-10 h-10 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors p-2"
+            onClick={() => setIsNotificationOpen(true)}>
+            <div className="relative w-6 h-6 flex items-center justify-center">
+              <Image src={notification} alt="Notification" width={18} height={18} className="object-contain" />
+              {unreadCount > 0 && (
+                <div className="absolute left-[13px] top-[-3px] flex flex-col justify-center items-center px-1.5 py-0.5 bg-[#FF7676] rounded-[4px] min-w-[14px] h-[14px] z-10">
+                  <span className="font-lato font-semibold text-[10px] leading-tight text-white">{unreadCount}</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="relative" ref={dropdownRef}>
           <div

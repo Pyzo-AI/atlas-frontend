@@ -13,7 +13,7 @@ import unlocked from "../../assets/svg/unlocked.svg";
 import completed from "../../assets/svg/completed.svg";
 import dueSoon from "../../assets/svg/due-soon.svg";
 import FeedbackSuccessModal from "../modals/FeedbackSuccessModal";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setAutoPlayEnabled, setSelectedAssessmentId } from "@/store/features/videoSlice";
 import { HiBookOpen, HiChevronDown } from "react-icons/hi2";
 import FloatingChatbot from "../common/FloatingChatbot";
@@ -220,6 +220,7 @@ const Home = () => {
   const { capture } = usePostHog();
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  const orgConfig = useSelector((state) => state.organization?.config);
 
   // Check for feedback success parameter
   useEffect(() => {
@@ -385,98 +386,108 @@ const Home = () => {
         {/* Course Section */}
         <div className="flex flex-col items-start gap-4 sm:gap-[16px] w-full px-4 sm:px-5 py-4 sm:py-4">
           {/* Header with search and tabs */}
-          <div className="flex justify-between items-center gap-4 sm:gap-[16px] w-full">
+          {!orgConfig?.disable_course_header_row && (
+            <div className="flex justify-between items-center gap-4 sm:gap-[16px] w-full">
             <div className="flex items-center gap-4">
               <h2 className="font-lato font-bold text-base sm:text-[16px] leading-tight sm:leading-[19px] text-primary-text">
                 {t("home.availableCourses")}
               </h2>
 
               {/* Search Box - Hidden on mobile, visible on iPad and desktop */}
-              <input
-                type="text"
-                placeholder={t("home.searchCourses")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="hidden md:block w-64 px-3 h-[32px] border border-border-dark rounded-[6px] font-lato text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
+              {!orgConfig?.disable_course_search && (
+                <input
+                  type="text"
+                  placeholder={t("home.searchCourses")}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="hidden md:block w-64 px-3 h-[32px] border border-border-dark rounded-[6px] font-lato text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              )}
             </div>
 
             {/* Desktop Tabs */}
-            <div className="hidden lg:flex items-start p-1 w-auto h-[32px] bg-white border border-border rounded-[6px] gap-1">
-              {["all", "locked", "in-progress", "overdue", "completed"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setFilter(tab)}
-                  className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${
-                    filter === tab ? "bg-primary" : ""
-                  }`}>
-                  <span
-                    className={`font-lato font-medium text-[10px] leading-[20px] whitespace-nowrap ${
-                      filter === tab ? "text-light" : "text-text-muted"
+            {!orgConfig?.disable_course_filters && (
+              <div className="hidden lg:flex items-start p-1 w-auto h-[32px] bg-white border border-border rounded-[6px] gap-1">
+                {["all", "locked", "in-progress", "overdue", "completed"].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setFilter(tab)}
+                    className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${
+                      filter === tab ? "bg-primary" : ""
                     }`}>
-                    {tab === "all"
+                    <span
+                      className={`font-lato font-medium text-[10px] leading-[20px] whitespace-nowrap ${
+                        filter === tab ? "text-light" : "text-text-muted"
+                      }`}>
+                      {tab === "all"
+                        ? t("home.tabs.all")
+                        : tab === "locked"
+                          ? t("home.tabs.locked")
+                          : tab === "in-progress"
+                            ? t("home.tabs.inProgress")
+                            : tab === "overdue"
+                              ? t("home.tabs.overdue")
+                              : t("home.tabs.completed")}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Mobile/Tablet Dropdown */}
+            {!orgConfig?.disable_course_filters && (
+              <div className="relative lg:hidden">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center justify-between px-3 py-2 w-32 h-[30px] bg-white border border-border rounded-[6px]">
+                  <span className="font-lato font-medium text-[12px] text-text-muted">
+                    {filter === "all"
                       ? t("home.tabs.all")
-                      : tab === "locked"
+                      : filter === "locked"
                         ? t("home.tabs.locked")
-                        : tab === "in-progress"
+                        : filter === "in-progress"
                           ? t("home.tabs.inProgress")
-                          : tab === "overdue"
+                          : filter === "overdue"
                             ? t("home.tabs.overdue")
                             : t("home.tabs.completed")}
                   </span>
+                  <HiChevronDown
+                    className={`w-4 h-4 text-text-muted transition-transform duration-200 ${
+                      isDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
-              ))}
-            </div>
-
-            {/* Mobile/Tablet Dropdown */}
-            <div className="relative lg:hidden">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center justify-between px-3 py-2 w-32 h-[30px] bg-white border border-border rounded-[6px]">
-                <span className="font-lato font-medium text-[12px] text-text-muted">
-                  {filter === "all"
-                    ? t("home.tabs.all")
-                    : filter === "locked"
-                      ? t("home.tabs.locked")
-                      : filter === "in-progress"
-                        ? t("home.tabs.inProgress")
-                        : filter === "overdue"
-                          ? t("home.tabs.overdue")
-                          : t("home.tabs.completed")}
-                </span>
-                <HiChevronDown
-                  className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-              {isDropdownOpen && (
-                <div className="absolute top-full mt-1 w-32 bg-white border border-border rounded-[6px] shadow-lg z-50">
-                  {["all", "locked", "in-progress", "overdue", "completed"].map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => {
-                        setFilter(tab);
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${
-                        filter === tab ? "bg-primary text-light" : "text-text-muted"
-                      }`}>
-                      <span className="font-lato font-medium text-[12px] leading-4">
-                        {tab === "all"
-                          ? t("home.tabs.all")
-                          : tab === "locked"
-                            ? t("home.tabs.locked")
-                            : tab === "in-progress"
-                              ? t("home.tabs.inProgress")
-                              : tab === "overdue"
-                                ? t("home.tabs.overdue")
-                                : t("home.tabs.completed")}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                {isDropdownOpen && (
+                  <div className="absolute top-full mt-1 w-32 bg-white border border-border rounded-[6px] shadow-lg z-50">
+                    {["all", "locked", "in-progress", "overdue", "completed"].map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => {
+                          setFilter(tab);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${
+                          filter === tab ? "bg-primary text-light" : "text-text-muted"
+                        }`}>
+                        <span className="font-lato font-medium text-[12px] leading-4">
+                          {tab === "all"
+                            ? t("home.tabs.all")
+                            : tab === "locked"
+                              ? t("home.tabs.locked")
+                              : tab === "in-progress"
+                                ? t("home.tabs.inProgress")
+                                : tab === "overdue"
+                                  ? t("home.tabs.overdue")
+                                  : t("home.tabs.completed")}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+          )}
 
           {/* Course Grid */}
           <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full">

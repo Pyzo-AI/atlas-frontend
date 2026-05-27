@@ -15,11 +15,13 @@ import analyticsActive from "@/assets/svg/analytics_active.svg";
 import certificate from "@/assets/svg/certificate.svg";
 import certificateActive from "@/assets/svg/certificate_active.svg";
 import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
 
 const Sidebar = ({ isOpen = false, onClose }) => {
   const pathname = usePathname();
   const { localizePath } = useLocalizedRouter();
   const { t } = useTranslation();
+  const orgConfig = useSelector((state) => state.organization?.config);
 
   // Hide sidebar on certain routes
   const hideSidebarRoutes = ["/lectures/", "/login"];
@@ -86,10 +88,12 @@ const Sidebar = ({ isOpen = false, onClose }) => {
         <div className="flex flex-col">
           {/* Logo Section */}
           <div className="flex flex-col justify-center items-start p-3 px-4 h-[68px]">
-            <div className="flex items-center gap-1">
-              {/* Logo Icon */}
-              <Image src={logo} height={25} width={92} alt="Pyzo Logo" />
-            </div>
+            {!orgConfig?.disable_logo && (
+              <div className="flex items-center gap-1">
+                {/* Logo Icon */}
+                <Image src={logo} height={25} width={92} alt="Pyzo Logo" />
+              </div>
+            )}
           </div>
 
           {/* Menu Section */}
