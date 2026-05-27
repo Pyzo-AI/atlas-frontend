@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap");
 @import "tailwindcss";
+@source "../../node_modules/@esmagico/pyzo-auth-sdk/dist/**/*.{js,mjs}";
 
 @theme {
   --color-primary: #2762ea;
@@ -168,26 +169,32 @@ body {
 .animate-wave {
   animation: wave 1.5s infinite;
 }
-
-/* Prevent iOS zoom on input focus */
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-  select,
-  textarea,
-  input[type="text"],
-  input[type="password"],
-  input[type="datetime"],
-  input[type="datetime-local"],
-  input[type="date"],
-  input[type="month"],
-  input[type="time"],
-  input[type="week"],
-  input[type="number"],
-  input[type="email"],
-  input[type="url"],
-  input[type="search"],
-  input[type="tel"],
-  input[type="color"] {
-    font-size: 16px;
+/* 
+  Wrap global tag selectors in @layer base to lower their specificity. 
+  This prevents global styles (like the iOS zoom fix) from overriding 
+  utility classes used in components and SDKs.
+*/
+@layer base {
+  /* Prevent iOS zoom on input focus */
+  @media screen and (-webkit-min-device-pixel-ratio: 0) {
+    select,
+    textarea,
+    input[type="text"],
+    input[type="password"],
+    input[type="datetime"],
+    input[type="datetime-local"],
+    input[type="date"],
+    input[type="month"],
+    input[type="time"],
+    input[type="week"],
+    input[type="number"],
+    input[type="email"],
+    input[type="url"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="color"] {
+      font-size: 16px;
+    }
   }
 }
 /* Utility to hide scrollbar but allow scrolling */

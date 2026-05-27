@@ -3,7 +3,7 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import { questionsApi } from "./api/questionsApi";
 import { analyticsApi } from "./api/analyticsApi";
 import { liveKitApi } from "./api/liveKitApi";
-import { authApi } from "./api/authApi";
+
 import { certificatesApi } from "./api/certificatesApi";
 import { notificationApi } from "./api/notificationApi";
 import videoReducer from "./features/videoSlice";
@@ -19,7 +19,7 @@ export const store = configureStore({
     [questionsApi.reducerPath]: questionsApi.reducer,
     [analyticsApi.reducerPath]: analyticsApi.reducer,
     [liveKitApi.reducerPath]: liveKitApi.reducer,
-    [authApi.reducerPath]: authApi.reducer,
+
     [certificatesApi.reducerPath]: certificatesApi.reducer,
     [notificationApi.reducerPath]: notificationApi.reducer,
     [organizationsApi.reducerPath]: organizationsApi.reducer,
@@ -35,7 +35,6 @@ export const store = configureStore({
       questionsApi.middleware,
       analyticsApi.middleware,
       liveKitApi.middleware,
-      authApi.middleware,
       certificatesApi.middleware,
       notificationApi.middleware,
       organizationsApi.middleware
