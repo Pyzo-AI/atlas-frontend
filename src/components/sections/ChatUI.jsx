@@ -37,6 +37,10 @@ const ChatUI = ({
   const { t } = useTranslation();
   const [showMicPopup, setShowMicPopup] = useState(false);
   const messagesContainerRef = useRef(null);
+  
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const prevMessageCountRef = useRef(0);
 
   // Fetch conversation history — use chatbot endpoint when useChatbotHistory is true
   const { data: presentationConversation = [], isLoading: isLoadingPresentationHistory } = useGetConversationHistoryQuery(presentationId, {
@@ -92,12 +96,44 @@ const ChatUI = ({
   const displayConversation = liveKitAgentEnabled ? mergedConversation : conversation;
   const groupedConversation = liveKitAgentEnabled ? groupMessagesByDate(mergedConversation) : null;
 
-  // Scroll to bottom when conversation updates or new live messages arrive
-  useEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+  // Scroll handling
+  const handleScroll = () => {
+    if (!messagesContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    // 50px threshold to be considered "at bottom"
+    const isBottom = Math.abs(scrollHeight - scrollTop - clientHeight) < 50;
+    setIsAtBottom(isBottom);
+    if (isBottom) {
+      setUnreadMessages(0);
     }
-  }, [displayConversation, liveMessages]);
+  };
+
+  useEffect(() => {
+    const currentCount = displayConversation.length;
+    const newMessages = currentCount - prevMessageCountRef.current;
+    prevMessageCountRef.current = currentCount;
+
+    if (newMessages > 0) {
+      if (isAtBottom) {
+        // Auto scroll
+        setTimeout(() => {
+          if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+          }
+        }, 100);
+      } else {
+        // Increment unread count
+        setUnreadMessages((prev) => prev + newMessages);
+      }
+    } else if (isAtBottom) {
+       // Just general updates, ensure we stick to bottom
+       setTimeout(() => {
+         if (messagesContainerRef.current) {
+           messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+         }
+       }, 100);
+    }
+  }, [displayConversation, isAtBottom]);
 
   const handleInteractionMode = async () => {
     if (!agentId) return;
@@ -153,9 +189,9 @@ const ChatUI = ({
       {showMicPopup && (
         <MicrophonePermissionPopup onCancel={() => setShowMicPopup(false)} onAllowMicrophone={handleAllowMicrophone} />
       )}
-      <div className="flex flex-col w-full bg-white h-full max-h-full overflow-hidden">
+      <div className="flex flex-col w-full bg-white h-full max-h-full overflow-hidden relative">
         {/* Chat Container */}
-        <div className="flex flex-col h-full border border-border-light rounded-xl overflow-hidden">
+        <div className="flex flex-col h-full border border-border-light rounded-xl overflow-hidden relative">
           {/* Header */}
           <div className="flex justify-between items-center px-3 py-1 lg:py-3 pb-1 md:pb-2 border-b border-border-light flex-shrink-0">
             <h2 className="font-lato font-bold text-[12px] lg:text-base leading-[19px] tracking-[0.02em] text-primary-text">
@@ -166,8 +202,26 @@ const ChatUI = ({
             </button>
           </div>
 
+          {/* New Messages Badge */}
+          {unreadMessages > 0 && !isAtBottom && (
+            <button
+              onClick={() => {
+                if (messagesContainerRef.current) {
+                  messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+                }
+                setUnreadMessages(0);
+                setIsAtBottom(true);
+              }}
+              className="absolute bottom-24 left-1/2 transform -translate-x-1/2 bg-primary text-white rounded-full px-4 py-2 text-xs font-bold shadow-lg flex items-center gap-2 z-50 hover:bg-primary-hover transition-all cursor-pointer">
+              {unreadMessages} new {unreadMessages === 1 ? "message" : "messages"}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </button>
+          )}
+
           {/* Messages Container */}
-          <div ref={messagesContainerRef} className="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden min-h-0 overscroll-contain">
+          <div ref={messagesContainerRef} onScroll={handleScroll} className="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden min-h-0 overscroll-contain scroll-smooth">
             {isLoadingHistory ? (
               <div className="space-y-3 sm:space-y-4 lg:space-y-6">
                 {Array.from({ length: 4 }).map((_, index) => (
