@@ -180,6 +180,22 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     };
   }, [isOpen]);
 
+  // Disconnect if the app is backgrounded (e.g. mobile Safari minimized, tab switched)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        if (isOpen) {
+          stopConversation();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isOpen]);
+
   // Lock body scroll on mobile when chatbot is open (iOS-safe approach)
   useEffect(() => {
     const isMobileWidth = window.innerWidth < 640;
