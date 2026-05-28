@@ -40,6 +40,13 @@ export default function LoginPage() {
         onPermissionDenied={() => {
           toast.warning("You do not have an active subscription for Atlas.");
         }}
+        ssoConfig={{
+          keycloakBaseUrl: process.env.NEXT_PUBLIC_KEYCLOAK_BASE_URL || "",
+          realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "",
+          clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "",
+          clientSecret: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET || "",
+          redirectUri: process.env.NEXT_PUBLIC_REDIRECT_URI || "",
+        }}
       />
     </div>
   );

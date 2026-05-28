@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import { decodeJWT } from "@/utils/jwt";
-import { getAuthTokens, clearAuthTokens } from "@esmagico/pyzo-auth-sdk";
+import { getAuthTokens } from "@esmagico/pyzo-auth-sdk";
 import user_icon from "@/assets/svg/user-icon.svg";
 import { trackLogout } from "@/utils/authTracking";
+import { logout } from "@/utils/auth";
 import Image from "next/image";
 import hamburger from "@/assets/svg/hamburger.svg";
 import logout_icon from "@/assets/svg/logout.svg";
@@ -103,19 +104,10 @@ useEffect(() => {
   const confirmLogout = async () => {
     setIsLoggingOut(true);
     setIsLogoutModalOpen(false);
-    const tokens = getAuthTokens() || {};
-    let userId = null;
-    if (tokens.access_token) {
-      const decoded = decodeJWT(tokens.access_token);
-      userId = decoded?.sub;
-    }
-    if (userId) {
-      trackLogout(userId);
-    }
-    clearAuthTokens();
+    
     localStorage.removeItem("trainboost_conversation_history");
     setIsDropdownOpen(false);
-    router.push("/login");
+    logout("/login");
   };
 
   return (

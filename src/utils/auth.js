@@ -1,6 +1,6 @@
 import { decodeJWT } from "./jwt";
 import { trackLogout } from "./authTracking";
-import { getAuthTokens, setAuthTokens, clearAuthTokens } from "@esmagico/pyzo-auth-sdk";
+import { getAuthTokens, setAuthTokens, logout as sdkLogout } from "@esmagico/pyzo-auth-sdk";
 
 // Get the refresh token URL from environment or fallback
 const REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_LOGIN_BASE_URL}/auth/refresh-token`;
@@ -81,7 +81,7 @@ export const isTokenExpired = (token) => {
 };
 
 // Logout utility
-export const logout = () => {
+export const logout = (loginUrl = "/login") => {
   // Get user ID for tracking before clearing tokens
   const tokens = getAuthTokens() || {};
   let userId = null;
@@ -95,6 +95,10 @@ export const logout = () => {
     trackLogout(userId);
   }
   
-  clearAuthTokens();
-  window.location.href = "/login";
+  // Use SDK logout to revoke session on Keycloak
+  sdkLogout({
+    loginUrl,
+    baseUrl: process.env.NEXT_PUBLIC_LOGIN_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "",
+    refreshToken: tokens?.refresh_token,
+  });
 };
