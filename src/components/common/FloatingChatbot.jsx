@@ -317,7 +317,9 @@ const FloatingChatbot = ({ agentId = 1 }) => {
                   ? isMuted
                     ? t("floatingChatbot.muted")
                     : t("floatingChatbot.listening")
-                  : t("floatingChatbot.speaking")}
+                  : liveKitAgentState === "speaking"
+                    ? t("floatingChatbot.speaking")
+                    : t("floatingChatbot.thinking")}
               </p>
               {/* {liveKitAgentState === "listening" && !isMuted && (
                 <p className="text-[10px] sm:text-[12px] leading-[12px] sm:leading-[16px] font-medium text-[#4B5563] sm:text-[#1A1C29]/60 font-lato">{t("floatingChatbot.canSpeakNow")}</p>

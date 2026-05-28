@@ -116,6 +116,7 @@
     "connecting": "Connecting to interviewer...",
     "listening": "Listening...",
     "speaking": "Speaking...",
+    "thinking": "Thinking...",
     "muted": "Muted",
     "canSpeakNow": "You can speak now"
   },

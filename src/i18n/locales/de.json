@@ -116,6 +116,7 @@
     "connecting": "Verbindung zum Interviewer wird hergestellt...",
     "listening": "Zuhören...",
     "speaking": "Sprechen...",
+    "thinking": "Nachdenken...",
     "muted": "Stummgeschaltet",
     "canSpeakNow": "Sie können jetzt sprechen"
   },
