@@ -62,7 +62,7 @@ const AILearningAssistant = ({
       {showMicPopup && (
         <MicrophonePermissionPopup onCancel={() => setShowMicPopup(false)} onAllowMicrophone={handleAllowMicrophone} />
       )}
-      <div className="flex flex-col items-start p-1 md:p-[6px] lg:p-3 gap-2.5 w-full h-full flex-1 border border-border-light rounded-xl bg-white overflow-hidden">
+      <div className="flex flex-col items-start p-1 md:p-[6px] lg:p-3 gap-2.5 w-full h-full flex-1 border border-border-light rounded-xl bg-white min-h-0 overflow-hidden">
         {/* Inner Frame */}
         <div
           className={`w-full h-full bg-bg-lavender rounded-xl ${
@@ -78,10 +78,10 @@ const AILearningAssistant = ({
           {/* Main Content Container - Centered vertically in remaining space */}
           <div
             className={`flex-1 flex flex-col items-center justify-center ${
-              isMobileView ? "gap-2 px-2" : "gap-6 px-4 "
-            }  min-h-0 overflow-hidden`}>
+              isMobileView ? "gap-2 px-2" : "gap-4 md:gap-6 px-4"
+            } w-full h-full min-h-0 overflow-y-auto py-2`}>
             {/* Icon and Text Section */}
-            <div className={`flex flex-col items-center ${isMobileView ? "gap-2" : "gap-4"} w-full max-w-[275px]`}>
+            <div className={`flex flex-col items-center ${isMobileView ? "gap-2" : "gap-4"} w-full max-w-[275px] my-auto`}>
               {/* Icon Container */}
               {!isMobileView ? (
                 <div className="w-[72px] h-[72px] bg-white rounded-full flex items-center justify-center">
@@ -109,7 +109,7 @@ const AILearningAssistant = ({
             </div>
 
             {/* Start Q&A Button */}
-            <div className="relative group">
+            <div className="relative group shrink-0 mt-auto md:mt-0 pb-2">
               <button
                 onClick={handleStartQA}
                 disabled={!agentId}
