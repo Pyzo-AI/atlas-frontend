@@ -32,6 +32,7 @@ const ChatUI = ({
   useChatbotHistory = false,
   hideFooter = false,
   liveMessages = [],
+  enableSmoothScroll = true,
 }) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
@@ -221,7 +222,7 @@ const ChatUI = ({
           )}
 
           {/* Messages Container */}
-          <div ref={messagesContainerRef} onScroll={handleScroll} className="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden min-h-0 overscroll-contain scroll-smooth">
+          <div ref={messagesContainerRef} onScroll={handleScroll} className={`flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden min-h-0 overscroll-contain ${enableSmoothScroll ? "scroll-smooth" : ""}`}>
             {isLoadingHistory ? (
               <div className="space-y-3 sm:space-y-4 lg:space-y-6">
                 {Array.from({ length: 4 }).map((_, index) => (
@@ -267,7 +268,7 @@ const ChatUI = ({
                             <div className="flex justify-end">
                               <div className="max-w-[75%]">
                                 <div className="bg-bg-chat-bubble rounded-[10px_10px_10px_0px] px-2.5 py-2">
-                                  <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-primary-text break-words">
+                                  <p className={`font-lato font-normal ${useChatbotHistory ? "text-[12px] leading-4" : "text-[8px] leading-3"} sm:leading-4 lg:text-[13px] text-left text-primary-text break-words`}>
                                     {item.content}
                                   </p>
                                 </div>
@@ -328,7 +329,7 @@ const ChatUI = ({
                                     ))}
                                   </div>
                                 )}
-                                <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-primary-text break-words">
+                                <p className={`font-lato font-normal ${useChatbotHistory ? "text-[12px] leading-4" : "text-[8px] leading-4"} sm:leading-5 lg:text-[13px] lg:leading-[18px] text-primary-text break-words`}>
                                   {item.content || "No text answer found"}
                                 </p>
                                 {item.time && <p className="text-[10px] text-gray-500 mt-1">{formatTime(item.time)}</p>}
@@ -349,7 +350,7 @@ const ChatUI = ({
                       /* User Message */
                       <div className="flex justify-end">
                         <div className="max-w-[75%] bg-bg-chat-bubble rounded-[10px_10px_10px_0px] px-2.5 py-2">
-                          <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-3 sm:leading-4 text-left text-primary-text break-words">
+                          <p className={`font-lato font-normal ${useChatbotHistory ? "text-[12px] leading-4" : "text-[8px] leading-3"} sm:leading-4 lg:text-[13px] text-left text-primary-text break-words`}>
                             {item.content}
                           </p>
                         </div>
@@ -398,7 +399,7 @@ const ChatUI = ({
                                     )}
                                   </a>
                                   {rec.area && (
-                                    <span className="font-lato font-medium text-[6px] lg:text-[10px] leading-tight text-primary-text-muted text-center max-w-[58px] truncate">
+                                    <span className={`font-lato font-medium ${useChatbotHistory ? "text-[8px]" : "text-[6px]"} lg:text-[10px] leading-tight text-primary-text-muted text-center max-w-[58px] truncate`}>
                                       {rec.area}
                                     </span>
                                   )}
@@ -406,7 +407,7 @@ const ChatUI = ({
                               ))}
                             </div>
                           )}
-                          <p className="font-lato font-normal text-[8px] lg:text-[13px] leading-4 sm:leading-5 lg:leading-[18px] text-primary-text break-words">
+                          <p className={`font-lato font-normal ${useChatbotHistory ? "text-[12px] leading-4" : "text-[8px] leading-4"} sm:leading-5 lg:text-[13px] lg:leading-[18px] text-primary-text break-words`}>
                             {item.content || "No text answer found"}
                           </p>
                         </div>

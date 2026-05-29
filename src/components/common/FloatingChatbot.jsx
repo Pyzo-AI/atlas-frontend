@@ -172,13 +172,16 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     if (isOpen && !connectionState.isConnected && !connectionState.isLoading) {
       startConversation();
     }
-    // Cleanup when component unmounts or chatbot is closed
+  }, [isOpen]);
+
+  // Cleanup when component unmounts
+  useEffect(() => {
     return () => {
-      if (liveKitService.isConnected() && !isOpen) {
+      if (liveKitService.isConnected()) {
         liveKitService.disconnect();
       }
     };
-  }, [isOpen]);
+  }, []);
 
   // Disconnect if the app is backgrounded (e.g. mobile Safari minimized, tab switched)
   useEffect(() => {
@@ -266,6 +269,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
             useChatbotHistory={true}
             hideFooter={true}
             liveMessages={liveMessages}
+            enableSmoothScroll={false}
           />
         </div>
 
