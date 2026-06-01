@@ -8,7 +8,7 @@ import { usePostHog } from '@/hooks/usePostHog'
 import { usePyzoSessionSync, AccessDeniedScreen, hasProductAccess, refreshSession, getAuthTokens } from '@esmagico/pyzo-auth-sdk'
 
 const PRODUCT_NAME = 'atlas'
-const REFRESH_URL = `${process.env.NEXT_PUBLIC_LOGIN_BASE_URL}/auth/refresh`
+const REFRESH_BASE_URL = process.env.NEXT_PUBLIC_LOGIN_BASE_URL || ''
 
 const PrivateRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -26,7 +26,7 @@ const PrivateRoute = ({ children }) => {
     },
     onLogin: () => router.push('/'),
     productName: PRODUCT_NAME,
-    refreshUrl: REFRESH_URL,
+    refreshBaseUrl: REFRESH_BASE_URL,
     onPermissionDenied: () => {
       // Token exists but product check failed — user IS logged in, just lacks access.
       // If on /login, navigate to home first so AccessDeniedScreen renders there.
@@ -62,7 +62,7 @@ const PrivateRoute = ({ children }) => {
       }
 
       // Refresh tokens to get latest permissions on page load
-      await refreshSession(REFRESH_URL)
+      await refreshSession(REFRESH_BASE_URL)
       const freshTokens = getAuthTokens() || tokens
 
       // Check product access on the refreshed token
