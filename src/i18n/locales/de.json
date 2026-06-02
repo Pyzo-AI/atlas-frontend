@@ -245,8 +245,11 @@
     "connecting": "Verbinden",
     "speaking": "Sprechen",
     "listening": "Zuhören",
+    "thinking": "Denken",
     "askMeAnything": "Fragen Sie mich etwas zur Präsentation, und ich helfe Ihnen bei den Antworten.",
     "continueLesson": "Lektion fortsetzen",
+    "microphoneMuted": "Mikrofon stummgeschaltet",
+    "unmuteAndSpeak": "Stummschaltung aufheben und sprechen.",
     "assessmentReset": "Bewertung zurückgesetzt. Sie können es erneut versuchen.",
     "restartingTraining": "Training wird von Anfang an neu gestartet.",
     "interactionModeUnavailable": "Interaktionsmodus nicht verfügbar. Bitte versuchen Sie es später erneut."

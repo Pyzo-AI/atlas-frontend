@@ -26,7 +26,7 @@ const QuestionModeAI = forwardRef(
     }));
 
     const userName = getUserDetailsFromToken()?.name;
-    const { productRecommendations } = useSelector((state) => state.video);
+    const { productRecommendations, isUserMuted } = useSelector((state) => state.video);
     const { t } = useTranslation();
 
     // Show ProductRecommendationGallery when product recommendations are available
@@ -116,7 +116,17 @@ const QuestionModeAI = forwardRef(
               </div>
             ) : isConnected ? (
               <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block capitalize">
-                {liveKitAgentEnabled ? liveKitAgentState : isAudioPlaying ? t("lectures.speaking") : t("lectures.listening")}
+                {liveKitAgentEnabled
+                  ? (liveKitAgentState === "listening"
+                      ? (isUserMuted ? "" : t("lectures.listening"))
+                      : liveKitAgentState === "speaking"
+                        ? t("lectures.speaking")
+                        : t("lectures.thinking"))
+                  : isAudioPlaying
+                    ? t("lectures.speaking")
+                    : isUserMuted
+                      ? ""
+                      : t("lectures.listening")}
               </p>
             ) : (
               <p className="w-full text-center font-lato font-normal text-sm leading-[18px] text-white hidden md:block">
