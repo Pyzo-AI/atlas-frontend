@@ -558,7 +558,7 @@ const Home = () => {
             </div>
 
             {/* Right Side - Video Panel */}
-            <div className={`${rightWidth} bg-page-background ${rightPadding} overflow-y-auto`}>
+            <div className={`${rightWidth} bg-page-background ${rightPadding} overflow-hidden`}>
               <CombinedVideoPanel
                 isMobile={true}
                 isPhone={isPhone}
