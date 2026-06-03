@@ -107,9 +107,9 @@ const QuestionModeUser = ({
   }, [dispatch]);
 
   return (
-    <div className={`flex-1 border border-border-light rounded-[10px] p-3 ${isMobile ? 'pb-2' : 'pb-6'} flex flex-col`}>
+    <div className={`flex-1 border border-border-light rounded-[10px] ${isMobile ? 'p-1.5' : 'p-3'} ${isMobile ? 'pb-1' : 'pb-6'} flex flex-col min-h-0`}>
       {/* Main Content Frame */}
-      <div className="flex-1 bg-bg-neutral rounded-xl flex items-center justify-center p-1">
+      <div className={`flex-1 bg-bg-neutral rounded-xl flex items-center justify-center ${isMobile ? 'p-0.5' : 'p-1'} min-h-0`}>
         {/* Center Content */}
         <div className="flex flex-col items-center justify-center w-full h-full gap-3">
           {isUserMuted ? (
@@ -124,11 +124,11 @@ const QuestionModeUser = ({
             </div>
           ) : (
             /* Active/listening state */
-            <div className={`w-[120px] ${isMobile ? "h-[20px]" : "h-[120px]"} flex items-center justify-center`}>
+            <div className={`${isMobile ? "w-[60px] h-[16px]" : "w-[120px] h-[120px]"} flex items-center justify-center`}>
               {isAudioLoading ? (
-                <Lottie animationData={userWaveAnimation} style={{ width: 120, height: 120 }} loop={true} />
+                <Lottie animationData={userWaveAnimation} style={{ width: isMobile ? 60 : 120, height: isMobile ? 40 : 120 }} loop={true} />
               ) : (
-                <Image src={tap_to_speak} alt="tap to speak" width={72} height={72} />
+                <Image src={tap_to_speak} alt="tap to speak" width={isMobile ? 36 : 72} height={isMobile ? 36 : 72} />
               )}
             </div>
           )}
@@ -136,7 +136,7 @@ const QuestionModeUser = ({
       </div>
 
       {/* Bottom Input Section */}
-      <div className={`${isMobile ? 'mt-2' : 'mt-6'} flex items-center justify-center px-0 md:px-3 gap-2 md:gap-4 mx-auto`}>
+      <div className={`${isMobile ? 'mt-1' : 'mt-6'} flex items-center justify-center px-0 md:px-3 gap-2 md:gap-4 mx-auto`}>
         {/* Chat History Button */}
         <button
           onClick={handleChatHistory}
