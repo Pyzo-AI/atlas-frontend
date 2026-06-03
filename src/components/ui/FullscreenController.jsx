@@ -89,14 +89,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
                 {t("fullscreen.maybeLater")}
               </button> */}
               <button
-                onClick={async () => {
-                  try {
-                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                      await navigator.mediaDevices.getUserMedia({ audio: true });
-                    }
-                  } catch (err) {
-                    console.warn("Microphone permission was not granted before fullscreen:", err);
-                  }
+                onClick={() => {
                   enterFullscreen();
                   setShowLandscapePrompt(false);
                   setUserExitedFullscreen(false);
