@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import Image from "next/image";
@@ -117,7 +117,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
           colorClass: "bg-status-error",
           textColorClass: "text-status-error-text",
           title: t("courseCard.overdue"),
-          subtitle: getOverdueMessage(presentation.due_info.due_time),
+          subtitle:  presentation?.due_info?.status_msg ?? getOverdueMessage(presentation.due_info.due_time),
         };
     }
 
