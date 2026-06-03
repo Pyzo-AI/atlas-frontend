@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useFullscreenOnLandscape } from '@/hooks/useFullscreenOnLandscape';
 import { GiExpand } from "react-icons/gi";
 import { useTranslation } from 'react-i18next';
@@ -8,28 +8,38 @@ import { useTranslation } from 'react-i18next';
 const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
   const { t } = useTranslation();
   const [showLandscapePrompt, setShowLandscapePrompt] = useState(false);
-  const [isLandscape, setIsLandscape] = useState(false);
   const [userExitedFullscreen, setUserExitedFullscreen] = useState(false);
   const { enterFullscreen, exitFullscreen } = useFullscreenOnLandscape(enableAutoFullscreen && !userExitedFullscreen);
 
+  // Use a ref so closures inside useEffect always read the latest value
+  const userExitedRef = useRef(false);
+  useEffect(() => { userExitedRef.current = userExitedFullscreen; }, [userExitedFullscreen]);
+
   useEffect(() => {
+    let resizeTimer;
+
     const checkOrientation = () => {
       const landscape = window.innerWidth > window.innerHeight;
-      setIsLandscape(landscape);
-      
-      // Show prompt only on mobile devices in landscape
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      setShowLandscapePrompt(landscape && isMobile && !document.fullscreenElement);
+      const isFullscreen = !!document.fullscreenElement || !!document.webkitFullscreenElement;
+
+      // Only show prompt if user hasn't already exited fullscreen this session
+      setShowLandscapePrompt(landscape && isMobile && !isFullscreen && !userExitedRef.current);
     };
 
-    checkOrientation();
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', () => {
-      // Reset user preference when orientation changes
+    // Debounced resize — ignores transient resizes from URL bar toggling
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(checkOrientation, 300);
+    };
+
+    const handleOrientationChange = () => {
+      // Reset user preference when orientation actually changes
+      userExitedRef.current = false;
       setUserExitedFullscreen(false);
       checkOrientation();
-    });
-    
+    };
+
     // Listen for fullscreen changes
     const handleFullscreenChange = () => {
       const isFullscreen = document.fullscreenElement || 
@@ -39,24 +49,31 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
       
       if (isFullscreen) {
         setShowLandscapePrompt(false);
-        setUserExitedFullscreen(false); // Reset when entering fullscreen
+        userExitedRef.current = false;
+        setUserExitedFullscreen(false);
       } else {
-        // User exited fullscreen - remember this preference
-        if (isLandscape) {
+        // User exited fullscreen — remember so we don't re-prompt on every scroll
+        const landscape = window.innerWidth > window.innerHeight;
+        if (landscape) {
+          userExitedRef.current = true;
           setUserExitedFullscreen(true);
+          setShowLandscapePrompt(false);
         }
-        checkOrientation();
       }
     };
 
+    checkOrientation();
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
     return () => {
-      window.removeEventListener('resize', checkOrientation);
-      window.removeEventListener('orientationchange', checkOrientation);
+      clearTimeout(resizeTimer);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
@@ -92,6 +109,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
                 onClick={() => {
                   enterFullscreen();
                   setShowLandscapePrompt(false);
+                  userExitedRef.current = false;
                   setUserExitedFullscreen(false);
                 }}
                 className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover"
