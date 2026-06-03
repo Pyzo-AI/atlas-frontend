@@ -142,6 +142,7 @@
     "completedDate": "Abgeschlossen am {{date}}",
     "unknownDate": "Unbekanntes Datum",
     "locked": "Gesperrt",
+    "overdue": "Überfällig",
     "unlocksIn": "Wird entsperrt in",
     "overdueBy": "Überfällig seit",
     "dueIn": "Fällig in",

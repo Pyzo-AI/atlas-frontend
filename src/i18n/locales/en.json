@@ -142,6 +142,7 @@
     "completedDate": "Completed {{date}}",
     "unknownDate": "Unknown date",
     "locked": "Locked",
+    "overdue": "Overdue",
     "unlocksIn": "Unlocks in",
     "overdueBy": "Overdue by",
     "dueIn": "Due in",
