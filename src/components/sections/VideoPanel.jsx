@@ -932,35 +932,18 @@ const VideoPanel = forwardRef(
           </div>
         )}
 
-        {/* Question Mode AI + User — shared flex container on phone */}
-        {isQuestionMode && !showChat && (
-          <div className={`flex flex-col ${isMobile && isPhone ? "flex-1 min-h-0 overflow-hidden gap-1" : "flex-1 gap-2"}`}>
-            <div className="flex-shrink-0">
-              <QuestionModeAI
-                isLoading={liveKitAgentEnabled ? liveKitAgentState === "connecting" : !conversationState.isConnected}
-                liveKitAgentEnabled={liveKitAgentEnabled}
-                liveKitAgentState={liveKitAgentState}
-                isAudioPlaying={conversation.isSpeaking}
-                isConnected={conversationState.isConnected}
-                avatarUrl={avatarUrl}
-                isMobile={isMobile && isPhone}
-                enableProductRecommendations={enableProductRecommendations}
-              />
-            </div>
-            <QuestionModeUser
-              onPauseVideo={pauseVideo}
-              onStartConversation={startConversation}
-              onStopConversation={stopConversation}
-              onPauseAnswerAudio={stopAnswerAudio}
-              isAudioPlaying={conversationState.isAudioPlaying}
-              isAudioLoading={liveKitAgentEnabled ? liveKitAgentState === "listening" : isListening}
-              isConnected={conversationState.isConnected}
-              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
-              isMobile={isMobile && isPhone}
-              liveKitAgentEnabled={liveKitAgentEnabled}
-              liveKitAgentState={liveKitAgentState}
-            />
-          </div>
+        {/* Question Mode AI - Responsive */}
+        {isQuestionMode && (
+          <QuestionModeAI
+            isLoading={liveKitAgentEnabled ? liveKitAgentState === "connecting" : !conversationState.isConnected}
+            liveKitAgentEnabled={liveKitAgentEnabled}
+            liveKitAgentState={liveKitAgentState}
+            isAudioPlaying={conversation.isSpeaking}
+            isConnected={conversationState.isConnected}
+            avatarUrl={avatarUrl}
+            isMobile={isMobile && isPhone}
+            enableProductRecommendations={enableProductRecommendations}
+          />
         )}
 
         {/* Chat UI - Responsive */}
@@ -980,6 +963,22 @@ const VideoPanel = forwardRef(
           />
         )}
 
+        {/* Question Mode User - Responsive */}
+        {isQuestionMode && !showChat && (
+          <QuestionModeUser
+            onPauseVideo={pauseVideo}
+            onStartConversation={startConversation}
+            onStopConversation={stopConversation}
+            onPauseAnswerAudio={stopAnswerAudio}
+            isAudioPlaying={conversationState.isAudioPlaying}
+            isAudioLoading={liveKitAgentEnabled ? liveKitAgentState === "listening" : isListening}
+            isConnected={conversationState.isConnected}
+            setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+            isMobile={isMobile && isPhone}
+            liveKitAgentEnabled={liveKitAgentEnabled}
+            liveKitAgentState={liveKitAgentState}
+          />
+        )}
         <FeedbackModal
           isOpen={showFeedbackModal}
           onClose={() => setShowFeedbackModal(false)}

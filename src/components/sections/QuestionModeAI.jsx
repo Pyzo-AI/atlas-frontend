@@ -47,82 +47,6 @@ const QuestionModeAI = forwardRef(
       );
     }
 
-    // Compact horizontal layout for mobile phone landscape
-    if (isMobile) {
-      return (
-        <div
-          className="p-2 bg-white rounded-xl border border-border-light flex items-center gap-3"
-          style={{ minHeight: '54px', maxHeight: '54px' }}
-        >
-          {/* Avatar */}
-          <div
-            className="w-10 h-10 rounded-full border border-white/50 overflow-hidden flex-shrink-0 flex items-center justify-center"
-            style={{ background: 'var(--gradient-primary-darkened)' }}
-          >
-            {avatarUrl ? (
-              <Image
-                src={avatarUrl}
-                alt="Profile picture"
-                width={40}
-                height={40}
-                className="rounded-full object-cover w-full h-full"
-              />
-            ) : (
-              <span className="text-white font-semibold text-sm">
-                {userName?.charAt(0)?.toUpperCase() || "U"}
-              </span>
-            )}
-          </div>
-
-          {/* Status text */}
-          <div className="flex-1 min-w-0">
-            {isLoading ? (
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-primary/80 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-primary/60 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-                <div className="w-2 h-2 bg-primary/40 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
-                <span className="ml-1 text-xs text-gray-500">{t("lectures.connecting")}</span>
-              </div>
-            ) : isConnected ? (
-              <p className="font-lato font-medium text-sm text-primary-text capitalize truncate">
-                {liveKitAgentEnabled
-                  ? (liveKitAgentState === "listening"
-                      ? (isUserMuted ? t("lectures.microphoneMuted") : t("lectures.listening"))
-                      : liveKitAgentState === "speaking"
-                        ? t("lectures.speaking")
-                        : t("lectures.thinking"))
-                  : isAudioPlaying
-                    ? t("lectures.speaking")
-                    : isUserMuted
-                      ? t("lectures.microphoneMuted")
-                      : t("lectures.listening")}
-              </p>
-            ) : (
-              <p className="font-lato font-normal text-sm text-gray-500 truncate">
-                {t("lectures.askMeAnything")}
-              </p>
-            )}
-          </div>
-
-          {/* Wave rings indicator when speaking */}
-          {(isAudioPlaying || (liveKitAgentState === "speaking" && !isLoading)) && (
-            <div className="flex-shrink-0 flex items-center gap-0.5">
-              {[1, 2, 3].map((bar) => (
-                <div
-                  key={bar}
-                  className="w-1 bg-primary rounded-full animate-pulse"
-                  style={{
-                    height: `${8 + bar * 4}px`,
-                    animationDelay: `${bar * 0.2}s`,
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      );
-    }
-
     return (
       <div className="p-1 md:p-3 bg-white rounded-xl border border-border-light">
         <div
@@ -151,17 +75,19 @@ const QuestionModeAI = forwardRef(
 
               {/* Main Avatar */}
               <div
-                className="w-16 h-16 rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10 flex items-center justify-center bg-white/20">
+                className={`${
+                  isMobile ? "w-10 h-10" : "w-16 h-16"
+                } rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10 flex items-center justify-center bg-white/20`}>
                 {avatarUrl ? (
                   <Image
                     src={avatarUrl}
                     alt="Profile picture"
-                    width={64}
-                    height={64}
+                    width={isMobile ? 40 : 64}
+                    height={isMobile ? 40 : 64}
                     className="rounded-full object-cover w-full h-full"
                   />
                 ) : (
-                  <span className="text-white font-semibold z-50 text-xl">
+                  <span className={`text-white font-semibold z-50 ${isMobile ? "text-sm" : "text-xl"}`}>
                     {userName?.charAt(0)?.toUpperCase() || "U"}
                   </span>
                 )}
@@ -170,7 +96,7 @@ const QuestionModeAI = forwardRef(
 
             {/* Text Content */}
             {isLoading ? (
-              <div className="flex flex-col items-center space-y-3">
+              <div className={`flex flex-col items-center ${isMobile ? "space-y-1" : "space-y-3"}`}>
                 {/* Thinking Animation */}
                 <div className="relative">
                   <div className="flex items-center space-x-1">
