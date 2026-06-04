@@ -163,6 +163,20 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
     };
   }, [evaluatePrompt]);
 
+  // ── iOS Safari viewport fix ────────────────────────────────────────────────
+  // After the mic permission dialog closes on iOS Safari, the browser doesn't
+  // always recalculate the viewport. Scrolling to 0,0 and dispatching a
+  // resize event forces a relayout.
+  const forceViewportRecalc = useCallback(() => {
+    window.scrollTo(0, 0);
+    // Double rAF ensures the browser has flushed layout before we trigger resize
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event('resize'));
+      });
+    });
+  }, []);
+
   // ── Button handler ──────────────────────────────────────────────────────────
   const handleStartExperience = async () => {
     setIsLoading(true);
@@ -187,6 +201,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
       // Mark the session as done — orientation changes will not re-show prompt
       sessionCompletedRef.current = true;
       setShowPrompt(false);
+      forceViewportRecalc();
     } catch (err) {
       console.warn('Mic or fullscreen request failed:', err);
       isRequestingPermissionRef.current = false;
@@ -197,6 +212,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
       }
       sessionCompletedRef.current = true;
       setShowPrompt(false);
+      forceViewportRecalc();
     } finally {
       setIsLoading(false);
     }

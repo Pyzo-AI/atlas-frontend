@@ -527,7 +527,7 @@ const Home = () => {
 
     return (
       <FullscreenController enableAutoFullscreen={true}>
-        <div className="flex h-screen w-screen bg-page-background overflow-hidden fixed inset-0 flex-col">
+        <div className="flex w-screen bg-page-background overflow-hidden fixed inset-0 flex-col" style={{ height: '100dvh' }}>
           {/* Breadcrumb Navigation */}
           <div className={`${paddingX} ${paddingY} bg-page-background`}>
             <CombinedBreadCrumb data={data} />
