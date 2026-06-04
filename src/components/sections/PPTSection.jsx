@@ -43,14 +43,14 @@ const PPTSection = React.forwardRef(
       height ||
       (isOnlyVideoMode
         ? isPhoneView
-          ? "calc(100dvh - 100px)"
+          ? "calc(100vh - 100px)"
           : isMobileView
-            ? "calc(100dvh - 140px)"
+            ? "calc(100vh - 140px)"
             : "calc(100vh - 200px)"
         : isPhoneView
-          ? "calc(100dvh - 148px)"
+          ? "calc(100vh - 148px)"
           : isMobileView
-            ? "calc(100dvh - 180px)"
+            ? "calc(100vh - 180px)"
             : "calc(100vh - 280px)");
 
     return (
