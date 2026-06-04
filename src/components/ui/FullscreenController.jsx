@@ -4,10 +4,23 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { GiExpand } from "react-icons/gi";
 import { useTranslation } from 'react-i18next';
 
+// ─── Fullscreen helpers ──────────────────────────────────────────────────────
+
 /**
- * Attempts to enter fullscreen on the document element.
+ * iOS Safari does NOT support the Fullscreen API on the document element.
+ * We detect it so we can skip the fullscreen step entirely on that platform.
  */
-async function requestFullscreen() {
+function isFullscreenSupported() {
+  const el = document.documentElement;
+  return !!(
+    el.requestFullscreen ||
+    el.webkitRequestFullscreen ||
+    el.mozRequestFullScreen ||
+    el.msRequestFullscreen
+  );
+}
+
+async function enterFullscreen() {
   const el = document.documentElement;
   try {
     if (el.requestFullscreen) {
@@ -39,18 +52,21 @@ function isMobileDevice() {
   );
 }
 
+// ─── Component ───────────────────────────────────────────────────────────────
+
 /**
  * FullscreenController
  *
- * - Always renders children (never hides the lecture)
- * - On mobile landscape, shows a one-time overlay prompting the user to
- *   grant mic permission and enter fullscreen
- * - Uses refs for all state that is read inside event listeners to
- *   avoid stale-closure bugs
- * - Does NOT re-show the prompt when the browser briefly exits fullscreen
- *   during a mic permission dialog (isRequestingPermission guard)
- * - Once the user manually exits fullscreen we remember that preference
- *   and stop prompting for the rest of the session
+ * On mobile landscape:
+ *   1. Shows a one-time overlay asking for mic permission
+ *   2. Then enters fullscreen (skipped on iOS Safari where it is unsupported)
+ *
+ * Key design choices:
+ *   - Children are ALWAYS rendered — the prompt is just an overlay, never a gate
+ *   - All values read inside event listeners are stored in refs to avoid stale closures
+ *   - `sessionCompletedRef` tracks whether the user has gone through the flow;
+ *     orientation changes never re-show the prompt once the flow is done
+ *   - On iOS Safari (fullscreen unsupported), we only ask for mic and then dismiss
  */
 const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
   const { t } = useTranslation();
@@ -58,63 +74,71 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
   const [showPrompt, setShowPrompt] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Refs keep event-listener callbacks in sync without re-registering them
-  const isLandscapeRef = useRef(false);
+  // Refs — readable from event listeners without stale-closure bugs
+  const isLandscapeRef            = useRef(false);
   const isRequestingPermissionRef = useRef(false);
-  const userExitedFullscreenRef = useRef(false);
-  const promptShownRef = useRef(false); // only show once per landscape entry
+  const userDismissedRef          = useRef(false);  // "Maybe later" clicked
+  const sessionCompletedRef       = useRef(false);  // flow fully completed once
+  const promptShownRef            = useRef(false);  // guard: show once per landscape entry
 
-  // -------------------------------------------------------------------
-  // Core helper: decide whether to show the prompt
-  // -------------------------------------------------------------------
+  // ── Evaluate whether to show the prompt ────────────────────────────────────
   const evaluatePrompt = useCallback(() => {
     if (!enableAutoFullscreen) return;
 
     const landscape = window.innerWidth > window.innerHeight;
     isLandscapeRef.current = landscape;
 
+    if (!landscape) {
+      // Rotated back to portrait — hide prompt, but keep session/dismissed flags
+      promptShownRef.current = false;
+      setShowPrompt(false);
+      return;
+    }
+
+    // Landscape — show prompt only if:
+    //   • on a mobile device
+    //   • not already in fullscreen (or fullscreen not supported — iOS)
+    //   • not currently requesting permission
+    //   • user hasn't dismissed with "maybe later"
+    //   • session flow not already completed
+    //   • prompt not already visible
+    const alreadyFullscreen = isCurrentlyFullscreen();
+
     if (
-      landscape &&
       isMobileDevice() &&
-      !isCurrentlyFullscreen() &&
+      !alreadyFullscreen &&
       !isRequestingPermissionRef.current &&
-      !userExitedFullscreenRef.current &&
+      !userDismissedRef.current &&
+      !sessionCompletedRef.current &&
       !promptShownRef.current
     ) {
       promptShownRef.current = true;
       setShowPrompt(true);
-    } else if (!landscape) {
-      // Portrait → reset so the prompt can appear again next landscape entry
-      promptShownRef.current = false;
-      userExitedFullscreenRef.current = false;
-      setShowPrompt(false);
     }
   }, [enableAutoFullscreen]);
 
-  // -------------------------------------------------------------------
-  // Event listeners (registered once, use refs for current values)
-  // -------------------------------------------------------------------
+  // ── Event listeners ─────────────────────────────────────────────────────────
   useEffect(() => {
     const onResize = () => evaluatePrompt();
 
     const onOrientationChange = () => {
-      // Reset per-session flags when the device rotates
-      promptShownRef.current = false;
-      userExitedFullscreenRef.current = false;
-      // Small delay to let the browser finish rotating
-      setTimeout(evaluatePrompt, 150);
+      // Only re-allow the prompt on the next landscape entry if the session
+      // hasn't been completed yet (i.e. user rotated before completing flow)
+      if (!sessionCompletedRef.current) {
+        promptShownRef.current = false;
+      }
+      setTimeout(evaluatePrompt, 200); // wait for dimensions to settle
     };
 
     const onFullscreenChange = () => {
       if (isCurrentlyFullscreen()) {
-        // Entered fullscreen – hide prompt
         setShowPrompt(false);
       } else {
-        // Exited fullscreen
-        // Only count it as "user manually exited" when we are NOT in the
-        // middle of the mic-permission dialog (which also drops fullscreen)
+        // Exited fullscreen — only treat as deliberate user exit when we are
+        // NOT mid-way through the mic-permission request (some browsers
+        // briefly exit fullscreen to show the mic dialog)
         if (isLandscapeRef.current && !isRequestingPermissionRef.current) {
-          userExitedFullscreenRef.current = true;
+          userDismissedRef.current = true;
           setShowPrompt(false);
         }
       }
@@ -127,7 +151,6 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
     document.addEventListener('mozfullscreenchange', onFullscreenChange);
     document.addEventListener('MSFullscreenChange', onFullscreenChange);
 
-    // Check initial state
     evaluatePrompt();
 
     return () => {
@@ -140,15 +163,14 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
     };
   }, [evaluatePrompt]);
 
-  // -------------------------------------------------------------------
-  // Button handler: mic permission → fullscreen
-  // -------------------------------------------------------------------
+  // ── Button handler ──────────────────────────────────────────────────────────
   const handleStartExperience = async () => {
     setIsLoading(true);
 
     try {
-      // Step 1: Request mic permission (this may briefly exit fullscreen on
-      // some browsers — the flag prevents us from treating that as user exit)
+      // Step 1 — ask mic permission
+      // Set the flag BEFORE getUserMedia so that the fullscreenchange listener
+      // knows not to treat an accidental fullscreen-exit as a user action.
       isRequestingPermissionRef.current = true;
 
       if (navigator.mediaDevices?.getUserMedia) {
@@ -157,30 +179,36 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
 
       isRequestingPermissionRef.current = false;
 
-      // Step 2: Enter fullscreen
-      await requestFullscreen();
+      // Step 2 — enter fullscreen (skip on iOS Safari where it is unsupported)
+      if (isFullscreenSupported()) {
+        await enterFullscreen();
+      }
 
+      // Mark the session as done — orientation changes will not re-show prompt
+      sessionCompletedRef.current = true;
       setShowPrompt(false);
     } catch (err) {
       console.warn('Mic or fullscreen request failed:', err);
       isRequestingPermissionRef.current = false;
-      // Even if mic is denied, still try to enter fullscreen
-      await requestFullscreen();
+
+      // Mic was denied — still try fullscreen and mark session done
+      if (isFullscreenSupported()) {
+        await enterFullscreen();
+      }
+      sessionCompletedRef.current = true;
       setShowPrompt(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // -------------------------------------------------------------------
-  // Render – children are ALWAYS rendered; prompt is an overlay on top
-  // -------------------------------------------------------------------
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="relative w-full h-full">
-      {/* Always render the lecture content */}
+      {/* Lecture content — always visible */}
       {children}
 
-      {/* Fullscreen + mic permission overlay – only on mobile landscape */}
+      {/* Mic + fullscreen prompt overlay */}
       {showPrompt && (
         <div className="fixed inset-0 bg-black bg-opacity-80 z-[9999] flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-sm w-full text-center shadow-xl">
@@ -207,7 +235,8 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
 
               <button
                 onClick={() => {
-                  userExitedFullscreenRef.current = true;
+                  userDismissedRef.current = true;
+                  sessionCompletedRef.current = true; // treat dismiss as done too
                   setShowPrompt(false);
                 }}
                 className="w-full px-4 py-2.5 text-gray-500 text-sm hover:text-gray-700"
