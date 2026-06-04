@@ -124,11 +124,11 @@ const QuestionModeUser = ({
             </div>
           ) : (
             /* Active/listening state */
-            <div className={`w-[120px] ${isMobile ? "h-[20px]" : "h-[120px]"} flex items-center justify-center`}>
+            <div className={`w-[120px] ${isMobile ? "h-[20px]" : "h-[120px]"} min-h-[65px] flex items-center justify-center`}>
               {isAudioLoading ? (
-                <Lottie animationData={userWaveAnimation} style={{ width: 120, height: 120 }} loop={true} />
+                <Lottie className='sm:w-[70px] sm:h-[70px] md:w-[120px] md:h-[120px]' animationData={userWaveAnimation} loop={true} />
               ) : (
-                <Image src={tap_to_speak} alt="tap to speak" width={72} height={72} />
+                <Image className='sm:w-[65px] sm:h-[65px] md:w-[72px] md:h-[72px]' src={tap_to_speak} alt="tap to speak" width={72} height={72} />
               )}
             </div>
           )}
