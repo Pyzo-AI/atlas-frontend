@@ -91,9 +91,12 @@ const ChatUI = ({
       const permission = await navigator.permissions.query({ name: "microphone" });
 
       if (permission.state === "granted") {
-        // Permission already granted, proceed
+        // Close chat directly instead of calling onClose(), because onClose() routes
+        // through handleCloseChatUI in VideoPanel which also calls startConversation()
+        // when isJumpedOnChatFromInteractionMode=true — causing a double session creation.
+        setIsJumpedOnChatFromInteractionMode(false);
         dispatch(setIsQuestionMode(true));
-        onClose();
+        dispatch(setShowChat(false));
         onStartConversation();
       } else {
         // Show permission popup
@@ -109,8 +112,10 @@ const ChatUI = ({
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       setShowMicPopup(false);
+      // Same reason as handleInteractionMode: bypass onClose() to avoid double session
+      setIsJumpedOnChatFromInteractionMode(false);
       dispatch(setIsQuestionMode(true));
-      onClose();
+      dispatch(setShowChat(false));
       onStartConversation();
     } catch (error) {
       console.log("Microphone permission denied:", error);
