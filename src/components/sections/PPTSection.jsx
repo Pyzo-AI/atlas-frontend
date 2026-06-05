@@ -48,7 +48,7 @@ const PPTSection = React.forwardRef(
             ? "calc(100vh - 140px)"
             : "calc(100vh - 200px)"
         : isPhoneView
-          ? "calc(100vh - 130px)"
+          ? "calc(100vh - 148px)"
           : isMobileView
             ? "calc(100vh - 180px)"
             : "calc(100vh - 280px)");
@@ -127,8 +127,8 @@ const PPTSection = React.forwardRef(
         {/* Video Playlist Section */}
         {!isOnlyVideoMode && (
           <div
-            className={`${isOnlyVideoMode ? "flex-1 min-h-0 overflow-y-auto" : ""} ${
-              isPhoneView ? "mt-0" : isMobileView ? "mt-2" : ""
+            className={`flex-1 min-h-0 ${
+              isPhoneView ? "mt-1" : isMobileView ? "mt-2" : ""
             }`}>
             <VideoPlaylist
               videos={videos}

@@ -204,9 +204,27 @@ const Home = () => {
   const { pptVideoIndex,currentVideoIndex } = useSelector((state) => state.video);
   const isPortrait = usePortraitMode();
 
-  // Device detection for different layouts
-  const isPhone = typeof window !== "undefined" && window.innerWidth <= 956;
-  const isTablet = typeof window !== "undefined" && window.innerWidth > 956 && window.innerWidth <= 1024;
+  // Device detection — stored in a single state object so one setState = one re-render.
+  // Debounced to ignore transient resizes (e.g. browser permission dialogs on mobile).
+  const [windowWidth, setWindowWidth] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+
+  useEffect(() => {
+    let timer;
+    const handleResize = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setWindowWidth(window.innerWidth), 300);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  const isPhone = windowWidth <= 956;
+  const isTablet = windowWidth > 956 && windowWidth <= 1024;
   const isMobileDevice = isPhone || isTablet;
   const isLandscape = !isPortrait && isMobileDevice;
   const isOnlyVideoMode = videos?.[currentVideoIndex]?.trainer_video === null;

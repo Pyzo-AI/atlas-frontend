@@ -107,23 +107,20 @@ const QuestionModeUser = ({
   }, [dispatch]);
 
   return (
-    <div className="flex-1 border border-border-light rounded-[10px] p-3 pb-6 flex flex-col">
+    <div className={`flex-1 border border-border-light rounded-[10px] p-3 ${isMobile ? 'pb-2' : 'pb-6'} flex flex-col`}>
       {/* Main Content Frame */}
       <div className="flex-1 bg-bg-neutral rounded-xl flex items-center justify-center p-1">
         {/* Center Content */}
         <div className="flex flex-col items-center justify-center w-full h-full gap-3">
           {isUserMuted ? (
             /* Muted state - show mute indicator */
-            <div className="flex flex-col items-center gap-3">
-              <Image src={tap_to_speak} alt="Microphone Muted" width={72} height={72} />
-              <div className="flex flex-col items-center gap-1 text-center">
-                <p className="font-lato font-semibold text-sm text-primary-text">
-                  {t("lectures.microphoneMuted")}
-                </p>
-                <p className="font-lato font-normal text-xs text-gray-400">
-                  {t("lectures.unmuteAndSpeak")}
-                </p>
-              </div>
+            <div className="flex flex-col items-center gap-1 text-center justify-center">
+              <p className="font-lato font-semibold text-sm text-primary-text">
+                {t("lectures.microphoneMuted")}
+              </p>
+              <p className="font-lato font-normal text-xs text-gray-400">
+                {t("lectures.unmuteAndSpeak")}
+              </p>
             </div>
           ) : (
             /* Active/listening state */
@@ -139,7 +136,7 @@ const QuestionModeUser = ({
       </div>
 
       {/* Bottom Input Section */}
-      <div className="mt-6 flex items-center justify-center px-0 md:px-3 gap-2 md:gap-4 mx-auto">
+      <div className={`${isMobile ? 'mt-2' : 'mt-6'} flex items-center justify-center px-0 md:px-3 gap-2 md:gap-4 mx-auto`}>
         {/* Chat History Button */}
         <button
           onClick={handleChatHistory}
