@@ -164,17 +164,18 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
   }, [evaluatePrompt]);
 
   // ── iOS Safari viewport fix ────────────────────────────────────────────────
-  // After the mic permission dialog closes on iOS Safari, the browser doesn't
-  // always recalculate the viewport. Scrolling to 0,0 and dispatching a
-  // resize event forces a relayout.
+  // After the mic permission dialog closes on iOS Safari, the browser settles its
+  // viewport (toolbar reappears) asynchronously over a few hundred ms. We nudge a
+  // relayout several times so useAppHeight re-measures --app-height once it lands.
   const forceViewportRecalc = useCallback(() => {
     window.scrollTo(0, 0);
-    // Double rAF ensures the browser has flushed layout before we trigger resize
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        window.dispatchEvent(new Event('resize'));
-      });
-    });
+    const nudge = () => window.dispatchEvent(new Event('resize'));
+    // Double rAF flushes the current layout, then delayed nudges catch the
+    // viewport after iOS finishes settling.
+    requestAnimationFrame(() => requestAnimationFrame(nudge));
+    setTimeout(nudge, 150);
+    setTimeout(nudge, 350);
+    setTimeout(nudge, 600);
   }, []);
 
   // ── Button handler ──────────────────────────────────────────────────────────
