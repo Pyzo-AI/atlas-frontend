@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -17,6 +17,7 @@ export default function Analytics() {
   const router = useLocalizedRouter();
   const { t } = useTranslation();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const initializeActiveTabFromURL = () => {
     return searchParams.get("tab") || "learning";
@@ -44,7 +45,7 @@ export default function Analytics() {
   const handleTabChange = (tabId) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tabId);
-    router.push(`?${params.toString()}`);
+    router.push(`${pathname}?${params.toString()}`);
     setActiveTab(tabId);
   };
 
