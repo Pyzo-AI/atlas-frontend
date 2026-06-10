@@ -247,7 +247,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
       {showSafariBanner && (
         <div className="fixed top-0 left-0 right-0 z-9998 flex items-center justify-between gap-2 bg-amber-50 border-b border-amber-200 px-3 py-2">
           <p className="text-amber-800 text-xs leading-snug">
-            💡 For the best experience, use <span className="font-semibold">Chrome</span> or <span className="font-semibold">Edge</span>.
+            💡 For the best experience, use <span className="font-semibold">Chrome</span>.
           </p>
           <button
             onClick={() => {
