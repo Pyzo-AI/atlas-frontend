@@ -52,6 +52,17 @@ function isMobileDevice() {
   );
 }
 
+// iPhone/iPod Safari only — excludes iPad (tablet), desktop Mac Safari,
+// and Chrome/Firefox/Edge running on iOS (which also contain "iPhone" in UA).
+function isMobileSafari() {
+  const ua = navigator.userAgent;
+  return (
+    /iPhone|iPod/.test(ua) &&
+    /Safari/.test(ua) &&
+    !/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua)
+  );
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 /**
@@ -73,6 +84,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
 
   const [showPrompt, setShowPrompt] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSafariBanner, setShowSafariBanner] = useState(false);
 
   // Refs — readable from event listeners without stale-closure bugs
   const isLandscapeRef            = useRef(false);
@@ -203,6 +215,9 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
       sessionCompletedRef.current = true;
       setShowPrompt(false);
       forceViewportRecalc();
+      if (isMobileSafari() && !sessionStorage.getItem('safari-banner-dismissed')) {
+        setShowSafariBanner(true);
+      }
     } catch (err) {
       console.warn('Mic or fullscreen request failed:', err);
       isRequestingPermissionRef.current = false;
@@ -214,6 +229,9 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
       sessionCompletedRef.current = true;
       setShowPrompt(false);
       forceViewportRecalc();
+      if (isMobileSafari() && !sessionStorage.getItem('safari-banner-dismissed')) {
+        setShowSafariBanner(true);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -224,6 +242,25 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
     <div className="relative w-full h-full">
       {/* Lecture content — always visible */}
       {children}
+
+      {/* Safari browser suggestion banner */}
+      {showSafariBanner && (
+        <div className="fixed top-0 left-0 right-0 z-9998 flex items-center justify-between gap-2 bg-amber-50 border-b border-amber-200 px-3 py-2">
+          <p className="text-amber-800 text-xs leading-snug">
+            💡 For the best experience, use <span className="font-semibold">Chrome</span> or <span className="font-semibold">Edge</span>.
+          </p>
+          <button
+            onClick={() => {
+              sessionStorage.setItem('safari-banner-dismissed', '1');
+              setShowSafariBanner(false);
+            }}
+            className="shrink-0 text-amber-600 hover:text-amber-900 text-base leading-none"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Mic + fullscreen prompt overlay */}
       {showPrompt && (
