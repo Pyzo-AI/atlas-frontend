@@ -960,6 +960,7 @@ const VideoPanel = forwardRef(
             onPauseSlideVideo={onPauseSlideVideo}
             liveKitAgentEnabled={liveKitAgentEnabled}
             presentationId={presentationId}
+            enableSmoothScroll={false}  // Pass flag so ChatUI doesn't animate scroll
           />
         )}
 

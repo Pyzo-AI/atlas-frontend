@@ -109,6 +109,13 @@ const ChatUI = ({
     }
   };
 
+  // Scroll to bottom instantly when history finishes loading
+  useEffect(() => {
+    if (!isLoadingHistory && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [isLoadingHistory]);
+
   useEffect(() => {
     const currentCount = displayConversation.length;
     const newMessages = currentCount - prevMessageCountRef.current;
