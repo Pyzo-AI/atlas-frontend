@@ -205,6 +205,7 @@ const ChatUI = ({
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [isLoadingInitial]);
+
   useEffect(() => {
     const currentCount = displayConversation.length;
     const newMessages = currentCount - prevMessageCountRef.current;
