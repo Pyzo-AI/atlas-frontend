@@ -14,7 +14,7 @@ import completed from "../../assets/svg/completed.svg";
 import dueSoon from "../../assets/svg/due-soon.svg";
 import FeedbackSuccessModal from "../modals/FeedbackSuccessModal";
 import { useDispatch, useSelector } from "react-redux";
-import { setAutoPlayEnabled, setSelectedAssessmentId } from "@/store/features/videoSlice";
+import { setAutoPlayEnabled, setSelectedAssessmentId, setShowChat, setIsQuestionMode } from "@/store/features/videoSlice";
 import { HiBookOpen, HiChevronDown } from "react-icons/hi2";
 import FloatingChatbot from "../common/FloatingChatbot";
 import { useTranslation } from "react-i18next";
@@ -281,6 +281,10 @@ const Home = () => {
       // module_status: selectedPresentation?.status,
       timestamp: new Date().toISOString(),
     });
+
+    // Close any open chat or question mode when navigating to a new module
+    dispatch(setShowChat(false));
+    dispatch(setIsQuestionMode(false));
 
     router.push(`/lectures/${presentationId}`);
   };
