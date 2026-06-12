@@ -124,11 +124,21 @@ const QuestionModeUser = ({
             </div>
           ) : (
             /* Active/listening state */
-            <div className={`w-[120px] ${isMobile ? "h-[20px]" : "h-[120px]"} flex items-center justify-center`}>
+            <div className="flex items-center justify-center min-h-0">
               {isAudioLoading ? (
-                <Lottie animationData={userWaveAnimation} style={{ width: 120, height: 120 }} loop={true} />
+                <Lottie
+                  animationData={userWaveAnimation}
+                  loop={true}
+                  style={{ width: "clamp(48px, 12vh, 120px)", height: "clamp(48px, 12vh, 120px)" }}
+                />
               ) : (
-                <Image src={tap_to_speak} alt="tap to speak" width={72} height={72} />
+                <Image
+                  src={tap_to_speak}
+                  alt="tap to speak"
+                  width={72}
+                  height={72}
+                  style={{ width: "clamp(40px, 10vh, 72px)", height: "auto" }}
+                />
               )}
             </div>
           )}

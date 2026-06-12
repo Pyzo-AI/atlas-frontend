@@ -39,18 +39,22 @@ const PPTSection = React.forwardRef(
       },
     }));
     const { t } = useTranslation();
+    // On mobile/phone, size against --app-height (the real visible viewport on
+    // iOS Safari) instead of vh, so the video tracks the same height as the
+    // outer landscape container. Desktop keeps vh.
+    const appH = "var(--app-height, 100dvh)";
     const effectiveHeight =
       height ||
       (isOnlyVideoMode
         ? isPhoneView
-          ? "calc(100vh - 100px)"
+          ? `calc(${appH} - 100px)`
           : isMobileView
-            ? "calc(100vh - 140px)"
+            ? `calc(${appH} - 140px)`
             : "calc(100vh - 200px)"
         : isPhoneView
-          ? "calc(100vh - 148px)"
+          ? `calc(${appH} - 148px)`
           : isMobileView
-            ? "calc(100vh - 180px)"
+            ? `calc(${appH} - 180px)`
             : "calc(100vh - 280px)");
 
     return (
