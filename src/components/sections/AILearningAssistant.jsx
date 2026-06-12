@@ -36,13 +36,14 @@ const AILearningAssistant = ({
     return () => observer.disconnect();
   }, []);
 
-  const showIcon = isMobileView ? false : cardHeight === null || cardHeight >= ICON_HIDE_THRESHOLD;
-  const isScrollable = !isMobileView && cardHeight !== null && cardHeight < SCROLL_THRESHOLD;
+  const showIcon = cardHeight === null || cardHeight >= ICON_HIDE_THRESHOLD;
+  const showDesc = cardHeight === null || cardHeight >= ICON_HIDE_THRESHOLD;
+  const isScrollable = cardHeight !== null && cardHeight < SCROLL_THRESHOLD;
 
   const handleStartQA = async () => {
     if (!agentId) return;
 
-    onPauseSlideVideo(); // Pause slide video when starting interaction mode
+    onPauseSlideVideo();
 
     try {
       const permission = await navigator.permissions.query({ name: "microphone" });
@@ -70,7 +71,7 @@ const AILearningAssistant = ({
   };
 
   const handleMessageClick = () => {
-    onPauseVideo(); // Pause the video when opening chat
+    onPauseVideo();
     dispatch(setShowChat(true));
     onStopConversation();
   };
@@ -94,21 +95,15 @@ const AILearningAssistant = ({
             <Image className="w-full h-full" src={message} alt="message" />
           </button>
 
-          {/* Main Content Container - Centered vertically in remaining space */}
+          {/* Main Content Container */}
           <div
             className={`flex-1 flex flex-col items-center justify-center ${
               isMobileView ? "gap-2 px-2" : "gap-4 px-4"
             } min-h-0 ${isScrollable ? "" : "overflow-hidden"}`}>
             {/* Icon and Text Section */}
             <div className={`flex flex-col items-center ${isMobileView ? "gap-2" : "gap-3"} w-full max-w-[275px]`}>
-              {/* Icon Container */}
               {showIcon && (
-                <div className="w-[56px] h-[56px] bg-white rounded-full flex items-center justify-center shrink-0">
-                  <Image className="w-full h-full" src={chat_star} alt="chat_star" />
-                </div>
-              )}
-              {isMobileView && (
-                <div className="w-[40px] h-[40px] bg-white rounded-full flex items-center justify-center shrink-0">
+                <div className={`${isMobileView ? "w-[40px] h-[40px]" : "w-[56px] h-[56px]"} bg-white rounded-full flex items-center justify-center shrink-0`}>
                   <Image className="w-full h-full" src={chat_star} alt="chat_star" />
                 </div>
               )}
@@ -120,7 +115,7 @@ const AILearningAssistant = ({
                   } text-primary-text`}>
                   {t("lectures.aiAssistant")}
                 </h3>
-                {!isMobileView && (
+                {showDesc && (
                   <p className="w-full text-center font-lato font-normal text-xs leading-4 text-primary-text">
                     {t("lectures.aiAssistantDesc")}
                   </p>
@@ -140,13 +135,7 @@ const AILearningAssistant = ({
                     ? "text-white cursor-pointer hover:opacity-90"
                     : "text-gray-400 cursor-not-allowed bg-gray-200"
                 }`}
-                style={
-                  agentId
-                    ? {
-                        background: "var(--gradient-primary)",
-                      }
-                    : {}
-                }
+                style={agentId ? { background: "var(--gradient-primary)" } : {}}
                 title={!agentId ? "Agent not available" : ""}>
                 <Image
                   className="w-5 h-5"
