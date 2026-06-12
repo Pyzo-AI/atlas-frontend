@@ -84,7 +84,7 @@ const AILearningAssistant = ({
             <div className={`flex flex-col items-center ${isMobileView ? "gap-2" : "gap-4"} w-full max-w-[275px]`}>
               {/* Icon Container */}
               {!isMobileView ? (
-                <div className="w-[72px] h-[72px] bg-white rounded-full flex items-center justify-center">
+                <div className="w-[56px] h-[56px] bg-white rounded-full flex items-center justify-center">
                   <Image className="w-full h-full" src={chat_star} alt="chat_star" />
                 </div>
               ) : (
