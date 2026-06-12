@@ -920,7 +920,7 @@ const VideoPanel = forwardRef(
         {/* AI Assistant Section - Responsive */}
         {!(isOnlyVideoMode && !agentId) && (
           <div
-            className={`${isMobile && isPhone ? "flex-1 min-h-0" : "h-full"} ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "pointer-events-none blur-[1px]" : ""}`}>
+            className={`flex-1 min-h-0 ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "pointer-events-none blur-[1px]" : ""}`}>
             <AILearningAssistant
               onStartConversation={startConversation}
               onStopConversation={stopConversation}

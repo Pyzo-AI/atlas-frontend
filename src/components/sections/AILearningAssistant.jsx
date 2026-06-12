@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useState, useRef, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { setIsQuestionMode, setShowChat } from "../../store/features/videoSlice";
 import message from "../../assets/svg/message.svg";
 import chat_star from "../../assets/svg/chat_star.svg";
@@ -7,6 +7,10 @@ import microphone from "../../assets/svg/microphone.svg";
 import Image from "next/image";
 import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup";
 import { useTranslation } from "react-i18next";
+
+// Height thresholds (px) for progressive content hiding
+const ICON_HIDE_THRESHOLD = 180;
+const SCROLL_THRESHOLD = 120;
 
 const AILearningAssistant = ({
   onStartConversation = () => {},
@@ -16,15 +20,29 @@ const AILearningAssistant = ({
   isMobileView = false,
   agentId,
 }) => {
-  const { isQuestionMode } = useSelector((state) => state.video);
   const dispatch = useDispatch();
   const [showMicPopup, setShowMicPopup] = useState(false);
+  const [cardHeight, setCardHeight] = useState(null);
+  const innerRef = useRef(null);
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setCardHeight(entry.contentRect.height);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const showIcon = cardHeight === null || cardHeight >= ICON_HIDE_THRESHOLD;
+  const isScrollable = cardHeight !== null && cardHeight < SCROLL_THRESHOLD;
 
   const handleStartQA = async () => {
     if (!agentId) return;
 
-    onPauseSlideVideo(); // Pause slide video when starting interaction mode
+    onPauseSlideVideo();
 
     try {
       const permission = await navigator.permissions.query({ name: "microphone" });
@@ -52,7 +70,7 @@ const AILearningAssistant = ({
   };
 
   const handleMessageClick = () => {
-    onPauseVideo(); // Pause the video when opening chat
+    onPauseVideo();
     dispatch(setShowChat(true));
     onStopConversation();
   };
@@ -65,9 +83,10 @@ const AILearningAssistant = ({
       <div className="flex flex-col items-start p-1 md:p-[6px] lg:p-3 gap-2.5 w-full h-full flex-1 border border-border-light rounded-xl bg-white overflow-hidden">
         {/* Inner Frame */}
         <div
+          ref={innerRef}
           className={`w-full h-full bg-bg-lavender rounded-xl ${
             isMobileView ? "p-1" : "p-3"
-          } flex flex-col min-h-0 overflow-hidden relative`}>
+          } flex flex-col min-h-0 ${isScrollable ? "overflow-y-auto" : "overflow-hidden"} relative`}>
           {/* Chat Icon - Positioned absolutely */}
           <button
             onClick={handleMessageClick}
@@ -75,20 +94,15 @@ const AILearningAssistant = ({
             <Image className="w-full h-full" src={message} alt="message" />
           </button>
 
-          {/* Main Content Container - Centered vertically in remaining space */}
+          {/* Main Content Container */}
           <div
             className={`flex-1 flex flex-col items-center justify-center ${
-              isMobileView ? "gap-2 px-2" : "gap-6 px-4 "
-            }  min-h-0 overflow-hidden`}>
+              isMobileView ? "gap-2 px-2" : "gap-4 px-4"
+            } min-h-0 ${isScrollable ? "" : "overflow-hidden"}`}>
             {/* Icon and Text Section */}
-            <div className={`flex flex-col items-center ${isMobileView ? "gap-2" : "gap-4"} w-full max-w-[275px]`}>
-              {/* Icon Container */}
-              {!isMobileView ? (
-                <div className="w-[72px] h-[72px] bg-white rounded-full flex items-center justify-center">
-                  <Image className="w-full h-full" src={chat_star} alt="chat_star" />
-                </div>
-              ) : (
-                <div className="w-[40px] h-[40px] bg-white rounded-full flex items-center justify-center">
+            <div className={`flex flex-col items-center ${isMobileView ? "gap-2" : "gap-3"} w-full max-w-[275px]`}>
+              {showIcon && (
+                <div className={`${isMobileView ? "w-[40px] h-[40px]" : "w-[56px] h-[56px]"} bg-white rounded-full flex items-center justify-center shrink-0`}>
                   <Image className="w-full h-full" src={chat_star} alt="chat_star" />
                 </div>
               )}
@@ -97,19 +111,17 @@ const AILearningAssistant = ({
                 <h3
                   className={`w-full text-center font-lato font-bold ${
                     isMobileView ? "text-[10px]" : "text-lg leading-5"
-                  }  text-primary-text`}>
+                  } text-primary-text`}>
                   {t("lectures.aiAssistant")}
                 </h3>
-                {!isMobileView && (
-                  <p className="w-full text-center font-lato font-normal text-xs leading-4 text-primary-text">
-                    {t("lectures.aiAssistantDesc")}
-                  </p>
-                )}
+                <p className={`w-full text-center font-lato font-normal ${isMobileView ? "text-[9px] leading-3" : "text-xs leading-4"} text-primary-text`}>
+                  {t("lectures.aiAssistantDesc")}
+                </p>
               </div>
             </div>
 
             {/* Start Q&A Button */}
-            <div className="relative group">
+            <div className="relative group shrink-0">
               <button
                 onClick={handleStartQA}
                 disabled={!agentId}
@@ -120,13 +132,7 @@ const AILearningAssistant = ({
                     ? "text-white cursor-pointer hover:opacity-90"
                     : "text-gray-400 cursor-not-allowed bg-gray-200"
                 }`}
-                style={
-                  agentId
-                    ? {
-                        background: "var(--gradient-primary)",
-                      }
-                    : {}
-                }
+                style={agentId ? { background: "var(--gradient-primary)" } : {}}
                 title={!agentId ? "Agent not available" : ""}>
                 <Image
                   className="w-5 h-5"

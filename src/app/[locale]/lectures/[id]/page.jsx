@@ -15,6 +15,7 @@ import { usePathname, useParams, useRouter } from "next/navigation";
 import BreadCrumb from "@/components/common/BreadCrumb";
 import PageSkeleton from "@/components/common/PageSkeleton";
 import { usePortraitMode } from "@/hooks/usePortraitMode";
+import { useAppHeight } from "@/hooks/useAppHeight";
 import FullscreenController from "@/components/ui/FullscreenController";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress, clearVideoProgress } from "@/utils/videoProgress";
@@ -203,6 +204,8 @@ const Home = () => {
   const dispatch = useDispatch();
   const { pptVideoIndex,currentVideoIndex } = useSelector((state) => state.video);
   const isPortrait = usePortraitMode();
+  // Keep --app-height synced to the real visible viewport (iOS Safari toolbar/dialogs).
+  useAppHeight();
 
   // Device detection — stored in a single state object so one setState = one re-render.
   // Debounced to ignore transient resizes (e.g. browser permission dialogs on mobile).
@@ -527,7 +530,7 @@ const Home = () => {
 
     return (
       <FullscreenController enableAutoFullscreen={true}>
-        <div className="flex h-screen w-screen bg-page-background overflow-hidden fixed inset-0 flex-col">
+        <div className="flex w-screen bg-page-background overflow-hidden fixed inset-0 flex-col" style={{ height: 'var(--app-height, 100dvh)' }}>
           {/* Breadcrumb Navigation */}
           <div className={`${paddingX} ${paddingY} bg-page-background`}>
             <CombinedBreadCrumb data={data} />
