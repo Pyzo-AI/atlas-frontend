@@ -114,7 +114,7 @@ const AILearningAssistant = ({
                   } text-primary-text`}>
                   {t("lectures.aiAssistant")}
                 </h3>
-                <p className="w-full text-center font-lato font-normal text-xs leading-4 text-primary-text">
+                <p className={`w-full text-center font-lato font-normal ${isMobileView ? "text-[9px] leading-3" : "text-xs leading-4"} text-primary-text`}>
                   {t("lectures.aiAssistantDesc")}
                 </p>
               </div>
