@@ -37,7 +37,6 @@ const AILearningAssistant = ({
   }, []);
 
   const showIcon = cardHeight === null || cardHeight >= ICON_HIDE_THRESHOLD;
-  const showDesc = cardHeight === null || cardHeight >= ICON_HIDE_THRESHOLD;
   const isScrollable = cardHeight !== null && cardHeight < SCROLL_THRESHOLD;
 
   const handleStartQA = async () => {
@@ -115,11 +114,9 @@ const AILearningAssistant = ({
                   } text-primary-text`}>
                   {t("lectures.aiAssistant")}
                 </h3>
-                {showDesc && (
-                  <p className="w-full text-center font-lato font-normal text-xs leading-4 text-primary-text">
-                    {t("lectures.aiAssistantDesc")}
-                  </p>
-                )}
+                <p className="w-full text-center font-lato font-normal text-xs leading-4 text-primary-text">
+                  {t("lectures.aiAssistantDesc")}
+                </p>
               </div>
             </div>
 
