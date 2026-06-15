@@ -112,6 +112,15 @@ export class LiveKitService {
 
         console.log("product_image:", data);
 
+        if (data.type === "agent_state" && data.state) {
+          // Don't let a late "listening" packet override "thinking"
+          if (!(data.state === "listening" && this.agentState === "thinking")) {
+            this.agentState = data.state;
+            this.onAgentStateChanged?.(data.state);
+          }
+          return;
+        }
+
         if (data.type === "slide_redirect" && data.slide_number) {
           const slideNumbers = Array.isArray(data.slide_number) ? data.slide_number : [data.slide_number];
           console.log("🎯 Slide redirect:", slideNumbers);
