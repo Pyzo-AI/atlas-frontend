@@ -219,9 +219,20 @@ const Home = () => {
       clearTimeout(timer);
       timer = setTimeout(() => setWindowWidth(window.innerWidth), 300);
     };
+    // iOS Safari doesn't fire "resize" when you switch tabs and come back —
+    // update windowWidth immediately on visibility restore so isLandscape /
+    // isPhone are correct the moment the user returns to this tab.
+    const handleVisibilityForWidth = () => {
+      if (document.visibilityState === "visible") {
+        clearTimeout(timer);
+        setWindowWidth(window.innerWidth);
+      }
+    };
     window.addEventListener("resize", handleResize);
+    document.addEventListener("visibilitychange", handleVisibilityForWidth);
     return () => {
       window.removeEventListener("resize", handleResize);
+      document.removeEventListener("visibilitychange", handleVisibilityForWidth);
       clearTimeout(timer);
     };
   }, []);
@@ -230,6 +241,22 @@ const Home = () => {
   const isTablet = windowWidth > 956 && windowWidth <= 1024;
   const isMobileDevice = isPhone || isTablet;
   const isLandscape = !isPortrait && isMobileDevice;
+
+  // Lock body scroll in landscape so iOS Safari can't rubber-band to reveal
+  // layout-viewport overflow while --app-height is still settling after a tab switch.
+  useEffect(() => {
+    if (isLandscape) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isLandscape]);
   const isOnlyVideoMode = videos?.[currentVideoIndex]?.trainer_video === null;
   const isFinalAssessmentPresent = data?.assessment_details && data.assessment_details.length > 0 && data.assessment_details[0].id ? true : false;
   const showQueryRelatedSlides = data?.presentation_query;
@@ -530,7 +557,7 @@ const Home = () => {
 
     return (
       <FullscreenController enableAutoFullscreen={true}>
-        <div className="flex w-screen bg-page-background overflow-hidden fixed inset-0 flex-col" style={{ height: 'var(--app-height, 100dvh)' }}>
+        <div className="flex w-screen bg-page-background overflow-hidden overscroll-none fixed inset-0 flex-col" style={{ height: 'var(--app-height, 100dvh)' }}>
           {/* Breadcrumb Navigation */}
           <div className={`${paddingX} ${paddingY} bg-page-background`}>
             <CombinedBreadCrumb data={data} />

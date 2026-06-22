@@ -40,8 +40,10 @@ export const useAppHeight = () => {
     // orientation change — re-measure a couple of times to catch the final size.
     const setHeightDeferred = () => {
       setHeight();
-      setTimeout(setHeight, 150);
-      setTimeout(setHeight, 350);
+      setTimeout(setHeight, 100);
+      setTimeout(setHeight, 250);
+      setTimeout(setHeight, 500);
+      setTimeout(setHeight, 800);
     };
 
     if (vv) {
