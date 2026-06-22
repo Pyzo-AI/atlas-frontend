@@ -14,8 +14,8 @@ import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup";
 import { clearOverlayImage } from "@/store/features/imageSlice";
-import { useGetConversationHistoryQuery } from "@/store/api/questionsApi";
-import { useGetChatbotConversationsQuery } from "@/store/api/liveKitApi";
+import { useLazyGetConversationHistoryQuery } from "@/store/api/questionsApi";
+import { useLazyGetChatbotConversationsQuery } from "@/store/api/liveKitApi";
 
 const ChatUI = ({
   onClose,
@@ -43,22 +43,105 @@ const ChatUI = ({
   const [unreadMessages, setUnreadMessages] = useState(0);
   const prevMessageCountRef = useRef(0);
 
-  // Fetch conversation history — use chatbot endpoint when useChatbotHistory is true
-  const { data: presentationConversation = [], isLoading: isLoadingPresentationHistory } = useGetConversationHistoryQuery(presentationId, {
-    skip: !liveKitAgentEnabled || !presentationId || useChatbotHistory,
-    refetchOnMountOrArgChange: true,
-  });
+  const [allHistory, setAllHistory] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingInitial, setIsLoadingInitial] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const prevScrollHeightRef = useRef(null);
+  const isPaginatingRef = useRef(false);
+  const isLoadingMoreRef = useRef(false);
+  const loadMoreDebounceRef = useRef(null);
 
-  const { data: chatbotConversation = [], isLoading: isLoadingChatbotHistory } = useGetChatbotConversationsQuery(undefined, {
-    skip: !liveKitAgentEnabled || !useChatbotHistory,
-    refetchOnMountOrArgChange: true,
-  });
+  const [fetchPresentationHistory] = useLazyGetConversationHistoryQuery();
+  const [fetchChatbotHistory] = useLazyGetChatbotConversationsQuery();
 
-  const apiConversation = useChatbotHistory ? chatbotConversation : presentationConversation;
-  const isLoadingHistory = useChatbotHistory ? isLoadingChatbotHistory : isLoadingPresentationHistory;
+  // Initial fetch on mount / when key props change
+  useEffect(() => {
+    if (!liveKitAgentEnabled) return;
+    if (!useChatbotHistory && !presentationId) return;
+
+    const fetchInitial = async () => {
+      setIsLoadingInitial(true);
+      setAllHistory([]);
+      setCurrentPage(1);
+      setHasMore(false);
+
+      const result = useChatbotHistory
+        ? await fetchChatbotHistory({ page: 1 })
+        : await fetchPresentationHistory({ presentationId, page: 1 });
+
+      if (result.data) {
+        // API returns newest-first; reverse for chronological display
+        setAllHistory([...result.data.results].reverse());
+        setHasMore(result.data.has_more);
+      }
+      setIsLoadingInitial(false);
+    };
+
+    fetchInitial();
+  }, [liveKitAgentEnabled, presentationId, useChatbotHistory]);
+
+  // Load older messages (scroll-up pagination)
+  const loadMoreHistory = async () => {
+    if (!hasMore || isLoadingMoreRef.current) return;
+
+    isLoadingMoreRef.current = true;
+    prevScrollHeightRef.current = messagesContainerRef.current?.scrollHeight ?? null;
+    isPaginatingRef.current = true;
+    setIsLoadingMore(true);
+
+    const nextPage = currentPage + 1;
+    const result = useChatbotHistory
+      ? await fetchChatbotHistory({ page: nextPage })
+      : await fetchPresentationHistory({ presentationId, page: nextPage });
+
+    if (result.data) {
+      const older = [...result.data.results].reverse();
+      setAllHistory((prev) => [...older, ...prev]);
+      setHasMore(result.data.has_more);
+      setCurrentPage(nextPage);
+      // isLoadingMoreRef is reset in the scroll restoration effect after DOM paints
+    } else {
+      // No data / error — reset immediately since allHistory won't change
+      isLoadingMoreRef.current = false;
+      isPaginatingRef.current = false;
+      prevScrollHeightRef.current = null;
+    }
+    setIsLoadingMore(false);
+  };
+
+  // Restore scroll position after older messages are prepended
+  useEffect(() => {
+    if (prevScrollHeightRef.current !== null) {
+      const savedHeight = prevScrollHeightRef.current;
+      prevScrollHeightRef.current = null;
+      // rAF ensures DOM has painted new content before we read scrollHeight
+      requestAnimationFrame(() => {
+        const el = messagesContainerRef.current;
+        if (el) {
+          // Override scroll-smooth temporarily so restoration is instant (no animation
+          // means no intermediate scrollTop values that could re-trigger loadMoreHistory)
+          const prev = el.style.scrollBehavior;
+          el.style.scrollBehavior = "auto";
+          el.scrollTop = el.scrollHeight - savedHeight;
+          el.style.scrollBehavior = prev;
+        }
+        // Reset only after restoration so handleScroll can't re-trigger mid-flight
+        isLoadingMoreRef.current = false;
+      });
+    }
+  }, [allHistory]);
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (loadMoreDebounceRef.current) clearTimeout(loadMoreDebounceRef.current);
+    };
+  }, []);
 
   // Merge API history with live messages from the current session
-  const mergedConversation = [...apiConversation, ...liveMessages];
+  const mergedConversation = [...allHistory, ...liveMessages];
 
   // Format time with AM/PM
   const formatTime = (time) => {
@@ -107,14 +190,21 @@ const ChatUI = ({
     if (isBottom) {
       setUnreadMessages(0);
     }
+    // Load older messages when scrolled near the top (debounced to avoid spam)
+    if (scrollTop < 300 && liveKitAgentEnabled) {
+      if (loadMoreDebounceRef.current) clearTimeout(loadMoreDebounceRef.current);
+      loadMoreDebounceRef.current = setTimeout(() => {
+        loadMoreHistory();
+      }, 200);
+    }
   };
 
-  // Scroll to bottom instantly when history finishes loading
+  // Scroll to bottom instantly when initial history finishes loading
   useEffect(() => {
-    if (!isLoadingHistory && messagesContainerRef.current) {
+    if (!isLoadingInitial && messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
-  }, [isLoadingHistory]);
+  }, [isLoadingInitial]);
 
   useEffect(() => {
     const currentCount = displayConversation.length;
@@ -122,7 +212,10 @@ const ChatUI = ({
     prevMessageCountRef.current = currentCount;
 
     if (newMessages > 0) {
-      if (isAtBottom) {
+      if (isPaginatingRef.current) {
+        // Older messages prepended — not new, don't show badge
+        isPaginatingRef.current = false;
+      } else if (isAtBottom) {
         // Auto scroll
         setTimeout(() => {
           if (messagesContainerRef.current) {
@@ -130,7 +223,7 @@ const ChatUI = ({
           }
         }, 100);
       } else {
-        // Increment unread count
+        // Increment unread count for genuine new messages
         setUnreadMessages((prev) => prev + newMessages);
       }
     } else if (isAtBottom) {
@@ -235,7 +328,13 @@ const ChatUI = ({
 
           {/* Messages Container */}
           <div ref={messagesContainerRef} onScroll={handleScroll} className={`flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden min-h-0 overscroll-contain ${enableSmoothScroll ? "scroll-smooth" : ""}`}>
-            {isLoadingHistory ? (
+            {/* Older messages loading indicator */}
+            {isLoadingMore && (
+              <div className="flex justify-center py-2">
+                <div className="w-5 h-5 border-2 border-gray-300 border-t-accent-secondary rounded-full animate-spin"></div>
+              </div>
+            )}
+            {isLoadingInitial ? (
               <div className="space-y-3 sm:space-y-4 lg:space-y-6">
                 {Array.from({ length: 4 }).map((_, index) => (
                   <div key={index} className={index % 2 === 0 ? "flex justify-end" : "flex gap-2 items-start"}>
