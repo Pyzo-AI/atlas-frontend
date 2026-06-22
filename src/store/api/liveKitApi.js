@@ -20,9 +20,15 @@ export const liveKitApi = createApi({
       }),
     }),
     getChatbotConversations: builder.query({
-      query: () => 'session/conversations?limit=-1',
+      query: ({ page = 1, limit = 20 } = {}) =>
+        `session/conversations?page=${page}&limit=${limit}`,
     }),
   }),
 });
 
-export const { useCreateSessionMutation, useCreateChatbotSessionMutation, useGetChatbotConversationsQuery } = liveKitApi;
+export const {
+  useCreateSessionMutation,
+  useCreateChatbotSessionMutation,
+  useGetChatbotConversationsQuery,
+  useLazyGetChatbotConversationsQuery,
+} = liveKitApi;
