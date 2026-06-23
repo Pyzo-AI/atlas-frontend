@@ -107,7 +107,7 @@ const QuestionModeUser = ({
   }, [dispatch]);
 
   return (
-    <div className="flex-1 border border-border-light rounded-[10px] p-3 pb-6 flex flex-col">
+    <div className="flex-1 border border-border-light rounded-[10px] p-3 pb-3 md:pb-6 flex flex-col">
       {/* Main Content Frame */}
       <div className="flex-1 bg-bg-neutral rounded-xl flex items-center justify-center p-1">
         {/* Center Content */}
@@ -139,7 +139,7 @@ const QuestionModeUser = ({
       </div>
 
       {/* Bottom Input Section */}
-      <div className="mt-6 flex items-center justify-center px-0 md:px-3 gap-2 md:gap-4 mx-auto">
+      <div className="mt-2 md:mt-6 flex items-center justify-center px-0 md:px-3 gap-2 md:gap-4 mx-auto">
         {/* Chat History Button */}
         <button
           onClick={handleChatHistory}
