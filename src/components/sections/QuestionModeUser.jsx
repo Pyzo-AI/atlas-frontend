@@ -1,6 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import chat_history from '@/assets/svg/chat_history.svg'
 import back_to_session from '@/assets/svg/back_to_session.svg'
+import mute from '@/assets/svg/mute.svg'
+import unmute from '@/assets/svg/unmute.svg'
 import Image from 'next/image'
 import tap_to_speak from '@/assets/svg/tap-to-speak.svg'
 import Lottie from 'lottie-react'
@@ -13,9 +15,11 @@ import {
   setShowChat,
   setSlideNumbers,
   setProductRecommendations,
+  setIsUserMuted,
 } from '@/store/features/videoSlice'
 import { clearOverlayImage } from '@/store/features/imageSlice'
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next"
+import { liveKitService } from '@/lib/livekit'
 
 const QuestionModeUser = ({
   onPauseVideo,
@@ -31,52 +35,60 @@ const QuestionModeUser = ({
   liveKitAgentState = "connecting",
 }) => {
   const dispatch = useDispatch();
-  const { question } = useSelector((state) => state.video);
+  const { question, isUserMuted } = useSelector((state) => state.video);
   const { t } = useTranslation();
-  // No need for manual speech recognition as ElevenLabs handles it
+
+  const isConnecting = liveKitAgentEnabled && liveKitAgentState === "connecting";
 
   const handleTapToSpeak = () => {
     if (isConnected) {
-      // Stop conversation if already connected
       if (onStopConversation) {
         onStopConversation();
       }
     } else {
-      // Start conversation
       if (onPauseVideo) {
         onPauseVideo();
       }
-
-      // Stop any playing answer audio when starting new conversation
       if (onPauseAnswerAudio) {
         onPauseAnswerAudio();
       }
-
       dispatch(setQuestion(""));
-
+      // Reset mute state on new conversation
+      dispatch(setIsUserMuted(false));
       if (onStartConversation) {
         onStartConversation();
       }
     }
   };
 
+  const handleToggleMute = async () => {
+    if (!liveKitAgentEnabled) return;
+    try {
+      if (isUserMuted) {
+        await liveKitService.enableMicrophone();
+        dispatch(setIsUserMuted(false));
+      } else {
+        await liveKitService.disableMicrophone();
+        dispatch(setIsUserMuted(true));
+      }
+    } catch (error) {
+      console.log("Failed to toggle microphone:", error);
+    }
+  };
+
   const handleBackToSession = () => {
-    // Stop conversation if active
-    // if (isConnected && onStopConversation) {
-    //   onStopConversation();
-    // }
     onStopConversation();
-    // Clear state
     dispatch(setQuestion(''))
     dispatch(setIsQuestionMode(false))
     dispatch(setSlideNumbers([]))
-    // Clear overlay image state (query based slide image)
     dispatch(clearOverlayImage());
     dispatch(setProductRecommendations([]));
+    // Reset mute when leaving interaction mode
+    dispatch(setIsUserMuted(false));
   };
 
   const handleChatHistory = () => {
-    onPauseVideo() // Pause the video when opening chat
+    onPauseVideo()
     dispatch(setShowChat(true))
     dispatch(setIsQuestionMode(false))
     dispatch(setSlideNumbers([]))
@@ -84,50 +96,89 @@ const QuestionModeUser = ({
     if (isConnected && onStopConversation) {
       onStopConversation();
     }
+    dispatch(setIsUserMuted(false));
   };
 
+  useEffect(() => {
+    return () => {
+      // Reset mute state when unmounting / exiting interaction mode
+      dispatch(setIsUserMuted(false));
+    };
+  }, [dispatch]);
+
   return (
-    <div className="flex-1 border border-border-light rounded-[10px] p-3 pb-6 flex flex-col">
+    <div className="flex-1 border border-border-light rounded-[10px] p-3 pb-3 md:pb-6 flex flex-col">
       {/* Main Content Frame */}
-      <div className="flex-1 bg-bg-neutral rounded-xl flex items-center justify-center p-6">
+      <div className="flex-1 bg-bg-neutral rounded-xl flex items-center justify-center p-1">
         {/* Center Content */}
-        <div className="flex flex-col items-center gap-[30px] max-w-[275px]">
-          {/* Avatar/Tap to Speak */}
-          <div className={`w-[120px] ${isMobile ? "h-[20px]" : "h-[120px]"} flex items-center justify-center`}>
-            {isAudioLoading ? (
-              <Lottie animationData={userWaveAnimation} style={{ width: 120, height: 120 }} loop={true} />
-            ) : (
-              <Image src={tap_to_speak} alt="tap to speak" width={72} height={72} />
-            )}
-          </div>
+        <div className="flex flex-col items-center justify-center w-full h-full gap-3">
+          {isUserMuted ? (
+            /* Muted state - show mute indicator */
+            <div className="flex flex-col items-center gap-3">
+              <Image src={tap_to_speak} alt="Microphone Muted" width={72} height={72} />
+              <div className="flex flex-col items-center gap-1 text-center">
+                <p className="font-lato font-semibold text-sm text-primary-text">
+                  {t("lectures.microphoneMuted")}
+                </p>
+                <p className="font-lato font-normal text-xs text-gray-400">
+                  {t("lectures.unmuteAndSpeak")}
+                </p>
+              </div>
+            </div>
+          ) : (
+            /* Active/listening state */
+            <div className={`w-[120px] ${isMobile ? "h-[20px]" : "h-[120px]"} flex items-center justify-center`}>
+              {isAudioLoading ? (
+                <Lottie animationData={userWaveAnimation} style={{ width: 120, height: 120 }} loop={true} />
+              ) : (
+                <Image src={tap_to_speak} alt="tap to speak" width={72} height={72} />
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Bottom Input Section */}
-      <div className="mt-6 flex items-center justify-center px-0 md:px-3 gap-2 md:gap-4 mx-auto">
+      <div className="mt-2 md:mt-6 flex items-center justify-center px-0 md:px-3 gap-2 md:gap-4 mx-auto">
+        {/* Chat History Button */}
         <button
           onClick={handleChatHistory}
-          disabled={liveKitAgentEnabled && liveKitAgentState === "connecting"}
+          disabled={isConnecting}
           className={`flex items-center gap-1 px-3 py-[7px] rounded-[73.75px] ${
-            liveKitAgentEnabled && liveKitAgentState === "connecting"
+            isConnecting
               ? "bg-gray-200 cursor-not-allowed opacity-50"
               : "bg-bg-accent-subtle cursor-pointer"
           }`}>
           <Image className="w-4 h-4 lg:w-5 lg:h-5" src={chat_history} alt="chat_history" />
         </button>
 
+        {/* Mute/Unmute Button */}
+        {liveKitAgentEnabled && (
+          <button
+            onClick={handleToggleMute}
+            disabled={isConnecting}
+            className={`flex items-center ${isConnecting ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
+            <Image
+              className="w-9 h-9 lg:w-10 lg:h-10"
+              src={isUserMuted ? mute : unmute}
+              alt={isUserMuted ? "Mute" : "Unmute"}
+            />
+          </button>
+        )}
+
+        {/* Continue Lesson Button */}
         <button
           onClick={handleBackToSession}
-          disabled={liveKitAgentEnabled && liveKitAgentState === "connecting"}
+          disabled={isConnecting}
           className={`flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-[73.75px] ${
-            liveKitAgentEnabled && liveKitAgentState === "connecting"
+            isConnecting
               ? "bg-gray-400 cursor-not-allowed opacity-50"
               : "bg-accent-secondary cursor-pointer"
           }`}>
           <Image className="w-4 h-4 lg:w-5 lg:h-5" src={back_to_session} alt="back_to_session" />
-          <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
+          {/* <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
             {t("lectures.continueLesson")}
-          </span>
+          </span> */}
         </button>
       </div>
     </div>

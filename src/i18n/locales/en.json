@@ -245,8 +245,11 @@
     "connecting": "Connecting",
     "speaking": "Speaking",
     "listening": "Listening",
+    "thinking": "Thinking",
     "askMeAnything": "Ask me anything about the presentation, and I'll help with the answers.",
     "continueLesson": "Continue Lesson",
+    "microphoneMuted": "Microphone Muted",
+    "unmuteAndSpeak": "Unmute and start speaking.",
     "assessmentReset": "Assessment reset. You can try again.",
     "restartingTraining": "Restarting training from the beginning.",
     "interactionModeUnavailable": "Interaction mode not available. Please try again later."

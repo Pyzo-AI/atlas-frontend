@@ -17,6 +17,7 @@ const initialState = {
   showChat: false,
   slideNumbers: [],
   productRecommendations: [],
+  isUserMuted: false,
 };
 
 const videoSlice = createSlice({
@@ -73,6 +74,9 @@ const videoSlice = createSlice({
       console.log("action.payload", action.payload);
       state.productRecommendations = action.payload;
     },
+    setIsUserMuted: (state, action) => {
+      state.isUserMuted = action.payload;
+    },
   },
 });
 
@@ -93,5 +97,6 @@ export const {
   setShowChat,
   setSlideNumbers,
   setProductRecommendations,
+  setIsUserMuted,
 } = videoSlice.actions;
 export default videoSlice.reducer;
