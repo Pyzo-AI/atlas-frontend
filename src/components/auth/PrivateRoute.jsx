@@ -16,6 +16,9 @@ const PrivateRoute = ({ children }) => {
   const pathname = usePathname()
   const [permissionDenied, setPermissionDenied] = useState(false)
 
+  // Match /login, /en/login, /de/login etc.
+  const isLoginPage = pathname === '/login' || pathname.endsWith('/login')
+
   // Cross-tab session sync: refreshes tokens on every tab switch to get latest permissions,
   // then checks product access (no admin check for user app).
   usePyzoSessionSync({
@@ -25,13 +28,14 @@ const PrivateRoute = ({ children }) => {
       }
     },
     onLogin: () => router.push('/'),
+    loginPath: isLoginPage ? pathname : '/login',
     productName: PRODUCT_NAME,
     refreshBaseUrl: REFRESH_BASE_URL,
     onPermissionDenied: () => {
       // Token exists but product check failed — user IS logged in, just lacks access.
       // If on /login, navigate to home first so AccessDeniedScreen renders there.
       setPermissionDenied(true)
-      if (window.location.pathname === '/login') {
+      if (isLoginPage) {
         router.push('/')
       }
     },
@@ -41,9 +45,6 @@ const PrivateRoute = ({ children }) => {
   })
 
   const { identify } = usePostHog()
-
-  // Match /login, /en/login, /de/login etc.
-  const isLoginPage = pathname === '/login' || pathname.endsWith('/login')
 
   useEffect(() => {
     const checkAuth = async () => {
