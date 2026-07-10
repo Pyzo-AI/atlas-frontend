@@ -95,7 +95,8 @@ export const questionsApi = createApi({
 
     // Get conversation history
     getConversationHistory: builder.query({
-      query: (presentationId) => `api/webhooks/presentations/${presentationId}/conversations?limit=-1`,
+      query: ({ presentationId, page = 1, limit = 20 }) =>
+        `api/webhooks/presentations/${presentationId}/conversations?page=${page}&limit=${limit}`,
       providesTags: ['Question'],
     }),
   }),
@@ -114,4 +115,5 @@ export const {
   useGetAssessmentSummaryQuery,
   useGenerateImageMutation,
   useGetConversationHistoryQuery,
+  useLazyGetConversationHistoryQuery,
 } = questionsApi;
