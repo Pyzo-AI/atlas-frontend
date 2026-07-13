@@ -617,8 +617,8 @@ const Home = () => {
                             </div>
                             {/* Simple Loading Overlay */}
                             {isInterviewLinkLoading && (
-                              <div className="absolute inset-0 bg-white/75 rounded-[8px] flex items-center justify-center z-20">
-                                <span className="text-sm font-medium text-primary animate-pulse">Loading...</span>
+                              <div className="absolute inset-0 bg-white/70 rounded-[8px] flex items-center justify-center z-20">
+                                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                               </div>
                             )}
                           </div>
