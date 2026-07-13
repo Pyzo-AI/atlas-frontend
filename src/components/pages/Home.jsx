@@ -595,29 +595,6 @@ const Home = () => {
                                     className="object-cover"
                                   />
                                 )}
-                                {isInterviewLinkLoading && (
-                                  <div className="absolute inset-0 flex items-center justify-center bg-white/60">
-                                    <svg
-                                      className="animate-spin w-8 h-8 text-primary"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
-                                      viewBox="0 0 24 24">
-                                      <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                      />
-                                      <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8v8H4z"
-                                      />
-                                    </svg>
-                                  </div>
-                                )}
                               </div>
                               {/* Content */}
                               <div className="flex flex-col items-start gap-2 sm:gap-[8px] w-full">
@@ -638,6 +615,12 @@ const Home = () => {
                                 </div>
                               </div>
                             </div>
+                            {/* Simple Loading Overlay */}
+                            {isInterviewLinkLoading && (
+                              <div className="absolute inset-0 bg-white/75 rounded-[8px] flex items-center justify-center z-20">
+                                <span className="text-sm font-medium text-primary animate-pulse">Loading...</span>
+                              </div>
+                            )}
                           </div>
                         )}
                       </React.Fragment>
