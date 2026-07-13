@@ -99,6 +99,14 @@ export const questionsApi = createApi({
         `api/webhooks/presentations/${presentationId}/conversations?page=${page}&limit=${limit}`,
       providesTags: ['Question'],
     }),
+
+    // Get interview link
+    getInterviewLink: builder.mutation({
+      query: () => ({
+        url: `api/learner/interview-link`,
+        method: 'POST',
+      }),
+    }),
   }),
 });
 
@@ -116,4 +124,5 @@ export const {
   useGenerateImageMutation,
   useGetConversationHistoryQuery,
   useLazyGetConversationHistoryQuery,
+  useGetInterviewLinkMutation,
 } = questionsApi;
