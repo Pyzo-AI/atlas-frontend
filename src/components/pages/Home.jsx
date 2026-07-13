@@ -576,10 +576,6 @@ const Home = () => {
                               !isAssessmentLinkLoading &&
                               handleAssessmentCardClick()
                             }>
-                            {/* Assessment badge */}
-                            <div className="absolute top-4.5 right-4.5 flex flex-col items-end p-1 gap-0.5 bg-primary rounded-[5px] z-10">
-                              <p className="font-lato font-medium text-[10px] leading-[10px] text-light">Assessment</p>
-                            </div>
                             <div className="flex flex-col items-start gap-[12px] w-full flex-1">
                               {/* Thumbnail */}
                               <div className="w-full flex-1 bg-bg-light-purple rounded-[8px] overflow-hidden relative">
