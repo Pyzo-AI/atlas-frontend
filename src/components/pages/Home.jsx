@@ -211,7 +211,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
 };
 
 const CIPLA_EMAIL = "cipla@pyzo.in";
-const INTERVIEW_MODULE_TITLE = "Basic cGMP & Gowning Requirements";
+const ASSESSMENT_MODULE_TITLE = "Basic cGMP & Gowning Requirements";
 
 const Home = () => {
   const router = useLocalizedRouter();
@@ -296,20 +296,20 @@ const Home = () => {
   const userDetails = getUserDetailsFromToken();
   const isCiplaUser = userDetails?.email === CIPLA_EMAIL;
 
-  const [getInterviewLink, { isLoading: isInterviewLinkLoading }] = useGetInterviewLinkMutation();
+  const [getInterviewLink, { isLoading: isAssessmentLinkLoading }] = useGetInterviewLinkMutation();
 
-  const handleInterviewCardClick = async () => {
+  const handleAssessmentCardClick = async () => {
     try {
       const result = await getInterviewLink().unwrap();
       const link = result?.interview_link || result?.link || result?.url;
       if (link) {
         window.open(link, "_blank", "noopener,noreferrer");
       } else {
-        toast.error("Interview link not found in response.");
+        toast.error("Assessment link not found in response.");
       }
     } catch (err) {
-      console.error("Failed to fetch interview link", err);
-      toast.error("Failed to fetch interview link");
+      console.error("Failed to fetch assessment link", err);
+      toast.error("Failed to fetch assessment link");
     }
   };
 
@@ -562,9 +562,9 @@ const Home = () => {
               return (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-[12px] w-full">
                   {filteredPresentations.map((presentation) => {
-                    const isInterviewModule =
+                    const isAssessmentModule =
                       isCiplaUser &&
-                      presentation.title?.trim() === INTERVIEW_MODULE_TITLE;
+                      presentation.title?.trim() === ASSESSMENT_MODULE_TITLE;
                     return (
                       <React.Fragment key={presentation.presentation_id}>
                         <PresentationCard
@@ -572,17 +572,17 @@ const Home = () => {
                           currentTime={currentTime}
                           onClick={() => handlePresentationClick(presentation.presentation_id)}
                         />
-                        {/* Interview card — renders right after the matching card, only for cipla@pyzo.in */}
-                        {isInterviewModule && (
+                        {/* Assessment card — renders right after the matching card, only for cipla@pyzo.in */}
+                        {isAssessmentModule && (
                           <div
                             className="relative flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] transition-shadow duration-300 cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)]"
                             onClick={() =>
-                              !isInterviewLinkLoading &&
-                              handleInterviewCardClick()
+                              !isAssessmentLinkLoading &&
+                              handleAssessmentCardClick()
                             }>
-                            {/* Interview badge */}
+                            {/* Assessment badge */}
                             <div className="absolute top-4.5 right-4.5 flex flex-col items-end p-1 gap-0.5 bg-primary rounded-[5px] z-10">
-                              <p className="font-lato font-medium text-[10px] leading-[10px] text-light">Interview</p>
+                              <p className="font-lato font-medium text-[10px] leading-[10px] text-light">Assessment</p>
                             </div>
                             <div className="flex flex-col items-start gap-[12px] w-full flex-1">
                               {/* Thumbnail */}
@@ -600,7 +600,7 @@ const Home = () => {
                               <div className="flex flex-col items-start gap-2 sm:gap-[8px] w-full">
                                 <div className="flex items-center gap-2 sm:gap-[8px] w-full">
                                   <h3 className="font-lato font-semibold text-sm sm:text-[16px] leading-tight sm:leading-[19px] text-text-title flex-grow">
-                                    {`${presentation?.title || INTERVIEW_MODULE_TITLE} - Interview`}
+                                    {`${presentation?.title || ASSESSMENT_MODULE_TITLE} - Assessment`}
                                   </h3>
                                 </div>
                                 <div className="flex justify-between items-start gap-2 sm:gap-[8px] w-full">
@@ -609,14 +609,14 @@ const Home = () => {
                                   </span>
                                   <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-blue-500">
                                     <span className="font-lato font-medium text-[11px] leading-4 text-white">
-                                      Interview
+                                      Assessment
                                     </span>
                                   </div>
                                 </div>
                               </div>
                             </div>
                             {/* Simple Loading Overlay */}
-                            {isInterviewLinkLoading && (
+                            {isAssessmentLinkLoading && (
                               <div className="absolute inset-0 bg-white/70 rounded-[8px] flex items-center justify-center z-20">
                                 <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                               </div>
