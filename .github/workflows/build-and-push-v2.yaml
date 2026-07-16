@@ -1,4 +1,4 @@
-name: Build and Push Docker Image V2 
+name: Build and Push Docker Image V2
 
 on:
   # push:
@@ -128,3 +128,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: ${{ steps.parse_env.outputs.build_args }}
+          secrets: |
+            npm_token=${{ secrets.PERSONAL_ACCESS_TOKEN }}
