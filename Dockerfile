@@ -1,5 +1,5 @@
-# Use the official Node.js 18 Alpine image as base
-FROM node:18-alpine AS base
+# Use the official Node.js 20 Alpine image as base
+FROM node:20-alpine AS base
 
 # Build arguments for environment variables
 ARG NEXT_PUBLIC_API_BASE_URL
