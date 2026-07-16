@@ -12,21 +12,31 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* .npmrc ./
-RUN \
+# CHANGED: removed .npmrc from COPY — it's never committed to the repo, so this always failed.
+# It's now generated inside the RUN step below using a mounted build secret instead.
+COPY package.json package-lock.json* ./
+# CHANGED: token is mounted as an ephemeral env var (never written to an image layer) and used
+# to build .npmrc on the fly, then the file is removed before the layer is committed.
+RUN --mount=type=secret,id=npm_token,env=NPM_TOKEN,required=true \
+  echo "@esmagico:registry=https://npm.pkg.github.com/" > .npmrc && \
+  echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" >> .npmrc && \
   if [ -f package-lock.json ]; then npm ci --only=production; \
   else echo "No lockfile found, using npm install..." && npm install --only=production; \
-  fi
+  fi && \
+  rm -f .npmrc
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
-COPY package.json package-lock.json* .npmrc ./
-RUN \
+# CHANGED: same as above — .npmrc removed from COPY, generated via secret mount instead
+COPY package.json package-lock.json* ./
+RUN --mount=type=secret,id=npm_token,env=NPM_TOKEN,required=true \
+  echo "@esmagico:registry=https://npm.pkg.github.com/" > .npmrc && \
+  echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" >> .npmrc && \
   if [ -f package-lock.json ]; then npm ci; \
   else echo "No lockfile found, using npm install..." && npm install; \
-  fi
+  fi && \
+  rm -f .npmrc
 COPY . .
 
 # Set build arguments as environment variables for the build process
