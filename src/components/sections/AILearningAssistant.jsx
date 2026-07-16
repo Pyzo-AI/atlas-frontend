@@ -84,7 +84,7 @@ const AILearningAssistant = ({
         {/* Inner Frame */}
         <div
           ref={innerRef}
-          className={`w-full h-full bg-bg-lavender rounded-xl ${
+          className={`w-full h-full bg-bg-light-blue rounded-xl ${
             isMobileView ? "p-1" : "p-3"
           } flex flex-col min-h-0 ${isScrollable ? "overflow-y-auto" : "overflow-hidden"} relative`}>
           {/* Chat Icon - Positioned absolutely */}
