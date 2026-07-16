@@ -1,0 +1,130 @@
+name: Build and Push Docker Image V2 
+
+on:
+  # push:
+  #   branches:
+  #     - prod
+  #     - dev
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build from'
+        required: true
+        default: 'prod'
+        type: string
+      image_tag:
+        description: 'Custom image tag (optional — defaults to <branch>-<commit-sha>)'
+        required: false
+        type: string
+      env_vars:
+        description: 'Build-time vars as KEY=VALUE (one per line) OR a JSON object'
+        required: false
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+
+      - name: Guard against unexpected release target
+        if: github.event_name == 'release'
+        run: |
+          echo "Release '${{ github.event.release.tag_name }}' targets branch: ${{ github.event.release.target_commitish }}"
+          ALLOWED_BRANCHES=("prod" "echo-dev")
+          TARGET="${{ github.event.release.target_commitish }}"
+          MATCH=0
+          for b in "${ALLOWED_BRANCHES[@]}"; do
+            [[ "$TARGET" == "$b" ]] && MATCH=1
+          done
+          if [[ "$MATCH" -eq 0 ]]; then
+            echo "::error::Release targets '$TARGET', which isn't in the allowed list (${ALLOWED_BRANCHES[*]}). Check the Target dropdown when publishing the release."
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref }}
+
+      - name: Confirm what was actually checked out
+        id: vars
+        run: |
+          SHA_SHORT=$(git rev-parse --short HEAD)
+          echo "sha_short=$SHA_SHORT" >> "$GITHUB_OUTPUT"
+          echo "Event: ${{ github.event_name }}"
+          echo "Checked out commit: $(git rev-parse HEAD)"
+          echo "Commit message: $(git log -1 --pretty=%s)"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Parse and mask manual build args
+        id: parse_env
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          RAW_ENV: ${{ inputs.env_vars }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os
+          raw = os.environ.get("RAW_ENV", "").strip()
+          lines = []
+          if raw:
+              try:
+                  data = json.loads(raw)
+                  lines = [f"{k}={v}" for k, v in data.items()]
+              except json.JSONDecodeError:
+                  for line in raw.splitlines():
+                      line = line.strip()
+                      if line and "=" in line and not line.startswith("#"):
+                          lines.append(line)
+          out = "\n".join(lines)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write("build_args<<EOF_DELIM\n")
+              f.write(out + "\n")
+              f.write("EOF_DELIM\n")
+
+          for line in lines:
+              if "=" in line:
+                  _, value = line.split("=", 1)
+                  if value:
+                      print(f"::add-mask::{value}")
+          PYEOF
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ inputs.image_tag }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.image_tag != '' }}
+            type=raw,value=${{ inputs.branch }}-${{ steps.vars.outputs.sha_short }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.image_tag == '' }}
+            type=ref,event=branch,enable=${{ github.event_name != 'workflow_dispatch' }}
+            type=pep440,pattern={{version}},value=${{ github.ref_name }},enable=${{ github.event_name == 'release' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
+
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: ${{ steps.parse_env.outputs.build_args }}
