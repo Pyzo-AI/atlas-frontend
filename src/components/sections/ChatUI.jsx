@@ -6,8 +6,8 @@ import {
   setShowChat,
   setSlideNumbers,
 } from "@/store/features/videoSlice";
-import back_to_session from "@/assets/svg/back_to_session.svg";
-import interaction_mode from "@/assets/svg/interaction_mode.svg";
+import back_to_session from "@/assets/svg/back_to_session_white.svg";
+import interaction_mode from "@/assets/svg/interaction_mode_light_blue.svg";
 import ai_answer_icon from "@/assets/svg/ai_answer_icon.svg";
 import close_icon from "@/assets/svg/close.svg";
 import Image from "next/image";
@@ -391,7 +391,7 @@ const ChatUI = ({
                           ) : item.type === "answer" ? (
                             /* AI Message */
                             <div className="flex gap-2 items-start">
-                              <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-b from-gradient-start to-gradient-end flex items-center justify-center flex-shrink-0">
+                              <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full  flex items-center justify-center flex-shrink-0">
                                 <Image src={ai_answer_icon} alt="AI Answer Icon" />
                               </div>
                               <div className="flex flex-col gap-1 lg:gap-1.5 flex-1 min-w-0">
@@ -469,7 +469,7 @@ const ChatUI = ({
                     ) : item.type === "answer" ? (
                       /* AI Message */
                       <div className="flex gap-2 items-start">
-                        <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-b from-gradient-start to-gradient-end flex items-center justify-center flex-shrink-0">
+                        <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center flex-shrink-0">
                           <Image src={ai_answer_icon} alt="AI Answer Icon" />
                         </div>
                         <div className="flex flex-col gap-1 lg:gap-1.5 flex-1 min-w-0">
@@ -544,18 +544,18 @@ const ChatUI = ({
 
           {/* Bottom Actions Container */}
           {!hideFooter && (
-            <div className="flex justify-center items-center gap-1 sm:gap-2 w-full bg-white px-2 sm:px-3 py-1.5 lg:py-2 flex-shrink-0 border-t border-border-light">
+            <div className="flex justify-center items-center gap-1.5 sm:gap-2 w-full bg-white px-2 sm:px-3 py-1.5 sm:py-2 flex-shrink-0 border-t border-border-light">
               {/* Interaction Mode Button */}
               <button
                 onClick={agentId ? handleInteractionMode : undefined}
                 disabled={!agentId}
-                className={`flex items-center justify-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-[74px] ${
-                  agentId ? "bg-bg-accent-subtle cursor-pointer" : "bg-gray-100 cursor-not-allowed opacity-50"
+                className={`flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-[8.53px] ${
+                  agentId ? "bg-bg-light-blue cursor-pointer" : "bg-gray-100 cursor-not-allowed opacity-50"
                 }`}>
-                <Image className="w-4 h-4 lg:w-5 lg:h-5" src={interaction_mode} alt="interaction_mode" />
+                <Image className="w-3.5 h-3.5 sm:w-4 sm:h-4" src={interaction_mode} alt="interaction_mode" />
 
                 {!isMobile && (
-                  <span className="font-lato font-medium text-[8px] sm:text-[9px] lg:text-[10px] leading-3 text-center text-accent-secondary whitespace-nowrap">
+                  <span className="font-lato font-medium text-[10px] sm:text-xs text-primary whitespace-nowrap">
                     {t("lectures.interactionMode")}
                   </span>
                 )}
@@ -564,9 +564,9 @@ const ChatUI = ({
               {/* Continue Lesson Button */}
               <button
                 onClick={handleContinueLesson}
-                className="cursor-pointer flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-accent-secondary rounded-[73.75px]">
-                <Image className="w-4 h-4 lg:w-5 lg:h-5" src={back_to_session} alt="back_to_session" />
-                <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
+                className="cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-primary rounded-[8.53px]">
+                <Image className="w-3.5 h-3.5 sm:w-4 sm:h-4" src={back_to_session} alt="back_to_session" />
+                <span className="font-lato font-medium text-[10px] sm:text-[10px] text-white whitespace-nowrap">
                   {t("lectures.continueLesson")}
                 </span>
               </button>
