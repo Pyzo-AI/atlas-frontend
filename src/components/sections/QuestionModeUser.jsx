@@ -151,12 +151,12 @@ const QuestionModeUser = ({
         <button
           onClick={handleChatHistory}
           disabled={isConnecting}
-          className={`flex items-center gap-1 px-3 py-[7px] rounded-[73.75px] ${
+          className={`flex items-center justify-center gap-1 px-3 py-[7px] rounded-lg ${
             isConnecting
               ? "bg-gray-200 cursor-not-allowed opacity-50"
-              : "bg-bg-accent-subtle cursor-pointer"
+              : "bg-accent-secondary cursor-pointer"
           }`}>
-          <Image className="w-4 h-4 lg:w-5 lg:h-5" src={chat_history} alt="chat_history" />
+          <Image className="w-3 h-3 lg:w-[18px] lg:h-[18px]" src={chat_history} alt="chat_history" />
         </button>
 
         {/* Mute/Unmute Button */}
@@ -177,12 +177,12 @@ const QuestionModeUser = ({
         <button
           onClick={handleBackToSession}
           disabled={isConnecting}
-          className={`flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-[73.75px] ${
+          className={`flex items-center justify-between gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg ${
             isConnecting
-              ? "bg-gray-400 cursor-not-allowed opacity-50"
+              ? "bg-gray-200 cursor-not-allowed opacity-50"
               : "bg-accent-secondary cursor-pointer"
           }`}>
-          <Image className="w-4 h-4 lg:w-5 lg:h-5" src={back_to_session} alt="back_to_session" />
+          <Image className="w-3 h-3 lg:w-[18px] lg:h-[18px]" src={back_to_session} alt="back_to_session" />
           {/* <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
             {t("lectures.continueLesson")}
           </span> */}

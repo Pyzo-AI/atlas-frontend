@@ -84,7 +84,7 @@ const AILearningAssistant = ({
         {/* Inner Frame */}
         <div
           ref={innerRef}
-          className={`w-full h-full bg-bg-lavender rounded-xl ${
+          className={`w-full h-full bg-bg-light-blue rounded-xl ${
             isMobileView ? "p-1" : "p-3"
           } flex flex-col min-h-0 ${isScrollable ? "overflow-y-auto" : "overflow-hidden"} relative`}>
           {/* Chat Icon - Positioned absolutely */}
@@ -114,7 +114,7 @@ const AILearningAssistant = ({
                   } text-primary-text`}>
                   {t("lectures.aiAssistant")}
                 </h3>
-                <p className={`w-full text-center font-lato font-normal ${isMobileView ? "text-[9px] leading-3" : "text-xs leading-4"} text-primary-text`}>
+                <p className={`w-full text-center font-lato font-normal ${isMobileView ? "text-[9px] leading-3" : "text-xs leading-4"} text-text-gray`}>
                   {t("lectures.aiAssistantDesc")}
                 </p>
               </div>
@@ -125,14 +125,14 @@ const AILearningAssistant = ({
               <button
                 onClick={handleStartQA}
                 disabled={!agentId}
-                className={`flex items-center justify-center gap-1 ${
+                className={`flex items-center justify-center rounded-[10px] bg-primary gap-1 ${
                   isMobileView ? "px-2 py-2 h-6" : "px-3 py-2 h-9"
-                } rounded-full font-lato font-semibold text-sm leading-4 transition-all duration-200 ${
+                }  font-lato font-semibold text-sm leading-4 transition-all duration-200 ${
                   agentId
                     ? "text-white cursor-pointer hover:opacity-90"
                     : "text-gray-400 cursor-not-allowed bg-gray-200"
                 }`}
-                style={agentId ? { background: "var(--gradient-primary)" } : {}}
+                // style={agentId ? { background: "var(--gradient-primary)" } : {}}
                 title={!agentId ? "Agent not available" : ""}>
                 <Image
                   className="w-5 h-5"
