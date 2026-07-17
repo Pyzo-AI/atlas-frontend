@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   train-boost-frontend:
     build:
@@ -9,11 +7,15 @@ services:
         - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
         - NEXT_PUBLIC_LOGIN_BASE_URL=${NEXT_PUBLIC_LOGIN_BASE_URL}
         - NEXT_PUBLIC_LIVEKIT_API_URL=${NEXT_PUBLIC_LIVEKIT_API_URL}
-        - NEXT_PUBLIC_KEYCLOAK_BASE_URL=$NEXT_PUBLIC_KEYCLOAK_BASE_URL
-        - NEXT_PUBLIC_KEYCLOAK_REALM=$NEXT_PUBLIC_KEYCLOAK_REALM
-        - NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=$NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
-        - NEXT_PUBLIC_REDIRECT_URI=$NEXT_PUBLIC_REDIRECT_URI
-        - NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET=$NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET
+        - NEXT_PUBLIC_KEYCLOAK_BASE_URL=${NEXT_PUBLIC_KEYCLOAK_BASE_URL}
+        - NEXT_PUBLIC_KEYCLOAK_REALM=${NEXT_PUBLIC_KEYCLOAK_REALM}
+        - NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=${NEXT_PUBLIC_KEYCLOAK_CLIENT_ID}
+        - NEXT_PUBLIC_REDIRECT_URI=${NEXT_PUBLIC_REDIRECT_URI}
+        - NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET=${NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET}
+      # ADDED: makes the npm_token secret available to `--mount=type=secret,id=npm_token` in the Dockerfile.
+      # This matches the "env" source below — Compose reads NPM_TOKEN from your shell/`.env` at build time.
+      secrets:
+        - npm_token
     ports:
       - "3000:3000"
     environment:
@@ -34,3 +36,11 @@ networks:
   shared-net:
     name: ${NETWORK_NAME}
     external: true
+
+# ADDED: top-level secrets definition. This secret is only used at BUILD time
+# (referenced under build.secrets above) — it is never mounted into the running
+# container, so it doesn't appear in `docker inspect`, `docker exec`, or the
+# container's environment once it's up.
+secrets:
+  npm_token:
+    environment: NPM_TOKEN
