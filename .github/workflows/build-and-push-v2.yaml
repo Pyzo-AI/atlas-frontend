@@ -74,45 +74,106 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Compute branch-specific secret name
+        id: branch_meta
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          BRANCH="${{ inputs.branch }}"
+          # Secret names may only contain [A-Z0-9_] — sanitize and uppercase.
+          SAFE=$(echo "$BRANCH" | tr '[:lower:]' '[:upper:]' | sed 's/[^A-Z0-9]/_/g')
+          echo "safe_branch=$SAFE" >> "$GITHUB_OUTPUT"
+          echo "Resolved branch '$BRANCH' -> secret suffix '$SAFE' (looks for DEFAULT_${SAFE}_BUILD_ENV_VARS)"
+
       - name: Parse and mask manual build args
         id: parse_env
         if: github.event_name == 'workflow_dispatch'
         env:
           RAW_ENV: ${{ inputs.env_vars }}
+          BRANCH_ENV_JSON: ${{ secrets[format('DEFAULT_{0}_BUILD_ENV_VARS', steps.branch_meta.outputs.safe_branch)] }}
           DEFAULT_ENV_JSON: ${{ secrets.DEFAULT_BUILD_ENV_VARS }}
         run: |
           python3 - <<'PYEOF'
           import json, os
-          raw = os.environ.get("RAW_ENV", "").strip()
-          source = "input"
 
-          if not raw:
-              raw = os.environ.get("DEFAULT_ENV_JSON", "").strip()
-              source = "secret"
+          def clean(val):
+              return (val or "").strip()
+
+          branch_secret_name = "DEFAULT_${{ steps.branch_meta.outputs.safe_branch }}_BUILD_ENV_VARS"
+
+          # Each candidate: (label used in logs, human-readable origin, raw value)
+          candidates = [
+              ("input", "the 'env_vars' field on the manual trigger", clean(os.environ.get("RAW_ENV"))),
+              ("branch secret", f"secret '{branch_secret_name}'", clean(os.environ.get("BRANCH_ENV_JSON"))),
+              ("default secret", "secret 'DEFAULT_BUILD_ENV_VARS'", clean(os.environ.get("DEFAULT_ENV_JSON"))),
+          ]
+
+          print("::group::Resolving build-time env vars")
+          print("Checking sources in priority order:")
+          for label, origin, value in candidates:
+              status = "found" if value else "empty / not set"
+              print(f"  - {label} ({origin}): {status}")
+
+          raw = ""
+          source_label = "none"
+          source_origin = "no source (all candidates empty)"
+          for label, origin, value in candidates:
+              if value:
+                  raw = value
+                  source_label = label
+                  source_origin = origin
+                  break
+          print(f"==> Selected source: {source_label} — {source_origin}")
+          print("::endgroup::")
 
           lines = []
+          parse_mode = "none"
           if raw:
               try:
                   data = json.loads(raw)
                   lines = [f"{k}={v}" for k, v in data.items()]
+                  parse_mode = "JSON object"
               except json.JSONDecodeError:
+                  parse_mode = "KEY=VALUE lines"
                   for line in raw.splitlines():
                       line = line.strip()
                       if line and "=" in line and not line.startswith("#"):
                           lines.append(line)
+
           out = "\n".join(lines)
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write("build_args<<EOF_DELIM\n")
               f.write(out + "\n")
               f.write("EOF_DELIM\n")
 
+          var_names = []
           for line in lines:
               if "=" in line:
-                  _, value = line.split("=", 1)
+                  key, value = line.split("=", 1)
+                  var_names.append(key)
                   if value:
                       print(f"::add-mask::{value}")
 
-          print(f"Build args sourced from: {source}")
+          print("::group::Build-time variables summary")
+          print(f"Source: {source_label} ({source_origin})")
+          print(f"Format parsed as: {parse_mode}")
+          print(f"Variable count: {len(var_names)}")
+          if var_names:
+              print("Variable names (values are masked and not logged):")
+              for name in var_names:
+                  print(f"  - {name}")
+          else:
+              print("No build-time variables were set — build-args will be empty.")
+          print("::endgroup::")
+
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary_path:
+              with open(summary_path, "a") as f:
+                  f.write("### Build-time env vars\n")
+                  f.write(f"- **Source:** {source_label} ({source_origin})\n")
+                  f.write(f"- **Parsed as:** {parse_mode}\n")
+                  f.write(f"- **Variable count:** {len(var_names)}\n")
+                  if var_names:
+                      f.write("- **Variables:** " + ", ".join(f"`{n}`" for n in var_names) + "\n")
           PYEOF
 
       - name: Extract metadata (tags, labels) for Docker
