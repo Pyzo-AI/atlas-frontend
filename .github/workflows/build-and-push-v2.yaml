@@ -79,10 +79,17 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         env:
           RAW_ENV: ${{ inputs.env_vars }}
+          DEFAULT_ENV_JSON: ${{ secrets.DEFAULT_BUILD_ENV_VARS }}
         run: |
           python3 - <<'PYEOF'
           import json, os
           raw = os.environ.get("RAW_ENV", "").strip()
+          source = "input"
+
+          if not raw:
+              raw = os.environ.get("DEFAULT_ENV_JSON", "").strip()
+              source = "secret"
+
           lines = []
           if raw:
               try:
@@ -104,6 +111,8 @@ jobs:
                   _, value = line.split("=", 1)
                   if value:
                       print(f"::add-mask::{value}")
+
+          print(f"Build args sourced from: {source}")
           PYEOF
 
       - name: Extract metadata (tags, labels) for Docker
