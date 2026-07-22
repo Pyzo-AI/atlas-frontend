@@ -7,12 +7,12 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 export const baseQueryWithReauth = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   prepareHeaders: (headers) => preparePyzoHeaders(headers, {
-    baseUrl: process.env.NEXT_PUBLIC_LOGIN_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || API_BASE_URL || ''
+    baseUrl: process.env.NEXT_PUBLIC_LOGIN_BASE_URL || API_BASE_URL || ''
   }),
 });
 
 export const baseQueryWithReauthAndRetry = createPyzoBaseQuery(baseQueryWithReauth, {
-  baseUrl: process.env.NEXT_PUBLIC_LOGIN_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || API_BASE_URL || '',
+  baseUrl: process.env.NEXT_PUBLIC_LOGIN_BASE_URL || API_BASE_URL || '',
   publicRoutes: ['/login'],
   loginPath: '/login',
   onLogout: (loginUrl) => logout(loginUrl)

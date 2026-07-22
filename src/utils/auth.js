@@ -73,7 +73,7 @@ export const logout = (loginUrl = "/login") => {
   // Use SDK logout to revoke session on Keycloak
   sdkLogout({
     loginUrl,
-    baseUrl: process.env.NEXT_PUBLIC_LOGIN_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "",
+    baseUrl: process.env.NEXT_PUBLIC_LOGIN_BASE_URL || "",
     refreshToken: tokens?.refresh_token,
   });
 };

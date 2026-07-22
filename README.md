@@ -39,7 +39,6 @@ This project utilizes the following environment variables. Ensure you create a `
 |--------------|-------------|
 | `NEXT_PUBLIC_API_BASE_URL` | Backend API endpoint for course data, video content, and progress tracking. |
 | `NEXT_PUBLIC_LOGIN_BASE_URL` | Authentication service for JWT token management and user sessions. |
-| `NEXT_PUBLIC_LIVEKIT_API_URL` | LiveKit server for real-time AI voice interactions and conversation sessions. |
 | `NEXT_PUBLIC_POSTHOG_KEY` | PostHog analytics key for user behavior tracking. |
 | `NEXT_PUBLIC_POSTHOG_HOST` | PostHog analytics host endpoint for data collection. |
 
@@ -47,7 +46,6 @@ Example `.env` file:
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://api.example.com
 NEXT_PUBLIC_LOGIN_BASE_URL=https://auth.example.com
-NEXT_PUBLIC_LIVEKIT_API_URL=https://livekit.example.com
 NEXT_PUBLIC_POSTHOG_KEY=phc_1234567890abcdef
 NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 ```
