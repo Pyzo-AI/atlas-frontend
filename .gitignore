@@ -43,3 +43,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 package-lock.json
+
+# Local npm config with auth tokens
+.npmrc

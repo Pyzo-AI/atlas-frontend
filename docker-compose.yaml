@@ -11,10 +11,8 @@ services:
         - NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=${NEXT_PUBLIC_KEYCLOAK_CLIENT_ID}
         - NEXT_PUBLIC_REDIRECT_URI=${NEXT_PUBLIC_REDIRECT_URI}
         - NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET=${NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET}
-      # ADDED: makes the npm_token secret available to `--mount=type=secret,id=npm_token` in the Dockerfile.
-      # This matches the "env" source below — Compose reads NPM_TOKEN from your shell/`.env` at build time.
       secrets:
-        - npm_token
+        - npmrc
     ports:
       - "3000:3000"
     environment:
@@ -43,10 +41,7 @@ networks:
     name: ${NETWORK_NAME}
     external: true
 
-# ADDED: top-level secrets definition. This secret is only used at BUILD time
-# (referenced under build.secrets above) — it is never mounted into the running
-# container, so it doesn't appear in `docker inspect`, `docker exec`, or the
-# container's environment once it's up.
+# top-level secrets definition — only used at BUILD time, never mounted into the running container.
 secrets:
-  npm_token:
-    environment: NPM_TOKEN
+  npmrc:
+    file: .npmrc
