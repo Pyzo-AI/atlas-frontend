@@ -10,6 +10,15 @@ import { usePyzoSessionSync, AccessDeniedScreen, hasProductAccess, refreshSessio
 const PRODUCT_NAME = 'atlas'
 const REFRESH_BASE_URL = process.env.NEXT_PUBLIC_LOGIN_BASE_URL || ''
 
+// Browser-persisted state that belongs to one learner. None of it is keyed by
+// user, so it has to be dropped whenever the signed-in account changes.
+const USER_SCOPED_STORAGE_KEYS = [
+  'video_progress',
+  'assessmentProgress',
+  'resultModalState',
+  'trainboost_conversation_history',
+]
+
 const PrivateRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useLocalizedRouter()
@@ -41,6 +50,15 @@ const PrivateRoute = ({ children }) => {
     },
     onPermissionGranted: () => {
       setPermissionDenied(false)
+    },
+    // A sibling *.pyzo.ai tab signed a different account into the shared
+    // session cookie. Everything below is learner-specific and keyed to no one,
+    // so without this the new account inherits the previous learner's video
+    // position, assessment answers and chat history. The reload then rebuilds
+    // the store and every mounted component for whoever signed in.
+    onUserChange: () => {
+      USER_SCOPED_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key))
+      window.location.reload()
     },
   })
 

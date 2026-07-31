@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "// dev:local": "Port 3002 so this can run alongside Central (3000) and Compass (3001). Next 15 already bundles with webpack by default, so no --webpack flag is needed to resolve a linked local SDK.",
+    "dev:local": "next dev --port 3002",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@elevenlabs/react": "^0.6.1",
-    "@esmagico/pyzo-auth-sdk": "^1.0.23",
+    "@esmagico/pyzo-auth-sdk": "^1.0.26",
     "@reduxjs/toolkit": "^2.8.2",
     "i18next": "^26.3.0",
     "i18next-browser-languagedetector": "^8.2.1",
