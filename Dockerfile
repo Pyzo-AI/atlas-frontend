@@ -54,6 +54,24 @@ ENV NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=$NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
 ENV NEXT_PUBLIC_REDIRECT_URI=$NEXT_PUBLIC_REDIRECT_URI
 ENV NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET=$NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET
 
+RUN for arg in \
+      NEXT_PUBLIC_API_BASE_URL \
+      NEXT_PUBLIC_LOGIN_BASE_URL \
+      NEXT_PUBLIC_KEYCLOAK_BASE_URL \
+      NEXT_PUBLIC_KEYCLOAK_REALM \
+      NEXT_PUBLIC_KEYCLOAK_CLIENT_ID \
+      NEXT_PUBLIC_REDIRECT_URI \
+      NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET; do \
+      eval "val=\$$arg"; \
+      if [ -z "$val" ]; then \
+        echo "=================================================================" && \
+        echo "ERROR: Required build argument '$arg' is missing!" && \
+        echo "Please pass --build-arg $arg=<value> during docker build." && \
+        echo "=================================================================" && \
+        exit 1; \
+      fi; \
+    done
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
