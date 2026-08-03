@@ -15,6 +15,11 @@ function getLocale(request) {
 export function middleware(request) {
   const { pathname, searchParams } = request.nextUrl;
   
+  // Ignore /admin paths (handled by admin frontend / reverse proxy)
+  if (pathname.startsWith('/admin')) {
+    return NextResponse.next();
+  }
+
   // 1. Check if there's a ?lang= param (like eval-fe)
   const langParam = searchParams.get("lang") || searchParams.get("language");
   
@@ -69,8 +74,8 @@ export function middleware(request) {
 }
 
 export const config = {
-  // Matcher ignoring `/_next/`, `/api/`, and any static files (files with dots)
+  // Matcher ignoring `/_next/`, `/api/`, `/admin`, and any static files (files with dots)
   matcher: [
-    '/((?!api|_next/static|_next/image|assets|favicon.ico|.*\\..*).*)',
+    '/((?!api|_next/static|_next/image|assets|favicon.ico|admin|.*\\..*).*)',
   ],
 };
