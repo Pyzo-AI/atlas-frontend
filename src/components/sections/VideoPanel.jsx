@@ -999,6 +999,8 @@ const VideoPanel = forwardRef(
               enableSmoothScroll={false}
               liveMessages={liveMessages}
               hideFooter={isQuestionMode}
+              showQueryRelatedSlides={showQueryRelatedSlides}
+              currentSlideId={videos?.[currentVideoIndex]?.slide}
             />
           </div>
         )}

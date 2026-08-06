@@ -14,10 +14,13 @@ import close_icon from "@/assets/svg/close.svg";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup";
-import { clearOverlayImage } from "@/store/features/imageSlice";
-import { useLazyGetConversationHistoryQuery } from "@/store/api/questionsApi";
+import { clearOverlayImage, setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
+import { useLazyGetConversationHistoryQuery, useGenerateImageMutation } from "@/store/api/questionsApi";
 import { useLazyGetChatbotConversationsQuery } from "@/store/api/liveKitApi";
 import { liveKitService } from "@/lib/livekit";
+import { toast } from "react-toastify";
+import { usePostHog } from "@/hooks/usePostHog";
+import { getUserDetailsFromToken } from "@/store/utils/token";
 
 const ChatUI = ({
   onClose,
@@ -35,12 +38,16 @@ const ChatUI = ({
   hideFooter = false,
   liveMessages = [],
   enableSmoothScroll = true,
+  showQueryRelatedSlides = false,
+  currentSlideId = null,
 }) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  const { capture } = usePostHog();
+  const [generateImage] = useGenerateImageMutation();
   const [showMicPopup, setShowMicPopup] = useState(false);
   const messagesContainerRef = useRef(null);
-  
+
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const prevMessageCountRef = useRef(0);
@@ -57,6 +64,7 @@ const ChatUI = ({
   const isPaginatingRef = useRef(false);
   const isLoadingMoreRef = useRef(false);
   const loadMoreDebounceRef = useRef(null);
+  const lastTypingSentRef = useRef(0);
 
   const [fetchPresentationHistory] = useLazyGetConversationHistoryQuery();
   const [fetchChatbotHistory] = useLazyGetChatbotConversationsQuery();
@@ -154,18 +162,63 @@ const ChatUI = ({
     if (!text || !isConnected || !liveKitService.isConnected()) return;
 
     try {
-      const payload = JSON.stringify({
+      const payloadObj = {
         type: "chat_message",
+        event: "user_message",
+        interrupt: true,
+        text: text,
         message: text,
+        content: text,
         timestamp: Date.now(),
-      });
+      };
+
       await liveKitService.room.localParticipant.publishData(
-        new TextEncoder().encode(payload),
+        new TextEncoder().encode(JSON.stringify(payloadObj)),
         { reliable: true }
       );
+      console.log(`📤 [LiveKit Message Sent] Type: "${payloadObj.type}" | Event: "${payloadObj.event}"`, payloadObj);
+
+      // Set speaker tracking and agent state to match voice flow
+      liveKitService.lastSpeaker = "user";
+      if (liveKitService.onAgentStateChanged) {
+        liveKitService.agentState = "thinking";
+        liveKitService.onAgentStateChanged("thinking");
+      }
+
+      // Track QnA interaction analytics for typed questions
+      const userDetails = getUserDetailsFromToken();
+      if (capture) {
+        capture("qna_interaction", {
+          user_id: userDetails?.sub,
+          module_id: presentationId,
+          question_text: text,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Trigger API call for image generation if showQueryRelatedSlides is true
+      if (showQueryRelatedSlides && currentSlideId) {
+        dispatch(setImageLoading(true));
+        generateImage({
+          presentationId: parseInt(presentationId),
+          currentSlideId: currentSlideId,
+          userMessage: text,
+        })
+          .unwrap()
+          .then((response) => {
+            dispatch(setOverlayImage(response.slide_image_url));
+          })
+          .catch((error) => {
+            console.log("Failed to generate image:", error);
+            dispatch(setImageLoading(false));
+          });
+      }
+
       setTextInput("");
+      lastTypingSentRef.current = 0;
     } catch (error) {
-      console.log("Failed to send text message:", error);
+      console.error("❌ [LiveKit Data Channel] Failed to send text message:", error);
+      toast.error("Failed to send message over LiveKit.");
     }
   };
 
@@ -268,6 +321,37 @@ const ChatUI = ({
        }, 100);
     }
   }, [displayConversation, isAtBottom]);
+
+  // Handle text input changes with throttled typing indicator
+  const handleTypingChange = (e) => {
+    const val = e.target.value;
+    setTextInput(val);
+
+    const now = Date.now();
+    if (now - lastTypingSentRef.current >= 500) {
+      if (liveKitService.room?.localParticipant && liveKitService.isConnected()) {
+        try {
+          const payload = JSON.stringify({
+            type: "user_typing",
+            event: "user_typing",
+            timestamp: now,
+          });
+          liveKitService.room.localParticipant.publishData(
+            new TextEncoder().encode(payload),
+            { reliable: false }
+          );
+          lastTypingSentRef.current = now;
+          console.log(`⌨️ [LiveKit Typing Indicator] Type: "user_typing" | Event: "user_typing"`, {
+            type: "user_typing",
+            event: "user_typing",
+            timestamp: now,
+          });
+        } catch (err) {
+          console.error("❌ [LiveKit Typing Indicator] Failed to send:", err);
+        }
+      }
+    }
+  };
 
   const handleInteractionMode = async () => {
     if (!agentId) return;
@@ -619,7 +703,7 @@ const ChatUI = ({
               <input
                 type="text"
                 value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
+                onChange={handleTypingChange}
                 onKeyDown={handleTextKeyDown}
                 disabled={!isConnected}
                 placeholder={isConnected ? "Type a message..." : "Connecting..."}
