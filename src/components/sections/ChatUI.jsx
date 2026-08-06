@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   setIsQuestionMode,
   setProductRecommendations,
   setShowChat,
   setSlideNumbers,
+  setIsAgentVoiceMuted,
 } from "@/store/features/videoSlice";
 import back_to_session from "@/assets/svg/back_to_session_white.svg";
 import interaction_mode from "@/assets/svg/interaction_mode_light_blue.svg";
@@ -16,6 +17,7 @@ import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup
 import { clearOverlayImage } from "@/store/features/imageSlice";
 import { useLazyGetConversationHistoryQuery } from "@/store/api/questionsApi";
 import { useLazyGetChatbotConversationsQuery } from "@/store/api/liveKitApi";
+import { liveKitService } from "@/lib/livekit";
 
 const ChatUI = ({
   onClose,
@@ -48,6 +50,9 @@ const ChatUI = ({
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingInitial, setIsLoadingInitial] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [textInput, setTextInput] = useState("");
+  const [isMicOn, setIsMicOn] = useState(true);
+  const { isAgentVoiceMuted } = useSelector((state) => state.video);
   const prevScrollHeightRef = useRef(null);
   const isPaginatingRef = useRef(false);
   const isLoadingMoreRef = useRef(false);
@@ -142,6 +147,34 @@ const ChatUI = ({
 
   // Merge API history with live messages from the current session
   const mergedConversation = [...allHistory, ...liveMessages];
+
+  // Send text message via LiveKit data channel
+  const sendTextMessage = async () => {
+    const text = textInput.trim();
+    if (!text || !isConnected || !liveKitService.isConnected()) return;
+
+    try {
+      const payload = JSON.stringify({
+        type: "chat_message",
+        message: text,
+        timestamp: Date.now(),
+      });
+      await liveKitService.room.localParticipant.publishData(
+        new TextEncoder().encode(payload),
+        { reliable: true }
+      );
+      setTextInput("");
+    } catch (error) {
+      console.log("Failed to send text message:", error);
+    }
+  };
+
+  const handleTextKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendTextMessage();
+    }
+  };
 
   // Format time with AM/PM
   const formatTime = (time) => {
@@ -303,9 +336,11 @@ const ChatUI = ({
             <h2 className="font-lato font-bold text-[12px] lg:text-base leading-[19px] tracking-[0.02em] text-primary-text">
               {t("chatUI.interactionHistory")}
             </h2>
-            <button onClick={onClose} className="w-6 h-6 flex items-center justify-center cursor-pointer">
-              <Image src={close_icon} alt="Close Icon" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={onClose} className="w-6 h-6 flex items-center justify-center cursor-pointer">
+                <Image src={close_icon} alt="Close Icon" />
+              </button>
+            </div>
           </div>
 
           {/* New Messages Badge */}
@@ -379,7 +414,7 @@ const ChatUI = ({
                             <div className="flex justify-end">
                               <div className="max-w-[75%]">
                                 <div className="bg-bg-chat-bubble rounded-[10px_10px_10px_0px] px-2.5 py-2">
-                                  <p className={`font-lato font-normal ${useChatbotHistory ? "text-[12px] leading-4" : "text-[8px] leading-3"} sm:leading-4 lg:text-[13px] text-left text-primary-text break-words`}>
+                                  <p className={`font-lato font-normal text-[12px] leading-4 sm:text-[13px] sm:leading-5 text-left text-primary-text break-words`}>
                                     {item.content}
                                   </p>
                                 </div>
@@ -440,7 +475,7 @@ const ChatUI = ({
                                     ))}
                                   </div>
                                 )}
-                                <p className={`font-lato font-normal ${useChatbotHistory ? "text-[12px] leading-4" : "text-[8px] leading-4"} sm:leading-5 lg:text-[13px] lg:leading-[18px] text-primary-text break-words`}>
+                                <p className={`font-lato font-normal text-[12px] leading-4 sm:text-[13px] sm:leading-5 lg:leading-[18px] text-primary-text break-words`}>
                                   {item.content || "No text answer found"}
                                 </p>
                                 {item.time && <p className="text-[10px] text-gray-500 mt-1">{formatTime(item.time)}</p>}
@@ -461,7 +496,7 @@ const ChatUI = ({
                       /* User Message */
                       <div className="flex justify-end">
                         <div className="max-w-[75%] bg-bg-chat-bubble rounded-[10px_10px_10px_0px] px-2.5 py-2">
-                          <p className={`font-lato font-normal ${useChatbotHistory ? "text-[12px] leading-4" : "text-[8px] leading-3"} sm:leading-4 lg:text-[13px] text-left text-primary-text break-words`}>
+                          <p className={`font-lato font-normal text-[12px] leading-4 sm:text-[13px] sm:leading-5 text-left text-primary-text break-words`}>
                             {item.content}
                           </p>
                         </div>
@@ -518,7 +553,7 @@ const ChatUI = ({
                               ))}
                             </div>
                           )}
-                          <p className={`font-lato font-normal ${useChatbotHistory ? "text-[12px] leading-4" : "text-[8px] leading-4"} sm:leading-5 lg:text-[13px] lg:leading-[18px] text-primary-text break-words`}>
+                          <p className={`font-lato font-normal text-[12px] leading-4 sm:text-[13px] sm:leading-5 lg:leading-[18px] text-primary-text break-words`}>
                             {item.content || "No text answer found"}
                           </p>
                         </div>
@@ -541,6 +576,66 @@ const ChatUI = ({
               </div>
             )}
           </div>
+
+          {/* Text Input for Chat - only show when in interaction mode (not just viewing history) */}
+          {liveKitAgentEnabled && (isConnected || hideFooter) && (
+            <div className="flex items-center gap-2 px-3 py-2 border-t border-border-light flex-shrink-0">
+              {/* Microphone Toggle */}
+              <button
+                onClick={async () => {
+                  try {
+                    if (isMicOn) {
+                      setIsMicOn(false);
+                      await liveKitService.disableMicrophone();
+                    } else {
+                      setIsMicOn(true);
+                      await liveKitService.enableMicrophone();
+                    }
+                  } catch (e) {
+                    console.log("Mic toggle error:", e);
+                    // Revert on failure
+                    setIsMicOn(liveKitService.isMicrophoneEnabled());
+                  }
+                }}
+                className={`p-2 rounded-lg flex-shrink-0 ${
+                  isMicOn
+                    ? "bg-primary text-white"
+                    : "bg-red-500 text-white"
+                }`}
+                title={isMicOn ? "Mute microphone" : "Unmute microphone"}
+              >
+                {isMicOn ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z"/>
+                  </svg>
+                )}
+              </button>
+
+              <input
+                type="text"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                onKeyDown={handleTextKeyDown}
+                disabled={!isConnected}
+                placeholder={isConnected ? "Type a message..." : "Connecting..."}
+                className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary disabled:bg-gray-100 disabled:text-gray-400"
+              />
+              <button
+                onClick={sendTextMessage}
+                disabled={!textInput.trim() || !isConnected}
+                className={`px-3 py-2 rounded-lg text-white text-sm font-medium flex-shrink-0 ${
+                  textInput.trim() && isConnected ? "bg-primary cursor-pointer hover:bg-primary-hover" : "bg-gray-300 cursor-not-allowed"
+                }`}
+              >
+                Send
+              </button>
+            </div>
+          )}
 
           {/* Bottom Actions Container */}
           {!hideFooter && (

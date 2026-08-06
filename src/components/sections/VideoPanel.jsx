@@ -32,7 +32,7 @@ import VideoPlayerContainer from "@/components/VideoPlayerContainer";
 import FeedbackModal from "../modals/FeedbackModal";
 import ResultModal from "../modals/ResultModal";
 import { useGenerateImageMutation } from "@/store/api/questionsApi";
-import { setOverlayImage, setImageLoading } from "@/store/features/imageSlice";
+import { setOverlayImage, setImageLoading, clearOverlayImage } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
@@ -128,6 +128,7 @@ const VideoPanel = forwardRef(
     const [initialVideoTime, setInitialVideoTime] = useState(0);
     const [persistentConversationHistory, setPersistentConversationHistory] = useState([]);
     const [contextSent, setContextSent] = useState(false);
+    const [liveMessages, setLiveMessages] = useState([]);
     const videoRef = useRef(null);
     const activeVideoRef = useRef(null);
     const router = useLocalizedRouter();
@@ -353,6 +354,7 @@ const VideoPanel = forwardRef(
         if (liveKitAgentEnabled) {
           // LiveKit flow
           setConversationState((prev) => ({ ...prev, isLoading: true }));
+          setLiveMessages([]);
           await navigator.mediaDevices.getUserMedia({ audio: true });
 
           try {
@@ -373,7 +375,9 @@ const VideoPanel = forwardRef(
               roomName: sessionResponse.room_name,
             });
           } catch (sessionError) {
-            toast.error(t("lectures.interactionModeUnavailable"));
+            // Show error message from BE response, fallback to generic message
+            const errorMessage = sessionError?.data?.message || "Unable to start interaction mode. Please try again.";
+            toast.error(errorMessage);
             dispatch(setIsQuestionMode(false));
             dispatch(setSlideNumbers([]));
             // throw sessionError;
@@ -646,11 +650,31 @@ const VideoPanel = forwardRef(
             const decoder = new TextDecoder();
             const strData = decoder.decode(payload);
             const data = JSON.parse(strData);
+
+            // Capture live chat messages (voice transcripts + agent responses)
+            if (data.type === "user_response" || data.type === "agent_response") {
+              const now = new Date();
+              setLiveMessages((prev) => [
+                ...prev,
+                {
+                  type: data.type === "user_response" ? "question" : "answer",
+                  content: data.text,
+                  time: now.toTimeString().slice(0, 5),
+                  date: now.toISOString().split("T")[0],
+                  metadata: data.metadata || {},
+                },
+              ]);
+            }
+
             if (data.type === "status" && data.message === "call_ending") {
               if (liveKitService.isConnected()) {
                 liveKitService.disconnect();
                 dispatch(setIsQuestionMode(false));
                 dispatch(setSlideNumbers([]));
+              }
+              // Show limit reached message if reason provided
+              if (data.reason === "limit_reached") {
+                toast.error("Your interaction time limit has been reached. Session ended.");
               }
             }
           } catch (error) {
@@ -825,7 +849,16 @@ const VideoPanel = forwardRef(
     };
 
     const handleCloseChatUI = () => {
-      if (isJumpedOnChatFromInteractionMode) {
+      if (liveKitAgentEnabled && isQuestionMode) {
+        // In LiveKit dual mode, closing chat ends the interaction mode
+        dispatch(setIsQuestionMode(false));
+        dispatch(setSlideNumbers([]));
+        if (conversationState.isConnected) {
+          liveKitService.disconnect();
+        }
+        dispatch(clearOverlayImage());
+        dispatch(setProductRecommendations([]));
+      } else if (isJumpedOnChatFromInteractionMode) {
         dispatch(setIsQuestionMode(true));
         setIsJumpedOnChatFromInteractionMode(false);
         startConversation();
@@ -934,38 +967,44 @@ const VideoPanel = forwardRef(
 
         {/* Question Mode AI - Responsive */}
         {isQuestionMode && (
-          <QuestionModeAI
-            isLoading={liveKitAgentEnabled ? liveKitAgentState === "connecting" : !conversationState.isConnected}
-            liveKitAgentEnabled={liveKitAgentEnabled}
-            liveKitAgentState={liveKitAgentState}
-            isAudioPlaying={conversation.isSpeaking}
-            isConnected={conversationState.isConnected}
-            avatarUrl={avatarUrl}
-            isMobile={isMobile && isPhone}
-            enableProductRecommendations={enableProductRecommendations}
-          />
+          <div className="flex-shrink-0">
+            <QuestionModeAI
+              isLoading={liveKitAgentEnabled ? liveKitAgentState === "connecting" : !conversationState.isConnected}
+              liveKitAgentEnabled={liveKitAgentEnabled}
+              liveKitAgentState={liveKitAgentState}
+              isAudioPlaying={conversation.isSpeaking}
+              isConnected={conversationState.isConnected}
+              avatarUrl={avatarUrl}
+              isMobile={isMobile && isPhone}
+              enableProductRecommendations={enableProductRecommendations}
+            />
+          </div>
         )}
 
-        {/* Chat UI - Responsive */}
-        {showChat && (
-          <ChatUI
-            onClose={handleCloseChatUI}
-            conversation={conversationHistory}
-            onStartConversation={startConversation}
-            onStopConversation={stopConversation}
-            isConnected={conversationState.isConnected}
-            setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
-            agentId={agentId}
-            isMobile={isMobile && isPhone}
-            onPauseSlideVideo={onPauseSlideVideo}
-            liveKitAgentEnabled={liveKitAgentEnabled}
-            presentationId={presentationId}
-            enableSmoothScroll={false}  // Pass flag so ChatUI doesn't animate scroll
-          />
+        {/* Chat UI - Responsive (shown when chat is open OR when in interaction mode with LiveKit) */}
+        {(showChat || (isQuestionMode && liveKitAgentEnabled)) && (
+          <div className="flex-1 min-h-0">
+            <ChatUI
+              onClose={handleCloseChatUI}
+              conversation={conversationHistory}
+              onStartConversation={startConversation}
+              onStopConversation={stopConversation}
+              isConnected={conversationState.isConnected}
+              setIsJumpedOnChatFromInteractionMode={setIsJumpedOnChatFromInteractionMode}
+              agentId={agentId}
+              isMobile={isMobile && isPhone}
+              onPauseSlideVideo={onPauseSlideVideo}
+              liveKitAgentEnabled={liveKitAgentEnabled}
+              presentationId={presentationId}
+              enableSmoothScroll={false}
+              liveMessages={liveMessages}
+              hideFooter={isQuestionMode}
+            />
+          </div>
         )}
 
-        {/* Question Mode User - Responsive */}
-        {isQuestionMode && !showChat && (
+        {/* Question Mode User - Only show for non-LiveKit (ElevenLabs) flow */}
+        {isQuestionMode && !showChat && !liveKitAgentEnabled && (
           <QuestionModeUser
             onPauseVideo={pauseVideo}
             onStartConversation={startConversation}

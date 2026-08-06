@@ -18,6 +18,7 @@ const initialState = {
   slideNumbers: [],
   productRecommendations: [],
   isUserMuted: false,
+  isAgentVoiceMuted: false, // Agent voice is ON by default
 };
 
 const videoSlice = createSlice({
@@ -77,6 +78,9 @@ const videoSlice = createSlice({
     setIsUserMuted: (state, action) => {
       state.isUserMuted = action.payload;
     },
+    setIsAgentVoiceMuted: (state, action) => {
+      state.isAgentVoiceMuted = action.payload;
+    },
   },
 });
 
@@ -98,5 +102,6 @@ export const {
   setSlideNumbers,
   setProductRecommendations,
   setIsUserMuted,
+  setIsAgentVoiceMuted,
 } = videoSlice.actions;
 export default videoSlice.reducer;

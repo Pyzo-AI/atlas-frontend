@@ -19,6 +19,8 @@ export class LiveKitService {
     this.onAgentStateChanged = null;
     this.idleTimeout = null;
     this.onSlideMetadataReceived = null;
+    this.isAgentMuted = false; // Agent voice is ON by default
+    this.agentAudioElements = []; // Track all agent audio elements
   }
 
   async connect(config) {
@@ -78,14 +80,20 @@ export class LiveKitService {
         this.updateConnectionState({ isAudioPlaying: true });
         const audioElement = track.attach();
         audioElement.autoplay = true;
+        // Apply current mute state to the new audio element
+        audioElement.muted = this.isAgentMuted;
         audioElement.onended = () => {
           this.isAgentSpeaking = false;
           this.updateConnectionState({ isAudioPlaying: false });
+          // Remove from tracked elements
+          this.agentAudioElements = this.agentAudioElements.filter((el) => el !== audioElement);
         };
         audioElement.onpause = () => {
           this.isAgentSpeaking = false;
           this.updateConnectionState({ isAudioPlaying: false });
         };
+        // Track the audio element
+        this.agentAudioElements.push(audioElement);
         document.body.appendChild(audioElement);
       }
     });
@@ -94,7 +102,11 @@ export class LiveKitService {
       if (track.kind === "audio") {
         this.isAgentSpeaking = false;
         this.updateConnectionState({ isAudioPlaying: false });
-        track.detach().forEach((element) => element.remove());
+        const detached = track.detach();
+        detached.forEach((element) => {
+          this.agentAudioElements = this.agentAudioElements.filter((el) => el !== element);
+          element.remove();
+        });
       }
     });
 
@@ -227,6 +239,34 @@ export class LiveKitService {
 
   getAgentState() {
     return this.agentState;
+  }
+
+  /**
+   * Mute the agent's voice output. Audio tracks stay subscribed but are silenced.
+   * Text responses still arrive normally via data channel.
+   */
+  muteAgentVoice() {
+    this.isAgentMuted = true;
+    this.agentAudioElements.forEach((el) => {
+      el.muted = true;
+    });
+  }
+
+  /**
+   * Unmute the agent's voice output so the user hears the AI speak.
+   */
+  unmuteAgentVoice() {
+    this.isAgentMuted = false;
+    this.agentAudioElements.forEach((el) => {
+      el.muted = false;
+    });
+  }
+
+  /**
+   * Check whether agent voice output is currently muted.
+   */
+  isAgentVoiceMuted() {
+    return this.isAgentMuted;
   }
 
   setOnAgentStateChanged(callback) {
