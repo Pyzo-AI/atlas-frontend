@@ -783,9 +783,10 @@ const VideoPlayer = forwardRef(
           );
         }
 
-        // Add spacebar to play/pause
+        // Add spacebar to play/pause (ignore when typing in input fields)
         const handleKeyDown = (e) => {
-          if (e.code === "Space") {
+          const isInput = ["INPUT", "TEXTAREA"].includes(e.target?.tagName) || e.target?.isContentEditable;
+          if (e.code === "Space" && !isInput) {
             if (!controls) return;
             e.preventDefault();
             if (playerRef.current.paused()) {

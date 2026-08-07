@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "// dev:local": "Port 3002 so this can run alongside Central (3000) and Compass (3001). Next 15 already bundles with webpack by default, so no --webpack flag is needed to resolve a linked local SDK.",
     "dev:local": "next dev --port 3002",
     "build": "next build",
