@@ -1,9 +1,9 @@
 name: Build and Push Docker Image
 
 on:
-  push:
-    branches:
-      - dev
+  # push:
+  #   branches:
+  #     - dev
   release:
     types: [published]
 env:
