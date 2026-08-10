@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PyzoLoginScreen } from "@esmagico/pyzo-auth-sdk";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import atlasLoginLogo from "@/assets/svg/atlas-login-logo.svg";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -46,7 +47,18 @@ export default function LoginPage() {
           clientSecret: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET || "",
           redirectUri: process.env.NEXT_PUBLIC_REDIRECT_URI || "",
         }}
+        productLogo={atlasLoginLogo.src}
+        productLabel="Atlas"
+        panelHeading="AI Training Coach"
+        panelDescription="Transform your SOPs, policies, and decks into AI-powered training with voice-first learning—available on any device, in any language, and built to reinforce competency."
+        panelFeatures={[
+          'Auto-generate training modules',
+          'Voice & chat query resolution',
+          'Any language, any device',
+          'Built-in competency tracking',
+        ]}
       />
     </div>
   );
 }
+

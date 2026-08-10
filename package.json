@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@elevenlabs/react": "^0.6.1",
-    "@esmagico/pyzo-auth-sdk": "^1.0.26",
+    "@esmagico/pyzo-auth-sdk": "^2.2.0",
     "@reduxjs/toolkit": "^2.8.2",
     "i18next": "^26.3.0",
     "i18next-browser-languagedetector": "^8.2.1",
