@@ -338,42 +338,95 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
               </h2>
 
               {/* Render based on question type */}
-              {currentQuestion?.question_type === "SUBJECTIVE" ? (
-                <TextArea
-                  value={answers[currentQuestion.question_id] || ""}
-                  onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
-                  placeholder={t("lectures.typeAnswerHere")}
-                />
-              ) : (
-                <div className="space-y-1 sm:space-y-2">
-                  {Object.entries(
-                    typeof currentQuestion?.options === "string"
-                      ? JSON.parse(currentQuestion.options.replace(/'/g, '"'))
-                      : currentQuestion?.options || {}
-                  ).map(([option, text]) => (
-                    <div key={option} className="group">
-                      <label
-                        className={`flex items-center cursor-pointer p-1 sm:p-2 rounded-lg border transition-all duration-200 ${
-                          answers[currentQuestion.question_id] === option
-                            ? "border-accent bg-accent-light"
-                            : "border-gray-200 hover:border-accent hover:bg-accent-light"
-                        }`}
-                        onClick={() => handleAnswer(currentQuestion.question_id, option)}>
-                        <RadioButton
-                          name={`question-${currentQuestion.question_id}`}
-                          value={option}
-                          checked={answers[currentQuestion.question_id] === option}
-                          onChange={() => handleAnswer(currentQuestion.question_id, option)}
-                          className="!mt-0"
-                        />
-                        <span className="text-xs sm:text-sm md:text-sm text-gray-700 leading-relaxed flex-1">
-                          {option}. {text}
-                        </span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {(() => {
+                const qType = (currentQuestion?.question_type || "").toUpperCase();
+                const isMultiCorrect = qType === "MULTI_CORRECT" || qType === "MULTI_SELECT" || qType === "MULTIPLE_CHOICE_MULTI";
+                const isSubjective = qType === "SUBJECTIVE";
+                const isOneWord = qType === "ONE_WORD" || qType === "FILL_IN_BLANK";
+
+                if (isSubjective) {
+                  return (
+                    <TextArea
+                      value={answers[currentQuestion.question_id] || ""}
+                      onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
+                      placeholder={t("lectures.typeAnswerHere")}
+                    />
+                  );
+                }
+
+                if (isOneWord || (!currentQuestion?.options || (typeof currentQuestion.options === "object" && Object.keys(currentQuestion.options).length === 0))) {
+                  return (
+                    <input
+                      type="text"
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-accent text-sm text-gray-800"
+                      value={answers[currentQuestion.question_id] || ""}
+                      onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
+                      placeholder={t("lectures.typeAnswerHere") || "Type your answer here..."}
+                    />
+                  );
+                }
+
+                let optionsObj = {};
+                try {
+                  optionsObj = typeof currentQuestion?.options === "string"
+                    ? JSON.parse(currentQuestion.options.replace(/'/g, '"'))
+                    : currentQuestion?.options || {};
+                } catch {
+                  optionsObj = {};
+                }
+
+                return (
+                  <div className="space-y-1 sm:space-y-2">
+                    {Object.entries(optionsObj).map(([option, text]) => {
+                      const currentAns = answers[currentQuestion.question_id] || "";
+                      let isChecked = false;
+                      if (isMultiCorrect) {
+                        const selectedArr = Array.isArray(currentAns) ? currentAns : (currentAns ? currentAns.split(",").map(s => s.trim()) : []);
+                        isChecked = selectedArr.includes(option);
+                      } else {
+                        isChecked = currentAns === option;
+                      }
+
+                      const handleOptionToggle = (e) => {
+                        e?.stopPropagation();
+                        if (isMultiCorrect) {
+                          const selectedArr = Array.isArray(currentAns) ? [...currentAns] : (currentAns ? currentAns.split(",").map(s => s.trim()) : []);
+                          const newArr = selectedArr.includes(option)
+                            ? selectedArr.filter((item) => item !== option)
+                            : [...selectedArr, option];
+                          handleAnswer(currentQuestion.question_id, newArr.join(","));
+                        } else {
+                          handleAnswer(currentQuestion.question_id, option);
+                        }
+                      };
+
+                      return (
+                        <div key={option} className="group">
+                          <label
+                            className={`flex items-center cursor-pointer p-1.5 sm:p-2.5 rounded-lg border transition-all duration-200 ${
+                              isChecked
+                                ? "border-accent bg-accent-light"
+                                : "border-gray-200 hover:border-accent hover:bg-accent-light"
+                            }`}
+                            onClick={handleOptionToggle}>
+                            <input
+                              type={isMultiCorrect ? "checkbox" : "radio"}
+                              name={`question-${currentQuestion.question_id}`}
+                              value={option}
+                              checked={isChecked}
+                              onChange={handleOptionToggle}
+                              className={`!mt-0 mr-3 text-accent focus:ring-accent ${isMultiCorrect ? "rounded w-4 h-4" : "rounded-full w-4 h-4"}`}
+                            />
+                            <span className="text-xs sm:text-sm md:text-sm text-gray-700 leading-relaxed flex-1">
+                              {option}. {text}
+                            </span>
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Navigation Buttons */}
