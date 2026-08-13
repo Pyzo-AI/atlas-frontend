@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { PyzoLoginScreen } from "@esmagico/pyzo-auth-sdk";
 import { toast } from "react-toastify";
+import { getApiErrorMessage } from "@/utils/errorHandler";
 import { useTranslation } from "react-i18next";
 import atlasLoginLogo from "@/assets/svg/atlas-login-logo.svg";
 
@@ -24,7 +25,7 @@ export default function LoginPage() {
   };
 
   const handleLoginFailure = (error) => {
-    toast.error(error?.message || "Login failed. Please check your credentials.");
+    toast.error(getApiErrorMessage(error, "Login failed. Please check your credentials."));
   };
 
   return (

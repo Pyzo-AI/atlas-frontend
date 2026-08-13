@@ -11,6 +11,7 @@ import {
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { toast } from "react-toastify";
+import { getApiErrorMessage } from "@/utils/errorHandler";
 import { useParams } from "next/navigation";
 import ResultModal from "@/components/modals/ResultModal";
 import FeedbackModal from "@/components/modals/FeedbackModal";
@@ -311,7 +312,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
         }
       } catch (error) {
         console.log("Assessment submission failed:", error);
-        toast.error(t("lectures.failedToSubmitAssessment"));
+        toast.error(getApiErrorMessage(error, t("lectures.failedToSubmitAssessment")));
       }
     };
 

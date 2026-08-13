@@ -35,6 +35,7 @@ import { useGenerateImageMutation } from "@/store/api/questionsApi";
 import { setOverlayImage, setImageLoading, clearOverlayImage } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
 import { toast } from "react-toastify";
+import { getApiErrorMessage } from "@/utils/errorHandler";
 import { useTranslation } from "react-i18next";
 
 
@@ -375,9 +376,7 @@ const VideoPanel = forwardRef(
               roomName: sessionResponse.room_name,
             });
           } catch (sessionError) {
-            // Show error message from BE response, fallback to generic message
-            const errorMessage = sessionError?.data?.message || "Unable to start interaction mode. Please try again.";
-            toast.error(errorMessage);
+            toast.error(getApiErrorMessage(sessionError, "Unable to start interaction mode. Please try again."));
             dispatch(setIsQuestionMode(false));
             dispatch(setSlideNumbers([]));
             // throw sessionError;

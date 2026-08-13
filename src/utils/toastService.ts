@@ -10,12 +10,12 @@ export const toastService = {
   /**
    * Show error toast with automatic message extraction
    */
-  showError: (error: any) => {
-    const message = ErrorHandler.getErrorMessage(error);
+  showError: (error: any, fallback?: string) => {
+    const message = ErrorHandler.getErrorMessage(error, fallback);
     const code = ErrorHandler.getErrorCode(error);
-    
+
     console.error(`[${code}]`, ErrorHandler.formatForLogging(error));
-    
+
     toast.error(message, {
       autoClose: 5000,
     });
@@ -68,3 +68,5 @@ export const toastService = {
  * Hook for using toast service
  */
 export const useToast = () => toastService;
+
+export default toastService;

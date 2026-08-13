@@ -19,6 +19,7 @@ import { HiBookOpen, HiChevronDown } from "react-icons/hi2";
 import FloatingChatbot from "../common/FloatingChatbot";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { getApiErrorMessage } from "@/utils/errorHandler";
 
 const PresentationCard = ({ presentation, onClick, currentTime }) => {
   const { t } = useTranslation();
@@ -308,8 +309,7 @@ const Home = () => {
         toast.error("Assessment link not found in response.");
       }
     } catch (err) {
-      console.error("Failed to fetch assessment link", err);
-      toast.error("Failed to fetch assessment link");
+      toast.error(getApiErrorMessage(err, "Failed to fetch assessment link"));
     }
   };
 
