@@ -211,7 +211,7 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
   );
 };
 
-const CIPLA_EMAIL = "cipla@pyzo.in";
+const CIPLA_EMAIL = "cipla@pyzo.io";
 const ASSESSMENT_MODULE_TITLE = "Basic cGMP & Gowning Requirements";
 
 const Home = () => {
