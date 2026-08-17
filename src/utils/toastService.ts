@@ -4,18 +4,14 @@
  */
 
 import { toast } from 'react-toastify';
-import { ErrorHandler } from './errorHandler';
+import { getApiErrorMessage } from './errorHandler';
 
 export const toastService = {
   /**
    * Show error toast with automatic message extraction
    */
   showError: (error: any, fallback?: string) => {
-    const message = ErrorHandler.getErrorMessage(error, fallback);
-    const code = ErrorHandler.getErrorCode(error);
-
-    console.error(`[${code}]`, ErrorHandler.formatForLogging(error));
-
+    const message = getApiErrorMessage(error, fallback);
     toast.error(message, {
       autoClose: 5000,
     });
