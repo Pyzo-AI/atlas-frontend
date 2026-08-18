@@ -197,24 +197,6 @@ const ChatUI = ({
         });
       }
 
-      // Trigger API call for image generation if showQueryRelatedSlides is true
-      if (showQueryRelatedSlides && currentSlideId) {
-        dispatch(setImageLoading(true));
-        generateImage({
-          presentationId: parseInt(presentationId),
-          currentSlideId: currentSlideId,
-          userMessage: text,
-        })
-          .unwrap()
-          .then((response) => {
-            dispatch(setOverlayImage(response.slide_image_url));
-          })
-          .catch((error) => {
-            console.log("Failed to generate image:", error);
-            dispatch(setImageLoading(false));
-          });
-      }
-
       setTextInput("");
       lastTypingSentRef.current = 0;
     } catch (error) {
