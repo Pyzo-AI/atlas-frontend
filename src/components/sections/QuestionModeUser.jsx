@@ -146,7 +146,7 @@ const QuestionModeUser = ({
       </div>
 
       {/* Bottom Input Section */}
-      <div className={`${isMobile ? 'mt-2' : 'mt-6'} flex items-center justify-center px-0 md:px-3 gap-2 md:gap-4 mx-auto`}>
+      <div className={`${isMobile ? 'mt-2' : 'mt-4'} flex items-center justify-center px-1 md:px-3 gap-2 md:gap-3 mx-auto w-full`}>
         {/* Chat History Button */}
         <button
           onClick={handleChatHistory}
@@ -157,6 +157,7 @@ const QuestionModeUser = ({
               : "bg-accent-secondary cursor-pointer"
           }`}>
           <Image className="w-3 h-3 lg:w-[18px] lg:h-[18px]" src={chat_history} alt="chat_history" />
+          <span className="font-lato font-medium text-[10px] text-white whitespace-nowrap">History</span>
         </button>
 
         {/* Mute/Unmute Button */}
@@ -177,15 +178,15 @@ const QuestionModeUser = ({
         <button
           onClick={handleBackToSession}
           disabled={isConnecting}
-          className={`flex items-center justify-between gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg ${
+          className={`flex items-center justify-between gap-1 px-3 py-1.5 rounded-lg ${
             isConnecting
               ? "bg-gray-200 cursor-not-allowed opacity-50"
               : "bg-accent-secondary cursor-pointer"
           }`}>
           <Image className="w-3 h-3 lg:w-[18px] lg:h-[18px]" src={back_to_session} alt="back_to_session" />
-          {/* <span className="font-lato font-medium text-[8px] lg:text-xs text-white whitespace-nowrap">
+          <span className="font-lato font-medium text-[10px] text-white whitespace-nowrap">
             {t("lectures.continueLesson")}
-          </span> */}
+          </span>
         </button>
       </div>
     </div>
