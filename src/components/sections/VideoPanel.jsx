@@ -31,7 +31,6 @@ import Image from "next/image";
 import VideoPlayerContainer from "@/components/VideoPlayerContainer";
 import FeedbackModal from "../modals/FeedbackModal";
 import ResultModal from "../modals/ResultModal";
-import { useGenerateImageMutation } from "@/store/api/questionsApi";
 import { setOverlayImage, setImageLoading, clearOverlayImage } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
 import { toast } from "react-toastify";
@@ -135,7 +134,6 @@ const VideoPanel = forwardRef(
     const router = useLocalizedRouter();
     const dispatch = useDispatch();
     const { t } = useTranslation();
-    const [generateImage] = useGenerateImageMutation();
     const [createSession] = useCreateSessionMutation();
     const {
       currentVideoIndex,
@@ -261,25 +259,6 @@ const VideoPanel = forwardRef(
         const content = message.message;
         // Store in current session history (for ChatUI)
         if (message.source === "user") {
-          // Trigger API call for image generation only if showQueryRelatedSlides is true
-          if (showQueryRelatedSlides) {
-            dispatch(setImageLoading(true));
-            const currentVideo = videos[currentVideoIndex];
-            generateImage({
-              presentationId: parseInt(presentationId),
-              currentSlideId: currentVideo?.slide,
-              userMessage: content,
-            })
-              .unwrap()
-              .then((response) => {
-                dispatch(setOverlayImage(response.slide_image_url));
-              })
-              .catch((error) => {
-                console.log("Failed to generate image:", error);
-                dispatch(setImageLoading(false));
-              });
-          }
-
           if (content.trim() === "") return;
 
           // Track QnA interaction when user asks a question
