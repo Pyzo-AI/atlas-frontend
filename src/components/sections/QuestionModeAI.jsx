@@ -53,8 +53,10 @@ const QuestionModeAI = forwardRef(
     return (
       <div className="p-1 lg:p-3 bg-white rounded-xl border border-border-light">
         <div
-          className="w-full h-[60px] lg:h-auto lg:aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center"
+          className="w-full bg-black rounded-lg overflow-hidden flex items-center justify-center"
           style={{
+            minHeight: isMobile ? '80px' : undefined,
+            aspectRatio: isMobile ? undefined : '16/9',
             background: "var(--gradient-primary-darkened)",
           }}>
           {/* Main Content Container */}
@@ -64,33 +66,39 @@ const QuestionModeAI = forwardRef(
               {/* Animated Wave Rings - only show when agent is audibly speaking (not muted) */}
               {(isAudioPlaying || (liveKitAgentState === "speaking" && !isLoading)) && !isAgentVoiceMuted && (
                 <>
-                  {[1, 2, 3].map((ring) => (
-                    <div
-                      key={ring}
-                      className="absolute rounded-full border-4 border-white/30 animate-wave"
-                      style={{
-                        animationDelay: `${ring * 0.4}s`,
-                      }}
-                    />
-                  ))}
+                  {[0, 1, 2, 3].map((ring) => {
+                    const borderOpacity = ["border-white/50", "border-white/35", "border-white/20", "border-white/12"][ring];
+                    return (
+                      <div
+                        key={ring}
+                        className={`absolute rounded-full border-2 ${borderOpacity} animate-wave`}
+                        style={{
+                          width: isMobile ? '40px' : '64px',
+                          height: isMobile ? '40px' : '64px',
+                          animationDelay: `${ring * 0.45}s`,
+                          willChange: 'transform, opacity',
+                        }}
+                      />
+                    );
+                  })}
                 </>
               )}
 
               {/* Main Avatar */}
               <div
                 className={`${
-                  isMobile ? "w-8 h-8" : "w-8 h-8 lg:w-16 lg:h-16"
+                  isMobile ? "w-10 h-10" : "w-8 h-8 lg:w-16 lg:h-16"
                 } rounded-full border-[0.8px] border-white/50 overflow-hidden relative z-10 flex items-center justify-center bg-white/20`}>
                 {avatarUrl ? (
                   <Image
                     src={avatarUrl}
                     alt="Profile picture"
-                    width={isMobile ? 32 : 64}
-                    height={isMobile ? 32 : 64}
+                    width={isMobile ? 40 : 64}
+                    height={isMobile ? 40 : 64}
                     className="rounded-full object-cover w-full h-full"
                   />
                 ) : (
-                  <span className={`text-white font-semibold z-50 ${isMobile ? "text-sm" : "text-xl"}`}>
+                  <span className={`text-white font-semibold z-50 ${isMobile ? "text-base" : "text-xl"}`}>
                     {userName?.charAt(0)?.toUpperCase() || "U"}
                   </span>
                 )}
@@ -119,7 +127,7 @@ const QuestionModeAI = forwardRef(
               </div>
             ) : isConnected ? (
               <div className="flex items-center justify-center gap-2 w-full">
-                <p className="text-center font-lato font-normal text-[10px] lg:text-sm leading-[14px] lg:leading-[18px] text-white capitalize">
+                <p className="text-center font-lato font-normal text-[11px] lg:text-sm leading-[14px] lg:leading-[18px] text-white capitalize">
                   {liveKitAgentEnabled
                     ? (liveKitAgentState === "listening"
                         ? (isUserMuted ? "" : t("lectures.listening"))
@@ -164,7 +172,7 @@ const QuestionModeAI = forwardRef(
                 )}
               </div>
             ) : (
-              <p className="w-full text-center font-lato font-normal text-[10px] lg:text-sm leading-[14px] lg:leading-[18px] text-white">
+              <p className="w-full text-center font-lato font-normal text-[11px] lg:text-sm leading-[14px] lg:leading-[18px] text-white">
                 {t("lectures.askMeAnything")}
               </p>
             )}

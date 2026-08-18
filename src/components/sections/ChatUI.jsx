@@ -481,7 +481,7 @@ const ChatUI = ({
                             <div className="flex justify-end">
                               <div className="max-w-[75%]">
                                 <div className="bg-bg-chat-bubble rounded-[10px_10px_10px_0px] px-2.5 py-2">
-                                  <p className={`font-lato font-normal text-[12px] leading-4 sm:text-[13px] sm:leading-5 text-left text-primary-text break-words`}>
+                                  <p className={`font-lato font-normal text-[11px] leading-4 sm:text-[13px] sm:leading-5 text-left text-primary-text break-words`}>
                                     {item.content}
                                   </p>
                                 </div>
@@ -542,10 +542,10 @@ const ChatUI = ({
                                     ))}
                                   </div>
                                 )}
-                                <p className={`font-lato font-normal text-[12px] leading-4 sm:text-[13px] sm:leading-5 lg:leading-[18px] text-primary-text break-words`}>
+                                <p className={`font-lato font-normal text-[11px] leading-4 sm:text-[13px] sm:leading-5 lg:leading-[18px] text-primary-text break-words`}>
                                   {item.content || "No text answer found"}
                                 </p>
-                                {item.time && <p className="text-[10px] text-gray-500 mt-1">{formatTime(item.time)}</p>}
+                                {item.time && <p className="text-[9px] text-gray-500 mt-1">{formatTime(item.time)}</p>}
                               </div>
                             </div>
                           ) : null}
@@ -563,7 +563,7 @@ const ChatUI = ({
                       /* User Message */
                       <div className="flex justify-end">
                         <div className="max-w-[75%] bg-bg-chat-bubble rounded-[10px_10px_10px_0px] px-2.5 py-2">
-                          <p className={`font-lato font-normal text-[12px] leading-4 sm:text-[13px] sm:leading-5 text-left text-primary-text break-words`}>
+                          <p className={`font-lato font-normal text-[11px] leading-4 sm:text-[13px] sm:leading-5 text-left text-primary-text break-words`}>
                             {item.content}
                           </p>
                         </div>
@@ -620,7 +620,7 @@ const ChatUI = ({
                               ))}
                             </div>
                           )}
-                          <p className={`font-lato font-normal text-[12px] leading-4 sm:text-[13px] sm:leading-5 lg:leading-[18px] text-primary-text break-words`}>
+                          <p className={`font-lato font-normal text-[11px] leading-4 sm:text-[13px] sm:leading-5 lg:leading-[18px] text-primary-text break-words`}>
                             {item.content || "No text answer found"}
                           </p>
                         </div>
@@ -646,7 +646,7 @@ const ChatUI = ({
 
           {/* Text Input for Chat - only show when in interaction mode (not just viewing history) */}
           {liveKitAgentEnabled && (isConnected || hideFooter) && (
-            <div className="flex items-center gap-2 px-3 py-2 border-t border-border-light flex-shrink-0">
+            <div className="flex items-center gap-1.5 px-2 py-2 border-t border-border-light flex-shrink-0">
               {/* Microphone Toggle */}
               <button
                 onClick={async () => {
@@ -664,7 +664,7 @@ const ChatUI = ({
                     setIsMicOn(liveKitService.isMicrophoneEnabled());
                   }
                 }}
-                className={`p-2 rounded-lg flex-shrink-0 ${
+                className={`p-1.5 rounded-lg flex-shrink-0 ${
                   isMicOn
                     ? "bg-primary text-white"
                     : "bg-red-500 text-white"
@@ -672,12 +672,12 @@ const ChatUI = ({
                 title={isMicOn ? "Mute microphone" : "Unmute microphone"}
               >
                 {isMicOn ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
                     <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
                   </svg>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z"/>
                   </svg>
                 )}
@@ -689,13 +689,13 @@ const ChatUI = ({
                 onChange={handleTypingChange}
                 onKeyDown={handleTextKeyDown}
                 disabled={!isConnected}
-                placeholder={isConnected ? "Type a message..." : "Connecting..."}
-                className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary disabled:bg-gray-100 disabled:text-gray-400"
+                placeholder={isConnected ? (isMobile ? "Message..." : "Type a message...") : "Connecting..."}
+                className="flex-1 min-w-0 px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-primary disabled:bg-gray-100 disabled:text-gray-400"
               />
               <button
                 onClick={sendTextMessage}
                 disabled={!textInput.trim() || !isConnected}
-                className={`px-3 py-2 rounded-lg text-white text-sm font-medium flex-shrink-0 ${
+                className={`px-2 py-1.5 rounded-lg text-white text-xs font-medium flex-shrink-0 ${
                   textInput.trim() && isConnected ? "bg-primary cursor-pointer hover:bg-primary-hover" : "bg-gray-300 cursor-not-allowed"
                 }`}
               >

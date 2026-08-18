@@ -85,7 +85,7 @@ const AILearningAssistant = ({
         <div
           ref={innerRef}
           className={`w-full h-full bg-bg-light-blue rounded-xl ${
-            isMobileView ? "p-1" : "p-3"
+            isMobileView ? "p-2" : "p-3"
           } flex flex-col min-h-0 ${isScrollable ? "overflow-y-auto" : "overflow-hidden"} relative`}>
           {/* Chat Icon - Positioned absolutely */}
           <button
@@ -97,12 +97,12 @@ const AILearningAssistant = ({
           {/* Main Content Container */}
           <div
             className={`flex-1 flex flex-col items-center justify-center ${
-              isMobileView ? "gap-2 px-2" : "gap-4 px-4"
+              isMobileView ? "gap-3 px-2" : "gap-4 px-4"
             } min-h-0 ${isScrollable ? "" : "overflow-hidden"}`}>
             {/* Icon and Text Section */}
             <div className={`flex flex-col items-center ${isMobileView ? "gap-2" : "gap-3"} w-full max-w-[275px]`}>
               {showIcon && (
-                <div className={`${isMobileView ? "w-[40px] h-[40px]" : "w-[56px] h-[56px]"} bg-white rounded-full flex items-center justify-center shrink-0`}>
+                <div className={`${isMobileView ? "w-[44px] h-[44px]" : "w-[56px] h-[56px]"} bg-white rounded-full flex items-center justify-center shrink-0`}>
                   <Image className="w-full h-full" src={chat_star} alt="chat_star" />
                 </div>
               )}
@@ -110,11 +110,11 @@ const AILearningAssistant = ({
               <div className="flex flex-col items-center gap-2 w-full">
                 <h3
                   className={`w-full text-center font-lato font-bold ${
-                    isMobileView ? "text-[10px]" : "text-lg leading-5"
+                    isMobileView ? "text-[12px] leading-[14px]" : "text-lg leading-5"
                   } text-primary-text`}>
                   {t("lectures.aiAssistant")}
                 </h3>
-                <p className={`w-full text-center font-lato font-normal ${isMobileView ? "text-[9px] leading-3" : "text-xs leading-4"} text-text-gray`}>
+                <p className={`w-full text-center font-lato font-normal ${isMobileView ? "text-[11px] leading-[14px]" : "text-xs leading-4"} text-text-gray`}>
                   {t("lectures.aiAssistantDesc")}
                 </p>
               </div>
@@ -125,9 +125,9 @@ const AILearningAssistant = ({
               <button
                 onClick={handleStartQA}
                 disabled={!agentId}
-                className={`flex items-center justify-center rounded-[10px] bg-primary gap-1 ${
-                  isMobileView ? "px-2 py-2 h-6" : "px-3 py-2 h-9"
-                }  font-lato font-semibold text-sm leading-4 transition-all duration-200 ${
+                className={`flex items-center justify-center rounded-[10px] bg-primary gap-1.5 ${
+                  isMobileView ? "px-3 py-2 h-8" : "px-3 py-2 h-9"
+                }  font-lato font-semibold leading-4 transition-all duration-200 ${
                   agentId
                     ? "text-white cursor-pointer hover:opacity-90"
                     : "text-gray-400 cursor-not-allowed bg-gray-200"
@@ -135,12 +135,12 @@ const AILearningAssistant = ({
                 // style={agentId ? { background: "var(--gradient-primary)" } : {}}
                 title={!agentId ? "Agent not available" : ""}>
                 <Image
-                  className="w-5 h-5"
+                  className={isMobileView ? "w-4 h-4" : "w-5 h-5"}
                   src={microphone}
                   alt="Microphone"
                   style={!agentId ? { filter: "grayscale(100%)" } : {}}
                 />
-                <span className={`text-[8px] sm:text-[9px] md:text-xs`}>{t("lectures.interactionMode")}</span>
+                <span className={isMobileView ? "text-[11px]" : "text-xs"}>{t("lectures.interactionMode")}</span>
               </button>
               {!agentId && (
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-700 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
