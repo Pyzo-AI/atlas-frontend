@@ -37,6 +37,7 @@ const ChatUI = ({
   presentationId,
   useChatbotHistory = false,
   hideFooter = false,
+  hideInteractionMode = false,
   liveMessages = [],
   enableSmoothScroll = true,
   showQueryRelatedSlides = false,
@@ -708,20 +709,22 @@ const ChatUI = ({
           {!hideFooter && (
             <div className="flex justify-center items-center gap-1.5 sm:gap-2 w-full bg-white px-2 sm:px-3 py-1.5 sm:py-2 flex-shrink-0 border-t border-border-light">
               {/* Interaction Mode Button */}
-              <button
-                onClick={agentId ? handleInteractionMode : undefined}
-                disabled={!agentId}
-                className={`flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-[8.53px] ${
-                  agentId ? "bg-bg-light-blue cursor-pointer" : "bg-gray-100 cursor-not-allowed opacity-50"
-                }`}>
-                <Image className="w-3.5 h-3.5 sm:w-4 sm:h-4" src={interaction_mode} alt="interaction_mode" />
+              {!hideInteractionMode && (
+                <button
+                  onClick={agentId ? handleInteractionMode : undefined}
+                  disabled={!agentId}
+                  className={`flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-[8.53px] ${
+                    agentId ? "bg-bg-light-blue cursor-pointer" : "bg-gray-100 cursor-not-allowed opacity-50"
+                  }`}>
+                  <Image className="w-3.5 h-3.5 sm:w-4 sm:h-4" src={interaction_mode} alt="interaction_mode" />
 
-                {!isMobile && (
-                  <span className="font-lato font-medium text-[10px] sm:text-xs text-primary whitespace-nowrap">
-                    {t("lectures.interactionMode")}
-                  </span>
-                )}
-              </button>
+                  {!isMobile && (
+                    <span className="font-lato font-medium text-[10px] sm:text-xs text-primary whitespace-nowrap">
+                      {t("lectures.interactionMode")}
+                    </span>
+                  )}
+                </button>
+              )}
 
               {/* Continue Lesson Button */}
               <button
