@@ -267,7 +267,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
           </div>
         )}
 
-        {/* Agent mute button (top-right of panel, always visible when open) */}
+        {/* Agent mute + close buttons (top-right of panel, always visible when open) */}
         <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
           <button
             onClick={toggleAgentMute}
@@ -291,6 +291,17 @@ const FloatingChatbot = ({ agentId = 1 }) => {
               </svg>
             )}
           </button>
+          {/* Close button */}
+          <button
+            onClick={stopConversation}
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200 transition-colors"
+            title="Close chat"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
         {/* ChatUI fills the whole panel */}
@@ -307,7 +318,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
           liveKitAgentEnabled={true}
           presentationId={1}
           useChatbotHistory={true}
-          hideFooter={false}
+          hideFooter={true}
           hideInteractionMode={true}
           liveMessages={liveMessages}
           enableSmoothScroll={false}
