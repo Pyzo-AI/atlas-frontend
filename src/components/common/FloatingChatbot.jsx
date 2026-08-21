@@ -4,9 +4,7 @@ import { getUserDetailsFromToken } from "@/store/utils/token";
 import { liveKitService } from "@/lib/livekit";
 import { useCreateChatbotSessionMutation } from "@/store/api/liveKitApi";
 import Lottie from "lottie-react";
-import userWaveAnimation from "@/assets/json/user_wave.json";
 import loaderAnimation from "@/assets/json/loader.json";
-import chatHistory from "@/assets/svg/chat-history.svg";
 import chatbotIcon from "@/assets/svg/chatbot-icon.svg";
 import chatbotCloseIcon from "@/assets/svg/chatbot-close-icon.svg";
 import Image from "next/image";
@@ -19,8 +17,8 @@ const FloatingChatbot = ({ agentId = 1 }) => {
   const { t } = useTranslation();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [showChatHistory, setShowChatHistory] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isAgentMuted, setIsAgentMuted] = useState(false);
   const [liveKitAgentState, setLiveKitAgentState] = useState("connecting");
   const [connectionState, setConnectionState] = useState({
     isLoading: false,
@@ -29,13 +27,15 @@ const FloatingChatbot = ({ agentId = 1 }) => {
   });
   const [liveMessages, setLiveMessages] = useState([]);
 
+  // Track typing so we never kill the session mid-message
+  const isTypingRef = useRef(false);
+
   const abortControllerRef = useRef(null);
   const sessionPromiseRef = useRef(null);
 
   const [createChatbotSession] = useCreateChatbotSessionMutation();
 
   const handleLiveKitStateChange = (state) => {
-    console.log(state, "state");
     setConnectionState({
       isLoading: state.isConnecting,
       isConnected: state.isConnected,
@@ -65,11 +65,10 @@ const FloatingChatbot = ({ agentId = 1 }) => {
 
       liveKitService.onConnectionStateChanged = handleLiveKitStateChange;
       liveKitService.setOnAgentStateChanged((state) => {
-        console.log(state, "liveKitAgentState");
         setLiveKitAgentState(state);
       });
 
-      // Detect call_ending from agent side and auto-close the chatbot
+      // Handle incoming data packets
       if (liveKitService.setOnDataReceived) {
         liveKitService.setOnDataReceived((payload) => {
           try {
@@ -93,7 +92,6 @@ const FloatingChatbot = ({ agentId = 1 }) => {
                 liveKitService.disconnect();
               }
               setIsOpen(false);
-              setShowChatHistory(false);
               setLiveKitAgentState("connecting");
               setConnectionState({ isLoading: false, isConnected: false, isAudioPlaying: false });
             }
@@ -121,7 +119,6 @@ const FloatingChatbot = ({ agentId = 1 }) => {
         console.log("Conversation start aborted");
         return;
       }
-      // toast.error("Failed to connect to the agent. Please try again later.");
       setConnectionState((prev) => ({ ...prev, isLoading: false }));
       setIsOpen(false);
     }
@@ -129,15 +126,19 @@ const FloatingChatbot = ({ agentId = 1 }) => {
 
   const stopConversation = async () => {
     try {
-      // Abort any ongoing connection attempts
+      // Don't close if user is actively typing
+      if (isTypingRef.current) {
+        toast.info("Finish typing before closing the chat");
+        return;
+      }
+
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
       if (sessionPromiseRef.current) {
-        sessionPromiseRef.current.abort();
+        sessionPromiseRef.current.abort?.();
       }
 
-      // Disconnect if we have a room (connected or connecting)
       await liveKitService.disconnect();
 
       setLiveKitAgentState("connecting");
@@ -147,7 +148,6 @@ const FloatingChatbot = ({ agentId = 1 }) => {
         isAudioPlaying: false,
       });
       setIsOpen(false);
-      setShowChatHistory(false);
     } catch (error) {
       console.log("Failed to stop conversation:", error);
     }
@@ -168,13 +168,24 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     }
   };
 
+  const toggleAgentMute = () => {
+    if (isAgentMuted) {
+      setIsAgentMuted(false);
+      liveKitService.unmuteAgentVoice();
+    } else {
+      setIsAgentMuted(true);
+      liveKitService.muteAgentVoice();
+    }
+  };
+
+  // Start session when the chatbot opens
   useEffect(() => {
     if (isOpen && !connectionState.isConnected && !connectionState.isLoading) {
       startConversation();
     }
   }, [isOpen]);
 
-  // Cleanup when component unmounts
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (liveKitService.isConnected()) {
@@ -183,23 +194,18 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     };
   }, []);
 
-  // Disconnect if the app is backgrounded (e.g. mobile Safari minimized, tab switched)
+  // Disconnect when tab is hidden — but only if NOT typing
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        if (isOpen) {
-          stopConversation();
-        }
+      if (document.visibilityState === "hidden" && isOpen && !isTypingRef.current) {
+        stopConversation();
       }
     };
-
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [isOpen]);
 
-  // Lock body scroll on mobile when chatbot is open (iOS-safe approach)
+  // Lock body scroll on mobile when chatbot is open
   useEffect(() => {
     const isMobileWidth = window.innerWidth < 640;
     if (!isMobileWidth) return;
@@ -232,153 +238,102 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     };
   }, [isOpen]);
 
-
+  // ─── Closed state: show the floating bubble ───────────────────────────────
   if (!isOpen) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="cursor-pointer fixed bottom-6 right-6 w-[60px] h-[60px] rounded-full shadow-[0px_0px_25px_2.5px_#2877EE65] hover:scale-105 transition-all duration-300 z-50 flex items-center justify-center bg-white overflow-hidden">
+        className="cursor-pointer fixed bottom-6 right-6 w-[60px] h-[60px] rounded-full shadow-[0px_0px_25px_2.5px_#2877EE65] hover:scale-105 transition-all duration-300 z-50 flex items-center justify-center bg-white overflow-hidden"
+      >
         <Image src={chatbotIcon} alt="chatbot" width={60} height={60} className="w-full h-full object-cover" />
       </button>
     );
   }
 
-  const isAgentSpeaking = connectionState.isAudioPlaying || liveKitAgentState === "speaking";
-  const isUserSpeaking = liveKitAgentState === "listening" && !isMuted;
   const isConnecting = connectionState.isLoading || liveKitAgentState === "connecting";
 
-  if (showChatHistory) {
-    return (
-      <>
-        {/* Mobile backdrop overlay */}
-        <div className="sm:hidden fixed inset-0 bg-black/40 z-[9998] pointer-events-auto" />
-
-        <div className="fixed bottom-0 right-0 w-full h-[90vh] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-white rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-[9999] transition-all duration-300 overscroll-contain">
-          <ChatUI
-            onClose={() => setShowChatHistory(false)}
-            conversation={[]}
-            onStartConversation={startConversation}
-            onStopConversation={stopConversation}
-            isConnected={connectionState.isConnected}
-            setIsJumpedOnChatFromInteractionMode={() => {}}
-            isMobile={false}
-            agentId={agentId}
-            onPauseSlideVideo={() => {}}
-            liveKitAgentEnabled={true}
-            presentationId={1}
-            useChatbotHistory={true}
-            hideFooter={true}
-            liveMessages={liveMessages}
-            enableSmoothScroll={false}
-          />
-        </div>
-
-        {/* Floating close button when open (Desktop only) */}
-        <button
-          onClick={stopConversation}
-          className="hidden sm:flex cursor-pointer fixed bottom-6 right-6 w-[60px] h-[60px] rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 z-50 items-center justify-center bg-white overflow-hidden">
-          <Image
-            src={chatbotCloseIcon}
-            alt="close chatbot"
-            width={60}
-            height={60}
-            className="w-full h-full object-cover"
-          />
-        </button>
-      </>
-    );
-  }
-
+  // ─── Open state: show the chat panel directly ──────────────────────────────
   return (
     <>
       {/* Mobile backdrop overlay */}
       <div className="sm:hidden fixed inset-0 bg-black/40 z-[9998] pointer-events-auto" />
 
-      <div className="fixed bottom-0 right-0 w-full h-[349px] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-[#FFFFFF] rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-[9999] border border-[#E9EFFD] transition-all duration-300 overscroll-contain">
-        {/* Background Gradient matching the screenshot */}
-        <div className="absolute top-[-90px] left-1/2 -translate-x-1/2 w-[180px] h-[120px] bg-[#2762EA] blur-[102px] pointer-events-none" />
-
-        {/* Center Animation Area */}
-        <div className="flex-1 flex flex-col items-center justify-center relative">
-          <div className="relative w-[150px] h-[150px] flex items-center justify-center">
-            {isConnecting ? (
-              <div className="flex flex-col items-center justify-center">
-                <Lottie animationData={loaderAnimation} style={{ width: 180, height: 80 }} loop={true} />
-                <p className="text-gray-500 text-sm font-lato mt-[-15px]">{t("floatingChatbot.connecting")}</p>
-              </div>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center scale-125">
-                <Lottie animationData={userWaveAnimation} style={{ width: 150, height: 150 }} loop={true} />
-              </div>
-            )}
+      <div className="fixed bottom-0 right-0 w-full h-[90vh] sm:bottom-[96px] sm:right-6 sm:w-[360px] sm:h-[526px] bg-white rounded-t-[20px] sm:rounded-[20px] shadow-[0px_0px_20px_2px_rgba(49,75,159,0.3)] overflow-hidden flex flex-col z-[9999] transition-all duration-300 overscroll-contain">
+        {/* Connecting overlay — shown on top of ChatUI while connecting */}
+        {isConnecting && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 rounded-[20px]">
+            <Lottie animationData={loaderAnimation} style={{ width: 180, height: 80 }} loop={true} />
+            <p className="text-gray-500 text-sm font-lato mt-[-15px]">{t("floatingChatbot.connecting")}</p>
           </div>
+        )}
 
-          {/* State Text */}
-          {!isConnecting && (
-            <div className="mt-[32px] sm:mt-[42px] flex flex-col items-center gap-[4px] sm:gap-[8px]">
-               <p className="text-[12px] sm:text-[14px] leading-[16px] font-semibold sm:font-bold text-[#2762EA] sm:text-[#0888E6] font-lato capitalize">
-                {liveKitAgentState === "listening"
-                  ? isMuted
-                    ? t("floatingChatbot.muted")
-                    : t("floatingChatbot.listening")
-                  : liveKitAgentState === "speaking"
-                    ? t("floatingChatbot.speaking")
-                    : t("floatingChatbot.thinking")}
-              </p>
-              {/* {liveKitAgentState === "listening" && !isMuted && (
-                <p className="text-[10px] sm:text-[12px] leading-[12px] sm:leading-[16px] font-medium text-[#4B5563] sm:text-[#1A1C29]/60 font-lato">{t("floatingChatbot.canSpeakNow")}</p>
-              )} */}
-            </div>
-          )}
-        </div>
-
-        {/* Bottom Controls */}
-        <div className="p-0 pb-[32px] sm:pb-[42px] flex items-center justify-center gap-[24px]">
+        {/* Agent mute + close buttons (top-right of panel, always visible when open) */}
+        <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
+          <button
+            onClick={toggleAgentMute}
+            disabled={!connectionState.isConnected}
+            className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
+              !connectionState.isConnected
+                ? "opacity-40 cursor-not-allowed bg-gray-100"
+                : isAgentMuted
+                ? "bg-red-100 text-red-500 cursor-pointer"
+                : "bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200"
+            }`}
+            title={isAgentMuted ? "Unmute agent voice" : "Mute agent voice"}
+          >
+            {isAgentMuted ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              </svg>
+            )}
+          </button>
+          {/* Close button */}
           <button
             onClick={stopConversation}
-            className="sm:hidden w-[56px] h-[56px] rounded-full flex items-center justify-center transition-colors cursor-pointer flex-shrink-0 shadow-sm hover:shadow-md bg-white border border-gray-100 overflow-hidden">
-            <Image
-              src={chatbotCloseIcon}
-              alt="close chatbot"
-              width={56}
-              height={56}
-              className="w-full h-full object-cover"
-            />
-          </button>
-
-          <button
-            onClick={() => setShowChatHistory(true)}
-            className="w-[56px] h-[56px] sm:w-[64px] sm:h-[64px] flex items-center justify-center flex-shrink-0 cursor-pointer">
-            <Image
-              src={chatHistory}
-              alt="chat history"
-              width={64}
-              height={64}
-              className="w-full h-full object-contain"
-            />
-          </button>
-
-          <button
-            onClick={toggleMute}
-            disabled={!connectionState.isConnected}
-            className={`w-[56px] h-[56px] sm:w-[64px] sm:h-[64px] flex items-center justify-center flex-shrink-0 ${
-              !connectionState.isConnected ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-            }`}>
-            <Image
-              src={isMuted ? micMuted : micUnmuted}
-              alt={isMuted ? "mic muted" : "mic unmuted"}
-              width={64}
-              height={64}
-              className="w-full h-full object-contain"
-            />
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200 transition-colors"
+            title="Close chat"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
+
+        {/* ChatUI fills the whole panel */}
+        <ChatUI
+          onClose={stopConversation}
+          conversation={[]}
+          onStartConversation={startConversation}
+          onStopConversation={stopConversation}
+          isConnected={connectionState.isConnected}
+          setIsJumpedOnChatFromInteractionMode={() => {}}
+          isMobile={false}
+          agentId={agentId}
+          onPauseSlideVideo={() => {}}
+          liveKitAgentEnabled={true}
+          presentationId={1}
+          useChatbotHistory={true}
+          hideFooter={true}
+          hideInteractionMode={true}
+          liveMessages={liveMessages}
+          enableSmoothScroll={false}
+          // Notify us when user starts/stops typing so we protect the session
+          onTypingChange={(isTyping) => {
+            isTypingRef.current = isTyping;
+          }}
+        />
       </div>
 
-      {/* Floating close button when open (Desktop only) */}
+      {/* Floating close button (Desktop only) */}
       <button
         onClick={stopConversation}
-        className="hidden sm:flex cursor-pointer fixed bottom-6 right-6 w-[60px] h-[60px] rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 z-50 items-center justify-center bg-white overflow-hidden">
+        className="hidden sm:flex cursor-pointer fixed bottom-6 right-6 w-[60px] h-[60px] rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 z-50 items-center justify-center bg-white overflow-hidden"
+      >
         <Image
           src={chatbotCloseIcon}
           alt="close chatbot"
