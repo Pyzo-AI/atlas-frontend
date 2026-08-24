@@ -107,6 +107,11 @@ export const questionsApi = createApi({
         method: 'POST',
       }),
     }),
+    // Get submission results
+    getSubmissionResults: builder.query({
+      query: (submissionId) => `api/learner/submissions/${submissionId}/results`,
+      providesTags: ['Question'],
+    }),
   }),
 });
 
@@ -125,4 +130,7 @@ export const {
   useGetConversationHistoryQuery,
   useLazyGetConversationHistoryQuery,
   useGetInterviewLinkMutation,
+  useGetSubmissionResultsQuery,
+  useLazyGetSubmissionResultsQuery,
 } = questionsApi;
+

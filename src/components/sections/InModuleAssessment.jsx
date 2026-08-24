@@ -316,6 +316,27 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
       }
     };
 
+  // Role Play AI Assessment View
+  if (assessmentData?.assessment_type === "ROLE_PLAY" || assessmentData?.interview_link) {
+    return (
+      <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col justify-center items-center p-6">
+          <p className="text-sm text-gray-500 mb-4">
+            Attempt #{assessmentData.attempt_number || 1} — Click below to take your assessment.
+          </p>
+          <a
+            href={assessmentData.interview_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="py-2.5 px-6 bg-[#2762EA] hover:bg-[#1E4FD9] text-white font-semibold rounded-lg text-sm transition-colors duration-150"
+          >
+            Take Assessment
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">
       {/* Scrollable Assessment Container */}

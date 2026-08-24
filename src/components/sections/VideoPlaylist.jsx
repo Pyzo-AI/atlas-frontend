@@ -378,11 +378,15 @@ const VideoPlaylist = ({
                   className={`font-lato font-medium ${
                     isMobile ? "text-[9px]" : "text-[12px]"
                   } leading-[14px] tracking-[0.02em] text-primary-text line-clamp-2`}>
-                  Final Assessment - {assessmentDetails[0]?.question_count || 0} Questions
+                  {assessmentDetails[0]?.type === "ROLE PLAY"
+                    ? "Final Assessment"
+                    : `Final Assessment - ${assessmentDetails[0]?.question_count || 0} Questions`}
                 </h4>
                 {!isMobile && (
                   <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-text-subtle">
-                    {assessmentDetails[0]?.type || "Assessment"}
+                    {assessmentDetails[0]?.assessment_type === "ROLE PLAY"
+                      ? "Role Play"
+                      : assessmentDetails[0]?.type || "Assessment"}
                   </div>
                 )}
               </div>
