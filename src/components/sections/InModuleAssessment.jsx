@@ -474,15 +474,14 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                               isChecked
                                 ? "border-accent bg-accent-light"
                                 : "border-gray-200 hover:border-accent hover:bg-accent-light"
-                            }`}
-                            onClick={handleOptionToggle}>
+                            }`}>
                             <input
                               type={isMultiCorrect ? "checkbox" : "radio"}
                               name={`question-${currentQuestion.question_id}`}
                               value={option}
                               checked={isChecked}
                               onChange={handleOptionToggle}
-                              className={`!mt-0 mr-3 text-accent focus:ring-accent ${isMultiCorrect ? "rounded w-4 h-4" : "rounded-full w-4 h-4"}`}
+                              className="custom-radio !mt-0 mr-3"
                             />
                             <span className="text-xs sm:text-sm md:text-sm text-gray-700 leading-relaxed flex-1">
                               {option}. {text}
@@ -581,27 +580,34 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
           -moz-appearance: none;
           width: 18px;
           height: 18px;
-          border: 1.28571px solid var(--color-accent);
-          border-radius: 18px;
+          min-width: 18px;
+          min-height: 18px;
+          border: 1.5px solid var(--color-accent);
+          border-radius: 50%;
           background: var(--color-light);
           position: relative;
           cursor: pointer;
           flex: none;
+          flex-shrink: 0;
           flex-grow: 0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .custom-radio:checked {
-          border: 1.28571px solid var(--color-accent);
+          border: 1.5px solid var(--color-accent);
           background: var(--color-light);
         }
 
         .custom-radio:checked::before {
           content: "";
           position: absolute;
-          width: 12px;
-          height: 12px;
-          left: 2.5px;
-          top: 2.5px;
+          width: 10px;
+          height: 10px;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
           background: var(--color-accent);
           border-radius: 50%;
         }
