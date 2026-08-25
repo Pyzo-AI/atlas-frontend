@@ -320,18 +320,63 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
   if (assessmentData?.assessment_type === "ROLE_PLAY" || assessmentData?.interview_link) {
     return (
       <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">
-        <div className="flex-1 flex flex-col justify-center items-center p-6">
-          <p className="text-sm text-gray-500 mb-4">
-            Attempt #{assessmentData.attempt_number || 1} — Click below to take your assessment.
-          </p>
-          <a
-            href={assessmentData.interview_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="py-2.5 px-6 bg-[#2762EA] hover:bg-[#1E4FD9] text-white font-semibold rounded-lg text-sm transition-colors duration-150"
-          >
-            Take Assessment
-          </a>
+        <div className="flex-1 overflow-y-auto flex flex-col justify-center items-center p-6 sm:p-8">
+          <div className="w-full max-w-md flex flex-col items-center text-center">
+            {/* AI Role Play Icon Badge */}
+            <div className="w-14 h-14 rounded-2xl bg-[#EFF6FF] border border-[#BFDBFE] text-[#2762EA] flex items-center justify-center mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" x2="12" y1="19" y2="22" />
+              </svg>
+            </div>
+
+            {/* Title & Description */}
+            <h2 className="font-lato font-bold text-xl sm:text-2xl text-[#111827] mb-2">
+              {assessmentData.title || "Role Play Assessment"}
+            </h2>
+            <p className="font-lato text-sm text-[#667085] leading-relaxed">
+              Click below to begin your assessment in a new window.
+            </p>
+
+            {/* Simple audio note */}
+            <div className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-3.5 my-6 flex items-center gap-3 text-left">
+              <div className="w-6 h-6 rounded-full bg-[#EFF6FF] text-[#2762EA] flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h4 className="font-lato font-semibold text-xs text-[#111827]">Microphone & Audio Required</h4>
+                <p className="font-lato text-[11px] text-[#667085] mt-0.5">Please ensure you are in a quiet environment with a working microphone.</p>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <a
+              href={assessmentData.interview_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-2.5 px-8 bg-[#2762EA] hover:bg-[#1E4FD9] text-white font-semibold rounded-lg text-sm transition-all duration-150 shadow-sm flex items-center justify-center gap-2"
+            >
+              <span>Take Assessment</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" x2="21" y2="3" />
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
     );
