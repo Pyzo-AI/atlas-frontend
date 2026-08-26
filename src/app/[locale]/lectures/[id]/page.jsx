@@ -379,7 +379,6 @@ const Home = () => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         submitProgressToAPI();
-        clearAssessmentProgressOnLeave();
       }
     };
 
