@@ -481,7 +481,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                               value={option}
                               checked={isChecked}
                               onChange={handleOptionToggle}
-                              className="custom-radio !mt-0 mr-3"
+                              className={isMultiCorrect ? "rounded w-4 h-4 text-accent focus:ring-accent !mt-0 mr-3" : "custom-radio !mt-0 mr-3"}
                             />
                             <span className="text-xs sm:text-sm md:text-sm text-gray-700 leading-relaxed flex-1">
                               {option}. {text}
