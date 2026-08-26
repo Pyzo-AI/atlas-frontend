@@ -5,7 +5,7 @@ export const getAssessmentProgress = (presentationId) => {
   try {
     const stored = localStorage.getItem(ASSESSMENT_PROGRESS_KEY);
     if (!stored) return null;
-    
+
     const allProgress = JSON.parse(stored);
     return allProgress[presentationId] || null;
   } catch (error) {
@@ -18,11 +18,11 @@ export const setAssessmentCompleted = (presentationId, assessmentId) => {
   try {
     const stored = localStorage.getItem(ASSESSMENT_PROGRESS_KEY);
     const allProgress = stored ? JSON.parse(stored) : {};
-    
+
     if (!allProgress[presentationId]) {
       allProgress[presentationId] = {};
     }
-    
+
     allProgress[presentationId][assessmentId] = true;
     localStorage.setItem(ASSESSMENT_PROGRESS_KEY, JSON.stringify(allProgress));
   } catch (error) {
@@ -32,7 +32,7 @@ export const setAssessmentCompleted = (presentationId, assessmentId) => {
 
 export const isAssessmentCompletedLocally = (presentationId, assessmentId) => {
   if (!assessmentId || !presentationId) return false;
-  
+
   const progress = getAssessmentProgress(presentationId);
   return progress && progress[assessmentId] === true;
 };
@@ -41,7 +41,7 @@ export const clearAssessmentProgress = (presentationId) => {
   try {
     const stored = localStorage.getItem(ASSESSMENT_PROGRESS_KEY);
     if (!stored) return;
-    
+
     const allProgress = JSON.parse(stored);
     if (allProgress[presentationId]) {
       delete allProgress[presentationId];
