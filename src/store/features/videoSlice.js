@@ -19,6 +19,7 @@ const initialState = {
   productRecommendations: [],
   isUserMuted: false,
   isAgentVoiceMuted: false, // Agent voice is ON by default
+  completedAssessmentIds: [],
 };
 
 const videoSlice = createSlice({
@@ -81,6 +82,14 @@ const videoSlice = createSlice({
     setIsAgentVoiceMuted: (state, action) => {
       state.isAgentVoiceMuted = action.payload;
     },
+    markAssessmentCompleted: (state, action) => {
+      if (action.payload && !state.completedAssessmentIds.includes(action.payload)) {
+        state.completedAssessmentIds.push(action.payload);
+      }
+    },
+    setCompletedAssessmentIds: (state, action) => {
+      state.completedAssessmentIds = action.payload || [];
+    },
   },
 });
 
@@ -103,5 +112,7 @@ export const {
   setProductRecommendations,
   setIsUserMuted,
   setIsAgentVoiceMuted,
+  markAssessmentCompleted,
+  setCompletedAssessmentIds,
 } = videoSlice.actions;
 export default videoSlice.reducer;

@@ -23,7 +23,7 @@ const VideoPlaylist = ({
   isGridLayout = false,
 }) => {
   const dispatch = useDispatch();
-  const { currentVideoIndex, selectedAssessmentId, isQuestionMode, showChat } = useSelector((state) => state.video);
+  const { currentVideoIndex, selectedAssessmentId, isQuestionMode, showChat, completedAssessmentIds = [] } = useSelector((state) => state.video);
   const scrollContainerRef = useRef(null);
   const videoItemRefs = useRef([]);
   const itemRefs = useRef({});
@@ -260,7 +260,9 @@ const VideoPlaylist = ({
                 video.slide_assessments.forEach((assessment, assessmentIndex) => {
                   const assessmentId = assessment.id; // Use the actual assessment ID from the data
                   const isAssessmentCompletedLocal =
-                    isAssessmentCompletedLocally(presentationId, assessmentId) || assessment.attempts_used > 0;
+                    completedAssessmentIds.includes(assessmentId) ||
+                    isAssessmentCompletedLocally(presentationId, assessmentId) ||
+                    assessment.attempts_used > 0;
                   const isAssessmentSelected = selectedAssessmentId === assessmentId;
 
                   items.push(
@@ -392,7 +394,8 @@ const VideoPlaylist = ({
               </div>
 
               {/* Final Assessment Status indicator - Show green checkmark if passed */}
-              {(isAssessmentCompletedLocally(presentationId, assessmentDetails[0]?.id) ||
+              {(completedAssessmentIds.includes(assessmentDetails[0]?.id) ||
+                isAssessmentCompletedLocally(presentationId, assessmentDetails[0]?.id) ||
                 assessmentDetails[0]?.passed) && (
                 <Image
                   src={playlist_completed_icon}
