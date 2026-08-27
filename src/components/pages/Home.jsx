@@ -224,6 +224,7 @@ const Home = () => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const orgConfig = useSelector((state) => state.organization?.config);
+  const userDetails = getUserDetailsFromToken();
 
   // Check for feedback success parameter
   useEffect(() => {
@@ -272,7 +273,6 @@ const Home = () => {
 
   const counts = getCounts();
   const handlePresentationClick = (presentationId) => {
-    const userDetails = getUserDetailsFromToken();
     const selectedPresentation = presentations?.data?.find((p) => p.presentation_id === presentationId);
 
     // Track module start event
