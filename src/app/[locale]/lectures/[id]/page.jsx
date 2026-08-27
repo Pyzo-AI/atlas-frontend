@@ -20,44 +20,8 @@ import FullscreenController from "@/components/ui/FullscreenController";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress, clearVideoProgress } from "@/utils/videoProgress";
 import { clearAssessmentProgress } from "@/utils/assessmentProgress";
-import Image from "next/image";
-import RotateDeviceIcon from "@/assets/svg/rotate_device.svg";
-import RotateArrowIcon from "@/assets/svg/rotate_arrow.svg";
 import { useTranslation } from "react-i18next";
-
-// Portrait Mode Rotation Prompt Component
-const RotationPrompt = () => {
-  const { t } = useTranslation();
-  return (
-    <div className="absolute top-16 inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
-      <div className="text-center text-white px-6">
-        <div className="mb-6">
-          <Image 
-            src={RotateDeviceIcon} 
-            alt="Rotate device" 
-            width={64} 
-            height={64} 
-            className="mx-auto mb-4 animate-bounce" 
-          />
-        </div>
-        <h2 className="text-xl font-semibold mb-2">{t("lectures.rotateTitle")}</h2>
-        <p className="text-gray-300 mb-4">
-          {t("lectures.rotateDesc")}
-        </p>
-        <div className="flex items-center justify-center space-x-2">
-          <div className="w-8 h-12 border-2 border-white rounded-sm"></div>
-          <Image 
-            src={RotateArrowIcon} 
-            alt="Rotate arrow" 
-            width={24} 
-            height={24} 
-          />
-          <div className="w-12 h-8 border-2 border-white rounded-sm"></div>
-        </div>
-      </div>
-    </div>
-  );
-};
+import PortraitLectureView from "@/components/sections/PortraitLectureView";
 
 // Combined components moved outside to prevent re-creation on every render
 const CombinedBreadCrumb = React.memo(({ data }) => {
@@ -544,6 +508,37 @@ const Home = () => {
     return <PageSkeleton />;
   }
 
+  if (isPortrait && isMobileDevice) {
+    return (
+      <PortraitLectureView
+        pptSectionRef={pptSectionRef}
+        videos={videos}
+        isLoading={isLoading}
+        pptVideoIndex={pptVideoIndex}
+        pptSyncState={pptSyncState}
+        videoState={videoState}
+        data={data}
+        canSkipVideo={canSkipVideo}
+        presentationId={presentationId}
+        onVideoIndexChange={handleVideoIndexChange}
+        isOnlyVideoMode={isOnlyVideoMode}
+        assessmentId={assessmentId}
+        showQueryRelatedSlides={showQueryRelatedSlides}
+        passingScore={passingScore}
+        videoPanelRef={videoPanelRef}
+        handleVideoStateChange={handleVideoStateChange}
+        handlePauseVideo={handlePauseVideo}
+        handlePauseAnswerAudio={handlePauseAnswerAudio}
+        handlePauseSlideVideo={handlePauseSlideVideo}
+        conversationHistory={conversationHistory}
+        setConversationHistory={setConversationHistory}
+        isFinalAssessmentPresent={isFinalAssessmentPresent}
+        liveKitAgentEnabled={liveKitAgentEnabled}
+        enableProductRecommendations={enableProductRecommendations}
+      />
+    );
+  }
+
   if (isLandscape && (isPhone || isTablet)) {
     // Dynamic width ratios
     const leftWidth = isPhone ? "w-[70%]" : "w-[60%]";
@@ -619,11 +614,7 @@ const Home = () => {
   }
 
   return (
-    <>
-      {/* Show rotation prompt on mobile portrait mode */}
-      {isPortrait && isMobileDevice && <RotationPrompt />}
-
-      <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-page-background overflow-x-hidden">
+    <div className="relative flex size-full h-[calc(100vh-55px)] flex-col bg-page-background overflow-x-hidden">
         <div className="layout-container flex h-full grow flex-col">
           <div className=" px-6 py-5 overflow-hidden">
             <CombinedBreadCrumb data={data} />
@@ -669,7 +660,6 @@ const Home = () => {
           </div>
         </div>
       </div>
-    </>
   );
 };
 

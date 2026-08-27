@@ -106,6 +106,7 @@ const VideoPanel = forwardRef(
       showQueryRelatedSlides = false,
       assessmentDetails = [],
       enableProductRecommendations = true,
+      hideAIAssistant = false,
     },
     ref
   ) => {
@@ -929,7 +930,7 @@ const VideoPanel = forwardRef(
         )}
 
         {/* AI Assistant Section - Responsive */}
-        {!(isOnlyVideoMode && !agentId) && (
+        {!(isOnlyVideoMode && !agentId) && !hideAIAssistant && (
           <div
             className={`flex-1 min-h-0 ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "pointer-events-none blur-[1px]" : ""}`}>
             <AILearningAssistant

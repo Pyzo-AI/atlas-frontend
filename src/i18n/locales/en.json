@@ -222,6 +222,8 @@
     "noSlideVideo": "No slide video available",
     "noVideoAvailable": "No video available",
     "loadingSlideVideo": "Loading slide video...",
+    "moduleContent": "Module Content",
+    "askAssistant": "Ask Assistant",
     "aiAssistant": "AI Assistant",
     "aiAssistantDesc": "Get instant answers to your questions and personalized learning support.",
     "interactionMode": "Interaction Mode",
