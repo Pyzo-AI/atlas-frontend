@@ -690,23 +690,9 @@ const VideoPanel = forwardRef(
           ) {
             dispatch(setOverlayImage(null));
           }
-
-          // Navigate to the redirected slide
-          if (metadata?.type === "slide_redirect" && Array.isArray(slideNumbers) && slideNumbers.length > 0) {
-            const targetSlideNumber = slideNumbers[0];
-            const targetIndex = videos.findIndex(
-              (video) => String(video.slide) === String(targetSlideNumber)
-            );
-            if (targetIndex !== -1) {
-              console.log(`🔀 [VideoPanel] Redirecting to slide ${targetSlideNumber} at index ${targetIndex}`);
-              dispatch(setCurrentVideoIndex(targetIndex));
-            } else {
-              console.warn(`⚠️ [VideoPanel] slide_redirect: no video found for slide number ${targetSlideNumber}`);
-            }
-          }
         });
       }
-    }, [dispatch, setSlideNumbers, videos]);
+    }, [dispatch, setSlideNumbers]);
 
     // Cleanup on unmount - disconnect LiveKit and reset question mode
     useEffect(() => {
