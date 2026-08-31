@@ -347,7 +347,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
               {assessmentData.title || "Role Play Assessment"}
             </h2>
             <p className="font-lato text-[11px] sm:text-xs text-[#667085] leading-snug">
-              Click below to begin your interview assessment in a new window.
+              Click &quot;Take Assessment&quot; to begin your assessment in a new window.
             </p>
 
             {/* Compact Information Card */}
