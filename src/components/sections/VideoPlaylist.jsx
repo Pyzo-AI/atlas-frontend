@@ -306,11 +306,17 @@ const VideoPlaylist = ({
                           className={`font-lato font-medium ${
                             isMobile ? "text-[9px]" : "text-[12px]"
                           } leading-[14px] tracking-[0.02em] text-primary-text line-clamp-2`}>
-                          Quiz - {assessment.question_count} Questions
+                          {assessment.type === "ROLE PLAY"
+                            ? (assessment.title || "Role Play")
+                            : `Quiz - ${assessment.question_count} Questions`}
                         </h4>
                         {!isMobile && (
                           <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-text-subtle">
-                            {assessment.type || "Assessment"}
+                            {assessment.in_progress ? (
+                              <span className="text-amber-600 font-medium">In Progress</span>
+                            ) : (
+                              assessment.type || "Assessment"
+                            )}
                           </div>
                         )}
                       </div>
@@ -386,9 +392,13 @@ const VideoPlaylist = ({
                 </h4>
                 {!isMobile && (
                   <div className="font-lato font-normal text-[10px] leading-[100%] align-middle text-text-subtle">
-                    {assessmentDetails[0]?.assessment_type === "ROLE PLAY"
-                      ? "Role Play"
-                      : assessmentDetails[0]?.type || "Assessment"}
+                    {assessmentDetails[0]?.in_progress ? (
+                      <span className="text-amber-600 font-medium">In Progress</span>
+                    ) : assessmentDetails[0]?.assessment_type === "ROLE_PLAY" || assessmentDetails[0]?.type === "ROLE PLAY" ? (
+                      "Role Play"
+                    ) : (
+                      assessmentDetails[0]?.type || "Assessment"
+                    )}
                   </div>
                 )}
               </div>

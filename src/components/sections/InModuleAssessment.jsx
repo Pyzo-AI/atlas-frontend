@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useGetAssessmentQuery, useSubmitAssessmentMutation, questionsApi } from "@/store/api/questionsApi";
+import {
+  useGetAssessmentQuery,
+  useLazyGetAssessmentQuery,
+  useSubmitAssessmentMutation,
+  questionsApi,
+} from "@/store/api/questionsApi";
+import RolePlayConfirmationModal from "@/components/modals/RolePlayConfirmationModal";
 import {
   setSelectedAssessmentId,
   setCurrentVideoIndex,
@@ -38,13 +44,38 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
   // Check if this is a final assessment (from assessment_details)
   const isFinalAssessment = assessmentDetails.some((assessment) => assessment.id === selectedAssessmentId);
 
-  // Debug logging to verify detection
-  console.log("Assessment Detection Debug:", {
-    selectedAssessmentId,
-    assessmentDetails,
-    isFinalAssessment,
-    assessmentDetailsIds: assessmentDetails.map((a) => a.id),
-  });
+  // Find metadata for the currently selected assessment (from either presentation or slide level)
+  const allAssessments = [
+    ...assessmentDetails,
+    ...videos.flatMap((v) => v.slide_assessments || []),
+  ];
+  const currentAssessmentMeta = allAssessments.find((a) => a.id === selectedAssessmentId);
+  const formattedType = (currentAssessmentMeta?.type || "").toUpperCase().replace(/[\s_]+/g, "");
+  const isRolePlay =
+    formattedType === "ROLEPLAY" ||
+    currentAssessmentMeta?.assessment_type === "ROLE_PLAY";
+
+  // Track in_progress state locally so it locks immediately upon receiving in_progress=true
+  const [rolePlayInProgress, setRolePlayInProgress] = useState(
+    Boolean(currentAssessmentMeta?.in_progress)
+  );
+  const [rolePlayInterviewLink, setRolePlayInterviewLink] = useState(null);
+  const [showRolePlayModal, setShowRolePlayModal] = useState(false);
+  const [isStartingRolePlay, setIsStartingRolePlay] = useState(false);
+
+  useEffect(() => {
+    if (currentAssessmentMeta?.in_progress !== undefined) {
+      setRolePlayInProgress(Boolean(currentAssessmentMeta?.in_progress));
+    }
+  }, [currentAssessmentMeta?.in_progress]);
+
+  useEffect(() => {
+    setRolePlayInterviewLink(null);
+    setShowRolePlayModal(false);
+  }, [selectedAssessmentId]);
+
+  // For Role Play assessments not started yet, do not trigger /start on mount
+  const shouldSkipAutoStart = isRolePlay && !currentAssessmentMeta?.in_progress && !rolePlayInProgress;
 
   // Fetch assessment data
   const {
@@ -53,9 +84,38 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
     isError,
     refetch,
   } = useGetAssessmentQuery(selectedAssessmentId, {
-    skip: !selectedAssessmentId,
+    skip: !selectedAssessmentId || shouldSkipAutoStart,
     refetchOnMountOrArgChange: true,
   });
+
+  const [triggerGetAssessment] = useLazyGetAssessmentQuery();
+
+  const handleConfirmRolePlay = async () => {
+    setIsStartingRolePlay(true);
+    try {
+      const res = await triggerGetAssessment(selectedAssessmentId).unwrap();
+      setShowRolePlayModal(false);
+      if (res?.interview_link) {
+        setRolePlayInterviewLink(res.interview_link);
+        window.open(res.interview_link, "_blank", "noopener,noreferrer");
+      }
+      if (res?.in_progress) {
+        setRolePlayInProgress(true);
+      }
+      const userDetails = getUserDetailsFromToken();
+      capture("assessment_start", {
+        user_id: userDetails?.sub,
+        assessment_id: selectedAssessmentId,
+      });
+      // Invalidate cache so presentation and playlist refresh their in_progress states
+      dispatch(questionsApi.util.invalidateTags(["Question"]));
+    } catch (err) {
+      console.error("Failed to start role play assessment:", err);
+      toast.error(getApiErrorMessage(err, "Failed to start assessment"));
+    } finally {
+      setIsStartingRolePlay(false);
+    }
+  };
 
   const [submitAssessment, { isLoading: isSubmitting }] = useSubmitAssessmentMutation();
   const [getAssessmentSummary] = questionsApi.endpoints.getAssessmentSummary.useLazyQuery();
@@ -130,6 +190,171 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Role Play Assessment View (handles both locked and not-started states)
+  if (isRolePlay || assessmentData?.assessment_type === "ROLE_PLAY") {
+    const isLocked =
+      rolePlayInProgress ||
+      Boolean(currentAssessmentMeta?.in_progress) ||
+      Boolean(assessmentData?.in_progress);
+    const activeLink = rolePlayInterviewLink || assessmentData?.interview_link;
+
+    if (isLocked) {
+      return (
+        <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto flex flex-col justify-center items-center p-3 sm:p-5 md:p-6">
+            <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center">
+              {/* Clean Lock Icon Badge */}
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-[#2762EA] flex items-center justify-center mb-1.5 sm:mb-2.5 shrink-0">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
+
+              {/* Title & Description */}
+              <h2 className="font-lato font-bold text-sm sm:text-base md:text-lg text-[#111827] mb-0.5 sm:mb-1">
+                {currentAssessmentMeta?.title || assessmentData?.title || "Role Play Assessment"}
+              </h2>
+              <p className="font-lato text-[11px] sm:text-xs text-[#667085] leading-snug">
+                Assessment In Progress
+              </p>
+
+              {/* Compact Information Card */}
+              <div className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg p-2 sm:p-2.5 my-2 sm:my-3 text-left flex flex-col gap-1.5 sm:gap-2">
+                <div className="flex items-start gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#EFF6FF] text-[#2762EA] flex items-center justify-center shrink-0 mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-lato font-semibold text-[11px] sm:text-xs text-[#111827] leading-tight">30-Minute Lock Period</h4>
+                    <p className="font-lato text-[10px] sm:text-[11px] text-[#667085] leading-tight mt-0.5">This assessment is locked for 30 minutes while in progress.</p>
+                  </div>
+                </div>
+              </div>
+
+              {activeLink && (
+                <a
+                  href={activeLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-1.5 sm:py-2 px-5 sm:px-6 bg-[#2762EA] hover:bg-[#1E4FD9] text-white font-semibold rounded-lg text-xs sm:text-sm transition-all duration-150 shadow-sm flex items-center justify-center gap-1.5 shrink-0"
+                >
+                  <span>Open Assessment</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" x2="21" y2="3" />
+                  </svg>
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Role Play - Not started yet
+    return (
+      <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto flex flex-col justify-center items-center p-3 sm:p-5 md:p-6">
+          <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center">
+            {/* Clean Icon Badge */}
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-[#2762EA] flex items-center justify-center mb-1.5 sm:mb-2.5 shrink-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" x2="12" y1="19" y2="22" />
+              </svg>
+            </div>
+
+            {/* Title & Description */}
+            <h2 className="font-lato font-bold text-sm sm:text-base md:text-lg text-[#111827] mb-0.5 sm:mb-1">
+              {currentAssessmentMeta?.title || assessmentData?.title || "Role Play Assessment"}
+            </h2>
+            <p className="font-lato text-[11px] sm:text-xs text-[#667085] leading-snug">
+              Click &quot;Take Assessment&quot; to begin your assessment in a new window.
+            </p>
+
+            {/* Compact Information Card */}
+            <div className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg p-2 sm:p-2.5 my-2 sm:my-3 text-left flex flex-col gap-1.5 sm:gap-2">
+              {/* Mic & Audio note */}
+              <div className="flex items-start gap-2">
+                <div className="w-4 h-4 rounded-full bg-[#EFF6FF] text-[#2762EA] flex items-center justify-center shrink-0 mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-lato font-semibold text-[11px] sm:text-xs text-[#111827] leading-tight">Microphone & Audio Required</h4>
+                  <p className="font-lato text-[10px] sm:text-[11px] text-[#667085] leading-tight mt-0.5">Please ensure you are in a quiet environment with a working microphone.</p>
+                </div>
+              </div>
+
+              <div className="w-full h-[1px] bg-[#E5E7EB]" />
+
+              {/* Results & Evaluation Update */}
+              <div className="flex items-start gap-2">
+                <div className="w-4 h-4 rounded-full bg-[#EFF6FF] text-[#2762EA] flex items-center justify-center shrink-0 mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-lato font-semibold text-[11px] sm:text-xs text-[#111827] leading-tight">Results & Evaluation Update</h4>
+                  <p className="font-lato text-[10px] sm:text-[11px] text-[#667085] leading-tight mt-0.5">Once completed, your evaluation results will be processed and updated within 1 hour.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <button
+              type="button"
+              onClick={() => setShowRolePlayModal(true)}
+              className="py-1.5 sm:py-2 px-5 sm:px-6 bg-[#2762EA] hover:bg-[#1E4FD9] text-white font-semibold rounded-lg text-xs sm:text-sm transition-all duration-150 shadow-sm flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <span>Take Assessment</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" x2="21" y2="3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Confirmation Modal */}
+        <RolePlayConfirmationModal
+          isOpen={showRolePlayModal}
+          onClose={() => setShowRolePlayModal(false)}
+          onConfirm={handleConfirmRolePlay}
+          isLoading={isStartingRolePlay}
+        />
       </div>
     );
   }
@@ -317,90 +542,6 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
         toast.error(getApiErrorMessage(error, t("lectures.failedToSubmitAssessment")));
       }
     };
-
-  // Role Play AI Assessment View
-  if (assessmentData?.assessment_type === "ROLE_PLAY" || assessmentData?.interview_link) {
-    return (
-      <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto flex flex-col justify-center items-center p-3 sm:p-5 md:p-6">
-          <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center">
-            {/* Clean Icon Badge */}
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-[#2762EA] flex items-center justify-center mb-1.5 sm:mb-2.5 shrink-0">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" x2="12" y1="19" y2="22" />
-              </svg>
-            </div>
-
-            {/* Title & Description */}
-            <h2 className="font-lato font-bold text-sm sm:text-base md:text-lg text-[#111827] mb-0.5 sm:mb-1">
-              {assessmentData.title || "Role Play Assessment"}
-            </h2>
-            <p className="font-lato text-[11px] sm:text-xs text-[#667085] leading-snug">
-              Click &quot;Take Assessment&quot; to begin your assessment in a new window.
-            </p>
-
-            {/* Compact Information Card */}
-            <div className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg p-2 sm:p-2.5 my-2 sm:my-3 text-left flex flex-col gap-1.5 sm:gap-2">
-              {/* Mic & Audio note */}
-              <div className="flex items-start gap-2">
-                <div className="w-4 h-4 rounded-full bg-[#EFF6FF] text-[#2762EA] flex items-center justify-center shrink-0 mt-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-lato font-semibold text-[11px] sm:text-xs text-[#111827] leading-tight">Microphone & Audio Required</h4>
-                  <p className="font-lato text-[10px] sm:text-[11px] text-[#667085] leading-tight mt-0.5">Please ensure you are in a quiet environment with a working microphone.</p>
-                </div>
-              </div>
-
-              <div className="w-full h-[1px] bg-[#E5E7EB]" />
-
-              {/* 1-Hour Evaluation Notice */}
-              <div className="flex items-start gap-2">
-                <div className="w-4 h-4 rounded-full bg-[#EFF6FF] text-[#2762EA] flex items-center justify-center shrink-0 mt-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-lato font-semibold text-[11px] sm:text-xs text-[#111827] leading-tight">Results & Evaluation Update</h4>
-                  <p className="font-lato text-[10px] sm:text-[11px] text-[#667085] leading-tight mt-0.5">Once completed, your evaluation results will be processed and updated within 1 hour.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Button */}
-            <a
-              href={assessmentData.interview_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-1.5 sm:py-2 px-5 sm:px-6 bg-[#2762EA] hover:bg-[#1E4FD9] text-white font-semibold rounded-lg text-xs sm:text-sm transition-all duration-150 shadow-sm flex items-center justify-center gap-1.5 shrink-0"
-            >
-              <span>Take Assessment</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" x2="21" y2="3" />
-              </svg>
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">

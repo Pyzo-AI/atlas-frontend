@@ -123,6 +123,7 @@ export const {
   useSubmitCompletionStatusMutation,
   useSubmitVideoProgressMutation,
   useGetAssessmentQuery,
+  useLazyGetAssessmentQuery,
   useSubmitAssessmentMutation,
   useSubmitFeedbackMutation,
   useGetAssessmentSummaryQuery,
