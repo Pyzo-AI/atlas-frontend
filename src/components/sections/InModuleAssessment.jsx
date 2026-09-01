@@ -28,6 +28,276 @@ import TextArea from "@/components/ui/TextArea";
 import { HiExclamationCircle } from "react-icons/hi2";
 import { useTranslation } from "react-i18next";
 
+// Role Play Confirmation Modal
+const RolePlayConfirmModal = ({ isOpen, onClose, onConfirm, isStarting }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+      {/* Modal Card */}
+      <div
+        className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 flex flex-col gap-4 animate-modal-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Icon */}
+        <div className="flex justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Heading */}
+        <div className="text-center">
+          <h3 className="text-base font-bold text-gray-900 mb-1">Ready to take the challenge? 🎯</h3>
+          <p className="text-[13px] text-gray-500 leading-snug">
+            Take a deep breath — you&apos;ve got this! Just make sure you&apos;re in a quiet spot with a working microphone before you begin.
+          </p>
+        </div>
+
+        {/* Warning Box */}
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <p className="text-[12px] text-amber-800 leading-snug">
+            <span className="font-semibold">Heads up:</span> Once you click &ldquo;Take Assessment&rdquo; below, this assessment will be <span className="font-semibold">locked for 30 minutes</span> while your session is in progress.
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 pt-1">
+          <button
+            onClick={onClose}
+            disabled={isStarting}
+            className="flex-1 py-2 px-4 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            Not yet
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isStarting}
+            className="flex-1 py-2 px-4 rounded-xl bg-[#2762EA] hover:bg-[#1E4FD9] text-white text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5"
+          >
+            {isStarting ? (
+              <>
+                <svg className="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+                Starting...
+              </>
+            ) : (
+              "Take Assessment"
+            )}
+          </button>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes modal-in {
+          from { opacity: 0; transform: scale(0.95) translateY(8px); }
+          to   { opacity: 1; transform: scale(1)   translateY(0); }
+        }
+        .animate-modal-in { animation: modal-in 0.18s ease-out both; }
+      `}</style>
+    </div>
+  );
+};
+
+// Role Play Assessment View – handles confirmation modal, start API, and in-progress lock
+const RolePlayAssessmentView = ({ assessmentData, selectedAssessmentId }) => {
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const [isInProgress, setIsInProgress] = useState(
+    // Pre-populate from the already-fetched assessment data if it has in_progress
+    () => assessmentData?.in_progress === true
+  );
+
+  // Lazy query so we can trigger it on demand (same endpoint already used by getAssessment)
+  const [triggerStart] = questionsApi.endpoints.getAssessment.useLazyQuery();
+
+  // Keep isInProgress in sync if the parent refetches and passes new data
+  useEffect(() => {
+    if (assessmentData?.in_progress === true) {
+      setIsInProgress(true);
+    }
+  }, [assessmentData?.in_progress]);
+
+  const handleConfirm = async () => {
+    setIsStarting(true);
+    try {
+      const result = await triggerStart(selectedAssessmentId, true /* preferCacheValue=false */).unwrap();
+      if (result?.in_progress === true) {
+        setIsInProgress(true);
+      }
+      // Open interview link in new tab (same as before)
+      if (assessmentData?.interview_link) {
+        window.open(assessmentData.interview_link, "_blank", "noopener,noreferrer");
+      }
+    } catch (err) {
+      console.error("Failed to start role play assessment:", err);
+      toast.error("Failed to start the assessment. Please try again.");
+    } finally {
+      setIsStarting(false);
+      setShowConfirmModal(false);
+    }
+  };
+
+  // ── In-Progress locked state ────────────────────────────────────────────────
+  if (isInProgress) {
+    return (
+      <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col justify-center items-center p-4 sm:p-6">
+          <div className="w-full max-w-sm flex flex-col items-center text-center gap-4">
+            {/* Lock icon */}
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-[#2762EA]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1">Assessment In Progress</h3>
+              <p className="text-[12px] sm:text-[13px] text-gray-500 leading-snug">
+                Your role play session has started! This assessment is locked for <span className="font-semibold text-gray-700">30 minutes</span> while your session is in progress.
+              </p>
+            </div>
+
+            {/* Info card */}
+            <div className="w-full bg-blue-50 border border-blue-200 rounded-xl p-3 text-left">
+              <div className="flex items-start gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#2762EA] shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <p className="text-[11px] sm:text-[12px] text-blue-800 leading-snug">
+                  Your evaluation results will be processed and updated within <span className="font-semibold">1 hour</span> after you complete the session.
+                </p>
+              </div>
+            </div>
+
+            {/* Re-open link button */}
+            {assessmentData?.interview_link && (
+              <a
+                href={assessmentData.interview_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2 px-5 bg-[#2762EA] hover:bg-[#1E4FD9] text-white font-semibold rounded-lg text-xs sm:text-sm transition-all duration-150 shadow-sm flex items-center gap-1.5"
+              >
+                <span>Continue Assessment</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" x2="21" y2="3" />
+                </svg>
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Default card (ready to start) ──────────────────────────────────────────
+  return (
+    <>
+      <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto flex flex-col justify-center items-center p-3 sm:p-5 md:p-6">
+          <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center text-center">
+            {/* Clean Icon Badge */}
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-[#2762EA] flex items-center justify-center mb-1.5 sm:mb-2.5 shrink-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" x2="12" y1="19" y2="22" />
+              </svg>
+            </div>
+
+            {/* Title & Description */}
+            <h2 className="font-lato font-bold text-sm sm:text-base md:text-lg text-[#111827] mb-0.5 sm:mb-1">
+              {assessmentData.title || "Role Play Assessment"}
+            </h2>
+            <p className="font-lato text-[11px] sm:text-xs text-[#667085] leading-snug">
+              Click &quot;Take Assessment&quot; when you&apos;re ready to begin your role play session.
+            </p>
+
+            {/* Compact Information Card */}
+            <div className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg p-2 sm:p-2.5 my-2 sm:my-3 text-left flex flex-col gap-1.5 sm:gap-2">
+              {/* Mic & Audio note */}
+              <div className="flex items-start gap-2">
+                <div className="w-4 h-4 rounded-full bg-[#EFF6FF] text-[#2762EA] flex items-center justify-center shrink-0 mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-lato font-semibold text-[11px] sm:text-xs text-[#111827] leading-tight">Microphone & Audio Required</h4>
+                  <p className="font-lato text-[10px] sm:text-[11px] text-[#667085] leading-tight mt-0.5">Please ensure you are in a quiet environment with a working microphone.</p>
+                </div>
+              </div>
+
+              <div className="w-full h-[1px] bg-[#E5E7EB]" />
+
+              {/* 1-Hour Evaluation Notice */}
+              <div className="flex items-start gap-2">
+                <div className="w-4 h-4 rounded-full bg-[#EFF6FF] text-[#2762EA] flex items-center justify-center shrink-0 mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-lato font-semibold text-[11px] sm:text-xs text-[#111827] leading-tight">Results & Evaluation Update</h4>
+                  <p className="font-lato text-[10px] sm:text-[11px] text-[#667085] leading-tight mt-0.5">Once completed, your evaluation results will be processed and updated within 1 hour.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Button – opens confirmation modal */}
+            <button
+              onClick={() => setShowConfirmModal(true)}
+              className="py-1.5 sm:py-2 px-5 sm:px-6 bg-[#2762EA] hover:bg-[#1E4FD9] text-white font-semibold rounded-lg text-xs sm:text-sm transition-all duration-150 shadow-sm flex items-center justify-center gap-1.5 shrink-0"
+            >
+              <span>Take Assessment</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" x2="21" y2="3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Confirmation Modal */}
+      <RolePlayConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => !isStarting && setShowConfirmModal(false)}
+        onConfirm={handleConfirm}
+        isStarting={isStarting}
+      />
+    </>
+  );
+};
+
 const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore }) => {
   const dispatch = useDispatch();
   const { selectedAssessmentId, currentVideoIndex } = useSelector((state) => state.video);
@@ -555,6 +825,11 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
         toast.error(getApiErrorMessage(error, t("lectures.failedToSubmitAssessment")));
       }
     };
+
+  // Role Play AI Assessment View
+  if (assessmentData?.assessment_type === "ROLE_PLAY" || assessmentData?.interview_link) {
+    return <RolePlayAssessmentView assessmentData={assessmentData} selectedAssessmentId={selectedAssessmentId} />;
+  }
 
   return (
     <div className="w-full h-full bg-white rounded-xl flex flex-col overflow-hidden">
