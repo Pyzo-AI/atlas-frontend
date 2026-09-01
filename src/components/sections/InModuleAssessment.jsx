@@ -74,6 +74,19 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
     setShowRolePlayModal(false);
   }, [selectedAssessmentId]);
 
+  // When user returns to this tab after doing (or abandoning) the interview,
+  // invalidate the slides cache so the latest in_progress value is fetched.
+  useEffect(() => {
+    if (!isRolePlay) return;
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        dispatch(questionsApi.util.invalidateTags(["Question"]));
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [isRolePlay, dispatch]);
+
   // For Role Play assessments not started yet, do not trigger /start on mount
   const shouldSkipAutoStart = isRolePlay && !currentAssessmentMeta?.in_progress && !rolePlayInProgress;
 
@@ -93,7 +106,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
   const handleConfirmRolePlay = async () => {
     setIsStartingRolePlay(true);
     try {
-      const res = await triggerGetAssessment(selectedAssessmentId).unwrap();
+      const res = await triggerGetAssessment(selectedAssessmentId, false).unwrap();
       setShowRolePlayModal(false);
       if (res?.interview_link) {
         setRolePlayInterviewLink(res.interview_link);
@@ -248,7 +261,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                 </div>
               </div>
 
-              {activeLink && (
+              {/* {activeLink && (
                 <a
                   href={activeLink}
                   target="_blank"
@@ -262,7 +275,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
                     <line x1="10" x2="21" y2="3" />
                   </svg>
                 </a>
-              )}
+              )} */}
             </div>
           </div>
         </div>
