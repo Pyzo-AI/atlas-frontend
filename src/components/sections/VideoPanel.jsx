@@ -699,6 +699,12 @@ const VideoPanel = forwardRef(
             );
             if (targetIndex !== -1) {
               console.log(`🔀 [VideoPanel] Redirecting to slide ${targetSlideNumber} at index ${targetIndex}`);
+              dispatch(setAutoPlayEnabled(false));
+              dispatch(setIsVideoPlaying(false));
+              setIsPlaying(false);
+              if (videoRef.current && !videoRef.current.paused) {
+                videoRef.current.pause();
+              }
               dispatch(setCurrentVideoIndex(targetIndex));
             } else {
               console.warn(`⚠️ [VideoPanel] slide_redirect: no video found for slide number ${targetSlideNumber}`);
