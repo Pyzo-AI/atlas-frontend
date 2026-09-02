@@ -103,11 +103,17 @@ useEffect(() => {
 
   const confirmLogout = async () => {
     setIsLoggingOut(true);
-    setIsLogoutModalOpen(false);
-    
     localStorage.removeItem("trainboost_conversation_history");
     setIsDropdownOpen(false);
-    logout("/login");
+    // logout() itself redirects to loginUrl once it's done, so this only
+    // resolves — and the modal only closes — after that navigation would
+    // already be underway; kept for the (rare) case it doesn't.
+    await logout("/login");
+    // Keep the loader up for a bit past whatever the request itself took, so
+    // a fast response doesn't just flash the spinner for a frame.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    setIsLoggingOut(false);
+    setIsLogoutModalOpen(false);
   };
 
   return (
@@ -214,7 +220,12 @@ useEffect(() => {
         </div>
       </div>
 
-      <LogoutModal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} onConfirm={confirmLogout} />
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={confirmLogout}
+        isLoggingOut={isLoggingOut}
+      />
 
       <NotificationDrawer
         isOpen={isNotificationOpen}

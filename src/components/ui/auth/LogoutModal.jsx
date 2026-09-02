@@ -1,17 +1,21 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Modal from "@/components/common/Modal";
 import { LuLogOut } from "react-icons/lu";
 import Button from "@/components/common/Button";
+import spinner from "@/assets/svg/spinner.svg";
 import { useTranslation } from "react-i18next";
 
-const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
+const LogoutModal = ({ isOpen, onClose, onConfirm, isLoggingOut = false }) => {
   const { t } = useTranslation();
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      // Once logout is in flight, ignore backdrop clicks — the confirm/cancel
+      // buttons below are also disabled, so there's no way to interrupt it.
+      onClose={isLoggingOut ? () => {} : onClose}
       size="custom"
       className="!p-0 !bg-transparent shadow-none"
       showCloseButton={false}>
@@ -40,14 +44,19 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
             <Button
               variant="secondary"
               onClick={onClose}
+              disabled={isLoggingOut}
               className="!w-[67px] !h-[30px] !p-0 !bg-[#E8F0F9] !text-[#2762EA] !rounded-[6px] !border-none !text-[12px] !leading-[14px] flex items-center justify-center">
               {t("auth.cancel")}
             </Button>
             <Button
               variant="primary"
               onClick={onConfirm}
-              className="!w-[67px] !h-[30px] !p-0 !bg-[#F04638] hover:!bg-[#D6453A] !text-white !rounded-[6px] !border-none !text-[12px] !leading-[14px] flex items-center justify-center">
-              {t("auth.logOutButton")}
+              disabled={isLoggingOut}
+              className={`!h-[30px] !p-0 !bg-[#F04638] hover:!bg-[#D6453A] !text-white !rounded-[6px] !border-none !text-[12px] !leading-[14px] flex items-center justify-center gap-[6px] disabled:!opacity-70 ${isLoggingOut ? "!w-[110px]" : "!w-[67px]"}`}>
+              {isLoggingOut && (
+                <Image src={spinner} alt="" width={14} height={14} className="animate-spin" style={{ animationDuration: "1.4s" }} />
+              )}
+              {isLoggingOut ? t("header.signingOut") : t("auth.logOutButton")}
             </Button>
           </div>
         </div>
