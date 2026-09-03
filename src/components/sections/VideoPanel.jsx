@@ -106,6 +106,9 @@ const VideoPanel = forwardRef(
       showQueryRelatedSlides = false,
       assessmentDetails = [],
       enableProductRecommendations = true,
+      hideAIAssistant = false,
+      hideChatUI = false,
+      fillQuestionModeAI = false,
     },
     ref
   ) => {
@@ -470,6 +473,13 @@ const VideoPanel = forwardRef(
       pauseVideo,
       getCurrentTime: () => videoRef.current?.getCurrentTime() || 0,
       getDuration: () => videoRef.current?.getDuration() || 0,
+      // Exposed for portrait ChatUI inline panel
+      startConversation,
+      stopConversation,
+      getConversationState: () => conversationState,
+      getLiveMessages: () => liveMessages,
+      getIsJumpedOnChatFromInteractionMode: () => isJumpedOnChatFromInteractionMode,
+      setIsJumpedOnChatFromInteractionMode,
     }));
 
     // Note: Video settings are now handled by VideoPlayer component props
@@ -949,7 +959,7 @@ const VideoPanel = forwardRef(
         )}
 
         {/* AI Assistant Section - Responsive */}
-        {!(isOnlyVideoMode && !agentId) && (
+        {!(isOnlyVideoMode && !agentId) && !hideAIAssistant && (
           <div
             className={`flex-1 min-h-0 ${showChat || isQuestionMode ? "hidden" : ""} ${selectedAssessmentId ? "pointer-events-none blur-[1px]" : ""}`}>
             <AILearningAssistant
@@ -965,7 +975,7 @@ const VideoPanel = forwardRef(
 
         {/* Question Mode AI - Responsive */}
         {isQuestionMode && (
-          <div className="flex-shrink-0">
+          <div className={fillQuestionModeAI ? "flex-1 min-h-0" : "flex-shrink-0"}>
             <QuestionModeAI
               isLoading={liveKitAgentEnabled ? liveKitAgentState === "connecting" : !conversationState.isConnected}
               liveKitAgentEnabled={liveKitAgentEnabled}
@@ -975,12 +985,13 @@ const VideoPanel = forwardRef(
               avatarUrl={avatarUrl}
               isMobile={isMobile && isPhone}
               enableProductRecommendations={enableProductRecommendations}
+              fillHeight={fillQuestionModeAI}
             />
           </div>
         )}
 
         {/* Chat UI - Responsive (shown when chat is open OR when in interaction mode with LiveKit) */}
-        {(showChat || (isQuestionMode && liveKitAgentEnabled)) && (
+        {(showChat || (isQuestionMode && liveKitAgentEnabled)) && !hideChatUI && (
           <div className="flex-1 min-h-0">
             <ChatUI
               onClose={handleCloseChatUI}

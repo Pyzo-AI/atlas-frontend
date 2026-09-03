@@ -13,7 +13,10 @@ const ResponsiveContainer = ({ children }) => {
   const { toggleSidebar } = useSidebar();
 
   const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
-  const shouldShowPadding = (isDesktop || (!isDesktop && isPortrait) || !containLecture) && !isLoginPage;
+  // On mobile portrait lectures the global header is hidden (Header has `hidden lg:flex` on /lectures).
+  // Don't add top padding in that case — PortraitLectureView manages its own height.
+  const headerHiddenOnMobile = containLecture && !isDesktop;
+  const shouldShowPadding = (isDesktop || (!isDesktop && isPortrait) || !containLecture) && !isLoginPage && !headerHiddenOnMobile;
 
   // Don't show header on login page
   const showHeader = !isLoginPage;

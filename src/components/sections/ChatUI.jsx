@@ -38,6 +38,7 @@ const ChatUI = ({
   useChatbotHistory = false,
   hideFooter = false,
   hideInteractionMode = false,
+  portraitMode = false,
   liveMessages = [],
   enableSmoothScroll = true,
   showQueryRelatedSlides = false,
@@ -61,7 +62,7 @@ const ChatUI = ({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [textInput, setTextInput] = useState("");
   const [isMicOn, setIsMicOn] = useState(true);
-  const { isAgentVoiceMuted } = useSelector((state) => state.video);
+  const { isAgentVoiceMuted, isQuestionMode } = useSelector((state) => state.video);
   const prevScrollHeightRef = useRef(null);
   const isPaginatingRef = useRef(false);
   const isLoadingMoreRef = useRef(false);
@@ -705,8 +706,45 @@ const ChatUI = ({
             </div>
           )}
 
+          {/* Portrait mode footer — single action button */}
+          {portraitMode && !hideFooter && (
+            <div className="flex justify-center items-center w-full bg-white px-4 py-3 flex-shrink-0 border-t border-border-light">
+              {isQuestionMode ? (
+                /* Interaction mode active → red Stop button */
+                <button
+                  onClick={handleContinueLesson}
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-red-500 rounded-xl cursor-pointer hover:bg-red-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="6" width="12" height="12" rx="2" />
+                  </svg>
+                  <span className="font-lato font-semibold text-[13px] text-white">
+                    {t("lectures.stopInteraction")}
+                  </span>
+                </button>
+              ) : (
+                /* Not started → blue Start Interaction button */
+                <button
+                  onClick={agentId ? handleInteractionMode : undefined}
+                  disabled={!agentId}
+                  className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl transition-colors ${
+                    agentId
+                      ? "bg-primary cursor-pointer hover:bg-primary-hover"
+                      : "bg-gray-200 cursor-not-allowed opacity-50"
+                  }`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                  </svg>
+                  <span className="font-lato font-semibold text-[13px] text-white">
+                    {t("lectures.interactionMode")}
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Bottom Actions Container */}
-          {!hideFooter && (
+          {!portraitMode && !hideFooter && (
             <div className="flex justify-center items-center gap-1.5 sm:gap-2 w-full bg-white px-2 sm:px-3 py-1.5 sm:py-2 flex-shrink-0 border-t border-border-light">
               {/* Interaction Mode Button */}
               {!hideInteractionMode && (
