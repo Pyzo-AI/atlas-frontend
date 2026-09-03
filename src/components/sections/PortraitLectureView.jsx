@@ -94,8 +94,11 @@ const PIP_MARGIN = 12;
 const DraggablePiP = ({ children, containerRef, isPiP }) => {
   const getDefaultPos = useCallback(() => {
     const cw = containerRef?.current?.clientWidth ?? (typeof window !== "undefined" ? window.innerWidth : 360);
-    // top-right corner, offset down by ~60px to clear the page header
-    return { x: cw - PIP_W - PIP_MARGIN, y: 60 };
+    // Position at top-right corner over the slide video
+    return {
+      x: cw - PIP_W - PIP_MARGIN,
+      y: 55,
+    };
   }, [containerRef]);
 
   const [pos, setPos] = useState(getDefaultPos);
@@ -157,7 +160,7 @@ const DraggablePiP = ({ children, containerRef, isPiP }) => {
         top: pos.y,
         width: PIP_W,
         height: PIP_H,
-        zIndex: 30,
+        zIndex: 60,
         borderRadius: 10,
         overflow: "hidden",
         boxShadow: "0 4px 18px rgba(0,0,0,0.4)",
@@ -455,6 +458,18 @@ const PortraitLectureView = ({
   // The module content panel starts exactly here so the slide stays unchanged above.
   const slideEndRef = useRef(null);
   const containerRef = useRef(null);
+  const [slideTopOffset, setSlideTopOffset] = useState(0);
+
+  useEffect(() => {
+    const updateOffset = () => {
+      if (slideEndRef.current) {
+        setSlideTopOffset(slideEndRef.current.offsetHeight);
+      }
+    };
+    updateOffset();
+    window.addEventListener("resize", updateOffset);
+    return () => window.removeEventListener("resize", updateOffset);
+  }, []);
 
   if (isLoading) return <PortraitSkeleton />;
 
@@ -468,7 +483,7 @@ const PortraitLectureView = ({
       {/* Wrap title + slide + progress in a ref div so we can measure   */}
       {/* where this block ends and start the module content panel there */}
       {/* ref only wraps title + slide — progress bar is outside so offset is exact */}
-      <div ref={slideEndRef}>
+      <div ref={slideEndRef} className="relative z-10" style={{ isolation: "isolate" }}>
         <div className="shrink-0 bg-white px-4 pt-3 pb-2 border-b border-border-light">
           <div className="flex items-center gap-3">
             <button onClick={() => router.back()} className="shrink-0 p-0.5">
@@ -485,8 +500,8 @@ const PortraitLectureView = ({
           </div>
         </div>
 
-        {/* ── 2. Slide video — edge-to-edge, 16:9, no side padding ──────── */}
-        <div className="shrink-0 w-full  [&_.rounded-xl]:rounded-none [&_.rounded-lg]:rounded-none" style={{ aspectRatio: "16 / 9" }}>
+        {/* ── 2. Slide video — edge-to-edge, 16:9, no side padding, overflow-hidden keeps assessment inside slide ──────── */}
+        <div className="shrink-0 w-full overflow-hidden [&_.rounded-xl]:rounded-none [&_.rounded-lg]:rounded-none" style={{ aspectRatio: "16 / 9" }}>
           <SlideVideoSection
             ref={pptSectionRef}
             videos={videos}
@@ -561,14 +576,14 @@ const PortraitLectureView = ({
           canSkipVideo={canSkipVideo}
           assessmentDetails={data?.assessment_details || []}
           onClose={handleClose}
-          topOffset={slideEndRef.current?.offsetHeight ?? 0}
+          topOffset={slideTopOffset || slideEndRef.current?.offsetHeight || 0}
         />
       )}
 
       {activePanel === "askAssistant" && (
         <AskAssistantInlinePanel
           onClose={handleClose}
-          topOffset={slideEndRef.current?.offsetHeight ?? 0}
+          topOffset={slideTopOffset || slideEndRef.current?.offsetHeight || 0}
           videoPanelRef={videoPanelRef}
           conversationHistory={conversationHistory}
           presentationId={presentationId}
