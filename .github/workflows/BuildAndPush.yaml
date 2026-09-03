@@ -1,30 +1,97 @@
 name: Build and Push Docker Image
 
 on:
-  push:
-    branches:
-      - dev
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+
+      # --- Disabled: manual overrides removed, build args/tag now come from secrets only ---
+      # image_tag:
+      #   description: 'Custom image tag (optional — defaults to <branch>-<commit-sha>)'
+      #   required: false
+      #   type: string
+      # env_vars:
+      #   description: 'Build-time vars as KEY=VALUE (one per line) OR a JSON object'
+      #   required: false
+      #   type: string
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  K8S_REPO: "pyzo-AI/pyzo-k8s"                                     # Format: OWNER/REPO
+  K8S_BRANCH: "v1"                                                 # k8s branch
+  MANIFEST_FILE: "fe-release.yaml"                                    # File inside MANIFEST_PATH to update
+  MANIFEST_PATH_DEV: "kustomize/overlays/atlas/dev/fe/patches"     # Dev manifest directory
+  MANIFEST_PATH_PROD: "kustomize/overlays/atlas/prod/fe/patches"   # Prod manifest directory
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
-    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+    # Trigger on push (dev), release (prod), PR merged into prod, or manual dispatch
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: write
+    outputs:
+      short_sha: ${{ steps.vars.outputs.short_sha }}
+      target_branch: ${{ steps.vars.outputs.target_branch }}
+      sanitized_branch: ${{ steps.vars.outputs.sanitized_branch }}
     steps:
+      - name: Guard against unexpected release target
+        if: github.event_name == 'release'
+        run: |
+          echo "Release '${{ github.event.release.tag_name }}' targets branch: ${{ github.event.release.target_commitish }}"
+          ALLOWED_BRANCHES=("prod" "dev")
+          TARGET="${{ github.event.release.target_commitish }}"
+          MATCH=0
+          for b in "${ALLOWED_BRANCHES[@]}"; do
+            [[ "$TARGET" == "$b" ]] && MATCH=1
+          done
+          if [[ "$MATCH" -eq 0 ]]; then
+            echo "::error::Release targets '$TARGET', which isn't in the allowed list (${ALLOWED_BRANCHES[*]}). Check the Target dropdown when publishing the release."
+            exit 1
+          fi
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || github.ref }}
+
+      - name: Set Short SHA & Target Branch
+        id: vars
+        run: |
+          echo "short_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+          # Resolve target branch across all trigger types:
+          # - pull_request (merged into prod): use base_ref
+          # - release (published): use the release's actual target branch
+          # - workflow_dispatch: use the manually supplied environment input
+          # - push (dev, etc.): use ref_name
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            TARGET_BRANCH="${{ github.base_ref }}"
+          elif [ "${{ github.event_name }}" == "release" ]; then
+            TARGET_BRANCH="${{ github.event.release.target_commitish }}"
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            TARGET_BRANCH="${{ inputs.environment }}"
+          else
+            TARGET_BRANCH="${{ github.ref_name }}"
+          fi
+
+          echo "target_branch=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
+
+          # Sanitize for use in Docker tags — replace '/' with '-'
+          echo "sanitized_branch=$(echo "$TARGET_BRANCH" | tr '/' '-')" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -32,25 +99,178 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Compute branch-specific secret name
+        id: branch_meta
+        run: |
+          BRANCH="${{ steps.vars.outputs.target_branch }}"
+          # Secret names may only contain [A-Z0-9_] — sanitize and uppercase.
+          SAFE=$(echo "$BRANCH" | tr '[:lower:]' '[:upper:]' | sed 's/[^A-Z0-9]/_/g')
+          echo "safe_branch=$SAFE" >> "$GITHUB_OUTPUT"
+          echo "Resolved branch '$BRANCH' -> secret suffix '$SAFE' (looks for DEFAULT_${SAFE}_BUILD_ENV_VARS)"
+
+      - name: Parse and mask build args from secrets
+        id: parse_env
+        env:
+          # RAW_ENV removed — manual input no longer accepted, secrets only
+          BRANCH_ENV_JSON: ${{ secrets[format('DEFAULT_{0}_BUILD_ENV_VARS', steps.branch_meta.outputs.safe_branch)] }}
+          DEFAULT_ENV_JSON: ${{ secrets.DEFAULT_BUILD_ENV_VARS }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os
+
+          def clean(val):
+              return (val or "").strip()
+
+          # Each candidate: (label used in logs, human-readable origin, raw value)
+          candidates = [
+              # ("input", "the 'env_vars' field on the manual trigger", clean(os.environ.get("RAW_ENV"))),  # disabled — secrets only
+              ("branch secret", f"secret 'DEFAULT_${{ steps.branch_meta.outputs.safe_branch }}_BUILD_ENV_VARS'", clean(os.environ.get("BRANCH_ENV_JSON"))),
+              ("default secret", "secret 'DEFAULT_BUILD_ENV_VARS'", clean(os.environ.get("DEFAULT_ENV_JSON"))),
+          ]
+
+          print("::group::Resolving build-time env vars")
+          print("Checking sources in priority order:")
+          for label, origin, value in candidates:
+              status = "found" if value else "empty / not set"
+              print(f"  - {label} ({origin}): {status}")
+
+          raw = ""
+          source_label = "none"
+          source_origin = "no source (all candidates empty)"
+          for label, origin, value in candidates:
+              if value:
+                  raw = value
+                  source_label = label
+                  source_origin = origin
+                  break
+          print(f"==> Selected source: {source_label} — {source_origin}")
+          print("::endgroup::")
+
+          lines = []
+          parse_mode = "none"
+          if raw:
+              try:
+                  data = json.loads(raw)
+                  lines = [f"{k}={v}" for k, v in data.items()]
+                  parse_mode = "JSON object"
+              except json.JSONDecodeError:
+                  parse_mode = "KEY=VALUE lines"
+                  for line in raw.splitlines():
+                      line = line.strip()
+                      if line and "=" in line and not line.startswith("#"):
+                          lines.append(line)
+
+          out = "\n".join(lines)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write("build_args<<EOF_DELIM\n")
+              f.write(out + "\n")
+              f.write("EOF_DELIM\n")
+
+          var_names = []
+          for line in lines:
+              if "=" in line:
+                  key, value = line.split("=", 1)
+                  var_names.append(key)
+                  if value:
+                      print(f"::add-mask::{value}")
+
+          print("::group::Build-time variables summary")
+          print(f"Source: {source_label} ({source_origin})")
+          print(f"Format parsed as: {parse_mode}")
+          print(f"Variable count: {len(var_names)}")
+          if var_names:
+              print("Variable names (values are masked and not logged):")
+              for name in var_names:
+                  print(f"  - {name}")
+          else:
+              print("No build-time variables were set — build-args will be empty.")
+          print("::endgroup::")
+
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary_path:
+              with open(summary_path, "a") as f:
+                  f.write("### Build-time env vars\n")
+                  f.write(f"- **Source:** {source_label} ({source_origin})\n")
+                  f.write(f"- **Parsed as:** {parse_mode}\n")
+                  f.write(f"- **Variable count:** {len(var_names)}\n")
+                  if var_names:
+                      f.write("- **Variables:** " + ", ".join(f"`{n}`" for n in var_names) + "\n")
+          PYEOF
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # minimal
+            # type=raw,value=${{ inputs.image_tag }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.image_tag != '' }}   # disabled — custom tag input removed
+            type=raw,value=${{ steps.vars.outputs.sanitized_branch }}-${{ steps.vars.outputs.short_sha }}
             type=pep440,pattern={{version}},value=${{ github.ref_name }},enable=${{ github.event_name == 'release' }}
-            # branch event
-            type=ref,event=branch
             type=raw,value=latest,enable=${{ github.event_name == 'release' }}
 
       - name: Build and Push Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
-          # build-args: 
           context: .
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: ${{ steps.parse_env.outputs.build_args }}
+          secrets: |
+            npm_token=${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+  update-manifest:
+    needs: build-and-push
+    if: always() && needs.build-and-push.result == 'success' && (needs.build-and-push.outputs.target_branch == 'dev' || needs.build-and-push.outputs.target_branch == 'prod')
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Kubernetes Config Repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.MANIFEST_REPO_PAT }}
+          repository: ${{ env.K8S_REPO }}
+          ref: ${{ env.K8S_BRANCH }}
+
+      - name: Set Manifest Path for Environment
+        id: manifest_path
+        run: |
+          BRANCH="${{ needs.build-and-push.outputs.target_branch }}"
+
+          if [ "$BRANCH" == "dev" ]; then
+            echo "manifest_dir=${{ env.MANIFEST_PATH_DEV }}" >> $GITHUB_OUTPUT
+          elif [ "$BRANCH" == "prod" ]; then
+            echo "manifest_dir=${{ env.MANIFEST_PATH_PROD }}" >> $GITHUB_OUTPUT
+          else
+            echo "::error::No manifest path defined for branch '$BRANCH'. Expected 'dev' or 'prod'."
+            exit 1
+          fi
+
+      - name: Update Image Tag in Manifest
+        run: |
+          SHA="${{ needs.build-and-push.outputs.short_sha }}"
+          SANITIZED_BRANCH="${{ needs.build-and-push.outputs.sanitized_branch }}"
+          IMAGE_TAG="${SANITIZED_BRANCH}-${SHA}"
+
+          MANIFEST_DIR="${{ steps.manifest_path.outputs.manifest_dir }}"
+          TARGET_FILE="${MANIFEST_DIR}/${{ env.MANIFEST_FILE }}"
+
+          if [ ! -f "$TARGET_FILE" ]; then
+            echo "::error::Manifest file not found: $TARGET_FILE"
+            exit 1
+          fi
+
+          sed -i "s|\(image: .*\):.*|\1:$IMAGE_TAG|g" "$TARGET_FILE"
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          MANIFEST_DIR="${{ steps.manifest_path.outputs.manifest_dir }}"
+          TARGET_FILE="${MANIFEST_DIR}/${{ env.MANIFEST_FILE }}"
+          git add "$TARGET_FILE"
+
+          git diff --staged --quiet || git commit -m "chore(deps): update image tag to ${{ needs.build-and-push.outputs.sanitized_branch }}-${{ needs.build-and-push.outputs.short_sha }}"
+          git push origin ${{ env.K8S_BRANCH }}
