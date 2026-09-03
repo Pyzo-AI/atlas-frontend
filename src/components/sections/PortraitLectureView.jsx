@@ -458,6 +458,18 @@ const PortraitLectureView = ({
   // The module content panel starts exactly here so the slide stays unchanged above.
   const slideEndRef = useRef(null);
   const containerRef = useRef(null);
+  const [slideTopOffset, setSlideTopOffset] = useState(0);
+
+  useEffect(() => {
+    const updateOffset = () => {
+      if (slideEndRef.current) {
+        setSlideTopOffset(slideEndRef.current.offsetHeight);
+      }
+    };
+    updateOffset();
+    window.addEventListener("resize", updateOffset);
+    return () => window.removeEventListener("resize", updateOffset);
+  }, []);
 
   if (isLoading) return <PortraitSkeleton />;
 
@@ -488,8 +500,8 @@ const PortraitLectureView = ({
           </div>
         </div>
 
-        {/* ── 2. Slide video — edge-to-edge, 16:9, no side padding ──────── */}
-        <div className="shrink-0 w-full  [&_.rounded-xl]:rounded-none [&_.rounded-lg]:rounded-none" style={{ aspectRatio: "16 / 9" }}>
+        {/* ── 2. Slide video — edge-to-edge, 16:9, no side padding, overflow-hidden keeps assessment inside slide ──────── */}
+        <div className="shrink-0 w-full overflow-hidden [&_.rounded-xl]:rounded-none [&_.rounded-lg]:rounded-none" style={{ aspectRatio: "16 / 9" }}>
           <SlideVideoSection
             ref={pptSectionRef}
             videos={videos}
@@ -564,14 +576,14 @@ const PortraitLectureView = ({
           canSkipVideo={canSkipVideo}
           assessmentDetails={data?.assessment_details || []}
           onClose={handleClose}
-          topOffset={slideEndRef.current?.offsetHeight ?? 0}
+          topOffset={slideTopOffset || slideEndRef.current?.offsetHeight || 0}
         />
       )}
 
       {activePanel === "askAssistant" && (
         <AskAssistantInlinePanel
           onClose={handleClose}
-          topOffset={slideEndRef.current?.offsetHeight ?? 0}
+          topOffset={slideTopOffset || slideEndRef.current?.offsetHeight || 0}
           videoPanelRef={videoPanelRef}
           conversationHistory={conversationHistory}
           presentationId={presentationId}
