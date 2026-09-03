@@ -93,7 +93,7 @@ const PIP_MARGIN = 12;
 
 const DraggablePiP = ({ children, containerRef, isPiP }) => {
   const getDefaultPos = useCallback(() => {
-    const cw = containerRef?.current?.clientWidth ?? window.innerWidth;
+    const cw = containerRef?.current?.clientWidth ?? (typeof window !== "undefined" ? window.innerWidth : 360);
     // top-right corner, offset down by ~60px to clear the page header
     return { x: cw - PIP_W - PIP_MARGIN, y: 60 };
   }, [containerRef]);
@@ -103,18 +103,15 @@ const DraggablePiP = ({ children, containerRef, isPiP }) => {
   const origin = useRef({ px: 0, py: 0, ox: 0, oy: 0 });
 
   // Reset to default position each time PiP mode activates
-  const prevIsPiP = useRef(false);
-  if (isPiP && !prevIsPiP.current) {
-    prevIsPiP.current = true;
-    // defer so containerRef is measured after paint
-    setTimeout(() => setPos(getDefaultPos()), 0);
-  } else if (!isPiP) {
-    prevIsPiP.current = false;
-  }
+  useEffect(() => {
+    if (isPiP) {
+      setPos(getDefaultPos());
+    }
+  }, [isPiP, getDefaultPos]);
 
   const clamp = useCallback((p) => {
-    const cw = containerRef?.current?.clientWidth ?? window.innerWidth;
-    const ch = containerRef?.current?.clientHeight ?? window.innerHeight;
+    const cw = containerRef?.current?.clientWidth ?? (typeof window !== "undefined" ? window.innerWidth : 360);
+    const ch = containerRef?.current?.clientHeight ?? (typeof window !== "undefined" ? window.innerHeight : 640);
     return {
       x: Math.max(PIP_MARGIN, Math.min(p.x, cw - PIP_W - PIP_MARGIN)),
       y: Math.max(PIP_MARGIN, Math.min(p.y, ch - PIP_H - PIP_MARGIN)),
