@@ -19,6 +19,7 @@ const QuestionModeAI = forwardRef(
       liveKitAgentEnabled,
       liveKitAgentState,
       enableProductRecommendations = false,
+      fillHeight = false,
     },
     ref
   ) => {
@@ -51,12 +52,13 @@ const QuestionModeAI = forwardRef(
     }
 
     return (
-      <div className="p-1 lg:p-3 bg-white rounded-xl border border-border-light">
+      <div className={`bg-white rounded-xl border border-border-light ${fillHeight ? "h-full p-0" : "p-1 lg:p-3"}`}>
         <div
           className="w-full bg-black rounded-lg overflow-hidden flex items-center justify-center"
           style={{
-            minHeight: isMobile ? '80px' : undefined,
-            aspectRatio: isMobile ? undefined : '16/9',
+            ...(fillHeight ? { height: "100%" } : {}),
+            ...(!fillHeight ? { minHeight: isMobile ? '80px' : undefined } : {}),
+            ...(!fillHeight ? { aspectRatio: isMobile ? undefined : '16/9' } : {}),
             background: "var(--gradient-primary-darkened)",
           }}>
           {/* Main Content Container */}

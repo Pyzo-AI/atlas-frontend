@@ -227,6 +227,7 @@
     "aiAssistant": "KI-Assistent",
     "aiAssistantDesc": "Erhalten Sie sofortige Antworten auf Ihre Fragen und personalisierte Lernunterstützung.",
     "interactionMode": "Interaktionsmodus",
+    "stopInteraction": "Interaktion beenden",
     "agentNotAvailable": "Agent nicht verfügbar",
     "interactionModeNotAvailable": "Interaktionsmodus nicht verfügbar",
     "failedLoadAssessment": "Bewertung konnte nicht geladen werden",

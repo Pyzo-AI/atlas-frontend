@@ -227,6 +227,7 @@
     "aiAssistant": "AI Assistant",
     "aiAssistantDesc": "Get instant answers to your questions and personalized learning support.",
     "interactionMode": "Interaction Mode",
+    "stopInteraction": "Stop Interaction",
     "agentNotAvailable": "Agent not available",
     "interactionModeNotAvailable": "Interaction Mode not available",
     "failedLoadAssessment": "Failed to load assessment",
