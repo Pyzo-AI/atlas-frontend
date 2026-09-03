@@ -6,10 +6,12 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const baseQueryWithReauth = fetchBaseQuery({
   baseUrl: API_BASE_URL,
-  prepareHeaders: (headers) =>
-    preparePyzoHeaders(headers, {
+  prepareHeaders: (headers) => {
+    headers.set("ngrok-skip-browser-warning", "true");
+    return preparePyzoHeaders(headers, {
       baseUrl: process.env.NEXT_PUBLIC_LOGIN_BASE_URL || API_BASE_URL || "",
-    }),
+    });
+  },
 });
 
 export const baseQueryWithReauthAndRetry = createPyzoBaseQuery(baseQueryWithReauth, {
