@@ -94,8 +94,11 @@ const PIP_MARGIN = 12;
 const DraggablePiP = ({ children, containerRef, isPiP }) => {
   const getDefaultPos = useCallback(() => {
     const cw = containerRef?.current?.clientWidth ?? (typeof window !== "undefined" ? window.innerWidth : 360);
-    // top-right corner, offset down by ~60px to clear the page header
-    return { x: cw - PIP_W - PIP_MARGIN, y: 60 };
+    // Position at top-right corner over the slide video
+    return {
+      x: cw - PIP_W - PIP_MARGIN,
+      y: 55,
+    };
   }, [containerRef]);
 
   const [pos, setPos] = useState(getDefaultPos);
@@ -157,7 +160,7 @@ const DraggablePiP = ({ children, containerRef, isPiP }) => {
         top: pos.y,
         width: PIP_W,
         height: PIP_H,
-        zIndex: 30,
+        zIndex: 60,
         borderRadius: 10,
         overflow: "hidden",
         boxShadow: "0 4px 18px rgba(0,0,0,0.4)",
@@ -468,7 +471,7 @@ const PortraitLectureView = ({
       {/* Wrap title + slide + progress in a ref div so we can measure   */}
       {/* where this block ends and start the module content panel there */}
       {/* ref only wraps title + slide — progress bar is outside so offset is exact */}
-      <div ref={slideEndRef}>
+      <div ref={slideEndRef} className="relative z-10" style={{ isolation: "isolate" }}>
         <div className="shrink-0 bg-white px-4 pt-3 pb-2 border-b border-border-light">
           <div className="flex items-center gap-3">
             <button onClick={() => router.back()} className="shrink-0 p-0.5">
