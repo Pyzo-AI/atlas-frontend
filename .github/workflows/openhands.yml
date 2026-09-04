@@ -1,0 +1,35 @@
+# ══════════════════════════════════════════════════════════════════════
+# The OpenHands agent — caller. Copy this file, unchanged, into
+# .github/workflows/openhands.yml on the DEFAULT BRANCH of any repo in
+# the org. Nothing here is repo-specific.
+#
+# All behaviour lives in the shared definition. To change what the agent
+# does, edit pr-agent-settings/.github/workflows/resolve.yml and move the
+# `v1` tag. Never add logic to this file.
+#
+# Trigger: add the `fix-me` label to an issue, or comment
+# `@pyzo-agent <instructions>` on one.
+#
+# ⚠️  The `permissions:` block is REQUIRED and must stay. A called workflow
+#     can only downgrade the caller's GITHUB_TOKEN, never elevate it — so
+#     without this, `resolve.yml` runs with whatever the org default is. If
+#     that default is read-only, the agent silently cannot comment, push,
+#     or open a pull request.
+# ══════════════════════════════════════════════════════════════════════
+
+name: OpenHands
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+jobs:
+  resolve:
+    permissions:
+      contents: write        # branch + push
+      pull-requests: write   # open the draft PR
+      issues: write          # the status comment
+    uses: Pyzo-AI/pr-agent-settings/.github/workflows/resolve.yml@v1
+    secrets: inherit

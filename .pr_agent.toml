@@ -1,0 +1,324 @@
+# ══════════════════════════════════════════════════════════════════════
+# PR-Agent — atlas-frontend (repo override)
+#
+# This repo inherits the org-wide defaults and overrides only the keys
+# below. Do NOT paste the full upstream configuration.toml here — it goes
+# stale and you inherit decisions you never made.
+#
+# NEVER put an API key or token in this file. It is readable by
+# everyone with access to this repo. Secrets live on the server only.
+#
+# Repo shape that drives everything here:
+#   - Next.js 15 App Router / React 19 / plain JavaScript (.jsx), no TS
+#   - CI runs ONLY on release publish or manual dispatch. Pull requests get
+#     no install, no lint, no typecheck, no build, no tests. There are no
+#     tests in the repo at all. Review is the only gate before merge.
+#   - Default branch: dev. Release branch: prod.
+#   - AGENTS.md is injected with these prompts as the repo map.
+# ══════════════════════════════════════════════════════════════════════
+
+
+# ────────────────────────────────────────────────────────────── general
+# [config] is inherited. Repo-specific override only:
+# [config]
+# # AGENTS.md is the map for both /review and /improve.
+# repo_context_files = ["AGENTS.md", "CLAUDE.md"]
+# repo_context_max_lines = 500
+# repo_context_from_default_branch = true
+
+# # This repo's PRs are usually a handful of large .jsx files with deep
+# # surrounding context (VideoPlayer.jsx is 2194 lines, VideoPanel.jsx 1057).
+# # A hunk in isolation is close to unreadable, so widen it.
+# allow_dynamic_context = true
+# patch_extra_lines_before = 12
+# patch_extra_lines_after = 6
+
+
+# ─────────────────────────────────────────────── files never reviewed
+# [ignore]
+# glob = [
+#     "*.lock",
+#     "package-lock.json",
+#     "yarn.lock",
+#     "pnpm-lock.yaml",
+#     "dist/**",
+#     "build/**",
+#     ".next/**",
+#     "**/*.generated.*",
+#     "**/*.min.js",
+#     "**/*.min.css",
+#     "src/assets/svg/**",
+#     "src/assets/json/**",
+#     "public/**",
+#     "**/*.svg",
+#     "**/*.png",
+#     "**/*.ico",
+# ]
+# NOTE: src/i18n/locales/*.json are deliberately NOT ignored — en/de key
+# parity is a correctness concern in this repo, not an asset concern.
+
+
+# ─────────────────────────────────────────────────────────── /review
+[pr_reviewer]
+extra_instructions = """\
+This repo is atlas-frontend: the learner-facing Next.js 15 / React 19 / plain-JavaScript
+app for Pyzo Atlas (video training + voice AI agent + assessments + certificates).
+AGENTS.md is injected with this prompt — use it as the map and do not restate it.
+
+There are NO tests, and CI runs nothing on pull requests (no install, lint, typecheck or
+build). Review is the only correctness gate. Judge every diff by one question first:
+**can this break a flow that works today?** Rank findings by blast radius roughly in this
+order:
+
+1. Regressions in the lecture experience (`lectures/[id]/page.jsx`, `VideoPanel`,
+   `PPTSection`, `SlideVideoSection`, `VideoPlayer`, `VideoPlayerContainer`,
+   `PortraitLectureView`). Specifically:
+   - A change is made in ONE of the three layouts (portrait mobile / landscape
+     mobile-tablet / desktop) that the other two also need, or a prop added to one
+     `CombinedPPTSection` / `CombinedVideoPanel` call site but not the others. All three
+     branches of that page render the same components with different props — a prop added
+     to the desktop branch and forgotten in the landscape or `PortraitLectureView` branch
+     lands as `undefined` at runtime.
+   - `canSkipVideo === false` (forward-seek lock for mandatory content) is enforced in five
+     independent places inside `VideoPlayer`/`VideoPlayerContainer`: the video.js `seeking`
+     handler restoring `previousTime`, the `.no-seek` progress-control overlay with
+     capture-phase blockers, the keyboard-shortcut filter (J must still skip back), the
+     native `seeking`/`seeked` iOS listener, and `VideoPlayerContainer.handleSeeking`.
+     Flag any diff that removes, reorders or short-circuits one of them.
+   - The `VideoPlayer` init effect depends only on `[src, isClient]` but closes over
+     `canSkipVideo`, `controls`, `autoPlay` and more. Flag a new prop that is read inside
+     that effect but has no `key` remount at the call site (it will silently never apply);
+     equally, flag adding those props to the dependency array without checking the mount
+     sites, since a re-init disposes the player and restarts playback.
+   - Slide/trainer sync thresholds in `SlideVideoSection` (seek only on master jump > 1.0s
+     or drift > 10.0s) exist to avoid flushing the MSE buffer. Tightening them causes
+     stalling.
+   - `--app-height` (from `useAppHeight`/`visualViewport`) replacing iOS-broken `vh`/`dvh`.
+     Flag a mobile layout height reintroducing `vh`, `dvh` or `100%`.
+   - `currentVideoIndex` (array index into `data.data`) confused with `slide` (server slide
+     id). They are not interchangeable and the bug is invisible until a module's slides are
+     non-contiguous.
+
+2. Broken cross-component wiring that only fails at runtime.
+   - A new RTK Query API slice needs THREE edits in `store/index.js` (import, `reducer`
+     entry, `middleware.concat`). Two out of three is a store error at boot.
+   - A new LiveKit data-channel packet type must be handled in `lib/livekit.js` AND every
+     consumer (`VideoPanel`, `FloatingChatbot`); otherwise it is parsed and silently
+     dropped. Same for a changed packet field name — the agent backend and this file are a
+     contract.
+   - `liveKitService` and `notificationService` are module singletons. A new consumer that
+     sets `onConnectionStateChanged` / `setOnDataReceived` / `setOnSlideMetadataReceived`
+     steals those callbacks from the existing one (last writer wins), and any mount without
+     a matching `disconnect()` in cleanup leaks a room or tears down a socket another
+     component is using (`notificationService` is reference-counted; `liveKitService` is not).
+   - `videoSlice` is shared mutable state across ~10 components. Flag a dispatch order that
+     leaves it inconsistent — notably setting `selectedAssessmentId` without pausing/clearing
+     autoplay, or clearing `isQuestionMode` without disconnecting the agent and resetting
+     `slideNumbers`.
+   - Assessment completion must write BOTH `markAssessmentCompleted` (Redux) and
+     `setAssessmentCompleted` (localStorage) — `VideoPlaylist` reads the localStorage copy.
+     Also check the middle-vs-final branch: middle assessments must not show `ResultModal`
+     and must advance the video; final ones must use `getAssessmentSummary` numbers, not the
+     raw submit response.
+
+3. Locale and i18n breakage. Every route is under `app/[locale]/`, so `usePathname()`
+   always returns a locale-prefixed path.
+   - Flag `pathname.startsWith("/route")` (always false) and raw
+     `useRouter().push("/path")` — navigation must go through `useLocalizedRouter()` or
+     `localizePath()`.
+   - Flag a new `t("…")` key added to `src/i18n/locales/en.json` without the matching key in
+     `de.json` (they are at exact parity today, 226 keys); a missing German key renders the
+     raw key string to the user.
+   - Do NOT demand translation of pre-existing hardcoded English strings the PR did not
+     touch (there is a lot of it, especially in `InModuleAssessment`).
+
+4. Auth, session and data-scoping.
+   - A new per-learner localStorage key must be added to `USER_SCOPED_STORAGE_KEYS` in
+     `components/auth/PrivateRoute.jsx`, or the next account signed in via the shared
+     `*.pyzo.ai` session cookie inherits the previous learner's state.
+   - Flag anything that bypasses `@esmagico/pyzo-auth-sdk` for tokens, refresh or logout, or
+     that reads/persists a token outside `store/utils/token.js` / `utils/auth.js`.
+   - Flag tokens, refresh tokens, emails, JWT payloads, or free-text learner answers written
+     to `console.*`, PostHog event properties, toast text, or a URL query string.
+   - A new route or page must stay inside the `PrivateRoute` tree; flag anything that opts
+     out of it without an explicit reason.
+
+5. State, effects and network hygiene in React 19 / App Router.
+   - `useEffect` cleanup missing for an added listener, interval, timeout, socket,
+     `MediaStream`/`getUserMedia` track, or LiveKit room.
+   - A dependency array that will re-run a mutation, `createSession`, `getUserMedia` or a
+     progress submit on every render, or an effect that dispatches into `videoSlice` in a way
+     that re-triggers itself.
+   - Hooks or browser globals (`window`, `document`, `localStorage`, `navigator`) reached
+     during render or module init without a `typeof window !== "undefined"` guard — this
+     breaks SSR/build, and the build is not run on PRs so nobody will catch it.
+   - A component using hooks that becomes reachable from a server component without
+     `"use client"` somewhere up the tree.
+   - Errors: use `getApiErrorMessage(error, fallback)` from `utils/errorHandler.ts` with
+     `react-toastify`; flag a raw `error.message`, a bare `error.data` render, or a new
+     `try/catch` that swallows a failure with no user-visible feedback.
+
+Context that should suppress false positives — do NOT raise these unless the diff makes
+them worse:
+- `NEXT_PUBLIC_KEYCLOAK_CLIENT_SECRET` is shipped to the browser. Pre-existing and known.
+- `app/[locale]/api/hls/route.js` fetches an arbitrary `url` query param server-side
+  (SSRF-shaped) and is unauthenticated. Pre-existing and known.
+- Resume-from-last-position is deliberately disabled: three sites compute a `startTime` from
+  `duration_viewed` then hardcode `0` with the comment "as quick fix it is set to 0 sec".
+  That is intentional.
+- The lecture page's redundant `beforeunload` / `pagehide` / `unload` / `visibilitychange` /
+  `popstate` / 5-minute-interval progress flushing is intentional (browsers fire different
+  subsets). Only flag a NEW handler that is not idempotent.
+- `router.push/back/replace` are monkey-patched in the lecture page on purpose.
+- The heavy platform sniffing in `VideoPlayer` (`isSafari`, `isIPhoneOrIPod`, `isIPad`,
+  `needsMSESupport`, `needsNativeHLS`) is load-bearing, not a code smell.
+- `package-lock.json` is gitignored, so `npm ci` never runs and dependency ranges are
+  unpinned in production. Raise this only when the PR itself changes a dependency range.
+- `utils/apiClient.ts`, `utils/deviceDetection.js`, `hooks/useFullscreenOnLandscape.js` and
+  `store/utils/apiErrorHandler.js` are dead code. Don't suggest using them; do flag a diff
+  that starts depending on them.
+- `console.log` volume (~154 calls) is pre-existing. Only flag new logs that print token
+  values, PII, or run inside a `timeupdate`/animation-frame hot path.
+- This repo has no tests by design. Never ask for unit or integration tests. Instead, when a
+  change is risky, say which flow needs manual verification and under which condition — e.g.
+  "verify with `is_skippable: false`", "verify on iPhone Safari (native HLS path)", "verify in
+  portrait and landscape", "verify with `interaction_mode: pyzo_train_convo_ai`".
+
+Also call out explicitly, when present in the diff:
+- A new `NEXT_PUBLIC_*` env var read in code but not added to the `Dockerfile`
+  (ARG + ENV in both `builder` and `runner` stages, plus the required-args validation loop)
+  and `docker-compose.yaml`. The image build hard-fails on a missing build arg.
+- A changed request/response field name, endpoint path, or method against the backend
+  contract, or a changed PostHog event name (`module_start`, `slide_view`, `video_play`,
+  `video_pause`, `video_complete`, `video_skip`, `video_skip_backward`,
+  `video_speed_change`, `qna_interaction`, `slide_redirect`, `assessment_start`,
+  `assessment_submit`, `session_end`, `session_timeout`) — dashboards depend on those names.
+- A behaviour change gated on an org feature flag that reads it as a positive rather than the
+  repo's negated convention (`orgConfig?.disable_x`, absent config ⇒ enabled).
+- `next.config.js` vs `next.config.mjs`: two configs exist and `next.config.js` resolves
+  first. Flag a PR editing the `.mjs` one and expecting it to take effect.
+
+Do NOT comment on formatting, quote style, import order, line length (Prettier owns these at
+120 cols), on missing TypeScript types or JSDoc for their own sake, on converting `.jsx` to
+`.tsx`, on file length or "this file should be split", or on files this PR did not change.
+One or two sentences per finding, naming the concrete failure and the flow it breaks.
+"""
+
+
+# ───────────────────────────────────────────────────────── /describe
+[pr_description]
+extra_instructions = """\
+- Lead with WHY the change was made, not a restatement of the diff.
+- State which of the three lecture layouts are affected (portrait mobile / landscape
+  mobile-tablet / desktop), or say "all layouts" / "not layout-related".
+- Call out explicitly, when present: new or changed `NEXT_PUBLIC_*` env vars, Dockerfile or
+  docker-compose changes, new/changed backend endpoints or payload fields, new i18n keys,
+  new PostHog event names, new localStorage keys, and anything touching auth or the
+  `@esmagico/pyzo-auth-sdk` integration.
+- Since CI runs nothing on PRs, add a short "Verify manually" list naming the flows a
+  reviewer should click through and the conditions that trigger them (e.g. skippable vs
+  non-skippable module, ElevenLabs vs LiveKit `interaction_mode`, middle vs final
+  assessment, role-play assessment, iPhone Safari HLS).
+- Keep the summary under 6 bullet points.
+"""
+
+
+# ────────────────────────────────────────────────────────── /improve
+[pr_code_suggestions]
+extra_instructions = """\
+Repo: atlas-frontend — Next.js 15 App Router, React 19, plain JavaScript (.jsx), Redux
+Toolkit + RTK Query, Tailwind CSS v4, Prettier at 120 cols. AGENTS.md is injected with this
+prompt; use it to find the existing abstraction instead of proposing a new one.
+
+Prefer suggestions that reuse what this repo already has:
+- `useLocalizedRouter()` / `localizePath()` for any navigation; never raw `useRouter().push`
+  with a hardcoded path.
+- `t("section.key")` from `useTranslation()` for user-visible strings, with the key added to
+  BOTH `src/i18n/locales/en.json` and `de.json` in the same diff.
+- `getApiErrorMessage(error, fallback)` (`utils/errorHandler.ts`) + `react-toastify` for
+  error surfaces — not `store/utils/apiErrorHandler.js`, which is dead.
+- `getTokens()` / `getUserDetailsFromToken()` (`store/utils/token.js`) for identity, and
+  `logout()` (`utils/auth.js`) for sign-out. Never hand-roll token handling.
+- An endpoint on an existing `store/api/*` slice over a new slice or a raw `fetch`; the
+  shared `baseQueryWithReauthAndRetry` already handles auth headers, 401 retry and logout.
+- `usePostHog().capture(...)` with an existing event name and the `user_id` / `module_id` /
+  ISO `timestamp` property convention.
+- Existing `videoSlice` actions rather than new local state that duplicates them, and
+  existing hooks: `useAppHeight`, `usePortraitMode`, `useDeviceType`, `useNotifications`.
+- Tailwind theme-token utilities from `globals.css` (`bg-page-background`,
+  `text-primary-text`, `border-border-light`, `text-status-error-text`) instead of new hex
+  literals or inline styles.
+- `orgConfig?.disable_x` negated-flag reads for feature gating.
+- A `key` prop to force a clean remount where `VideoPlayer` needs re-initialisation, since
+  its init effect only watches `[src, isClient]`.
+
+Do NOT suggest:
+- Adding or expanding tests; this repo has none by design and no test runner.
+- Migrating files to TypeScript, adding prop-types, or adding JSDoc for its own sake.
+- Splitting or broadly refactoring `VideoPlayer.jsx` (2194 lines), `VideoPanel.jsx`,
+  `InModuleAssessment.jsx` or `lectures/[id]/page.jsx`. Churn there causes merge conflicts
+  across many active feature branches and risks the video/slide sync contract.
+- Collapsing the three lecture layouts into one, or de-duplicating
+  `CombinedPPTSection` / `CombinedVideoPanel`.
+- Simplifying the platform detection in `VideoPlayer`, the five-way `canSkipVideo` seek lock,
+  the redundant progress-flush handlers, the `router` monkey-patch, or the `--app-height`
+  mechanism — each is a deliberate browser workaround.
+- Replacing `--app-height` with `vh`/`dvh`, or loosening the 1.0s/10.0s slide-sync thresholds.
+- Renaming backend request/response fields, endpoint paths, PostHog event names, localStorage
+  keys (`video_progress`, `assessmentProgress`, `resultModalState`, `feedbackModalState`,
+  `trainboost_conversation_history`), LiveKit packet `type` values, or i18n keys — the
+  backend, the agent runtime, deployed dashboards and persisted browser state all depend on them.
+- Renaming the package (`train-boost`) or removing legacy TrainBoost naming.
+- Adding a `tailwind.config.js` (Tailwind v4 is configured via `@theme` in CSS) or touching
+  `next.config.mjs` expecting it to be the live config.
+- `try/catch` purely for defensiveness, import reordering, quote/format changes, or cosmetics.
+
+Every suggestion must be a concrete, directly applicable diff on a line this PR touches —
+never "consider refactoring". Prioritise, in order: a runtime break under a config the diff
+did not consider (missing prop in another layout branch, un-guarded `window` in an SSR path,
+missing store registration, unhandled packet type), a missing effect cleanup, a missing
+paired write (Redux + localStorage, en.json + de.json, Dockerfile + code), then everything
+else. If nothing is genuinely worth changing, return no suggestions.
+"""
+
+
+# # ───────────────────────────────────────────────────────────── /ask
+# [pr_questions]
+# extra_instructions = """\
+# Answer only from the PR diff and the repository context provided (AGENTS.md). If the answer
+# is not determinable from them — in particular anything about backend payload shapes, the
+# LiveKit/ElevenLabs agent behaviour, or Keycloak configuration, none of which live in this
+# repo — say so instead of guessing.
+# """
+
+
+# ─────────────────────── /custom_prompt — manual, on-demand only
+# Invoke by commenting /custom_prompt on any PR. Use this for a targeted
+# regression pass on a risky lecture-player or agent change.
+[pr_custom_prompt]
+prompt = """\
+Review this PR ONLY for ways it can break behaviour that works today. Report nothing else.
+
+- A prop, handler or condition added in one of the three lecture layouts (portrait mobile,
+  landscape mobile-tablet, desktop) but missing from the others.
+- Weakening of the `canSkipVideo === false` forward-seek lock in any of its five enforcement
+  points.
+- A `VideoPlayer` prop read inside the `[src, isClient]` init effect with no `key` remount at
+  the call site, or a dependency-array change that now re-initialises the player mid-playback.
+- A new or renamed LiveKit data packet `type`/field handled in `lib/livekit.js` but not in
+  `VideoPanel` and `FloatingChatbot`, or vice versa.
+- A singleton (`liveKitService`, `notificationService`) gaining a consumer without matching
+  cleanup, or overwriting another consumer's callbacks.
+- A new RTK Query slice not registered in all three places in `store/index.js`; a `Question`
+  tag invalidation added where it will refetch slides and restart playback.
+- An assessment path that writes only one of `markAssessmentCompleted` / `setAssessmentCompleted`,
+  or that crosses the middle-vs-final branch incorrectly.
+- A new i18n key in `en.json` without `de.json`; a new per-user localStorage key not added to
+  `USER_SCOPED_STORAGE_KEYS`; a new `NEXT_PUBLIC_*` var not added to the Dockerfile and compose.
+- `window`/`document`/`localStorage`/`navigator` reached during render or module init without a
+  guard (the build is never run on PRs).
+- A missing `useEffect` cleanup for a listener, interval, socket, media track or LiveKit room.
+
+For each finding, name the exact flow that breaks and the condition that triggers it.
+"""
+suggestions_score_threshold = 5
