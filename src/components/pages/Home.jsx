@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import Image from "next/image";
@@ -9,10 +9,12 @@ import { usePostHog } from "@/hooks/usePostHog";
 import FeedbackSuccessModal from "../modals/FeedbackSuccessModal";
 import { useDispatch, useSelector } from "react-redux";
 import { setAutoPlayEnabled, setSelectedAssessmentId, setShowChat, setIsQuestionMode } from "@/store/features/videoSlice";
-import { HiBookOpen, HiChevronDown, HiMagnifyingGlass } from "react-icons/hi2";
+import { HiBookOpen } from "react-icons/hi2";
 import FloatingChatbot from "../common/FloatingChatbot";
 import ModuleStatsOverview from "../common/ModuleStatsOverview";
 import Pagination from "../common/Pagination";
+import QuickFilter from "../common/QuickFilter";
+import SearchBar from "../common/SearchBar";
 import { useTranslation } from "react-i18next";
 
 const STATUS_OPTIONS = ["all", "in_progress", "yet_to_start", "locked", "overdue", "completed"];
@@ -177,56 +179,12 @@ const MobileModuleCard = ({ presentation, onClick, getBadge }) => {
   );
 };
 
-const Dropdown = ({ label, value, options, renderLabel, renderOptionLabel, onSelect }) => {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const onClickOutside = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
-
-  return (
-    <div className="relative shrink-0" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 px-3 h-[30px] bg-white border border-border rounded-md">
-        <span className="font-lato font-medium text-xs text-text-muted whitespace-nowrap">{label}:</span>
-        <span className="font-lato font-semibold text-xs text-text-title whitespace-nowrap">{renderLabel(value)}</span>
-        <HiChevronDown className={`w-3.5 h-3.5 text-text-muted transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-1 min-w-36 bg-white border border-border rounded-md shadow-lg z-50 py-1">
-          {options.map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => {
-                onSelect(opt);
-                setOpen(false);
-              }}
-              className={`w-full text-left px-3 py-1.5 text-xs font-lato hover:bg-gray-50 whitespace-nowrap ${
-                opt === value ? "text-primary font-semibold" : "text-text-title"
-              }`}>
-              {(renderOptionLabel || renderLabel)(opt)}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
 
 const Home = () => {
   const router = useLocalizedRouter();
   const searchParams = useSearchParams();
   const [filter, setFilter] = useState("all");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [page, setPage] = useState(1);
@@ -237,14 +195,10 @@ const Home = () => {
   const userDetails = getUserDetailsFromToken();
   const getBadge = useBadge();
 
-  // Debounce search input before sending it to the API
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchQuery(searchInput);
-      setPage(1);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const handleSearchChange = (term) => {
+    setSearchQuery(term);
+    setPage(1);
+  };
 
   useEffect(() => {
     setPage(1);
@@ -336,28 +290,31 @@ const Home = () => {
           {!orgConfig?.disable_course_header_row && (
             <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 w-full">
               {!orgConfig?.disable_course_search && (
-                <div className="relative w-full sm:w-80">
-                  <HiMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
-                  <input
-                    type="text"
-                    placeholder={t("home.searchCourses")}
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full pl-8 pr-3 h-[30px] border border-border-light rounded-md font-lato text-sm placeholder-text-muted/70 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
+                <SearchBar
+                  initialValue={searchQuery}
+                  onSearchChange={handleSearchChange}
+                  placeholder={t("home.searchCourses")}
+                  width="100%"
+                  className="sm:!w-80"
+                />
               )}
 
               {!orgConfig?.disable_course_filters && (
                 <div className="flex items-center gap-3 shrink-0">
-                  <Dropdown label={t("home.stats.status")} value={filter} options={STATUS_OPTIONS} renderLabel={statusLabel} onSelect={setFilter} />
-                  <Dropdown
-                    label={t("home.sortBy")}
+                  <QuickFilter
+                    value={filter}
+                    onChange={setFilter}
+                    options={STATUS_OPTIONS.map((s) => ({ id: s, label: statusLabel(s) }))}
+                    placeholder={`${t("home.stats.status")}:`}
+                  />
+                  <QuickFilter
                     value={sortOrder}
-                    options={["asc", "desc"]}
-                    renderLabel={() => t("home.sortByDueDate")}
-                    renderOptionLabel={(opt) => `${t("home.sortByDueDate")} (${opt === "asc" ? "↑" : "↓"})`}
-                    onSelect={setSortOrder}
+                    onChange={setSortOrder}
+                    options={[
+                      { id: "asc", label: `${t("home.sortByDueDate")} (${t("home.sortEarliest")})` },
+                      { id: "desc", label: `${t("home.sortByDueDate")} (${t("home.sortLatest")})` },
+                    ]}
+                    placeholder={`${t("home.sortBy")}:`}
                   />
                 </div>
               )}

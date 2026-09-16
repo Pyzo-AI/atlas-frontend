@@ -131,6 +131,8 @@
     "noCoursesFound": "Keine Kurse gefunden",
     "sortBy": "Sortieren nach",
     "sortByDueDate": "Fälligkeitsdatum",
+    "sortEarliest": "Früheste",
+    "sortLatest": "Späteste",
     "tabs": {
       "all": "Alle",
       "locked": "Gesperrt",

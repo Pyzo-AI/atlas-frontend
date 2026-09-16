@@ -152,6 +152,8 @@
     "noCoursesFound": "No Courses Found",
     "sortBy": "Sort By",
     "sortByDueDate": "Due Date",
+    "sortEarliest": "Earliest",
+    "sortLatest": "Latest",
     "tabs": {
       "all": "All",
       "locked": "Locked",
