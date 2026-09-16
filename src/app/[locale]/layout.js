@@ -41,7 +41,8 @@ export const metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: "/favicon.svg",
-    "apple-touch-icon": "/favicon.svg",
+    shortcut: "/favicon.ico",
+    "apple-touch-icon": "/apple-touch-icon.png",
   },
 };
 
@@ -73,9 +74,10 @@ export default async function RootLayout({ children, params }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Atlas" />
-        <link rel="apple-touch-icon" href="/favicon.svg" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${lato.variable} ${montserrat.variable} antialiased font-lato`}>

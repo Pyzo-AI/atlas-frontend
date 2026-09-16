@@ -150,7 +150,19 @@
       "inProgress": "In Bearbeitung",
       "yetToStart": "Noch nicht begonnen",
       "learningTimeHrs": "Lernzeit (Std.)",
-      "averageScore": "Durchschnittliche Punktzahl"
+      "averageScore": "Durchschnittliche Punktzahl",
+      "compact": {
+        "modulesTitle": "Module",
+        "assignedSuffix": "zugewiesen",
+        "assessmentsTitle": "Bewertungen",
+        "totalSuffix": "gesamt",
+        "done": "erledigt",
+        "inProgress": "in Bearbeitung",
+        "toStart": "zu starten",
+        "learningTime": "Lernzeit",
+        "yetToStart": "noch offen",
+        "avgScore": "Ø Punktzahl"
+      }
     }
   },
   "courseCard": {

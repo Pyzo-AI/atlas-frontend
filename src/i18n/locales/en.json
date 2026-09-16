@@ -171,7 +171,19 @@
       "inProgress": "In Progress",
       "yetToStart": "Yet to Start",
       "learningTimeHrs": "Learning Time (Hrs)",
-      "averageScore": "Average Score"
+      "averageScore": "Average Score",
+      "compact": {
+        "modulesTitle": "Modules",
+        "assignedSuffix": "assigned",
+        "assessmentsTitle": "Assessments",
+        "totalSuffix": "total",
+        "done": "done",
+        "inProgress": "in progress",
+        "toStart": "to start",
+        "learningTime": "learning time",
+        "yetToStart": "yet to start",
+        "avgScore": "avg score"
+      }
     }
   },
   "courseCard": {
