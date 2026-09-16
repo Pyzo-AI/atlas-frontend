@@ -8,10 +8,6 @@ import Image from "next/image";
 import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import modules from "@/assets/svg/modules.svg";
 import modulesActive from "@/assets/svg/modules_active.svg";
-import assessment from "@/assets/svg/assessment.svg";
-import assessmentActive from "@/assets/svg/assessment_active.svg";
-import analytics from "@/assets/svg/analytics.svg";
-import analyticsActive from "@/assets/svg/analytics_active.svg";
 import certificate from "@/assets/svg/certificate.svg";
 import certificateActive from "@/assets/svg/certificate_active.svg";
 import { useTranslation } from "react-i18next";
@@ -44,18 +40,6 @@ const Sidebar = ({ isOpen = false, onClose }) => {
       icon: certificate,
       activeIcon: certificateActive,
     },
-    {
-      name: t("sidebar.analytics"),
-      href: "/analytics?tab=learning",
-      icon: analytics,
-      activeIcon: analyticsActive,
-    },
-    // {
-    //   name: t("sidebar.assessments"),
-    //   href: "/assessments",
-    //   icon: assessment,
-    //   activeIcon: assessmentActive,
-    // },
   ];
 
   const isActive = (href) => {

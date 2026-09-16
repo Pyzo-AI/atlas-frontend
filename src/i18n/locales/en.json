@@ -143,19 +143,32 @@
   },
   "home": {
     "hello": "Hello, {{name}}!",
-    "browseDescription": "Browse your courses and get instant answers to your questions with our AI.",
-    "availableCourses": "Available Courses",
-    "searchCourses": "Search courses...",
+    "browseDescription": "Browse your modules and get instant answers to your questions with AI guide.",
+    "availableCourses": "Modules",
+    "searchCourses": "Search by module name",
     "errorTitle": "Error Loading Presentations",
     "errorDesc": "Failed to fetch data from the server.",
     "learningOverview": "Learning Overview",
     "noCoursesFound": "No Courses Found",
+    "sortBy": "Sort By",
+    "sortByDueDate": "Due Date",
     "tabs": {
       "all": "All",
       "locked": "Locked",
       "inProgress": "In Progress",
+      "yetToStart": "Yet to Start",
       "overdue": "Overdue",
       "completed": "Completed"
+    },
+    "stats": {
+      "status": "Status",
+      "modulesAssigned": "Modules Assigned",
+      "totalAssessments": "Total Assessments",
+      "completed": "Completed",
+      "inProgress": "In Progress",
+      "yetToStart": "Yet to Start",
+      "learningTimeHrs": "Learning Time (Hrs)",
+      "averageScore": "Average Score"
     }
   },
   "courseCard": {
@@ -168,6 +181,10 @@
     "overdueBy": "Overdue by",
     "dueIn": "Due in",
     "inProgress": "In Progress",
+    "yetToStart": "Todo",
+    "todoDueIn": "Todo - Due In {{count}} days",
+    "dueDateLabel": "Due Date:",
+    "durationLabel": "Duration:",
     "day": "day",
     "days": "days",
     "hr": "hr",

@@ -122,19 +122,32 @@
   },
   "home": {
     "hello": "Hallo, {{name}}!",
-    "browseDescription": "Durchsuchen Sie Ihre Kurse und erhalten Sie mit unserem KI-Leitfaden sofortige Antworten auf Ihre Fragen.",
-    "availableCourses": "Verfügbare Kurse",
-    "searchCourses": "Kurse suchen...",
+    "browseDescription": "Durchsuchen Sie Ihre Module und erhalten Sie mit unserem KI-Leitfaden sofortige Antworten auf Ihre Fragen.",
+    "availableCourses": "Module",
+    "searchCourses": "Nach Modulnamen suchen",
     "errorTitle": "Fehler beim Laden der Präsentationen",
     "errorDesc": "Fehler beim Abrufen der Daten vom Server.",
     "learningOverview": "Lernübersicht",
     "noCoursesFound": "Keine Kurse gefunden",
+    "sortBy": "Sortieren nach",
+    "sortByDueDate": "Fälligkeitsdatum",
     "tabs": {
       "all": "Alle",
       "locked": "Gesperrt",
       "inProgress": "In Bearbeitung",
+      "yetToStart": "Noch nicht begonnen",
       "overdue": "Überfällig",
       "completed": "Abgeschlossen"
+    },
+    "stats": {
+      "status": "Status",
+      "modulesAssigned": "Zugewiesene Module",
+      "totalAssessments": "Gesamtzahl der Bewertungen",
+      "completed": "Abgeschlossen",
+      "inProgress": "In Bearbeitung",
+      "yetToStart": "Noch nicht begonnen",
+      "learningTimeHrs": "Lernzeit (Std.)",
+      "averageScore": "Durchschnittliche Punktzahl"
     }
   },
   "courseCard": {
@@ -147,6 +160,10 @@
     "overdueBy": "Überfällig seit",
     "dueIn": "Fällig in",
     "inProgress": "In Bearbeitung",
+    "yetToStart": "Offen",
+    "todoDueIn": "Offen - Fällig in {{count}} Tagen",
+    "dueDateLabel": "Fälligkeitsdatum:",
+    "durationLabel": "Dauer:",
     "day": "Tag",
     "days": "Tagen",
     "hr": "Std",

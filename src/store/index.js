@@ -1,7 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { questionsApi } from "./api/questionsApi";
-import { analyticsApi } from "./api/analyticsApi";
 import { liveKitApi } from "./api/liveKitApi";
 
 import { certificatesApi } from "./api/certificatesApi";
@@ -17,7 +16,6 @@ import organizationReducer from "./features/organizationSlice";
 export const store = configureStore({
   reducer: {
     [questionsApi.reducerPath]: questionsApi.reducer,
-    [analyticsApi.reducerPath]: analyticsApi.reducer,
     [liveKitApi.reducerPath]: liveKitApi.reducer,
 
     [certificatesApi.reducerPath]: certificatesApi.reducer,
@@ -33,7 +31,6 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       questionsApi.middleware,
-      analyticsApi.middleware,
       liveKitApi.middleware,
       certificatesApi.middleware,
       notificationApi.middleware,
