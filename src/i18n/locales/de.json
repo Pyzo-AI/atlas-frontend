@@ -189,7 +189,23 @@
     "modules": "Module",
     "certificates": "Zertifikate",
     "analytics": "Analysen",
-    "assessments": "Bewertungen"
+    "assessments": "Bewertungen",
+    "chats": "Chats"
+  },
+  "chats": {
+    "title": "Chats",
+    "subtitle": "Sehen Sie Ihre modulweisen Diskussionen an einem Ort.",
+    "searchPlaceholder": "Nach Chatname suchen",
+    "listHeaderName": "Chats",
+    "listHeaderDateTime": "Datum & Uhrzeit",
+    "aiOverviewTitle": "KI-Überblick",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "loadingMore": "Weitere werden geladen...",
+    "noSearchResults": "Keine Chats entsprechen Ihrer Suche",
+    "emptyStateTitle": "Noch keine Chats",
+    "emptyStateDesc": "Starten Sie ein Gespräch auf der Vorlesungsseite eines Moduls, und es wird hier angezeigt.",
+    "selectChatPrompt": "Wählen Sie einen Chat aus, um die Unterhaltung anzuzeigen"
   },
   "header": {
     "resetPassword": "Passwort zurücksetzen",

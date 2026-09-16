@@ -210,7 +210,23 @@
     "modules": "Modules",
     "certificates": "Certificates",
     "analytics": "Analytics",
-    "assessments": "Assessments"
+    "assessments": "Assessments",
+    "chats": "Chats"
+  },
+  "chats": {
+    "title": "Chats",
+    "subtitle": "View your module-wise discussions in one place.",
+    "searchPlaceholder": "Search by chat name",
+    "listHeaderName": "Chats",
+    "listHeaderDateTime": "Date & Time",
+    "aiOverviewTitle": "AI Overview",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "loadingMore": "Loading more...",
+    "noSearchResults": "No chats match your search",
+    "emptyStateTitle": "No chats yet",
+    "emptyStateDesc": "Start a conversation on a module's lecture page and it will show up here.",
+    "selectChatPrompt": "Select a chat to view the conversation"
   },
   "header": {
     "resetPassword": "Reset Password",

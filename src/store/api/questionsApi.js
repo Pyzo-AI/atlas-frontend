@@ -36,6 +36,23 @@ export const questionsApi = createApi({
       providesTags: ['Question'],
     }),
 
+    getChats: builder.query({
+      query: ({ search = '', page = 1, pageSize = 50 } = {}) => {
+        const params = new URLSearchParams({
+          page: String(page),
+          page_size: String(pageSize),
+        });
+        if (search) params.set('search', search);
+        return `api/learner/chats?${params.toString()}`;
+      },
+      providesTags: ['Question'],
+    }),
+
+    getChatDetail: builder.query({
+      query: (conversationId) => `api/learner/chats/${conversationId}`,
+      providesTags: ['Question'],
+    }),
+
     // Submit a new question
     submitQuestion: builder.mutation({
       query: ({ presentationId, ...questionData }) => ({
@@ -135,6 +152,8 @@ export const {
   useGetAllVideoQuery,
   useGetPresentationsQuery,
   useGetDashboardSummaryQuery,
+  useGetChatsQuery,
+  useGetChatDetailQuery,
   useSubmitCompletionStatusMutation,
   useSubmitVideoProgressMutation,
   useGetAssessmentQuery,

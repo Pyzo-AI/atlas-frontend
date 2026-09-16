@@ -10,6 +10,8 @@ import modules from "@/assets/svg/modules.svg";
 import modulesActive from "@/assets/svg/modules_active.svg";
 import certificate from "@/assets/svg/certificate.svg";
 import certificateActive from "@/assets/svg/certificate_active.svg";
+import chats from "@/assets/svg/chats.svg";
+import chatsActive from "@/assets/svg/chats_active.svg";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import SidebarToolsSwitcher from "@/components/common/SidebarToolsSwitcher";
@@ -39,6 +41,12 @@ const Sidebar = ({ isOpen = false, onClose, isCollapsed = false }) => {
       href: "/certificates",
       icon: certificate,
       activeIcon: certificateActive,
+    },
+    {
+      name: t("sidebar.chats"),
+      href: "/chats",
+      icon: chats,
+      activeIcon: chatsActive,
     },
   ];
 
