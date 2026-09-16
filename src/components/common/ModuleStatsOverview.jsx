@@ -19,7 +19,7 @@ const DesktopMetric = ({ value, label, isLast }) => (
 const DesktopStatCard = ({ iconBg, icon, title, value, metrics }) => (
   <div className="flex-1 min-w-[280px] flex flex-col gap-2 px-5 py-4 bg-white border border-[#EDEDED] rounded-[14px]">
     <div className="flex items-center gap-2 w-full">
-      <div className={`flex items-center justify-center w-11 h-11 rounded-full shrink-0 ${iconBg}`}>{icon}</div>
+      <div className={`flex items-center justify-center w-11 h-11 rounded-[7.33px] shrink-0 ${iconBg}`}>{icon}</div>
       <div className="flex flex-col gap-1 min-w-0">
         <span className="font-lato font-bold text-xs uppercase text-[#595959]">{title}</span>
         <span className="font-lato font-bold text-2xl text-[#333333]">{value}</span>
