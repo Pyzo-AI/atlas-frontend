@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import Image from "next/image";
@@ -254,6 +254,28 @@ const Home = () => {
     }
   }, [loading, statsLoading, minLoaderTimeElapsed, hasLoadedOnce]);
 
+  // Once the page has loaded once, any later refetch (filter/search/sort/page
+  // change) keeps the in-area loader up for at least 2s too, even if the
+  // response comes back faster.
+  const [showAreaLoader, setShowAreaLoader] = useState(false);
+  const areaLoaderStartRef = useRef(null);
+
+  useEffect(() => {
+    if (loading) {
+      if (!showAreaLoader) {
+        areaLoaderStartRef.current = Date.now();
+        setShowAreaLoader(true);
+      }
+      return;
+    }
+    if (showAreaLoader) {
+      const elapsed = Date.now() - (areaLoaderStartRef.current || 0);
+      const remaining = Math.max(0, 2000 - elapsed);
+      const timer = setTimeout(() => setShowAreaLoader(false), remaining);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, showAreaLoader]);
+
   const handlePresentationClick = (presentationId) => {
     capture("module_start", {
       user_id: userDetails?.sub,
@@ -346,8 +368,11 @@ const Home = () => {
 
           {/* Module list */}
           <div className="flex flex-col items-center gap-4 w-full">
-            {loading ? (
-              <PyzoLoader fullScreen={false} />
+            {showAreaLoader ? (
+              // Matches ~2 rows of cards (mobile list rows vs. desktop grid
+              // cards have very different heights) so switching page/filter
+              // doesn't shift the page height around the loader.
+              <PyzoLoader fullScreen={false} heightClassName="min-h-[208px] sm:min-h-[490px]" />
             ) : items.length === 0 ? (
               orgConfig?.disable_no_course_found ? null : (
                 <div className="flex flex-col items-center justify-center w-full min-h-[40vh]">
@@ -360,26 +385,27 @@ const Home = () => {
                 </div>
               )
             ) : (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
-                  {items.map((presentation) => (
-                    <React.Fragment key={presentation.presentation_id}>
-                      <DesktopModuleCard
-                        presentation={presentation}
-                        getBadge={getBadge}
-                        onClick={() => handlePresentationClick(presentation.presentation_id)}
-                      />
-                      <MobileModuleCard
-                        presentation={presentation}
-                        getBadge={getBadge}
-                        onClick={() => handlePresentationClick(presentation.presentation_id)}
-                      />
-                    </React.Fragment>
-                  ))}
-                </div>
-                {pagination && <Pagination page={pagination.page} totalPages={pagination.total_pages} onPageChange={setPage} />}
-              </>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
+                {items.map((presentation) => (
+                  <React.Fragment key={presentation.presentation_id}>
+                    <DesktopModuleCard
+                      presentation={presentation}
+                      getBadge={getBadge}
+                      onClick={() => handlePresentationClick(presentation.presentation_id)}
+                    />
+                    <MobileModuleCard
+                      presentation={presentation}
+                      getBadge={getBadge}
+                      onClick={() => handlePresentationClick(presentation.presentation_id)}
+                    />
+                  </React.Fragment>
+                ))}
+              </div>
             )}
+
+            {/* Stays put (uses the last known page info) while a filter/sort/page
+                change is loading — only the cards area above swaps for the loader. */}
+            {pagination && <Pagination page={pagination.page} totalPages={pagination.total_pages} onPageChange={setPage} />}
           </div>
         </div>
       </div>
