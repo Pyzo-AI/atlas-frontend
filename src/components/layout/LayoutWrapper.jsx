@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, createContext, useContext } from "react";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import { useSelector } from "react-redux";
+import { useDeviceType } from "@/hooks/useDeviceType";
 
 const SidebarContext = createContext();
 
@@ -20,6 +21,17 @@ export default function LayoutWrapper({ children }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const pathname = usePathname();
   const orgConfig = useSelector((state) => state.organization?.config);
+  const { isTablet } = useDeviceType();
+
+  // Default the sidebar to collapsed on tablet widths - only applied once,
+  // so it doesn't fight a manual toggle the user made afterward.
+  const hasSetTabletDefault = useRef(false);
+  useEffect(() => {
+    if (isTablet && !hasSetTabletDefault.current) {
+      hasSetTabletDefault.current = true;
+      setIsSidebarCollapsed(true);
+    }
+  }, [isTablet]);
 
   // Check if sidebar should be hidden
   const hideSidebarRoutes = ["/lectures/", "/assessment/", "/login"];

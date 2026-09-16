@@ -352,7 +352,7 @@ const Home = () => {
         className={`w-full bg-page-background flex flex-col ${
           noModulesAssignedAtAll ? "h-[calc(100vh-45px)] overflow-hidden" : "min-h-screen"
         }`}>
-        <div className="flex flex-col flex-1 min-h-0 items-stretch gap-5 w-full px-4 sm:px-5 py-5 max-w-[1240px] mx-auto">
+        <div className="flex flex-col flex-1 min-h-0 items-stretch gap-5 w-full px-4 sm:px-5 py-5">
           {/* Page header */}
           <div className="flex flex-col gap-1 w-full shrink-0">
             <h1 className="font-lato font-bold text-base text-text-title">{t("home.availableCourses")}</h1>
@@ -440,7 +440,9 @@ const Home = () => {
                 </div>
               )
             ) : (
-              <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
+              <div
+                ref={gridRef}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 w-full">
                 {items.map((presentation) => (
                   <React.Fragment key={presentation.presentation_id}>
                     <DesktopModuleCard

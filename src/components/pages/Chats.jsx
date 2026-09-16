@@ -336,7 +336,7 @@ export default function Chats() {
 
   return (
     <div className="w-full h-[calc(100vh-45px)] overflow-hidden bg-[#F9FAFB]">
-      <div className="flex flex-col h-full items-stretch gap-5 w-full px-4 sm:px-5 py-5 max-w-[1240px] mx-auto">
+      <div className="flex flex-col h-full items-stretch gap-5 w-full px-4 sm:px-5 py-5">
         {/* Page header - hidden on mobile while a chat's detail is open (the
             detail screen has its own back-button header instead); always
             shown on desktop regardless of mobileView. */}
@@ -352,7 +352,7 @@ export default function Chats() {
             Figma nodes 8391:58870 (never chatted) and 8391:62291 (no matches). */}
         <div className="hidden sm:flex items-start gap-4 w-full flex-1 min-h-0">
             {/* Left pane: module chat list */}
-            <div className="w-[323px] h-full shrink-0 flex flex-col bg-white border border-[#E5E7EB] rounded-lg overflow-hidden">
+            <div className="w-[27%] min-w-[280px] max-w-[420px] h-full shrink-0 flex flex-col bg-white border border-[#E5E7EB] rounded-lg overflow-hidden">
               <div className="p-2.5 shrink-0">
                 <SearchBar
                   initialValue={searchTerm}

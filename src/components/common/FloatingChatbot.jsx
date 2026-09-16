@@ -243,7 +243,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="cursor-pointer fixed bottom-6 right-6 w-[54px] h-[54px] rounded-full hover:scale-110 hover:shadow-[0px_4px_16px_rgba(39,98,234,0.35)] transition-all duration-200 z-50"
+        className="cursor-pointer fixed bottom-6 right-6 w-[54px] h-[54px] rounded-full border-[3px] border-white shadow-[0px_4px_16px_rgba(39,98,234,0.35)] hover:scale-110 transition-all duration-200 z-50 overflow-hidden"
       >
         <Image src={chatbotFabIcon} alt="chatbot" width={54} height={54} className="w-full h-full" />
       </button>
