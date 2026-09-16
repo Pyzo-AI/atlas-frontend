@@ -17,6 +17,7 @@ import QuickFilter from "../common/QuickFilter";
 import SearchBar from "../common/SearchBar";
 import PyzoLoader from "../common/PyzoLoader";
 import { useTranslation } from "react-i18next";
+import noModulesAssignedIcon from "@/assets/svg/no-modules-assigned-icon.svg";
 
 const STATUS_OPTIONS = ["all", "in_progress", "yet_to_start", "locked", "overdue", "completed"];
 const PAGE_SIZE = 8;
@@ -315,16 +316,41 @@ const Home = () => {
     return <PyzoLoader fullScreen />;
   }
 
+  // The dashboard-summary "assigned" count is independent of the current
+  // filter/search/page, so it's the reliable signal for "this user has zero
+  // modules assigned, period" (as opposed to zero results for the current
+  // filter) - matches Figma node 8000:77225.
+  const noModulesAssignedAtAll = (dashboardSummary?.modules?.assigned ?? 0) === 0;
+
   return (
     <>
-      <div className="w-full min-h-screen bg-page-background">
-        <div className="flex flex-col items-stretch gap-5 w-full px-4 sm:px-5 py-5 max-w-[1240px] mx-auto">
+      <div
+        className={`w-full bg-page-background flex flex-col ${
+          noModulesAssignedAtAll ? "h-[calc(100vh-45px)] overflow-hidden" : "min-h-screen"
+        }`}>
+        <div className="flex flex-col flex-1 min-h-0 items-stretch gap-5 w-full px-4 sm:px-5 py-5 max-w-[1240px] mx-auto">
           {/* Page header */}
-          <div className="flex flex-col gap-1 w-full">
+          <div className="flex flex-col gap-1 w-full shrink-0">
             <h1 className="font-lato font-bold text-base text-text-title">{t("home.availableCourses")}</h1>
             <p className="font-lato text-xs text-text-muted">{t("home.browseDescription")}</p>
           </div>
 
+          {noModulesAssignedAtAll ? (
+            <div className="flex flex-col items-center justify-center w-full flex-1 min-h-0 mt-[-60px]">
+              <div className="flex flex-col items-center gap-6 text-center">
+                <div className="w-[88px] h-[88px] rounded-[20px] bg-white shadow-[0px_4px_12px_rgba(131,98,234,0.05)] flex items-center justify-center shrink-0">
+                  <Image src={noModulesAssignedIcon} alt="" width={44} height={44} />
+                </div>
+                <div className="flex flex-col items-center gap-3">
+                  <h3 className="font-lato font-semibold text-xl text-[#1D1F2C]">{t("home.noModulesAssignedTitle")}</h3>
+                  <p className="font-lato text-sm leading-5 text-[#667085] max-w-[400px]">
+                    {t("home.noModulesAssignedDesc")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
           {/* Learning Overview */}
           <div className="flex flex-col items-stretch gap-2.5 w-full">
             <h3 className="font-lato font-semibold text-sm text-text-title">{t("home.learningOverview")}</h3>
@@ -407,6 +433,8 @@ const Home = () => {
                 change is loading — only the cards area above swaps for the loader. */}
             {pagination && <Pagination page={pagination.page} totalPages={pagination.total_pages} onPageChange={setPage} />}
           </div>
+            </>
+          )}
         </div>
       </div>
 

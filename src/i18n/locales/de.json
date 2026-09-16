@@ -130,6 +130,8 @@
     "errorDesc": "Fehler beim Abrufen der Daten vom Server.",
     "learningOverview": "Lernübersicht",
     "noCoursesFound": "Keine Kurse gefunden",
+    "noModulesAssignedTitle": "Noch keine Module zugewiesen",
+    "noModulesAssignedDesc": "Es sieht so aus, als wären Ihnen noch keine Module zugewiesen. Sobald Ihr Administrator Module zuweist, erscheinen sie hier.",
     "sortBy": "Sortieren nach",
     "sortByDueDate": "Fälligkeitsdatum",
     "sortEarliest": "Früheste",
