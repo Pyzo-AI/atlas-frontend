@@ -27,6 +27,7 @@
     "react-redux": "^9.2.0",
     "react-toastify": "^11.0.5",
     "socket.io-client": "^4.8.3",
+    "tailwindcss-animate": "^1.0.7",
     "video.js": "^7.21.5"
   },
   "devDependencies": {

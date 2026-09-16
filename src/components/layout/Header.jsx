@@ -1,37 +1,37 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
-import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import { decodeJWT } from "@/utils/jwt";
 import { getAuthTokens } from "@esmagico/pyzo-auth-sdk";
-import user_icon from "@/assets/svg/user-icon.svg";
-import { trackLogout } from "@/utils/authTracking";
 import { logout } from "@/utils/auth";
 import Image from "next/image";
 import hamburger from "@/assets/svg/hamburger.svg";
-import logout_icon from "@/assets/svg/logout.svg";
-import { toast } from "react-toastify";
+import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import LogoutModal from "@/components/ui/auth/LogoutModal";
-import { FiChevronDown } from "react-icons/fi";
+import { LuChevronsLeft } from "react-icons/lu";
 import NotificationDrawer from "./NotificationDrawer";
 import notification from "@/assets/svg/notification.svg";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useTranslation } from "react-i18next";
 import { useGetOrganizationConfigQuery } from "@/store/api/organizationsApi";
+import { useSidebar } from "./LayoutWrapper";
+import { useOverlayTransition } from "@/hooks/useOverlayTransition";
 
-const navigation = [
-  // { name: "Home", href: "/" },
-  // { name: "Assessment", href: "/assessment" },
-  // { name: 'Resources', href: '/' },
-  // { name: 'Community', href: '/' },
-];
+/** "Ankit Kumar" -> "AK"; falls back to the first two letters for a single word. */
+function getInitials(name) {
+  const parts = (name || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
+// Visual chrome (48px height, avatar-initials dropdown, collapse toggle)
+// ported from pyzo-central-frontend's Header.tsx so switching tabs between
+// PYZO products doesn't feel like a different app. Notification bell +
+// org-config gating stay Atlas's own, real functionality.
 const Header = ({ onMenuClick }) => {
-  const router = useLocalizedRouter();
-  const { localizePath } = router;
   const pathname = usePathname();
+  const { isSidebarCollapsed, toggleSidebarCollapse, shouldHideSidebar } = useSidebar();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [userInfo, setUserInfo] = useState({ name: "", email: "" });
@@ -39,34 +39,23 @@ const Header = ({ onMenuClick }) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [token, setToken] = useState(null);
-  const { notifications, unreadCount, markAsRead, refresh, loadMore, hasMore, loading } = useNotifications(token);
+  const { notifications, unreadCount, markAsRead, loadMore, hasMore, loading } = useNotifications(token);
   const { t } = useTranslation();
+  const { shouldRender, transitionStyle, dropdownTransitionClassName } = useOverlayTransition(isDropdownOpen, false);
 
-  // Fetch organization config
   const { data: orgConfig } = useGetOrganizationConfigQuery(undefined, {
-    skip: !token, // Only fetch if we have a token
+    skip: !token,
   });
 
   useEffect(() => {
-    if (orgConfig) {
-      console.log("Organization Config API Response:", orgConfig);
+    if (
+      typeof window !== "undefined" &&
+      typeof Notification !== "undefined" &&
+      Notification.permission === "default"
+    ) {
+      Notification.requestPermission();
     }
-  }, [orgConfig]);
-
-useEffect(() => {
-  if (
-    typeof window !== "undefined" &&
-    typeof Notification !== "undefined" &&
-    Notification.permission === "default"
-  ) {
-    Notification.requestPermission();
-  }
-}, []);
-
-
-
-  const hideSidebarRoutes = ["/lectures/", "/assessment/", "/login"];
-  const shouldHideMenuButton = orgConfig?.disable_sidebar || hideSidebarRoutes.some((route) => pathname.includes(route));
+  }, []);
 
   useEffect(() => {
     const tokens = getAuthTokens() || {};
@@ -95,7 +84,6 @@ useEffect(() => {
     };
   }, []);
 
-
   const handleLogoutClick = () => {
     setIsDropdownOpen(false);
     setIsLogoutModalOpen(true);
@@ -104,18 +92,21 @@ useEffect(() => {
   const confirmLogout = async () => {
     setIsLoggingOut(true);
     setIsLogoutModalOpen(false);
-    
     localStorage.removeItem("trainboost_conversation_history");
     setIsDropdownOpen(false);
     logout("/login");
   };
 
+  const hideMenuButton = orgConfig?.disable_sidebar || shouldHideSidebar;
+
   return (
     <header
-      className={`fixed top-0 right-0 h-12 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#E5E7EB] px-4 md:px-5 bg-white backdrop-blur-sm z-50 ${shouldHideMenuButton ? "left-0" : "left-0 md:left-[200px]"} ${pathname.startsWith("/lectures") ? "hidden lg:flex" : ""}`}>
-      <div className="flex items-center gap-2 md:gap-3 md:flex-1">
-        {/* Mobile Menu Button - Hidden on certain routes */}
-        {!shouldHideMenuButton && (
+      className={`fixed top-0 right-0 h-12 flex items-center justify-between whitespace-nowrap border-b border-[#E5E7EB] px-4 md:px-6 bg-white z-[120] transition-all duration-300 ${
+        hideMenuButton ? "left-0" : isSidebarCollapsed ? "left-0 md:left-[70px]" : "left-0 md:left-[200px]"
+      } ${pathname.startsWith("/lectures") ? "hidden lg:flex" : ""}`}>
+      <div className="flex items-center gap-2 md:gap-4">
+        {/* Mobile Menu Button */}
+        {!hideMenuButton && (
           <button
             onClick={onMenuClick}
             className="md:hidden p-1.5 rounded-md hover:bg-gray-100 transition-colors"
@@ -124,33 +115,25 @@ useEffect(() => {
           </button>
         )}
 
-        {/* Logo - Always visible on mobile, visible on desktop for /lectures page */}
-        {!orgConfig?.disable_logo && (
-          <div
-            className={`cursor-pointer ${pathname.includes("/lectures/") ? "" : "md:hidden"}`}
-            onClick={() => router.push("/")}>
-            <Image src={logo} height={28} width={103} alt="Pyzo Logo" />
-          </div>
+        {/* Sidebar Collapse Toggle — desktop only */}
+        {!hideMenuButton && (
+          <button
+            onClick={toggleSidebarCollapse}
+            className={`hidden md:flex p-1.5 text-[#5F6069] hover:bg-gray-100 rounded-md transition-all duration-300 cursor-pointer ${
+              isSidebarCollapsed ? "rotate-180" : ""
+            }`}
+            aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+            <LuChevronsLeft className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Sidebar is hidden on the lecture player — keep branding visible here instead. */}
+        {pathname.includes("/lectures/") && !orgConfig?.disable_logo && (
+          <Image src={logo} height={28} width={103} alt="Pyzo Logo" />
         )}
       </div>
 
       <div className="flex items-center gap-4">
-        <nav className="flex items-center gap-5">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                href={localizePath(item.href)}
-                className={`font-lato font-semibold text-[14px] leading-[100%] tracking-[0.02em] ${
-                  isActive ? "text-primary " : "text-primary-text hover:text-primary"
-                }`}>
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
-
         {/* Notification Icon */}
         {!orgConfig?.disable_notification && (
           <div
@@ -167,48 +150,50 @@ useEffect(() => {
           </div>
         )}
 
+        {/* Avatar + dropdown */}
         <div className="relative" ref={dropdownRef}>
-          <div
-            className="flex items-center gap-1 cursor-pointer py-[5px] px-[5px] bg-white border border-[#E3E7EF] rounded-full hover:bg-gray-50 transition-colors"
+          <button
+            type="button"
+            aria-label="Account menu"
+            className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-primary cursor-pointer transition-opacity hover:opacity-90"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-            <Image src={user_icon} alt="user-icon" width={22} height={22} />
-            <span className="hidden lg:block font-mulish font-semibold text-[12px] leading-[15px] text-[#1D1F2C]">
-              {userInfo.name || t("header.user")}
+            <span className="font-lato font-semibold text-[12px] leading-[14px] text-white text-center">
+              {getInitials(userInfo.name) || "?"}
             </span>
-            <FiChevronDown
-              className={`hidden lg:block w-4 h-4 text-[#4A4C56] transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
-            />
-          </div>
+          </button>
 
-          {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-[244px] bg-white border border-[#ECECEC] shadow-[0px_3px_8px_rgba(0,0,0,0.12)] rounded-[10px] px-3 pt-3 pb-2 flex flex-col gap-[10px] z-[70] font-lato">
-              <div className="flex items-center gap-[6px] w-full">
-                <Image src={user_icon} alt="user-icon" width={36} height={36} />
-                <div className="flex flex-col gap-[1px] overflow-hidden">
-                  <div className="text-[14px] font-semibold text-[#1D1F2C] leading-[17px] truncate">
+          {shouldRender && (
+            <div
+              className={`absolute right-0 top-[calc(100%+2px)] w-[240px] origin-top-right bg-white border border-[#E7E9EE] rounded-[12px] flex flex-col z-[70] ${dropdownTransitionClassName}`}
+              style={{ boxShadow: "0px 1px 4px rgba(0,0,0,0.04), 0px 4px 16px rgba(0,0,0,0.08)", ...transitionStyle }}>
+              <div className="flex items-center gap-3 px-4 py-3 w-full">
+                <span className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-primary">
+                  <span className="font-lato font-semibold text-[13px] leading-[16px] text-white text-center">
+                    {getInitials(userInfo.name) || "?"}
+                  </span>
+                </span>
+                <div className="flex flex-col gap-1 overflow-hidden">
+                  <div className="font-lato font-bold text-[13px] leading-[16px] text-[#1E293B] truncate">
                     {userInfo.name}
                   </div>
                   {userInfo.email && (
-                    <div className="text-[12px] font-normal text-[#585858] leading-[14px] truncate">
+                    <div className="font-lato font-normal text-[12px] leading-[14px] text-[#64748B] truncate">
                       {userInfo.email}
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-[10px] items-start w-full">                <div className="flex flex-col gap-1.5 w-full">
-                  <div className="w-full h-[1px] bg-[#E5E7EB]" />
-                  <button
-                    onClick={handleLogoutClick}
-                    disabled={isLoggingOut}
-                    className="py-1 flex items-center gap-[8px] w-full cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[#F04638]">
-                    <Image src={logout_icon} alt="logout-icon" width={16} height={16} />
-                    <span className="text-[12px] font-normal leading-[14px] text-[#F04638]">
-                      {isLoggingOut ? t("header.signingOut") : t("header.logOut")}
-                    </span>
-                  </button>
-                </div>
-              </div>
+              <div className="w-full h-px bg-[#F1F5F9]" />
+
+              <button
+                onClick={handleLogoutClick}
+                disabled={isLoggingOut}
+                className="flex items-center gap-1 px-4 py-3 w-full cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <span className="font-lato font-medium text-[12px] leading-[14px] text-[#E05345]">
+                  {isLoggingOut ? t("header.signingOut") : t("header.logOut")}
+                </span>
+              </button>
             </div>
           )}
         </div>

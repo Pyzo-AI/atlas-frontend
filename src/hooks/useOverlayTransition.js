@@ -6,6 +6,14 @@ import { useEffect, useLayoutEffect, useReducer } from "react";
 export const OVERLAY_ANIMATION = {
   openDuration: 350,
   closeDuration: 200,
+  backdrop: {
+    open: "transition-opacity ease-out opacity-100",
+    close: "transition-opacity ease-in opacity-0",
+  },
+  leftDrawer: {
+    open: "transition-all ease-out opacity-100 translate-x-0",
+    close: "transition-all ease-in opacity-0 -translate-x-full",
+  },
   dropdown: {
     open: "transition-all ease-out opacity-100 scale-100 translate-y-0",
     close: "transition-all ease-in opacity-0 scale-95 -translate-y-1 pointer-events-none",
@@ -89,6 +97,8 @@ export const useOverlayTransition = (isOpen, lockScroll = true) => {
   };
 
   const dropdownTransitionClassName = state.isVisible ? OVERLAY_ANIMATION.dropdown.open : OVERLAY_ANIMATION.dropdown.close;
+  const backdropTransitionClassName = state.isVisible ? OVERLAY_ANIMATION.backdrop.open : OVERLAY_ANIMATION.backdrop.close;
+  const leftDrawerTransitionClassName = state.isVisible ? OVERLAY_ANIMATION.leftDrawer.open : OVERLAY_ANIMATION.leftDrawer.close;
 
-  return { ...state, transitionStyle, dropdownTransitionClassName };
+  return { ...state, transitionStyle, dropdownTransitionClassName, backdropTransitionClassName, leftDrawerTransitionClassName };
 };

@@ -3,7 +3,6 @@
 import { useState, createContext, useContext } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
-import Header from "./Header";
 import { useSelector } from "react-redux";
 
 const SidebarContext = createContext();
@@ -18,6 +17,7 @@ export const useSidebar = () => {
 
 export default function LayoutWrapper({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const pathname = usePathname();
   const orgConfig = useSelector((state) => state.organization?.config);
 
@@ -35,10 +35,20 @@ export default function LayoutWrapper({ children }) {
     setIsSidebarOpen(false);
   };
 
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed((prev) => !prev);
+  };
+
   return (
-    <SidebarContext.Provider value={{ toggleSidebar, closeSidebar }}>
-      {!shouldHideSidebar && <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />}
-      <div className={shouldHideSidebar ? "" : "md:ml-[200px]"}>
+    <SidebarContext.Provider
+      value={{ toggleSidebar, closeSidebar, isSidebarCollapsed, toggleSidebarCollapse, shouldHideSidebar }}>
+      {!shouldHideSidebar && (
+        <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} isCollapsed={isSidebarCollapsed} />
+      )}
+      <div
+        className={`transition-all duration-300 ${
+          shouldHideSidebar ? "" : isSidebarCollapsed ? "md:ml-[70px]" : "md:ml-[200px]"
+        }`}>
         {children}
       </div>
     </SidebarContext.Provider>

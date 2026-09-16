@@ -15,6 +15,7 @@ import ModuleStatsOverview from "../common/ModuleStatsOverview";
 import Pagination from "../common/Pagination";
 import QuickFilter from "../common/QuickFilter";
 import SearchBar from "../common/SearchBar";
+import PyzoLoader from "../common/PyzoLoader";
 import { useTranslation } from "react-i18next";
 
 const STATUS_OPTIONS = ["all", "in_progress", "yet_to_start", "locked", "overdue", "completed"];
@@ -324,17 +325,7 @@ const Home = () => {
           {/* Module list */}
           <div className="flex flex-col items-center gap-4 w-full">
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full animate-pulse">
-                {[...Array(PAGE_SIZE)].map((_, index) => (
-                  <div key={index} className="flex flex-col p-[10px_10px_12px] gap-2.5 w-full bg-white border border-border-card rounded-lg">
-                    <div className="w-full aspect-[271/132] bg-gray-200 rounded-md"></div>
-                    <div className="flex flex-col gap-2 w-full">
-                      <div className="w-full h-4 bg-gray-200 rounded"></div>
-                      <div className="w-2/3 h-3 bg-gray-200 rounded"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <PyzoLoader fullScreen={false} />
             ) : items.length === 0 ? (
               orgConfig?.disable_no_course_found ? null : (
                 <div className="flex flex-col items-center justify-center w-full min-h-[40vh]">
