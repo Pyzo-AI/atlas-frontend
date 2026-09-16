@@ -8,7 +8,8 @@ import Image from "next/image";
 import hamburger from "@/assets/svg/hamburger.svg";
 import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import LogoutModal from "@/components/ui/auth/LogoutModal";
-import { LuChevronsLeft } from "react-icons/lu";
+import sidebarCollapse from "@/assets/svg/sidebar-collapse.svg";
+import logoutIcon from "@/assets/svg/logout.svg";
 import NotificationDrawer from "./NotificationDrawer";
 import notification from "@/assets/svg/notification.svg";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -91,10 +92,17 @@ const Header = ({ onMenuClick }) => {
 
   const confirmLogout = async () => {
     setIsLoggingOut(true);
-    setIsLogoutModalOpen(false);
     localStorage.removeItem("trainboost_conversation_history");
     setIsDropdownOpen(false);
+    // logout() redirects to loginUrl once it's done, so this only resolves —
+    // and the modal only closes — after that navigation would already be
+    // underway; kept for the (rare) case it doesn't. Keep the spinner up a
+    // bit past whatever the call itself took, so a fast response doesn't
+    // just flash it for a frame.
     logout("/login");
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    setIsLoggingOut(false);
+    setIsLogoutModalOpen(false);
   };
 
   const hideMenuButton = orgConfig?.disable_sidebar || shouldHideSidebar;
@@ -119,11 +127,11 @@ const Header = ({ onMenuClick }) => {
         {!hideMenuButton && (
           <button
             onClick={toggleSidebarCollapse}
-            className={`hidden md:flex p-1.5 text-[#5F6069] hover:bg-gray-100 rounded-md transition-all duration-300 cursor-pointer ${
+            className={`hidden md:flex -ml-[10px] p-1.5 text-[#5F6069] hover:bg-gray-100 rounded-md transition-all duration-300 cursor-pointer ${
               isSidebarCollapsed ? "rotate-180" : ""
             }`}
             aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
-            <LuChevronsLeft className="w-4 h-4" />
+            <Image src={sidebarCollapse} width={16} height={16} alt="" unoptimized />
           </button>
         )}
 
@@ -190,6 +198,7 @@ const Header = ({ onMenuClick }) => {
                 onClick={handleLogoutClick}
                 disabled={isLoggingOut}
                 className="flex items-center gap-1 px-4 py-3 w-full cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <Image src={logoutIcon} alt="logout-icon" width={16} height={16} unoptimized />
                 <span className="font-lato font-medium text-[12px] leading-[14px] text-[#E05345]">
                   {isLoggingOut ? t("header.signingOut") : t("header.logOut")}
                 </span>
@@ -199,7 +208,12 @@ const Header = ({ onMenuClick }) => {
         </div>
       </div>
 
-      <LogoutModal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} onConfirm={confirmLogout} />
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={confirmLogout}
+        isLoggingOut={isLoggingOut}
+      />
 
       <NotificationDrawer
         isOpen={isNotificationOpen}

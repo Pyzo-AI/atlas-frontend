@@ -14,6 +14,14 @@ export const OVERLAY_ANIMATION = {
     open: "transition-all ease-out opacity-100 translate-x-0",
     close: "transition-all ease-in opacity-0 -translate-x-full",
   },
+  rightDrawer: {
+    open: "transition-all ease-out opacity-100 translate-x-0",
+    close: "transition-all ease-in opacity-0 translate-x-full",
+  },
+  modal: {
+    open: "transition-all ease-out opacity-100 scale-100 translate-y-0",
+    close: "transition-all ease-in opacity-0 scale-95 translate-y-4",
+  },
   dropdown: {
     open: "transition-all ease-out opacity-100 scale-100 translate-y-0",
     close: "transition-all ease-in opacity-0 scale-95 -translate-y-1 pointer-events-none",
@@ -99,6 +107,16 @@ export const useOverlayTransition = (isOpen, lockScroll = true) => {
   const dropdownTransitionClassName = state.isVisible ? OVERLAY_ANIMATION.dropdown.open : OVERLAY_ANIMATION.dropdown.close;
   const backdropTransitionClassName = state.isVisible ? OVERLAY_ANIMATION.backdrop.open : OVERLAY_ANIMATION.backdrop.close;
   const leftDrawerTransitionClassName = state.isVisible ? OVERLAY_ANIMATION.leftDrawer.open : OVERLAY_ANIMATION.leftDrawer.close;
+  const rightDrawerTransitionClassName = state.isVisible ? OVERLAY_ANIMATION.rightDrawer.open : OVERLAY_ANIMATION.rightDrawer.close;
+  const modalTransitionClassName = state.isVisible ? OVERLAY_ANIMATION.modal.open : OVERLAY_ANIMATION.modal.close;
 
-  return { ...state, transitionStyle, dropdownTransitionClassName, backdropTransitionClassName, leftDrawerTransitionClassName };
+  return {
+    ...state,
+    transitionStyle,
+    dropdownTransitionClassName,
+    backdropTransitionClassName,
+    leftDrawerTransitionClassName,
+    rightDrawerTransitionClassName,
+    modalTransitionClassName,
+  };
 };

@@ -7,6 +7,7 @@
     "logOutDesc": "Are you sure you want to log out? You'll need to sign in again to continue.",
     "cancel": "Cancel",
     "logOutButton": "Log Out",
+    "loggingOut": "Logging out...",
     "newPasswordReq": "New password is required",
     "passwordLength": "Password must be at least 6 characters",
     "confirmPasswordReq": "Please confirm your password",

@@ -3,17 +3,13 @@ import rating_success from "@/assets/svg/rating_success.svg";
 import close_icon from "@/assets/svg/close.svg";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
+import Modal from "@/components/common/Modal";
 
 const RatingSuccessModal = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
-
-      {/* Modal */}
+    <Modal isOpen={isOpen} onClose={onClose} size="custom" className="!p-0 !bg-transparent shadow-none">
       <div className="relative bg-white rounded-2xl shadow-xl w-full md:w-[420px] mx-4 md:mx-0">
         {/* Close Button */}
         <button onClick={onClose} className="cursor-pointer absolute top-4 right-4 w-6 h-6 ">
@@ -49,7 +45,7 @@ const RatingSuccessModal = ({ isOpen, onClose }) => {
           </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

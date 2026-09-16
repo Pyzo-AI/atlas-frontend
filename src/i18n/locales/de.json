@@ -7,6 +7,7 @@
     "logOutDesc": "Möchten Sie sich wirklich abmelden? Sie müssen sich erneut anmelden, um fortzufahren.",
     "cancel": "Abbrechen",
     "logOutButton": "Abmelden",
+    "loggingOut": "Wird abgemeldet...",
     "newPasswordReq": "Neues Passwort ist erforderlich",
     "passwordLength": "Das Passwort muss mindestens 6 Zeichen lang sein",
     "confirmPasswordReq": "Bitte bestätigen Sie Ihr Passwort",
