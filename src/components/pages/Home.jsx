@@ -243,9 +243,9 @@ const Home = () => {
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [minLoaderTimeElapsed, setMinLoaderTimeElapsed] = useState(false);
 
-  // Keep the full-screen loader up for at least 3s, even if data arrives sooner.
+  // Keep the full-screen loader up for at least 1.5s, even if data arrives sooner.
   useEffect(() => {
-    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 3000);
+    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 1500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -262,6 +262,12 @@ const Home = () => {
   const areaLoaderStartRef = useRef(null);
 
   useEffect(() => {
+    // The initial load is covered entirely by the full-screen loader above
+    // (hasLoadedOnce gate) - don't also start the area loader's own 2s timer
+    // for that same first fetch, or it can outlive hasLoadedOnce flipping
+    // true and flash the small loader right after the full-screen one ends.
+    if (!hasLoadedOnce) return;
+
     if (loading) {
       if (!showAreaLoader) {
         areaLoaderStartRef.current = Date.now();
@@ -275,7 +281,7 @@ const Home = () => {
       const timer = setTimeout(() => setShowAreaLoader(false), remaining);
       return () => clearTimeout(timer);
     }
-  }, [loading, showAreaLoader]);
+  }, [loading, showAreaLoader, hasLoadedOnce]);
 
   // Measure the real card grid's height every time it's actually on screen,
   // so the loader that replaces it on the next filter/page change reuses that

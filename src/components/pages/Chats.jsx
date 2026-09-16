@@ -308,14 +308,22 @@ export default function Chats() {
 
   // Full-screen loader only for the very first mount (list + its first
   // conversation's detail); every later fetch (search, page, switching
-  // chats) shows an in-place skeleton instead.
+  // chats) shows an in-place skeleton instead. Stays up for at least
+  // max(1.5s hardcoded minimum, actual load time) - matches the Modules page.
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [minLoaderTimeElapsed, setMinLoaderTimeElapsed] = useState(false);
+
   useEffect(() => {
-    if (hasLoadedOnce || chatsLoading) return;
+    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (hasLoadedOnce || chatsLoading || !minLoaderTimeElapsed) return;
     const waitingOnFirstDetail = chats.length > 0 && (!selectedConversationId || detailLoading || !detail);
     if (waitingOnFirstDetail) return;
     setHasLoadedOnce(true);
-  }, [hasLoadedOnce, chatsLoading, chats, selectedConversationId, detailLoading, detail]);
+  }, [hasLoadedOnce, chatsLoading, chats, selectedConversationId, detailLoading, detail, minLoaderTimeElapsed]);
 
   const messageGroups = detail ? groupMessagesByDay(detail.messages) : [];
   const headerDate = detail?.messages?.length
