@@ -1,10 +1,10 @@
 import React from "react";
 import Image from "next/image";
-import graduationCap from "@/assets/svg/graduation-cap.svg";
-import clipboardList from "@/assets/svg/clipboard-list.svg";
+import modulesIcon from "@/assets/svg/modules-assigned-icon.svg";
+import assessmentsIcon from "@/assets/svg/total-assessments-icon.svg";
 import { useTranslation } from "react-i18next";
 
-// ============= Desktop (node 8368:58460): circular icon, divider-separated metrics =============
+// ============= Desktop (node 8368:58460): flattened icon+bg badge, divider-separated metrics =============
 
 const DesktopMetric = ({ value, label, isLast }) => (
   <div className={`flex flex-1 items-stretch ${isLast ? "" : "gap-4"}`}>
@@ -16,10 +16,10 @@ const DesktopMetric = ({ value, label, isLast }) => (
   </div>
 );
 
-const DesktopStatCard = ({ iconBg, icon, title, value, metrics }) => (
+const DesktopStatCard = ({ icon, title, value, metrics }) => (
   <div className="flex-1 min-w-[280px] flex flex-col gap-2 px-5 py-4 bg-white border border-[#EDEDED] rounded-[14px]">
     <div className="flex items-center gap-2 w-full">
-      <div className={`flex items-center justify-center w-11 h-11 rounded-[7.33px] shrink-0 ${iconBg}`}>{icon}</div>
+      <Image src={icon} alt="" width={44} height={44} className="shrink-0" />
       <div className="flex flex-col gap-1 min-w-0">
         <span className="font-lato font-bold text-xs uppercase text-[#595959]">{title}</span>
         <span className="font-lato font-bold text-2xl text-[#333333]">{value}</span>
@@ -42,9 +42,9 @@ const MobileMetric = ({ value, label }) => (
   </div>
 );
 
-const MobileStatRow = ({ iconBg, icon, titlePrefix, value, valueSuffix, metrics }) => (
+const MobileStatRow = ({ icon, titlePrefix, value, valueSuffix, metrics }) => (
   <div className="flex items-center gap-2 w-full">
-    <div className={`flex items-center justify-center w-9 h-9 rounded-md shrink-0 ${iconBg}`}>{icon}</div>
+    <Image src={icon} alt="" width={36} height={36} className="shrink-0" />
     <div className="flex flex-col gap-1 flex-1 min-w-0">
       <div className="flex items-center gap-1">
         <span className="font-lato font-bold text-xs text-[#111827]">{titlePrefix}</span>
@@ -66,9 +66,6 @@ const ModuleStatsOverview = ({ summary, isLoading }) => {
   const modules = summary?.modules;
   const assessments = summary?.assessments;
   const dash = isLoading ? "-" : null;
-
-  const moduleIcon = (size) => <Image src={graduationCap} alt="" width={size} height={size} />;
-  const assessmentIcon = (size) => <Image src={clipboardList} alt="" width={size} height={size} />;
 
   const moduleMetrics = [
     { value: dash ?? modules?.completed ?? 0, label: t("home.stats.completed") },
@@ -99,15 +96,13 @@ const ModuleStatsOverview = ({ summary, isLoading }) => {
       {/* Desktop / tablet: two separate cards side by side, wrapping on narrower widths */}
       <div className="hidden sm:flex flex-wrap items-stretch gap-5 w-full">
         <DesktopStatCard
-          iconBg="bg-[#E9EFFD]"
-          icon={moduleIcon(22)}
+          icon={modulesIcon}
           title={t("home.stats.modulesAssigned")}
           value={dash ?? modules?.assigned ?? 0}
           metrics={moduleMetrics}
         />
         <DesktopStatCard
-          iconBg="bg-[#E6F7F0]"
-          icon={assessmentIcon(20)}
+          icon={assessmentsIcon}
           title={t("home.stats.totalAssessments")}
           value={dash ?? assessments?.total ?? 0}
           metrics={assessmentMetrics}
@@ -118,8 +113,7 @@ const ModuleStatsOverview = ({ summary, isLoading }) => {
       <div className="sm:hidden flex flex-col gap-3 w-full p-4 bg-white border border-[#EDEDED] rounded-xl divide-y divide-[#E4E6E8]">
         <div className="pb-3">
           <MobileStatRow
-            iconBg="bg-[#E9EFFD]"
-            icon={moduleIcon(18)}
+            icon={modulesIcon}
             titlePrefix={t("home.stats.compact.modulesTitle")}
             value={dash ?? modules?.assigned ?? 0}
             valueSuffix={t("home.stats.compact.assignedSuffix")}
@@ -128,8 +122,7 @@ const ModuleStatsOverview = ({ summary, isLoading }) => {
         </div>
         <div className="pt-3">
           <MobileStatRow
-            iconBg="bg-[#E6F7F0]"
-            icon={assessmentIcon(17)}
+            icon={assessmentsIcon}
             titlePrefix={t("home.stats.compact.assessmentsTitle")}
             value={dash ?? assessments?.total ?? 0}
             valueSuffix={t("home.stats.compact.totalSuffix")}
