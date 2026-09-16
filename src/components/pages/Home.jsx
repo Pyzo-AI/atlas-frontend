@@ -236,6 +236,24 @@ const Home = () => {
     refetchOnMountOrArgChange: true,
   });
 
+  // Only the very first load (no data on screen yet at all) gets the
+  // full-screen loader; any later refetch (search/filter/sort/page change)
+  // only replaces the module list area, keeping stats/header/filters visible.
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [minLoaderTimeElapsed, setMinLoaderTimeElapsed] = useState(false);
+
+  // Keep the full-screen loader up for at least 3s, even if data arrives sooner.
+  useEffect(() => {
+    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedOnce && !loading && !statsLoading && minLoaderTimeElapsed) {
+      setHasLoadedOnce(true);
+    }
+  }, [loading, statsLoading, minLoaderTimeElapsed, hasLoadedOnce]);
+
   const handlePresentationClick = (presentationId) => {
     capture("module_start", {
       user_id: userDetails?.sub,
@@ -270,6 +288,10 @@ const Home = () => {
 
   const items = presentations?.data || [];
   const pagination = presentations?.pagination;
+
+  if (!hasLoadedOnce) {
+    return <PyzoLoader fullScreen />;
+  }
 
   return (
     <>
