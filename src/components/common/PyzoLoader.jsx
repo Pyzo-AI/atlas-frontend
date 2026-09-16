@@ -16,11 +16,14 @@ import pyzoLoader from "@/assets/gif/pyzo-loader.gif";
  *   will occupy once loaded — e.g. a card grid — so swapping the loader in
  *   and out doesn't shift the page. When omitted (and fullScreen is false),
  *   falls back to measuring the remaining viewport height below the loader.
+ * @param {number} height - Exact pixel height (e.g. measured from the real
+ *   content via a ref before it's replaced by the loader). Takes priority
+ *   over heightClassName when provided, for pixel-perfect no-shift swaps.
  */
-export default function PyzoLoader({ fullScreen = true, heightClassName = "" }) {
+export default function PyzoLoader({ fullScreen = true, heightClassName = "", height }) {
   const containerRef = useRef(null);
   const [availableHeight, setAvailableHeight] = useState(null);
-  const useDynamicHeight = !fullScreen && !heightClassName;
+  const useDynamicHeight = !fullScreen && !heightClassName && height == null;
 
   useLayoutEffect(() => {
     if (!useDynamicHeight) return;
@@ -46,9 +49,15 @@ export default function PyzoLoader({ fullScreen = true, heightClassName = "" }) 
     <div
       ref={containerRef}
       className={`flex items-center justify-center bg-white w-full ${
-        fullScreen ? "min-h-[calc(100vh-3rem)]" : heightClassName
+        fullScreen ? "min-h-[calc(100vh-3rem)]" : height == null ? heightClassName : ""
       }`}
-      style={useDynamicHeight && availableHeight !== null ? { height: availableHeight } : undefined}>
+      style={
+        height != null
+          ? { height }
+          : useDynamicHeight && availableHeight !== null
+            ? { height: availableHeight }
+            : undefined
+      }>
       <Image src={pyzoLoader} alt="Loading..." width={200} height={200} priority unoptimized />
     </div>
   );

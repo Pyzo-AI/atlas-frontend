@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import Image from "next/image";
@@ -277,6 +277,24 @@ const Home = () => {
     }
   }, [loading, showAreaLoader]);
 
+  // Measure the real card grid's height every time it's actually on screen,
+  // so the loader that replaces it on the next filter/page change reuses that
+  // exact pixel height instead of a guessed row-count - keeps the pagination
+  // control from shifting up/down between pages with different row counts.
+  const gridRef = useRef(null);
+  const [gridHeight, setGridHeight] = useState(null);
+  useLayoutEffect(() => {
+    const grid = gridRef.current;
+    if (!hasLoadedOnce || showAreaLoader || !grid) return;
+
+    const updateHeight = () => setGridHeight(grid.getBoundingClientRect().height);
+    updateHeight();
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, [hasLoadedOnce, showAreaLoader, presentations]);
+
   const handlePresentationClick = (presentationId) => {
     capture("module_start", {
       user_id: userDetails?.sub,
@@ -395,10 +413,15 @@ const Home = () => {
           {/* Module list */}
           <div className="flex flex-col items-center gap-4 w-full">
             {showAreaLoader ? (
-              // Matches ~2 rows of cards (mobile list rows vs. desktop grid
-              // cards have very different heights) so switching page/filter
-              // doesn't shift the page height around the loader.
-              <PyzoLoader fullScreen={false} heightClassName="min-h-[208px] sm:min-h-[490px]" />
+              // Reuses the real grid's last-measured pixel height (gridHeight)
+              // so the loader occupies exactly the same space the cards did -
+              // the row-count guess below only covers the very first render,
+              // before any grid has ever been measured.
+              <PyzoLoader
+                fullScreen={false}
+                height={gridHeight ?? undefined}
+                heightClassName="min-h-[208px] sm:min-h-[490px]"
+              />
             ) : items.length === 0 ? (
               orgConfig?.disable_no_course_found ? null : (
                 <div className="flex flex-col items-center justify-center w-full min-h-[40vh]">
@@ -411,7 +434,7 @@ const Home = () => {
                 </div>
               )
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
+              <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
                 {items.map((presentation) => (
                   <React.Fragment key={presentation.presentation_id}>
                     <DesktopModuleCard
