@@ -12,6 +12,7 @@ import noDataFoundIcon from "@/assets/svg/no-data-found.svg";
 import noCertificatesIcon from "@/assets/svg/no-certificate.svg";
 import { useGetCertificatesMutation, useGetUserMetadataQuery } from "@/store/api/certificatesApi";
 import CertificateCardSkeleton from "@/components/common/CertificateCardSkeleton";
+import PyzoLoader from "@/components/common/PyzoLoader";
 import { useTranslation } from "react-i18next";
 
 export default function CertificatesPage() {
@@ -140,6 +141,24 @@ export default function CertificatesPage() {
 
   const certificates = data?.certificates || [];
 
+  // Full-screen loader only for the very first load, up for at least
+  // max(1.5s hardcoded minimum, actual load time) - matches the Modules page.
+  // Later refetches (search/filter changes) keep using the inline skeleton
+  // grid below, never the full-screen loader again.
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [minLoaderTimeElapsed, setMinLoaderTimeElapsed] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedOnce && !isLoading && minLoaderTimeElapsed) {
+      setHasLoadedOnce(true);
+    }
+  }, [isLoading, minLoaderTimeElapsed, hasLoadedOnce]);
+
   const handleDownload = (url, title) => {
     const link = document.createElement("a");
     link.href = url;
@@ -149,6 +168,10 @@ export default function CertificatesPage() {
     link.click();
     document.body.removeChild(link);
   };
+
+  if (!hasLoadedOnce) {
+    return <PyzoLoader fullScreen />;
+  }
 
   return (
     <div className="flex flex-col bg-[#F9F9FC] min-h-screen">

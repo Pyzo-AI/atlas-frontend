@@ -1,208 +1,180 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
 import Image from "next/image";
-import { useGetPresentationsQuery } from "../../store/api/questionsApi";
-import chat_star from "../../assets/svg/chat_star.svg";
+import { useGetPresentationsQuery, useGetDashboardSummaryQuery } from "../../store/api/questionsApi";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { usePostHog } from "@/hooks/usePostHog";
-import overdue from "../../assets/svg/overdue.svg";
-import locked from "../../assets/svg/locked.svg";
-import unlocked from "../../assets/svg/unlocked.svg";
-import completed from "../../assets/svg/completed.svg";
-import dueSoon from "../../assets/svg/due-soon.svg";
 import FeedbackSuccessModal from "../modals/FeedbackSuccessModal";
 import { useDispatch, useSelector } from "react-redux";
 import { setAutoPlayEnabled, setSelectedAssessmentId, setShowChat, setIsQuestionMode } from "@/store/features/videoSlice";
-import { HiBookOpen, HiChevronDown } from "react-icons/hi2";
+import { HiBookOpen } from "react-icons/hi2";
 import FloatingChatbot from "../common/FloatingChatbot";
+import ModuleStatsOverview from "../common/ModuleStatsOverview";
+import Pagination from "../common/Pagination";
+import QuickFilter from "../common/QuickFilter";
+import SearchBar from "../common/SearchBar";
+import PyzoLoader from "../common/PyzoLoader";
 import { useTranslation } from "react-i18next";
+import noModulesAssignedIcon from "@/assets/svg/no-modules-assigned-icon.svg";
+import noSearchResultsIcon from "@/assets/svg/chats-no-search-results-icon.svg";
 
+const STATUS_OPTIONS = ["all", "in_progress", "yet_to_start", "locked", "overdue", "completed"];
+const PAGE_SIZE = 8;
 
-const PresentationCard = ({ presentation, onClick, currentTime }) => {
+const BADGE_STYLES = {
+  completed: { bg: "bg-[#DCFCE7]", text: "text-[#159600]" },
+  in_progress: { bg: "bg-[#DBEAFE]", text: "text-[#1447E6]" },
+  yet_to_start: { bg: "bg-border-light", text: "text-text-title" },
+  locked: { bg: "bg-border-light", text: "text-text-title" },
+  overdue: { bg: "bg-[#F0463819]", text: "text-[#F04638]" },
+};
+
+const useBadge = () => {
   const { t } = useTranslation();
-
-  const formatDuration = (seconds) => {
-    const totalSeconds = Math.max(0, Math.round(seconds));
-    if (totalSeconds < 60) {
-      return `${totalSeconds}${t("courseCard.s")}`;
-    }
-    const totalMinutes = Math.floor(totalSeconds / 60);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    if (hours > 0) {
-      return minutes > 0 ? `${hours}${t("courseCard.hr")} ${minutes}${t("courseCard.m")}` : `${hours}${t("courseCard.hr")}`;
-    }
-    return `${minutes}${t("courseCard.m")}`;
-  };
-  const getTimeDiffMessage = (targetTime, prefix) => {
-    const target = new Date(targetTime);
-    const diff = target - currentTime;
-    const absDiff = Math.abs(diff);
-
-    const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
-    if (days >= 1) {
-      return `${prefix} ${days} ${days === 1 ? t("courseCard.day") : t("courseCard.days")}`;
-    }
-
-    const hours = Math.floor(absDiff / (1000 * 60 * 60));
-    if (hours >= 1) {
-      return `${prefix} ${hours}${t("courseCard.hr")}`;
-    }
-
-    const minutes = Math.floor(absDiff / (1000 * 60));
-    if (minutes >= 1) {
-      return `${prefix} ${minutes}${t("courseCard.m")}`;
-    }
-
-    const seconds = Math.floor(absDiff / 1000);
-    return `${prefix} ${seconds}${t("courseCard.s")}`;
-  };
-
-  const getUnlockMessage = (targetTime) => {
-    return getTimeDiffMessage(targetTime, t("courseCard.unlocksIn"));
-  };
-
-  const getOverdueMessage = (targetTime) => {
-    return getTimeDiffMessage(targetTime, t("courseCard.overdueBy"));
-  };
-
-  const getDueMessage = (targetTime) => {
-    return getTimeDiffMessage(targetTime, t("courseCard.dueIn"));
-  };
-
-  const getBadgeInfo = () => {
-    // Status priority: Completed -> Locked -> Overdue -> In Progress
-    
-    // 1. Check completion
-    if (presentation.isPresentationCompleted) {
-      const completedDate = presentation.presentationCompletedDate
-        ? new Date(presentation.presentationCompletedDate).toLocaleDateString("en-GB")
-        : t("courseCard.unknownDate");
-      return {
-        icon: completed,
-        colorClass: "bg-status-completed",
-        textColorClass: "text-light",
-        title: t("courseCard.completed"),
-        subtitle: t("courseCard.completedDate", { date: completedDate }),
-      };
-    }
-
-    // 2. Check lock status (only if it's currently locked AND the unlock time is still in the future)
-    if (presentation.lock_info?.status === "locked" && presentation.lock_info?.unlock_time) {
-      const unlockTime = new Date(presentation.lock_info.unlock_time);
-      if (unlockTime > currentTime) {
-        return {
-          icon: locked,
-          colorClass: "bg-status-locked-bg",
-          textColorClass: "text-primary-text",
-          title: t("courseCard.locked"),
-          subtitle: getUnlockMessage(presentation.lock_info.unlock_time),
-        };
+  return (presentation) => {
+    const style = BADGE_STYLES[presentation.status] || BADGE_STYLES.yet_to_start;
+    switch (presentation.status) {
+      case "completed": {
+        const completedDate = presentation.presentationCompletedDate
+          ? new Date(presentation.presentationCompletedDate).toLocaleDateString("en-GB")
+          : t("courseCard.unknownDate");
+        return { ...style, label: t("courseCard.completedDate", { date: completedDate }) };
       }
-    }
-
-    // 3. Check overdue status (if server says overdue OR the due date has passed)
-    const isActuallyOverdue = 
-      presentation.due_info?.due_time && new Date(presentation.due_info.due_time) < currentTime;
-    
-    if (
-      (presentation.due_info?.status === "overdue" || isActuallyOverdue) && 
-      presentation.due_info?.due_time &&
-      !presentation.isPresentationCompleted
-    ) {
-      return {
-          icon: overdue,
-          colorClass: "bg-status-error",
-          textColorClass: "text-status-error-text",
-          title: t("courseCard.overdue"),
-          subtitle:  presentation?.due_info?.status_msg ?? getOverdueMessage(presentation.due_info.due_time),
+      case "locked":
+        return { ...style, label: presentation.lock_info?.status_msg || t("courseCard.locked") };
+      case "overdue":
+        return { ...style, label: presentation.due_info?.status_msg || t("courseCard.overdue") };
+      case "yet_to_start":
+        return {
+          ...style,
+          label:
+            presentation.due_info?.status === "due"
+              ? t("courseCard.todoDueIn", { count: presentation.due_info?.status_msg?.match(/\d+/)?.[0] || "" })
+              : t("courseCard.yetToStart"),
+        };
+      case "in_progress":
+      default:
+        return {
+          ...style,
+          label: `${t("courseCard.inProgress")}${
+            presentation.completion_percentage ? ` - ${presentation.completion_percentage}%` : ""
+          }`,
         };
     }
-
-    // 4. Fallback to In Progress
-    return {
-      icon: unlocked,
-      colorClass: "bg-status-progress-bg",
-      textColorClass: "text-status-progress-text",
-      title: "In Progress",
-      subtitle: (presentation.due_info?.due_time && !isActuallyOverdue) 
-        ? getDueMessage(presentation.due_info.due_time) 
-        : null,
-    };
-
-    // If no lock_info or due_info available, return minimal info
-    if (!presentation.lock_info && !presentation.due_info) {
-      return {
-        icon: null,
-        colorClass: null,
-        textColorClass: null,
-        title: null,
-        subtitle: null,
-      };
-    }
-
-    return {
-      icon: unlocked,
-      colorClass: "bg-status-progress-bg",
-      textColorClass: "text-status-progress-text",
-      title: "In Progress",
-      subtitle: null,
-    };
   };
+};
 
-  const badgeInfo = getBadgeInfo();
-  const isLocked = presentation.lock_info?.status === "locked";
+const formatDuration = (seconds, t) => {
+  const totalSeconds = Math.max(0, Math.round(seconds || 0));
+  if (totalSeconds < 60) return `${totalSeconds}${t("courseCard.s")}`;
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0) {
+    return minutes > 0 ? `${hours}${t("courseCard.hr")} ${minutes}${t("courseCard.m")}` : `${hours}${t("courseCard.hr")}`;
+  }
+  return `${minutes}${t("courseCard.m")}`;
+};
+
+const formatDueDate = (dueTime) => (dueTime ? new Date(dueTime).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-");
+
+// Desktop grid card: flag badge overlaid on thumbnail, due date/duration row below
+const DesktopModuleCard = ({ presentation, onClick, getBadge }) => {
+  const { t } = useTranslation();
+  const badge = getBadge(presentation);
+  const isLocked = presentation.status === "locked";
 
   return (
     <div
-      className={`relative flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px] transition-shadow duration-300 ${
-        isLocked ? " cursor-not-allowed" : "cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)]"
+      className={`hidden sm:flex flex-col items-stretch p-[10px_10px_12px] gap-2.5 w-full bg-white border border-border-card rounded-lg transition-shadow duration-300 ${
+        isLocked ? "cursor-not-allowed" : "cursor-pointer hover:shadow-[0_4px_25px_rgba(0,0,0,0.1)]"
       }`}
       onClick={isLocked ? undefined : onClick}>
-      {/* badge */}
-      {badgeInfo.subtitle && (
-        <div className="absolute top-4.5 right-4.5 flex flex-col items-end p-1 gap-0.5 bg-primary rounded-[5px] z-10">
-          <p className="font-lato font-medium text-[10px] leading-[10px] text-light">{badgeInfo.subtitle}</p>
-        </div>
-      )}
-      <div className="flex flex-col items-start gap-[12px] w-full flex-1">
-        {/* Thumbnail */}
-        <div className="w-full flex-1 bg-bg-light-purple rounded-[8px] overflow-hidden relative">
-          {presentation?.image && presentation.image.trim() !== "" && (
-            <Image src={presentation.image} alt={presentation?.title} fill className="object-cover" />
-          )}
-        </div>
-
-        {/* Content */}
-        <div className="flex flex-col items-start gap-2 sm:gap-[8px] w-full">
-          <div className="flex items-center gap-2 sm:gap-[8px] w-full">
-            <h3 className="font-lato font-semibold text-sm sm:text-[16px] leading-tight sm:leading-[19px] text-text-title flex-grow">
-              {presentation?.title || "Unknown Title"}
-            </h3>
-            {presentation?.presentation_duration > 0 && presentation?.presentation_duration && (
-              <div className="flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] bg-primary">
-                <span className="font-lato font-medium text-[11px] leading-4 text-light whitespace-nowrap">
-                  {formatDuration(presentation.presentation_duration)}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-between items-start gap-2 sm:gap-[8px] w-full">
-            <span className="font-lato font-normal text-xs sm:text-[12px] leading-tight sm:leading-[14px] text-text-secondary">
-              {presentation?.author || "Unknown Author"}
+      <div className="relative w-full aspect-[271/132] bg-[#F5F6FC] rounded-md overflow-hidden">
+        {presentation?.image && presentation.image.trim() !== "" && (
+          <Image src={presentation.image} alt={presentation?.title} fill className="object-cover" />
+        )}
+        {badge.label && (
+          <div className={`absolute left-0 top-1.5 flex items-center px-[5px] py-[6px] rounded-r-lg ${badge.bg}`}>
+            <span className={`font-lato font-medium text-[12px] leading-none whitespace-nowrap ${badge.text}`}>
+              {badge.label}
             </span>
-            {badgeInfo.title && (
-              <div
-                className={`flex justify-center items-center px-1.5 py-[2.5px] h-5 rounded-[10px] ${badgeInfo.colorClass}`}>
-                <span className={`font-lato font-medium text-[11px] leading-4 ${badgeInfo.textColorClass}`}>
-                  {badgeInfo.title}
-                </span>
-              </div>
-            )}
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col items-stretch gap-2.5 w-full">
+        <div className="flex flex-col items-stretch gap-1.5 w-full">
+          <h3 className="font-lato font-semibold text-sm leading-tight text-text-title truncate">
+            {presentation?.title || "Unknown Title"}
+          </h3>
+          <span className="font-lato font-normal text-xs leading-tight text-text-secondary truncate">
+            {presentation?.author || "Unknown Author"}
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center gap-2 w-full">
+          <div className="flex items-center gap-0.5">
+            <span className="font-lato text-xs text-text-secondary">{t("courseCard.dueDateLabel")}</span>
+            <span className="font-lato font-semibold text-xs text-text-title">
+              {formatDueDate(presentation?.due_info?.due_time)}
+            </span>
+          </div>
+          <div className="flex items-center gap-0.5">
+            <span className="font-lato text-xs text-text-secondary">{t("courseCard.durationLabel")}</span>
+            <span className="font-lato font-semibold text-xs text-text-title">
+              {formatDuration(presentation.presentation_duration, t)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Mobile list card: small thumbnail, pill badge above title, due date/duration row below
+const MobileModuleCard = ({ presentation, onClick, getBadge }) => {
+  const { t } = useTranslation();
+  const badge = getBadge(presentation);
+  const isLocked = presentation.status === "locked";
+
+  return (
+    <div
+      className={`sm:hidden flex items-stretch gap-2 w-full p-2 bg-white border border-border-card rounded-xl ${
+        isLocked ? "cursor-not-allowed" : "cursor-pointer"
+      }`}
+      onClick={isLocked ? undefined : onClick}>
+      <div className="relative w-20 h-20 shrink-0 bg-bg-light-purple rounded-lg overflow-hidden">
+        {presentation?.image && presentation.image.trim() !== "" && (
+          <Image src={presentation.image} alt={presentation?.title} fill className="object-cover" />
+        )}
+      </div>
+      <div className="flex flex-col justify-center gap-2 min-w-0 flex-1">
+        {badge.label && (
+          <div className={`self-start flex items-center px-1.5 py-1 rounded-[10px] ${badge.bg}`}>
+            <span className={`font-lato font-medium text-[11px] leading-none whitespace-nowrap ${badge.text}`}>
+              {badge.label}
+            </span>
+          </div>
+        )}
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <h3 className="font-lato font-semibold text-sm text-text-title truncate">{presentation?.title || "Unknown Title"}</h3>
+          <span className="font-lato text-xs text-text-secondary truncate">{presentation?.author || "Unknown Author"}</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-0.5">
+            <span className="font-lato text-[10px] text-text-secondary">{t("courseCard.dueDateLabel")}</span>
+            <span className="font-lato font-semibold text-[11px] text-text-title">
+              {formatDueDate(presentation?.due_info?.due_time)}
+            </span>
+          </div>
+          <div className="flex items-center gap-0.5">
+            <span className="font-lato text-[10px] text-text-secondary">{t("courseCard.durationLabel")}</span>
+            <span className="font-lato font-semibold text-[11px] text-text-title">
+              {formatDuration(presentation.presentation_duration, t)}
+            </span>
           </div>
         </div>
       </div>
@@ -211,20 +183,29 @@ const PresentationCard = ({ presentation, onClick, currentTime }) => {
 };
 
 
-
 const Home = () => {
   const router = useLocalizedRouter();
   const searchParams = useSearchParams();
   const [filter, setFilter] = useState("all");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [page, setPage] = useState(1);
   const { capture } = usePostHog();
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const orgConfig = useSelector((state) => state.organization?.config);
   const userDetails = getUserDetailsFromToken();
+  const getBadge = useBadge();
+
+  const handleSearchChange = (term) => {
+    setSearchQuery(term);
+    setPage(1);
+  };
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, sortOrder]);
 
   // Check for feedback success parameter
   useEffect(() => {
@@ -236,63 +217,111 @@ const Home = () => {
 
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false);
-    // Remove the feedback parameter from URL
     router.replace("/");
   };
 
-  // Calculate counts for each filter
-
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
     dispatch(setAutoPlayEnabled(false));
     dispatch(setSelectedAssessmentId(null));
-    return () => clearInterval(timer);
   }, []);
+
   const {
-    data: presentations = [],
-    isLoading: loading,
+    data: presentations = {},
+    isFetching: loading,
     error,
-  } = useGetPresentationsQuery(undefined, {
+  } = useGetPresentationsQuery(
+    { search: searchQuery, status: filter, sortOrder, page, pageSize: PAGE_SIZE },
+    { refetchOnMountOrArgChange: true }
+  );
+
+  const { data: dashboardSummary, isFetching: statsLoading } = useGetDashboardSummaryQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
 
-  const getCounts = () => {
-    const data = presentations?.data || [];
-    return {
-      all: data.length,
-      locked: data.filter((p) => p.lock_info?.status === "locked").length,
-      "in-progress": data.filter(
-        (p) => p.lock_info?.status === "unlocked" && !p.isPresentationCompleted && p.due_info?.status !== "overdue"
-      ).length,
-      overdue: data.filter((p) => p.due_info?.status === "overdue").length,
-      completed: data.filter((p) => p.isPresentationCompleted).length,
-    };
-  };
+  // Only the very first load (no data on screen yet at all) gets the
+  // full-screen loader; any later refetch (search/filter/sort/page change)
+  // only replaces the module list area, keeping stats/header/filters visible.
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [minLoaderTimeElapsed, setMinLoaderTimeElapsed] = useState(false);
 
-  const counts = getCounts();
+  // Keep the full-screen loader up for at least 1.5s, even if data arrives sooner.
+  useEffect(() => {
+    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedOnce && !loading && !statsLoading && minLoaderTimeElapsed) {
+      setHasLoadedOnce(true);
+    }
+  }, [loading, statsLoading, minLoaderTimeElapsed, hasLoadedOnce]);
+
+  // Once the page has loaded once, any later refetch (filter/search/sort/page
+  // change) keeps the in-area loader up for at least 2s too, even if the
+  // response comes back faster.
+  const [showAreaLoader, setShowAreaLoader] = useState(false);
+  const areaLoaderStartRef = useRef(null);
+
+  useEffect(() => {
+    // The initial load is covered entirely by the full-screen loader above
+    // (hasLoadedOnce gate) - don't also start the area loader's own 2s timer
+    // for that same first fetch, or it can outlive hasLoadedOnce flipping
+    // true and flash the small loader right after the full-screen one ends.
+    if (!hasLoadedOnce) return;
+
+    if (loading) {
+      if (!showAreaLoader) {
+        areaLoaderStartRef.current = Date.now();
+        setShowAreaLoader(true);
+      }
+      return;
+    }
+    if (showAreaLoader) {
+      const elapsed = Date.now() - (areaLoaderStartRef.current || 0);
+      const remaining = Math.max(0, 2000 - elapsed);
+      const timer = setTimeout(() => setShowAreaLoader(false), remaining);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, showAreaLoader, hasLoadedOnce]);
+
+  // Measure the real card grid's height every time it's actually on screen,
+  // so the loader that replaces it on the next filter/page change reuses that
+  // exact pixel height instead of a guessed row-count - keeps the pagination
+  // control from shifting up/down between pages with different row counts.
+  const gridRef = useRef(null);
+  const [gridHeight, setGridHeight] = useState(null);
+  useLayoutEffect(() => {
+    const grid = gridRef.current;
+    if (!hasLoadedOnce || showAreaLoader || !grid) return;
+
+    const updateHeight = () => setGridHeight(grid.getBoundingClientRect().height);
+    updateHeight();
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, [hasLoadedOnce, showAreaLoader, presentations]);
+
   const handlePresentationClick = (presentationId) => {
-    const selectedPresentation = presentations?.data?.find((p) => p.presentation_id === presentationId);
-
-    // Track module start event
     capture("module_start", {
       user_id: userDetails?.sub,
       module_id: presentationId,
-      // module_title: selectedPresentation?.title,
-      // module_author: selectedPresentation?.author,
-      // module_status: selectedPresentation?.status,
       timestamp: new Date().toISOString(),
     });
-
-    // Close any open chat or question mode when navigating to a new module
     dispatch(setShowChat(false));
     dispatch(setIsQuestionMode(false));
-
     router.push(`/lectures/${presentationId}`);
   };
 
-
+  const statusLabel = (status) =>
+    ({
+      all: t("home.tabs.all"),
+      locked: t("home.tabs.locked"),
+      in_progress: t("home.tabs.inProgress"),
+      yet_to_start: t("home.tabs.yetToStart"),
+      overdue: t("home.tabs.overdue"),
+      completed: t("home.tabs.completed"),
+    })[status];
 
   if (error) {
     return (
@@ -305,262 +334,161 @@ const Home = () => {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="w-full min-h-screen bg-page-background animate-pulse">
-        {/* Purple Header Section Skeleton */}
-        <div className="w-full bg-gray-300 relative mt-1">
-          {/* User Profile Skeleton */}
-          <div className="flex items-center gap-3 sm:gap-[12px] px-4 sm:px-5 py-4 sm:py-6">
-            <div className="w-10 h-10 sm:w-[48px] sm:h-[48px] bg-gray-400 rounded-[60px] flex-shrink-0"></div>
-            <div className="flex flex-col justify-center items-start gap-1 sm:gap-[4px] min-w-0 flex-1">
-              <div className="w-[120px] h-[17px] bg-gray-400 rounded"></div>
-              <div className="w-[200px] h-[12px] bg-gray-400 rounded opacity-70"></div>
-            </div>
-          </div>
-        </div>
+  const items = presentations?.data || [];
+  const pagination = presentations?.pagination;
 
-        {/* Course Section Skeleton */}
-        <div className="flex flex-col items-start gap-4 sm:gap-[16px] w-full px-4 sm:px-[40px] py-4 sm:py-[20px]">
-          {/* Header with tabs skeleton */}
-          <div className="flex justify-between items-center gap-[16px] w-full h-[30px]">
-            <div className="w-[140px] h-[19px] bg-gray-300 rounded"></div>
-            <div className="w-[234px] h-[32px] bg-gray-200 rounded-[6px]"></div>
-          </div>
-
-          {/* Course Grid Skeleton */}
-          <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-[12px] w-full">
-              {[...Array(8)].map((_, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col items-start p-3 sm:p-[12px_12px_16px] gap-2 sm:gap-[10px] w-full min-w-[200px] sm:min-w-[280px] aspect-[331/223.5] bg-white rounded-[8px]">
-                  <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full flex-1">
-                    {/* Thumbnail skeleton */}
-                    <div className="w-full flex-1 bg-gray-200 rounded-[8px]"></div>
-
-                    {/* Content skeleton */}
-                    <div className="flex flex-col items-start gap-2 sm:gap-[8px] w-full">
-                      <div className="w-full h-[19px] bg-gray-200 rounded"></div>
-                      <div className="flex justify-between items-start gap-2 sm:gap-[8px] w-full">
-                        <div className="w-[100px] h-[14px] bg-gray-200 rounded"></div>
-                        <div className="w-[80px] h-[17px] bg-gray-200 rounded-[10px]"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  if (!hasLoadedOnce) {
+    return <PyzoLoader fullScreen />;
   }
 
-  const completedCount = presentations?.data?.filter((p) => p.isPresentationCompleted).length;
-  const totalCount = presentations?.data?.length;
+  // The dashboard-summary "assigned" count is independent of the current
+  // filter/search/page, so it's the reliable signal for "this user has zero
+  // modules assigned, period" (as opposed to zero results for the current
+  // filter) - matches Figma node 8000:77225.
+  const noModulesAssignedAtAll = (dashboardSummary?.modules?.assigned ?? 0) === 0;
 
   return (
     <>
-      <div className="w-full min-h-screen bg-page-background">
-        {/* Purple Header Section */}
-        <div className="w-full bg-primary relative mt-1">
-          {/* User Profile */}
-          <div className="flex items-center gap-3 sm:gap-[12px] px-4 sm:px-5 py-4 sm:py-6">
-            <Image
-              className="w-10 h-10 sm:w-[48px] sm:h-[48px] bg-bg-light-gray rounded-[60px] flex-shrink-0"
-              src={chat_star}
-              alt="User icon"
-            />
-            <div className="flex flex-col justify-center items-start gap-1 sm:gap-[4px] min-w-0 flex-1">
-              <span className="font-lato font-semibold text-base sm:text-[17px] leading-tight sm:leading-[20px] text-light truncate">
-                {t("home.hello", { name: userDetails?.name })}
-              </span>
-              <span className="font-lato font-normal text-xs sm:text-[12px] leading-tight sm:leading-[14px] text-light opacity-70">
-                {t("home.browseDescription")}
-              </span>
-            </div>
+      <div
+        className={`w-full bg-page-background flex flex-col ${
+          noModulesAssignedAtAll ? "h-[calc(100vh-45px)] overflow-hidden" : "min-h-screen"
+        }`}>
+        <div className="flex flex-col flex-1 min-h-0 items-stretch gap-5 w-full px-4 sm:px-5 py-5">
+          {/* Page header */}
+          <div className="flex flex-col gap-1 w-full shrink-0">
+            <h1 className="font-lato font-bold text-base text-text-title">{t("home.availableCourses")}</h1>
+            <p className="font-lato text-xs text-text-muted">{t("home.browseDescription")}</p>
           </div>
 
-          {/* Learning Overview - Hidden by default as per Figma */}
-          {/* <div className="absolute flex flex-col items-start gap-3 sm:gap-[12px] w-full h-[138px] px-4 sm:px-[40px] top-[104px] invisible">
-            <h3 className="w-full h-[17px] font-lato font-semibold text-sm sm:text-[14px] leading-[17px] text-light">
-              {t("home.learningOverview")}
-            </h3>
-          </div> */}
-        </div>
+          {noModulesAssignedAtAll ? (
+            <div className="flex flex-col items-center justify-center w-full flex-1 min-h-0 mt-[-60px]">
+              <div className="flex flex-col items-center gap-6 text-center">
+                <div className="w-[88px] h-[88px] rounded-[20px] bg-white shadow-[0px_4px_12px_rgba(131,98,234,0.05)] flex items-center justify-center shrink-0">
+                  <Image src={noModulesAssignedIcon} alt="" width={44} height={44} />
+                </div>
+                <div className="flex flex-col items-center gap-3">
+                  <h3 className="font-lato font-semibold text-xl text-[#1D1F2C]">{t("home.noModulesAssignedTitle")}</h3>
+                  <p className="font-lato text-sm leading-5 text-[#667085] max-w-[400px]">
+                    {t("home.noModulesAssignedDesc")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+          {/* Learning Overview */}
+          <div className="flex flex-col items-stretch gap-2.5 w-full">
+            <h3 className="font-lato font-semibold text-sm text-text-title">{t("home.learningOverview")}</h3>
+            <ModuleStatsOverview summary={dashboardSummary} isLoading={statsLoading} />
+          </div>
 
-        {/* Course Section */}
-        <div className="flex flex-col items-start gap-4 sm:gap-[16px] w-full px-4 sm:px-5 py-4 sm:py-4">
-          {/* Header with search and tabs */}
+          {/* Search + filters */}
           {!orgConfig?.disable_course_header_row && (
-            <div className="flex justify-between items-center gap-4 sm:gap-[16px] w-full">
-            <div className="flex items-center gap-4">
-              <h2 className="font-lato font-bold text-base sm:text-[16px] leading-tight sm:leading-[19px] text-primary-text">
-                {t("home.availableCourses")}
-              </h2>
-
-              {/* Search Box - Hidden on mobile, visible on iPad and desktop */}
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 w-full">
               {!orgConfig?.disable_course_search && (
-                <input
-                  type="text"
+                <SearchBar
+                  initialValue={searchQuery}
+                  onSearchChange={handleSearchChange}
                   placeholder={t("home.searchCourses")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="hidden md:block w-64 px-3 h-[32px] border border-border-dark rounded-[6px] font-lato text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  width="100%"
+                  className="sm:!w-80"
                 />
               )}
-            </div>
 
-            {/* Desktop Tabs */}
-            {!orgConfig?.disable_course_filters && (
-              <div className="hidden lg:flex items-start p-1 w-auto h-[32px] bg-white border border-border rounded-[6px] gap-1">
-                {["all", "locked", "in-progress", "overdue", "completed"].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setFilter(tab)}
-                    className={`flex justify-center items-center px-2 py-1 h-[22px] rounded-[4px] cursor-pointer ${
-                      filter === tab ? "bg-primary" : ""
-                    }`}>
-                    <span
-                      className={`font-lato font-medium text-[10px] leading-[20px] whitespace-nowrap ${
-                        filter === tab ? "text-light" : "text-text-muted"
-                      }`}>
-                      {tab === "all"
-                        ? t("home.tabs.all")
-                        : tab === "locked"
-                          ? t("home.tabs.locked")
-                          : tab === "in-progress"
-                            ? t("home.tabs.inProgress")
-                            : tab === "overdue"
-                              ? t("home.tabs.overdue")
-                              : t("home.tabs.completed")}
-                    </span>
-                  </button>
+              {!orgConfig?.disable_course_filters && (
+                <div className="flex items-center gap-3 shrink-0">
+                  <QuickFilter
+                    value={filter}
+                    onChange={setFilter}
+                    options={STATUS_OPTIONS.map((s) => ({ id: s, label: statusLabel(s) }))}
+                    placeholder={`${t("home.stats.status")}:`}
+                  />
+                  <QuickFilter
+                    value={sortOrder}
+                    onChange={setSortOrder}
+                    options={[
+                      { id: "asc", label: `${t("home.sortByDueDate")} (${t("home.sortEarliest")})` },
+                      { id: "desc", label: `${t("home.sortByDueDate")} (${t("home.sortLatest")})` },
+                    ]}
+                    placeholder={`${t("home.sortBy")}:`}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Module list */}
+          <div className="flex flex-col items-center gap-4 w-full">
+            {showAreaLoader ? (
+              // Reuses the real grid's last-measured pixel height (gridHeight)
+              // so the loader occupies exactly the same space the cards did -
+              // the row-count guess below only covers the very first render,
+              // before any grid has ever been measured.
+              <PyzoLoader
+                fullScreen={false}
+                height={gridHeight ?? undefined}
+                heightClassName="min-h-[208px] sm:min-h-[490px]"
+              />
+            ) : items.length === 0 ? (
+              orgConfig?.disable_no_course_found ? null : searchQuery ? (
+                // Figma node 8402:63196 - search-specific "no results" state
+                <div className="flex flex-col items-center justify-center w-full min-h-[40vh] px-6">
+                  <div className="flex flex-col items-center gap-6 text-center">
+                    <div className="w-[88px] h-[88px] rounded-[20px] bg-white shadow-[0px_4px_12px_rgba(131,98,234,0.05)] flex items-center justify-center shrink-0">
+                      <Image src={noSearchResultsIcon} alt="" width={32} height={32} />
+                    </div>
+                    <div className="flex flex-col items-center gap-3">
+                      <h3 className="font-lato font-semibold text-xl text-[#1D1F2C]">
+                        {t("home.noResultsForQuery", { query: searchQuery })}
+                      </h3>
+                      <p className="font-lato text-sm leading-5 text-[#667085] max-w-[400px] whitespace-pre-line">
+                        {t("home.noResultsDesc")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center w-full min-h-[40vh]">
+                  <div className="flex flex-col items-center gap-4 text-center">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-bg-light-purple rounded-full flex items-center justify-center">
+                      <HiBookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+                    </div>
+                    <h3 className="font-lato font-semibold text-lg sm:text-xl text-primary-text">{t("home.noCoursesFound")}</h3>
+                  </div>
+                </div>
+              )
+            ) : (
+              <div
+                ref={gridRef}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 w-full">
+                {items.map((presentation) => (
+                  <React.Fragment key={presentation.presentation_id}>
+                    <DesktopModuleCard
+                      presentation={presentation}
+                      getBadge={getBadge}
+                      onClick={() => handlePresentationClick(presentation.presentation_id)}
+                    />
+                    <MobileModuleCard
+                      presentation={presentation}
+                      getBadge={getBadge}
+                      onClick={() => handlePresentationClick(presentation.presentation_id)}
+                    />
+                  </React.Fragment>
                 ))}
               </div>
             )}
 
-            {/* Mobile/Tablet Dropdown */}
-            {!orgConfig?.disable_course_filters && (
-              <div className="relative lg:hidden">
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center justify-between px-3 py-2 w-32 h-[30px] bg-white border border-border rounded-[6px]">
-                  <span className="font-lato font-medium text-[12px] text-text-muted">
-                    {filter === "all"
-                      ? t("home.tabs.all")
-                      : filter === "locked"
-                        ? t("home.tabs.locked")
-                        : filter === "in-progress"
-                          ? t("home.tabs.inProgress")
-                          : filter === "overdue"
-                            ? t("home.tabs.overdue")
-                            : t("home.tabs.completed")}
-                  </span>
-                  <HiChevronDown
-                    className={`w-4 h-4 text-text-muted transition-transform duration-200 ${
-                      isDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isDropdownOpen && (
-                  <div className="absolute top-full mt-1 w-32 bg-white border border-border rounded-[6px] shadow-lg z-50">
-                    {["all", "locked", "in-progress", "overdue", "completed"].map((tab) => (
-                      <button
-                        key={tab}
-                        onClick={() => {
-                          setFilter(tab);
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-3 py-2 text-[12px] font-lato hover:bg-gray-50 ${
-                          filter === tab ? "bg-primary text-light" : "text-text-muted"
-                        }`}>
-                        <span className="font-lato font-medium text-[12px] leading-4">
-                          {tab === "all"
-                            ? t("home.tabs.all")
-                            : tab === "locked"
-                              ? t("home.tabs.locked")
-                              : tab === "in-progress"
-                                ? t("home.tabs.inProgress")
-                                : tab === "overdue"
-                                  ? t("home.tabs.overdue")
-                                  : t("home.tabs.completed")}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Stays put (uses the last known page info) while a filter/sort/page
+                change is loading — only the cards area above swaps for the loader. */}
+            {pagination && <Pagination page={pagination.page} totalPages={pagination.total_pages} onPageChange={setPage} />}
           </div>
+            </>
           )}
-
-          {/* Course Grid */}
-          <div className="flex flex-col items-start gap-3 sm:gap-[12px] w-full">
-            {(() => {
-              const filteredPresentations =
-                presentations?.data?.filter((p) => {
-                  // Filter by search query
-                  const matchesSearch =
-                    searchQuery === "" || p.title?.toLowerCase().includes(searchQuery.toLowerCase());
-
-                  if (!matchesSearch) return false;
-
-                  // Filter by status
-                  if (filter === "all") return true;
-                  if (filter === "locked") return p.lock_info?.status === "locked";
-                  if (filter === "in-progress")
-                    return (
-                      p.lock_info?.status === "unlocked" &&
-                      !p.isPresentationCompleted &&
-                      p.due_info?.status !== "overdue"
-                    );
-                  if (filter === "overdue") return p.due_info?.status === "overdue" && !p.isPresentationCompleted;
-                  if (filter === "completed") return p.isPresentationCompleted;
-                  return true;
-                }) || [];
-
-              if (filteredPresentations.length === 0) {
-                if (orgConfig?.disable_no_course_found) return null;
-
-                return (
-                  <div className="flex flex-col items-center justify-center w-full min-h-[50vh]">
-                    <div className="flex flex-col items-center gap-4 text-center">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-bg-light-purple rounded-full flex items-center justify-center">
-                        <HiBookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <h3 className="font-lato font-semibold text-lg sm:text-xl text-primary-text">
-                          {t("home.noCoursesFound")}
-                        </h3>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              return (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-[12px] w-full">
-                  {filteredPresentations.map((presentation) => (
-                    <PresentationCard
-                      key={presentation.presentation_id}
-                      presentation={presentation}
-                      currentTime={currentTime}
-                      onClick={() => handlePresentationClick(presentation.presentation_id)}
-                    />
-                  ))}
-                </div>
-              );
-            })()}
-          </div>
         </div>
       </div>
 
-      {/* Success Modal */}
       <FeedbackSuccessModal isOpen={showSuccessModal} onClose={handleSuccessModalClose} />
 
-       {/* Floating Chatbot */}
       {presentations?.organization?.agent?.enabled && (
         <FloatingChatbot agentId={presentations.organization.agent.id} />
       )}

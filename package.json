@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@elevenlabs/react": "^0.6.1",
-    "@esmagico/pyzo-auth-sdk": "^2.2.0",
+    "@esmagico/pyzo-auth-sdk": "^2.2.4",
     "@reduxjs/toolkit": "^2.8.2",
     "i18next": "^26.3.0",
     "i18next-browser-languagedetector": "^8.2.1",
@@ -27,6 +27,7 @@
     "react-redux": "^9.2.0",
     "react-toastify": "^11.0.5",
     "socket.io-client": "^4.8.3",
+    "tailwindcss-animate": "^1.0.7",
     "video.js": "^7.21.5"
   },
   "devDependencies": {

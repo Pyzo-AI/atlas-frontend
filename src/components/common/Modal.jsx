@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { IoClose } from "react-icons/io5";
+import { useOverlayTransition } from "@/hooks/useOverlayTransition";
 
 export default function Modal({
   isOpen,
@@ -15,25 +16,21 @@ export default function Modal({
   showCloseButton = false,
   size = "md" // xs, sm, md, lg, xl, full
 }) {
-  // Handle escape key and body scroll
+  const { shouldRender, transitionStyle, backdropTransitionClassName, modalTransitionClassName } = useOverlayTransition(isOpen);
+
+  // Escape key handling — body scroll lock is already handled by useOverlayTransition.
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
+    if (!shouldRender) return;
 
-      const handleKeyDown = (e) => {
-        if (e.key === 'Escape' && closeOnEscape) {
-          onClose?.();
-        }
-      };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && closeOnEscape) {
+        onClose?.();
+      }
+    };
 
-      document.addEventListener('keydown', handleKeyDown);
-
-      return () => {
-        document.body.style.overflow = 'unset';
-        document.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [isOpen, closeOnEscape, onClose]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [shouldRender, closeOnEscape, onClose]);
 
   // Handle overlay click
   const handleOverlayClick = (e) => {
@@ -42,7 +39,7 @@ export default function Modal({
     }
   };
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   // Size classes
   const sizeClasses = {
@@ -62,12 +59,15 @@ export default function Modal({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
       {/* Backdrop with blur effect */}
       <div
-        className={`absolute inset-0 bg-black/50 backdrop-blur-sm ${overlayClassName}`}
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm ${backdropTransitionClassName} ${overlayClassName}`}
+        style={transitionStyle}
         onClick={handleOverlayClick}
       />
 
       {/* Modal Content */}
-      <div className={`relative ${size === 'custom' ? '' : 'bg-white rounded-lg shadow-xl'} ${sizeClasses[size]} ${className}`}>
+      <div
+        className={`relative ${size === 'custom' ? '' : 'bg-white rounded-lg shadow-xl'} ${sizeClasses[size]} ${modalTransitionClassName} ${className}`}
+        style={transitionStyle}>
         {/* Close button */}
         {showCloseButton && (
           <button

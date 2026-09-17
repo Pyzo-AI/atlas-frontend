@@ -5,6 +5,7 @@ import Image from "next/image";
 import Checkbox from "./Checkbox";
 import dropdownIcon from "@/assets/svg/dropdown-icon.svg";
 import { useTranslation } from "react-i18next";
+import { useOverlayTransition } from "@/hooks/useOverlayTransition";
 
 const MultiSelectDropdown = ({
   options = [],
@@ -19,6 +20,7 @@ const MultiSelectDropdown = ({
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
+  const { shouldRender, transitionStyle, dropdownTransitionClassName } = useOverlayTransition(isOpen, false);
 
   const matches = (a, b) => String(a) === String(b);
 
@@ -107,15 +109,16 @@ const MultiSelectDropdown = ({
         />
       </div>
 
-      {isOpen && !disabled && (
+      {shouldRender && !disabled && (
         <div
-          className="absolute z-50 w-full bg-white border border-[#E5E7EB] rounded-b-[6px] shadow-lg"
+          className={`absolute z-50 w-full bg-white border border-[#E5E7EB] rounded-b-[6px] shadow-lg origin-top ${dropdownTransitionClassName}`}
           style={{
             top: "32px",
             left: "0px",
             filter: "drop-shadow(0px 4px 16px rgba(0, 0, 0, 0.1))",
             maxHeight: "200px",
             overflowY: "auto",
+            ...transitionStyle,
           }}>
           {filteredOptions.length > 0 ? (
             filteredOptions.map((option) => {
