@@ -153,6 +153,8 @@
     "noCoursesFound": "No Courses Found",
     "noModulesAssignedTitle": "No Modules Assigned Yet",
     "noModulesAssignedDesc": "It looks like you don't have any modules assigned to you yet. Once your admin assigns modules, they'll appear here.",
+    "noResultsForQuery": "No results for \"{{query}}\"",
+    "noResultsDesc": "We couldn't find any module matching this query. \nDouble-check your spelling or search terms,",
     "sortBy": "Sort By",
     "sortByDueDate": "Due Date",
     "sortEarliest": "Earliest",

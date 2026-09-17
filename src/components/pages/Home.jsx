@@ -18,6 +18,7 @@ import SearchBar from "../common/SearchBar";
 import PyzoLoader from "../common/PyzoLoader";
 import { useTranslation } from "react-i18next";
 import noModulesAssignedIcon from "@/assets/svg/no-modules-assigned-icon.svg";
+import noSearchResultsIcon from "@/assets/svg/chats-no-search-results-icon.svg";
 
 const STATUS_OPTIONS = ["all", "in_progress", "yet_to_start", "locked", "overdue", "completed"];
 const PAGE_SIZE = 8;
@@ -429,7 +430,24 @@ const Home = () => {
                 heightClassName="min-h-[208px] sm:min-h-[490px]"
               />
             ) : items.length === 0 ? (
-              orgConfig?.disable_no_course_found ? null : (
+              orgConfig?.disable_no_course_found ? null : searchQuery ? (
+                // Figma node 8402:63196 - search-specific "no results" state
+                <div className="flex flex-col items-center justify-center w-full min-h-[40vh] px-6">
+                  <div className="flex flex-col items-center gap-6 text-center">
+                    <div className="w-[88px] h-[88px] rounded-[20px] bg-white shadow-[0px_4px_12px_rgba(131,98,234,0.05)] flex items-center justify-center shrink-0">
+                      <Image src={noSearchResultsIcon} alt="" width={32} height={32} />
+                    </div>
+                    <div className="flex flex-col items-center gap-3">
+                      <h3 className="font-lato font-semibold text-xl text-[#1D1F2C]">
+                        {t("home.noResultsForQuery", { query: searchQuery })}
+                      </h3>
+                      <p className="font-lato text-sm leading-5 text-[#667085] max-w-[400px] whitespace-pre-line">
+                        {t("home.noResultsDesc")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
                 <div className="flex flex-col items-center justify-center w-full min-h-[40vh]">
                   <div className="flex flex-col items-center gap-4 text-center">
                     <div className="w-16 h-16 sm:w-20 sm:h-20 bg-bg-light-purple rounded-full flex items-center justify-center">

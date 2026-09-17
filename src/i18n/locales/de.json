@@ -132,6 +132,8 @@
     "noCoursesFound": "Keine Kurse gefunden",
     "noModulesAssignedTitle": "Noch keine Module zugewiesen",
     "noModulesAssignedDesc": "Es sieht so aus, als wären Ihnen noch keine Module zugewiesen. Sobald Ihr Administrator Module zuweist, erscheinen sie hier.",
+    "noResultsForQuery": "Keine Ergebnisse für \"{{query}}\"",
+    "noResultsDesc": "Wir konnten kein Modul finden, das dieser Suche entspricht. \nÜberprüfen Sie Ihre Schreibweise oder Suchbegriffe,",
     "sortBy": "Sortieren nach",
     "sortByDueDate": "Fälligkeitsdatum",
     "sortEarliest": "Früheste",
