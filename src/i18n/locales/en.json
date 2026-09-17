@@ -349,6 +349,8 @@
   "common": {
     "errorLoadingData": "Error Loading Data",
     "somethingWentWrong": "Something went wrong. Please try again.",
-    "tryAgain": "Try Again"
+    "tryAgain": "Try Again",
+    "accessDenied": "Access Denied",
+    "permissionDenied": "You don't have the required permission to view this."
   }
 }
