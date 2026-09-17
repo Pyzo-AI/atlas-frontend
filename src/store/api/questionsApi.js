@@ -18,7 +18,38 @@ export const questionsApi = createApi({
     }),
 
     getPresentations: builder.query({
-      query: () => 'presentations/',
+      query: ({ search = '', status = 'all', sortOrder = 'asc', page = 1, pageSize = 10 } = {}) => {
+        const params = new URLSearchParams({
+          status,
+          sort_order: sortOrder,
+          page: String(page),
+          page_size: String(pageSize),
+        });
+        if (search) params.set('search', search);
+        return `presentations/?${params.toString()}`;
+      },
+      providesTags: ['Question'],
+    }),
+
+    getDashboardSummary: builder.query({
+      query: () => 'api/learner/dashboard-summary',
+      providesTags: ['Question'],
+    }),
+
+    getChats: builder.query({
+      query: ({ search = '', page = 1, pageSize = 50 } = {}) => {
+        const params = new URLSearchParams({
+          page: String(page),
+          page_size: String(pageSize),
+        });
+        if (search) params.set('search', search);
+        return `api/learner/chats?${params.toString()}`;
+      },
+      providesTags: ['Question'],
+    }),
+
+    getChatDetail: builder.query({
+      query: (conversationId) => `api/learner/chats/${conversationId}`,
       providesTags: ['Question'],
     }),
 
@@ -120,6 +151,9 @@ export const {
   useSubmitQuestionMutation,
   useGetAllVideoQuery,
   useGetPresentationsQuery,
+  useGetDashboardSummaryQuery,
+  useGetChatsQuery,
+  useGetChatDetailQuery,
   useSubmitCompletionStatusMutation,
   useSubmitVideoProgressMutation,
   useGetAssessmentQuery,

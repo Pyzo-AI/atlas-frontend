@@ -10,13 +10,15 @@ import DateRangePicker from "@/components/ui/DateRangePicker";
 import filterIcon from "@/assets/svg/filter.svg";
 import closeIcon from "@/assets/svg/close.svg";
 import { useTranslation } from "react-i18next";
+import { useOverlayTransition } from "@/hooks/useOverlayTransition";
 
 export default function Filter({ sections = [], onFilterChange, appliedFilters = {}, disabled = false }) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState(appliedFilters);
   const [expandedSections, setExpandedSections] = useState({});
-  const [mounted, setMounted] = useState(false);
+  const { shouldRender, transitionStyle, backdropTransitionClassName, rightDrawerTransitionClassName } =
+    useOverlayTransition(isOpen);
 
   // Flexible equality comparator for option values (handles number vs string mismatches)
   const matches = (a, b) => String(a) === String(b);
@@ -33,10 +35,6 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
   };
 
   const [hierarchySelections, setHierarchySelections] = useState(initializeHierarchyFromFilters);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     setSelectedFilters(appliedFilters);
@@ -261,15 +259,17 @@ export default function Filter({ sections = [], onFilterChange, appliedFilters =
         </span>
       </button>
 
-      {isOpen &&
-        mounted &&
+      {shouldRender &&
         createPortal(
           <div className="fixed inset-0 z-[9999] overflow-hidden">
             <div
-              className="absolute inset-0 bg-black/50"
+              className={`absolute inset-0 bg-black/50 ${backdropTransitionClassName}`}
+              style={transitionStyle}
               onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}
             />
-            <div className="absolute right-0 top-0 h-full bg-white flex flex-col shadow-xl w-[90%] md:w-[352px]">
+            <div
+              className={`absolute right-0 top-0 h-full bg-white flex flex-col shadow-xl w-[90%] md:w-[352px] ${rightDrawerTransitionClassName}`}
+              style={transitionStyle}>
               <div className="h-12 bg-white border-b border-[#E5E5E5] flex items-center justify-between px-4 flex-shrink-0">
                 <span className="font-lato font-semibold text-base text-[#2C313B]">
                   {t("filter.filterBy")}{hasSelectedFilters ? ` (${selectedFilterCount})` : ""}

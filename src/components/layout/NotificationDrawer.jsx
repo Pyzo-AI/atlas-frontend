@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useLocalizedRouter } from "@/hooks/useLocalizedRouter";
@@ -8,6 +8,7 @@ import unreadNotification from "@/assets/svg/unread_notification.svg";
 import back from "@/assets/svg/back.svg";
 import close from "@/assets/svg/close.svg";
 import { useTranslation } from "react-i18next";
+import { useOverlayTransition } from "@/hooks/useOverlayTransition";
 
 const NotificationDrawer = ({
   isOpen,
@@ -19,23 +20,12 @@ const NotificationDrawer = ({
   loadMore,
   loading,
 }) => {
-  const [mounted, setMounted] = useState(false);
   const router = useLocalizedRouter();
   const { t } = useTranslation();
+  const { shouldRender, transitionStyle, backdropTransitionClassName, rightDrawerTransitionClassName } =
+    useOverlayTransition(isOpen);
 
-  useEffect(() => {
-    setMounted(true);
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
-
-  if (!mounted || !isOpen) return null;
+  if (!shouldRender) return null;
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
@@ -82,10 +72,16 @@ const NotificationDrawer = ({
   return createPortal(
     <div className="fixed inset-0 z-[9999] overflow-hidden">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity" onClick={onClose} />
+      <div
+        className={`absolute inset-0 bg-black/20 backdrop-blur-sm ${backdropTransitionClassName}`}
+        style={transitionStyle}
+        onClick={onClose}
+      />
 
       {/* Drawer */}
-      <div className="absolute right-0 top-0 h-full bg-white shadow-[-7px_3px_34px_rgba(217,217,233,0.3)] w-full sm:w-[415px] flex flex-col font-lato animate-in slide-in-from-right duration-300">
+      <div
+        className={`absolute right-0 top-0 h-full bg-white shadow-[-7px_3px_34px_rgba(217,217,233,0.3)] w-full sm:w-[415px] flex flex-col font-lato ${rightDrawerTransitionClassName}`}
+        style={transitionStyle}>
         {/* Header */}
         <div className="h-12 flex items-center px-4 border-b border-[#E5E5E5] flex-shrink-0 relative">
           {/* Back button for mobile */}

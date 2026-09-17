@@ -5,7 +5,7 @@ import { liveKitService } from "@/lib/livekit";
 import { useCreateChatbotSessionMutation } from "@/store/api/liveKitApi";
 import Lottie from "lottie-react";
 import loaderAnimation from "@/assets/json/loader.json";
-import chatbotIcon from "@/assets/svg/chatbot-icon.svg";
+import chatbotFabIcon from "@/assets/svg/floating-chatbot-icon.svg";
 import chatbotCloseIcon from "@/assets/svg/chatbot-close-icon.svg";
 import Image from "next/image";
 import micMuted from "@/assets/svg/mic-muted.svg";
@@ -243,9 +243,9 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="cursor-pointer fixed bottom-6 right-6 w-[60px] h-[60px] rounded-full shadow-[0px_0px_25px_2.5px_#2877EE65] hover:scale-105 transition-all duration-300 z-50 flex items-center justify-center bg-white overflow-hidden"
+        className="cursor-pointer fixed bottom-6 right-6 w-[54px] h-[54px] rounded-full border-[3px] border-white shadow-[0px_4px_16px_rgba(39,98,234,0.35)] hover:scale-110 transition-all duration-200 z-50 overflow-hidden"
       >
-        <Image src={chatbotIcon} alt="chatbot" width={60} height={60} className="w-full h-full object-cover" />
+        <Image src={chatbotFabIcon} alt="chatbot" width={54} height={54} className="w-full h-full" />
       </button>
     );
   }

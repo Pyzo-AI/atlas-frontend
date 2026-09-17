@@ -175,7 +175,8 @@ const Home = () => {
   console.log("videos", videos);
   const userName = getUserDetailsFromToken()?.preferred_username;
   const assessmentId = data?.assessment_details?.[0]?.id;
-  const passingScore = data?.assessment_details?.[0]?.passing_score || 100;
+  const passingScores = data?.assessment_details?.map((a) => a.passing_score).filter((s) => s != null);
+  const passingScore = passingScores?.length ? Math.max(...passingScores) : 80;
   const canSkipVideo = data?.hasOwnProperty("is_skippable") ? data.is_skippable : !userName?.includes("jeenaseekho");
   const enableProductRecommendations = data?.enable_product_recommendations || false;
   const videoPanelRef = useRef(null);

@@ -863,17 +863,22 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
           const summaryData = await getAssessmentSummary(presentationId).unwrap();
           // Use summary data for result modal
           const modalData = {
-            score: summaryData.summary.latest_percentage,
+            score: summaryData.summary.overall_percentage ?? summaryData.summary.latest_percentage,
             presentationId: presentationId,
             assessmentId: selectedAssessmentId,
             totalQuestions: summaryData.summary.total_questions,
-            correctAnswers: summaryData.summary.latest_correct_questions,
+            correctAnswers: summaryData.summary.correct_questions ?? summaryData.summary.latest_correct_questions,
           };
           setResultData(modalData);
           setShowResultModalLocal(true);
         } catch (summaryError) {
           console.log("Failed to fetch assessment summary:", summaryError);
-          // Don't show result modal if summary API fails
+          // Fallback to submission result if summary API fails
+          setResultData({
+            ...resultData,
+            presentationId: presentationId,
+          });
+          setShowResultModalLocal(true);
         }
       } else {
         console.log("Skipping ResultModal for middle assessment:", selectedAssessmentId);
