@@ -11,7 +11,10 @@ import { getApiErrorMessage } from "@/utils/errorHandler";
 export const rtkQueryErrorMiddleware = () => (next) => (action) => {
   if (isRejectedWithValue(action)) {
     const status = action.payload?.status;
-    if (status === 403) {
+    // App Router still server-renders 'use client' trees once for the
+    // initial HTML before hydration — a rejected query in that pass would
+    // otherwise reach toast.error() with no DOM/browser APIs available.
+    if (status === 403 && typeof window !== "undefined") {
       // A page load can fire several parallel requests that all 403 at
       // once (e.g. certificates + notifications + config) — a fixed
       // toastId collapses those into a single visible toast instead of
