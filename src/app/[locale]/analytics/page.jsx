@@ -187,7 +187,11 @@ export default function Analytics() {
         </div>
         {activeTab === "learning" &&
           (statsError ? (
-            <ErrorState message={t("analytics.learningError")} onRetry={refetchStats} />
+            <ErrorState
+              message={t("analytics.learningError")}
+              status={statsError?.status}
+              onRetry={refetchStats}
+            />
           ) : (
             <Learning isLoading={isLoadingStats} analyticsData={learningData} />
           ))}
@@ -195,6 +199,7 @@ export default function Analytics() {
           (assessmentStatsError ? (
             <ErrorState
               message={t("analytics.assessmentsError")}
+              status={assessmentStatsError?.status}
               onRetry={refetchAssessmentStats}
             />
           ) : (

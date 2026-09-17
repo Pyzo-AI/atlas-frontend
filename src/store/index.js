@@ -13,6 +13,7 @@ import imageReducer from "./features/imageSlice";
 import notificationsReducer from "./features/notificationsSlice";
 import { organizationsApi } from "./api/organizationsApi";
 import organizationReducer from "./features/organizationSlice";
+import { rtkQueryErrorMiddleware } from "./middleware/rtkQueryErrorMiddleware";
 
 export const store = configureStore({
   reducer: {
@@ -37,7 +38,8 @@ export const store = configureStore({
       liveKitApi.middleware,
       certificatesApi.middleware,
       notificationApi.middleware,
-      organizationsApi.middleware
+      organizationsApi.middleware,
+      rtkQueryErrorMiddleware
     ),
   devTools: process.env.NODE_ENV !== "production",
 });

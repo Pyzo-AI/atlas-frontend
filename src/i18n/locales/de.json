@@ -270,6 +270,8 @@
   "common": {
     "errorLoadingData": "Fehler beim Laden der Daten",
     "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
-    "tryAgain": "Erneut versuchen"
+    "tryAgain": "Erneut versuchen",
+    "accessDenied": "Zugriff verweigert",
+    "permissionDenied": "Sie haben nicht die erforderliche Berechtigung, dies anzuzeigen."
   }
 }
