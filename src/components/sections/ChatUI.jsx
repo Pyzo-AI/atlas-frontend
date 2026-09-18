@@ -18,7 +18,7 @@ import { clearOverlayImage, setOverlayImage, setImageLoading } from "@/store/fea
 import { useLazyGetConversationHistoryQuery, useGenerateImageMutation } from "@/store/api/questionsApi";
 import { useLazyGetChatbotConversationsQuery } from "@/store/api/liveKitApi";
 import { liveKitService } from "@/lib/livekit";
-import { toast } from "react-toastify";
+import { showToast } from "@/utils/toast";
 import { getApiErrorMessage } from "@/utils/errorHandler";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
@@ -203,7 +203,7 @@ const ChatUI = ({
       lastTypingSentRef.current = 0;
     } catch (error) {
       console.error("❌ [LiveKit Data Channel] Failed to send text message:", error);
-      toast.error(getApiErrorMessage(error, "Failed to send message over LiveKit."));
+      showToast.error(getApiErrorMessage(error, "Failed to send message over LiveKit."));
     }
   };
 

@@ -3,7 +3,7 @@
  * Handles error toasts with standardized error messages
  */
 
-import { toast } from 'react-toastify';
+import { showToast } from './toast';
 import { getApiErrorMessage } from './errorHandler';
 
 export const toastService = {
@@ -12,51 +12,28 @@ export const toastService = {
    */
   showError: (error: any, fallback?: string) => {
     const message = getApiErrorMessage(error, fallback);
-    toast.error(message, {
-      autoClose: 5000,
-    });
+    showToast.error(message);
   },
 
   /**
    * Show success toast
    */
   showSuccess: (message: string = 'Operation completed successfully') => {
-    toast.success(message, { autoClose: 3000 });
+    showToast.success(message);
   },
 
   /**
    * Show info toast
    */
   showInfo: (message: string) => {
-    toast.info(message, { autoClose: 3000 });
+    showToast.info(message);
   },
 
   /**
    * Show warning toast
    */
   showWarning: (message: string) => {
-    toast.warning(message, { autoClose: 4000 });
-  },
-
-  /**
-   * Show loading toast (return close function)
-   */
-  showLoading: (message: string) => {
-    return toast.loading(message);
-  },
-
-  /**
-   * Dismiss specific toast
-   */
-  dismiss: (toastId: string | number) => {
-    toast.dismiss(toastId);
-  },
-
-  /**
-   * Dismiss all toasts
-   */
-  dismissAll: () => {
-    toast.dismiss();
+    showToast.warning(message);
   },
 };
 

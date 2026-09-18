@@ -396,7 +396,7 @@ const Home = () => {
               )}
 
               {!orgConfig?.disable_course_filters && (
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto shrink-0">
                   <QuickFilter
                     value={filter}
                     onChange={setFilter}

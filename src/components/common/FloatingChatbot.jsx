@@ -10,7 +10,7 @@ import chatbotCloseIcon from "@/assets/svg/chatbot-close-icon.svg";
 import Image from "next/image";
 import micMuted from "@/assets/svg/mic-muted.svg";
 import micUnmuted from "@/assets/svg/mic-unmuted.svg";
-import { toast } from "react-toastify";
+import { showToast } from "@/utils/toast";
 import ChatUI from "@/components/sections/ChatUI";
 
 const FloatingChatbot = ({ agentId = 1 }) => {
@@ -128,7 +128,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
     try {
       // Don't close if user is actively typing
       if (isTypingRef.current) {
-        toast.info("Finish typing before closing the chat");
+        showToast.info("Finish typing before closing the chat");
         return;
       }
 

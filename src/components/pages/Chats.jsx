@@ -336,7 +336,10 @@ export default function Chats() {
 
   return (
     <div className="w-full h-[calc(100vh-45px)] overflow-hidden bg-[#F9FAFB]">
-      <div className="flex flex-col h-full items-stretch gap-5 w-full px-4 sm:px-5 py-5">
+      <div
+        className={`flex flex-col h-full items-stretch gap-5 w-full px-4 sm:px-5 pb-5 ${
+          mobileView === "detail" ? "pt-0 sm:pt-5" : "pt-5"
+        }`}>
         {/* Page header - hidden on mobile while a chat's detail is open (the
             detail screen has its own back-button header instead); always
             shown on desktop regardless of mobileView. */}

@@ -1,7 +1,6 @@
 import { Geist, Geist_Mono, Lato, Montserrat } from "next/font/google";
 import "./globals.css";
 import "../../styles/fullscreen.css";
-import "react-toastify/dist/ReactToastify.css";
 import { ReduxProvider } from "@/providers/ReduxProvider";
 import ElevenLabsProviderWrapper from "@/providers/ElevenLabsProvider";
 import PostHogProvider from "@/providers/PostHogProvider";
@@ -9,7 +8,7 @@ import PrivateRoute from "@/components/auth/PrivateRoute";
 import ResponsiveContainer from "@/components/layout/ResponsiveContainer";
 import ResultModalProvider from "@/components/providers/ResultModalProvider";
 import FeedbackModalProvider from "@/components/providers/FeedbackModalProvider";
-import { ToastContainer } from "react-toastify";
+import { Toaster } from "react-hot-toast";
 import LayoutWrapper from "@/components/layout/LayoutWrapper";
 import TranslationProvider from "@/providers/TranslationProvider";
 
@@ -92,17 +91,13 @@ export default async function RootLayout({ children, params }) {
                       <ResponsiveContainer>{children}</ResponsiveContainer>
                     </LayoutWrapper>
                   </PrivateRoute>
-                  <ToastContainer
-                    position="top-right"
-                    autoClose={3000}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                    theme="light"
+                  <Toaster
+                    position="bottom-right"
+                    reverseOrder={false}
+                    containerStyle={{
+                      bottom: 40,
+                      right: 40,
+                    }}
                   />
                 </FeedbackModalProvider>
               </ResultModalProvider>

@@ -34,7 +34,7 @@ import FeedbackModal from "../modals/FeedbackModal";
 import ResultModal from "../modals/ResultModal";
 import { setOverlayImage, setImageLoading, clearOverlayImage } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
-import { toast } from "react-toastify";
+import { showToast } from "@/utils/toast";
 import { getApiErrorMessage } from "@/utils/errorHandler";
 import { useTranslation } from "react-i18next";
 
@@ -360,7 +360,7 @@ const VideoPanel = forwardRef(
               roomName: sessionResponse.room_name,
             });
           } catch (sessionError) {
-            toast.error(getApiErrorMessage(sessionError, "Unable to start interaction mode. Please try again."));
+            showToast.error(getApiErrorMessage(sessionError, "Unable to start interaction mode. Please try again."));
             dispatch(setIsQuestionMode(false));
             dispatch(setSlideNumbers([]));
             // throw sessionError;
@@ -664,7 +664,7 @@ const VideoPanel = forwardRef(
               }
               // Show limit reached message if reason provided
               if (data.reason === "limit_reached") {
-                toast.error("Your interaction time limit has been reached. Session ended.");
+                showToast.error("Your interaction time limit has been reached. Session ended.");
               }
             }
           } catch (error) {
@@ -848,7 +848,7 @@ const VideoPanel = forwardRef(
             dispatch(setCurrentSlide(videos[firstIncompleteIdx]?.slide));
             dispatch(setCurrentVideoTime(0));
           }
-          toast.info(t("lectures.completeAllSlidesForAssessment") || "Please complete all previous slides before taking the final assessment.");
+          showToast.info(t("lectures.completeAllSlidesForAssessment") || "Please complete all previous slides before taking the final assessment.");
           return;
         }
 

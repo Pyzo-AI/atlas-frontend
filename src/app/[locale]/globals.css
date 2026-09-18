@@ -123,6 +123,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Toast auto-dismiss countdown bar (CustomToast.jsx) — shrinks from full
+   width to empty over the toast's own duration. */
+@keyframes custom-toast-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 /* Animation for speaking indicator */
 @keyframes pulse {
   0% {

@@ -8,7 +8,6 @@ import { showFeedbackModal } from "@/store/features/feedbackModalSlice";
 import ProgressCircle from "@/components/ui/ProgressCircle";
 import { useGenerateCertificateMutation } from "@/store/api/certificatesApi";
 import React, { useState, useEffect } from "react";
-import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 
 export default function ResultModal({

@@ -8,7 +8,7 @@ import Image from "next/image";
 import ResultModal from "../modals/ResultModal";
 import FeedbackModal from "../modals/FeedbackModal";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
+import { showToast } from "@/utils/toast";
 import { isSlideVideoCompleted } from "@/utils/videoProgress";
 import { canAccessFinalAssessment, isAssessmentValid, isAssessmentCompleted } from "@/utils/assessmentProgress";
 
@@ -280,7 +280,7 @@ const SlideVideoSection = React.forwardRef(
                   if (firstIncompleteIdx !== -1 && onVideoIndexChange) {
                     onVideoIndexChange(firstIncompleteIdx);
                   }
-                  toast.info(t("lectures.completeAllSlidesForAssessment") || "Please complete all previous slides before taking the final assessment.");
+                  showToast.info(t("lectures.completeAllSlidesForAssessment") || "Please complete all previous slides before taking the final assessment.");
                   return;
                 }
 

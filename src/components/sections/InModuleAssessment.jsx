@@ -17,7 +17,7 @@ import {
 } from "@/store/features/videoSlice";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
-import { toast } from "react-toastify";
+import { showToast } from "@/utils/toast";
 import { getApiErrorMessage } from "@/utils/errorHandler";
 import { useParams } from "next/navigation";
 import ResultModal from "@/components/modals/ResultModal";
@@ -143,7 +143,7 @@ const RolePlayAssessmentView = ({ assessmentData, selectedAssessmentId }) => {
       }
     } catch (err) {
       console.error("Failed to start role play assessment:", err);
-      toast.error(getApiErrorMessage(err, "Failed to start the assessment. Please try again."));
+      showToast.error(getApiErrorMessage(err, "Failed to start the assessment. Please try again."));
     } finally {
       setIsStarting(false);
       setShowConfirmModal(false);
@@ -414,7 +414,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
       dispatch(questionsApi.util.invalidateTags(["Question"]));
     } catch (err) {
       console.error("Failed to start role play assessment:", err);
-      toast.error(getApiErrorMessage(err, "Failed to start assessment"));
+      showToast.error(getApiErrorMessage(err, "Failed to start assessment"));
     } finally {
       setIsStartingRolePlay(false);
     }
@@ -807,7 +807,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
 
   const handleSubmit = async () => {
     if (!submissionId) {
-      toast.error(t("lectures.noSubmissionId"));
+      showToast.error(t("lectures.noSubmissionId"));
       return;
     }
 
@@ -929,17 +929,17 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
             });
           }
 
-            toast.success(t("lectures.assessmentCompletedNextVideo"));
+            showToast.success(t("lectures.assessmentCompletedNextVideo"));
           } else {
             // If this was the last video, just show success message
-            toast.success(t("lectures.assessmentSubmittedTrainingCompleted"));
+            showToast.success(t("lectures.assessmentSubmittedTrainingCompleted"));
           }
         } else {
-          toast.success(t("lectures.assessmentSubmittedSuccessfully"));
+          showToast.success(t("lectures.assessmentSubmittedSuccessfully"));
         }
       } catch (error) {
         console.log("Assessment submission failed:", error);
-        toast.error(getApiErrorMessage(error, t("lectures.failedToSubmitAssessment")));
+        showToast.error(getApiErrorMessage(error, t("lectures.failedToSubmitAssessment")));
       }
     };
 
@@ -1246,7 +1246,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
             setCurrentQuestionIndex(0);
             setAnswers({});
             setAssessmentStartTime(null);
-            toast.info(t("lectures.assessmentReset"));
+            showToast.info(t("lectures.assessmentReset"));
           }}
           onRestartTraining={() => {
             // Handle restart training logic
@@ -1255,7 +1255,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
             setResultData(null);
             dispatch(setSelectedAssessmentId(null));
             dispatch(setCurrentVideoIndex(0));
-            toast.info(t("lectures.restartingTraining"));
+            showToast.info(t("lectures.restartingTraining"));
           }}
           onShowFeedback={() => {
             setShowResultModalLocal(false);

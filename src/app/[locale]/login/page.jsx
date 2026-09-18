@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { PyzoLoginScreen } from "@esmagico/pyzo-auth-sdk";
-import { toast } from "react-toastify";
+import { showToast } from "@/utils/toast";
 import { getApiErrorMessage } from "@/utils/errorHandler";
 import { useTranslation } from "react-i18next";
 import atlasLoginLogo from "@/assets/svg/atlas-login-logo.svg";
@@ -12,11 +12,11 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleLoginSuccess = (response) => {
-    toast.success("Login successful!");
-    
+    showToast.success("Login Successful!", "Welcome back to Atlas.");
+
     const urlParams = new URLSearchParams(window.location.search);
     const redirectUrl = urlParams.get("redirect");
-    
+
     if (redirectUrl) {
       router.push(redirectUrl);
     } else {
@@ -25,7 +25,7 @@ export default function LoginPage() {
   };
 
   const handleLoginFailure = (error) => {
-    toast.error(getApiErrorMessage(error, "Login failed. Please check your credentials."));
+    showToast.error(getApiErrorMessage(error, "Login failed. Please try again."));
   };
 
   return (
@@ -39,7 +39,7 @@ export default function LoginPage() {
         onSignupSuccess={() => {}} 
         onSignupFailure={() => {}}
         onPermissionDenied={() => {
-          toast.warning("You do not have an active subscription for Atlas.");
+          showToast.warning("You do not have an active subscription for Atlas.");
         }}
         ssoConfig={{
           keycloakBaseUrl: process.env.NEXT_PUBLIC_KEYCLOAK_BASE_URL || "",
