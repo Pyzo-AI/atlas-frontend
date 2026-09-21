@@ -246,7 +246,7 @@ const Home = () => {
 
   // Keep the full-screen loader up for at least 1.5s, even if data arrives sooner.
   useEffect(() => {
-    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 1500);
+    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -256,33 +256,11 @@ const Home = () => {
     }
   }, [loading, statsLoading, minLoaderTimeElapsed, hasLoadedOnce]);
 
-  // Once the page has loaded once, any later refetch (filter/search/sort/page
-  // change) keeps the in-area loader up for at least 2s too, even if the
-  // response comes back faster.
-  const [showAreaLoader, setShowAreaLoader] = useState(false);
-  const areaLoaderStartRef = useRef(null);
-
-  useEffect(() => {
-    // The initial load is covered entirely by the full-screen loader above
-    // (hasLoadedOnce gate) - don't also start the area loader's own 2s timer
-    // for that same first fetch, or it can outlive hasLoadedOnce flipping
-    // true and flash the small loader right after the full-screen one ends.
-    if (!hasLoadedOnce) return;
-
-    if (loading) {
-      if (!showAreaLoader) {
-        areaLoaderStartRef.current = Date.now();
-        setShowAreaLoader(true);
-      }
-      return;
-    }
-    if (showAreaLoader) {
-      const elapsed = Date.now() - (areaLoaderStartRef.current || 0);
-      const remaining = Math.max(0, 2000 - elapsed);
-      const timer = setTimeout(() => setShowAreaLoader(false), remaining);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, showAreaLoader, hasLoadedOnce]);
+  // Any refetch after the first load (search/filter/sort/page change) shows
+  // the in-area loader for exactly as long as the request is actually in
+  // flight - no artificial minimum here, unlike the one-time full-screen
+  // loader above which does hold for at least 1.5s.
+  const showAreaLoader = hasLoadedOnce && loading;
 
   // Measure the real card grid's height every time it's actually on screen,
   // so the loader that replaces it on the next filter/page change reuses that
@@ -291,8 +269,20 @@ const Home = () => {
   const gridRef = useRef(null);
   const [gridHeight, setGridHeight] = useState(null);
   useLayoutEffect(() => {
+    if (!hasLoadedOnce || showAreaLoader) return;
+
     const grid = gridRef.current;
-    if (!hasLoadedOnce || showAreaLoader || !grid) return;
+    if (!grid) {
+      // No grid on screen right now (e.g. a search matched 0 modules) - drop
+      // the stale measurement from whatever was last shown, so the next
+      // loader falls back to the fixed 2-row heightClassName below instead
+      // of reusing a pixel height that has nothing to do with the current
+      // view. Without this, searching again right after a 0-result search
+      // reuses that stale height as-is, which can end up far smaller than
+      // an actual 2-row grid.
+      setGridHeight(null);
+      return;
+    }
 
     const updateHeight = () => setGridHeight(grid.getBoundingClientRect().height);
     updateHeight();

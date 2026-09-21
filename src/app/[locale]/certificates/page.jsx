@@ -149,7 +149,7 @@ export default function CertificatesPage() {
   const [minLoaderTimeElapsed, setMinLoaderTimeElapsed] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 1500);
+    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 1000);
     return () => clearTimeout(timer);
   }, []);
 
