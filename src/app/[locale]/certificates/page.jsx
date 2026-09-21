@@ -211,8 +211,10 @@ export default function CertificatesPage() {
                   <div
                     key={cert.id}
                     className="bg-white rounded-lg p-3 flex flex-col gap-[10px] md:gap-4 shadow-[0px_1px_12px_rgba(0,0,0,0.04)] border border-[#E5E7EB]">
-                    {/* Top Icon and Label */}
-                    <div className="flex flex-col gap-2">
+                    {/* Top Icon and Label - flex-1 so shorter (single-line-title)
+                        cards still push Actions to the bottom, matching the
+                        tallest card in the same grid row. */}
+                    <div className="flex flex-col gap-2 flex-1">
                       <Image src={cert.icon} alt="Award" width={40} height={40} className="object-contain rounded-lg" />
                       <div className="flex flex-col gap-[5px]">
                         <h3 className="font-lato font-semibold text-sm leading-[17px] text-[#1D1F2C] line-clamp-2">
@@ -228,7 +230,7 @@ export default function CertificatesPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 shrink-0">
                       <SecondaryButton
                         className="flex-1"
                         onClick={() => {

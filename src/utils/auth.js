@@ -55,7 +55,9 @@ export const isTokenExpired = (token) => {
   return decoded.exp <= Date.now() / 1000 + 30;
 };
 
-// Logout utility
+// Logout utility. Returns the SDK call's promise so callers can await the
+// actual logout/redirect completing, instead of it running fire-and-forget
+// in the background while the caller's own UI state races ahead of it.
 export const logout = (loginUrl = "/login") => {
   // Get user ID for tracking before clearing tokens
   const tokens = getAuthTokens() || {};
@@ -64,14 +66,14 @@ export const logout = (loginUrl = "/login") => {
     const decoded = decodeJWT(tokens.access_token);
     userId = decoded?.sub;
   }
-  
+
   // Track session end event
   if (userId) {
     trackLogout(userId);
   }
-  
+
   // Use SDK logout to revoke session on Keycloak
-  sdkLogout({
+  return sdkLogout({
     loginUrl,
     baseUrl: process.env.NEXT_PUBLIC_LOGIN_BASE_URL || "",
     refreshToken: tokens?.refresh_token,

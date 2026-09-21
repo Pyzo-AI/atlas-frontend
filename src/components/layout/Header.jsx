@@ -99,7 +99,7 @@ const Header = ({ onMenuClick }) => {
     // underway; kept for the (rare) case it doesn't. Keep the spinner up a
     // bit past whatever the call itself took, so a fast response doesn't
     // just flash it for a frame.
-    logout("/login");
+    await logout("/login");
     await new Promise((resolve) => setTimeout(resolve, 300));
     setIsLoggingOut(false);
     setIsLogoutModalOpen(false);
