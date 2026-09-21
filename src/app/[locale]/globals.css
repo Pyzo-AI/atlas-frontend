@@ -3,6 +3,20 @@
 @plugin "tailwindcss-animate";
 @source "../../../node_modules/@esmagico/pyzo-auth-sdk/dist/**/*.{js,mjs}";
 
+/* Always reserve the vertical scrollbar's track, whether or not it's
+   actually showing. Without this, useOverlayTransition's scroll lock
+   (setting overflow: hidden while a drawer/modal/dropdown is open) removes
+   the scrollbar and the page content visibly grows wider to fill that
+   space, then shrinks back on close - a jarring width flicker. Reserving
+   the gutter permanently means opening/closing an overlay never changes
+   the usable content width at all, so there's nothing to compensate for
+   and no need for a delayed cleanup timer. Matches the same convention
+   already used in pyzo-central-frontend. */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 @theme {
   --color-primary: #2762ea;
   --color-page-background: #f9f9f9;
