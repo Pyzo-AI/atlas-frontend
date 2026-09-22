@@ -1,15 +1,22 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PyzoLoginScreen } from "@esmagico/pyzo-auth-sdk";
 import { showToast } from "@/utils/toast";
 import { getApiErrorMessage } from "@/utils/errorHandler";
 import { useTranslation } from "react-i18next";
+import PyzoLoader from "@/components/common/PyzoLoader";
 import atlasLoginLogo from "@/assets/svg/atlas-login-logo.svg";
 
 export default function LoginPage() {
   const router = useRouter();
+  // Unlike window.location.search, useSearchParams() resolves consistently
+  // during server-side rendering too, so this is already correct in the
+  // very first HTML the server sends - passed to PyzoLoginScreen so it
+  // never has to render the email form for an in-progress SSO callback,
+  // not even for a single frame before hydration.
+  const hasSsoCallback = useSearchParams().has("code");
 
   const handleLoginSuccess = (response) => {
     showToast.success("Login Successful!", "Welcome back to Atlas.");
@@ -33,6 +40,8 @@ export default function LoginPage() {
       <PyzoLoginScreen
         productName="atlas"
         baseUrl={process.env.NEXT_PUBLIC_LOGIN_BASE_URL || ""}
+        hasSsoCallback={hasSsoCallback}
+        ssoLoadingScreen={<PyzoLoader fullScreen />}
         onLoginSuccess={handleLoginSuccess}
         onLoginFailure={handleLoginFailure}
         // Signup is disabled for products other than "central" unless explicitly allowed
