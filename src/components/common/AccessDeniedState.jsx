@@ -13,9 +13,16 @@ export default function AccessDeniedState({
   title = "You don't have access to this",
   description = "Ask an organization admin to grant you the required permission.",
   className = "",
+  // false lets this render inside a smaller host (e.g. the notification
+  // drawer) that already constrains its own height, instead of forcing the
+  // viewport-height page layout.
+  fullScreen = true,
 }) {
   return (
-    <div className={`flex items-center justify-center px-4 min-h-[calc(100vh-45px)] bg-[#F9FAFB] transition-all duration-300 ${className}`}>
+    <div
+      className={`flex items-center justify-center px-4 transition-all duration-300 ${
+        fullScreen ? "min-h-[calc(100vh-45px)] bg-[#F9FAFB]" : "h-full"
+      } ${className}`}>
       <div className="flex flex-col items-stretch gap-6 w-full max-w-[400px] px-6 py-10 bg-white rounded-xl animate-in fade-in zoom-in duration-300">
         <div className="flex flex-col items-center gap-4">
           <Image

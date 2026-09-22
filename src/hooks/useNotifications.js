@@ -7,20 +7,22 @@ import {
   setConnected,
   resetPagination,
   setLoading,
+  setError,
   markRead,
 } from "../store/features/notificationsSlice";
 import { useLazyGetNotificationsQuery, useMarkNotificationAsReadMutation } from "../store/api/notificationApi";
 
 export function useNotifications(token) {
   const dispatch = useDispatch();
-  const { 
-    items: notifications, 
-    unreadCount, 
+  const {
+    items: notifications,
+    unreadCount,
     isConnected,
     page,
     hasMore,
     total,
-    loading
+    loading,
+    error
   } = useSelector((state) => state.notifications);
 
   const [triggerGetNotifications] = useLazyGetNotificationsQuery();
@@ -45,6 +47,7 @@ export function useNotifications(token) {
       }));
     } catch (error) {
       console.log("Failed to fetch notifications:", error);
+      dispatch(setError(error?.status ?? null));
     } finally {
         dispatch(setLoading(false));
     }
@@ -121,6 +124,7 @@ export function useNotifications(token) {
     hasMore,
     total,
     loading,
+    error,
     markAsRead,
     loadMore,
     refresh: () => {

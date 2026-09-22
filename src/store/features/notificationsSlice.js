@@ -10,14 +10,19 @@ const notificationsSlice = createSlice({
     page: 1,
     hasMore: true,
     loading: false,
+    error: null,
   },
   reducers: {
     setLoading: (state, action) => {
       state.loading = action.payload;
     },
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
     setNotifications: (state, action) => {
       const { notifications, total, page, unread_count } = action.payload;
       state.loading = false;
+      state.error = null;
       if (page === 1) {
         state.items = notifications || [];
       } else {
@@ -64,14 +69,15 @@ const notificationsSlice = createSlice({
   },
 });
 
-export const { 
-  setNotifications, 
-  addNotification, 
-  setUnreadCount, 
-  markRead, 
+export const {
+  setNotifications,
+  addNotification,
+  setUnreadCount,
+  markRead,
   setConnected,
   resetPagination,
-  setLoading
+  setLoading,
+  setError
 } = notificationsSlice.actions;
 
 export default notificationsSlice.reducer;
