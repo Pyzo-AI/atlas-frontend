@@ -376,9 +376,7 @@ const Home = () => {
             </div>
           ) : (
             <>
-          {/* Learning Overview */}
           <div className="flex flex-col items-stretch gap-2.5 w-full">
-            <h3 className="font-lato font-semibold text-sm text-text-title">{t("home.learningOverview")}</h3>
             <ModuleStatsOverview summary={dashboardSummary} isLoading={statsLoading} />
           </div>
 
