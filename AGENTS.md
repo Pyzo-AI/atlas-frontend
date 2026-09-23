@@ -20,7 +20,7 @@ survives in storage keys and asset filenames. Don't "fix" it.
 - **Redux Toolkit + RTK Query** for all state and server data.
 - **Prettier**: 120 cols, double quotes, semicolons, `bracketSameLine: true`.
 - **ESLint**: `next/core-web-vitals` only. `npm run lint` is not wired into CI.
-- Scripts: `npm run dev` (turbopack), `npm run dev:local` (port 3002, webpack — use this
+- Scripts: `npm run dev` (turbopack), `npm run dev:local` (port 3000, webpack — use this
   when a locally linked `@esmagico/pyzo-auth-sdk` must resolve), `npm run build`, `npm start`.
 - **There are no tests of any kind** and no test runner. Do not add a test suite as part
   of an unrelated change.
