@@ -22,33 +22,23 @@ const pyzoBaseQuery = createPyzoBaseQuery(baseQueryWithReauth, {
   onLogout: (loginUrl) => logout(loginUrl),
 });
 
-// Every api slice shares this single base query, so any error status from
-// ANY endpoint flips the global `accessDenied.status` flag - ResponsiveContainer
-// shows AccessDeniedState for a 403 specifically, or the generic ErrorState
-// for anything else. Only an actual error sets it - a successful response
-// never clears it, since a page can fire several queries at once (e.g. the
-// Modules page's presentations + dashboard-summary calls) and an unrelated
-// one succeeding must not race away a real error from another. Clearing
-// happens on navigation instead (ResponsiveContainer resets it on pathname
-// change).
+// Every api slice shares this single base query, so an error from ANY
+// endpoint could in principle flip the global `accessDenied.status` flag -
+// ResponsiveContainer shows AccessDeniedState for a 403, or the generic
+// ErrorState for anything else. That full-page swap must only happen for
+// whatever page the user is actually on, so it's gated to an allowlist of
+// each page's own primary content query below - a background/secondary call
+// on the same page (dashboard-summary widget, telemetry writes like
+// submitVideoProgress, feedback/QA submissions, notification polling,
+// org-config, etc.) failing with ANY status (a 403, a 500, a network drop)
+// must never blank out an otherwise-working page or interrupt an active
+// lecture/assessment session. Only an actual error sets the flag - a
+// successful response never clears it, since a page can fire several
+// queries at once and an unrelated one succeeding must not race away a real
+// error from another. Clearing happens on navigation instead
+// (ResponsiveContainer resets it on pathname change).
 //
-// The notification bell and org-config gating are header-level widgets, not
-// page content - an error from either must not blank out whatever page the
-// user is currently on. `getNotifications` reports its own 403 locally
-// instead (see notificationsSlice / NotificationDrawer).
-const ENDPOINTS_EXCLUDED_FROM_GLOBAL_ACCESS_DENIED = [
-  "getOrganizationConfig",
-  "getNotifications",
-  "markNotificationAsRead",
-];
-
-// A 403 specifically must only blank a page when it comes from THAT page's
-// own primary content query - not from a secondary/incidental call sharing
-// the same page (dashboard-summary widget, user metadata, telemetry writes,
-// etc.), which would otherwise wrongly show "access denied" over a page
-// whose main data loaded fine. Add a new page's primary endpoint here when
-// it needs the same treatment; a non-403 error still falls through to the
-// blanket ErrorState for any endpoint, unchanged.
+// Add a new page's primary endpoint here when it needs the same treatment.
 const PRIMARY_PAGE_ENDPOINTS_FOR_ACCESS_DENIED = [
   "getPresentations", // Home / Modules
   "getAllVideo", // lecture/presentation details
@@ -58,11 +48,8 @@ const PRIMARY_PAGE_ENDPOINTS_FOR_ACCESS_DENIED = [
 
 export const baseQueryWithReauthAndRetry = async (args, api, extraOptions) => {
   const result = await pyzoBaseQuery(args, api, extraOptions);
-  if (result.error && !ENDPOINTS_EXCLUDED_FROM_GLOBAL_ACCESS_DENIED.includes(api.endpoint)) {
-    const isAccessDenied = result.error.status === 403;
-    if (!isAccessDenied || PRIMARY_PAGE_ENDPOINTS_FOR_ACCESS_DENIED.includes(api.endpoint)) {
-      api.dispatch(setApiErrorStatus(result.error.status));
-    }
+  if (result.error && PRIMARY_PAGE_ENDPOINTS_FOR_ACCESS_DENIED.includes(api.endpoint)) {
+    api.dispatch(setApiErrorStatus(result.error.status));
   }
   return result;
 };
