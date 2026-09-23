@@ -7,6 +7,7 @@ import readNotification from "@/assets/svg/read_notification.svg";
 import unreadNotification from "@/assets/svg/unread_notification.svg";
 import back from "@/assets/svg/back.svg";
 import close from "@/assets/svg/close.svg";
+import AccessDeniedState from "@/components/common/AccessDeniedState";
 import { useTranslation } from "react-i18next";
 import { useOverlayTransition } from "@/hooks/useOverlayTransition";
 
@@ -19,6 +20,7 @@ const NotificationDrawer = ({
   hasMore,
   loadMore,
   loading,
+  error,
 }) => {
   const router = useLocalizedRouter();
   const { t } = useTranslation();
@@ -108,7 +110,13 @@ const NotificationDrawer = ({
 
         {/* Notification List */}
         <div className="flex-1 overflow-y-auto pb-4 flex flex-col" onScroll={handleScroll}>
-          {notifications.length === 0 ? (
+          {error === 403 ? (
+            <AccessDeniedState
+              fullScreen={false}
+              title={t("notifications.accessDeniedTitle")}
+              description={t("notifications.accessDeniedDesc")}
+            />
+          ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-8 gap-2">
               <p className="text-gray-500 font-medium">{t("notifications.emptyTitle")}</p>
               <p className="text-xs text-gray-400">{t("notifications.emptyDesc")}</p>

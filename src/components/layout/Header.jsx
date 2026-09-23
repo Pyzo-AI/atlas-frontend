@@ -40,7 +40,8 @@ const Header = ({ onMenuClick }) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [token, setToken] = useState(null);
-  const { notifications, unreadCount, markAsRead, loadMore, hasMore, loading } = useNotifications(token);
+  const { notifications, unreadCount, markAsRead, loadMore, hasMore, loading, error: notificationsError } =
+    useNotifications(token);
   const { t } = useTranslation();
   const { shouldRender, transitionStyle, dropdownTransitionClassName } = useOverlayTransition(isDropdownOpen, false);
 
@@ -224,6 +225,7 @@ const Header = ({ onMenuClick }) => {
         hasMore={hasMore}
         loadMore={loadMore}
         loading={loading}
+        error={notificationsError}
       />
     </header>
   );

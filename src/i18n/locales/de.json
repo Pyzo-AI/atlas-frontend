@@ -84,7 +84,9 @@
     "emptyTitle": "Noch keine Benachrichtigungen",
     "emptyDesc": "Wir benachrichtigen Sie, wenn etwas Wichtiges passiert.",
     "loading": "Wird geladen...",
-    "scrollMore": "Für mehr scrollen"
+    "scrollMore": "Für mehr scrollen",
+    "accessDeniedTitle": "Sie haben keinen Zugriff darauf",
+    "accessDeniedDesc": "Bitten Sie einen Organisationsadministrator, Ihnen die erforderliche Berechtigung zu erteilen."
   },
   "filter": {
     "filters": "Filter",

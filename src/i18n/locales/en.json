@@ -84,7 +84,9 @@
     "emptyTitle": "No notifications yet",
     "emptyDesc": "We'll notify you when something important happens.",
     "loading": "Loading...",
-    "scrollMore": "Scroll for more"
+    "scrollMore": "Scroll for more",
+    "accessDeniedTitle": "You don't have access to this",
+    "accessDeniedDesc": "Ask an organization admin to grant you the required permission."
   },
   "filter": {
     "filters": "Filters",

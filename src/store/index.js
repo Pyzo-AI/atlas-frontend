@@ -13,6 +13,7 @@ import notificationsReducer from "./features/notificationsSlice";
 import { organizationsApi } from "./api/organizationsApi";
 import organizationReducer from "./features/organizationSlice";
 import { productsApi } from "./api/productsApi";
+import accessDeniedReducer from "./features/accessDeniedSlice";
 
 export const store = configureStore({
   reducer: {
@@ -29,6 +30,7 @@ export const store = configureStore({
     image: imageReducer,
     notifications: notificationsReducer,
     organization: organizationReducer,
+    accessDenied: accessDeniedReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
