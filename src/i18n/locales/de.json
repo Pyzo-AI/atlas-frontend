@@ -328,8 +328,8 @@
     "goFullscreen": "Vollbildmodus aktivieren"
   },
   "common": {
-    "errorLoadingData": "Fehler beim Laden der Daten",
-    "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "errorLoadingData": "Verbindung zum System nicht möglich",
+    "somethingWentWrong": "Beim Abrufen dieser Informationen ist ein Problem aufgetreten. Überprüfen Sie Ihre Internetverbindung oder aktualisieren Sie die Seite.",
     "tryAgain": "Erneut versuchen"
   }
 }

@@ -349,8 +349,8 @@
     "goFullscreen": "Go Fullscreen"
   },
   "common": {
-    "errorLoadingData": "Error Loading Data",
-    "somethingWentWrong": "Something went wrong. Please try again.",
+    "errorLoadingData": "Unable to Connect to System",
+    "somethingWentWrong": "We're having trouble retrieving this information. Check your internet connection or try refreshing the page.",
     "tryAgain": "Try Again"
   }
 }
