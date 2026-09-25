@@ -12,6 +12,8 @@ import micMuted from "@/assets/svg/mic-muted.svg";
 import micUnmuted from "@/assets/svg/mic-unmuted.svg";
 import { showToast } from "@/utils/toast";
 import ChatUI from "@/components/sections/ChatUI";
+import { isAccessDeniedError } from "@/utils/errorHandler";
+import { toastService } from "@/utils/toastService";
 
 const FloatingChatbot = ({ agentId = 1 }) => {
   const { t } = useTranslation();
@@ -119,6 +121,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
         console.log("Conversation start aborted");
         return;
       }
+      if (isAccessDeniedError(error)) toastService.showError(error);
       setConnectionState((prev) => ({ ...prev, isLoading: false }));
       setIsOpen(false);
     }

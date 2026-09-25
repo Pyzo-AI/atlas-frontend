@@ -19,6 +19,7 @@ import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { showToast } from "@/utils/toast";
 import { getApiErrorMessage } from "@/utils/errorHandler";
+import { toastService } from "@/utils/toastService";
 import { useParams } from "next/navigation";
 import ResultModal from "@/components/modals/ResultModal";
 import FeedbackModal from "@/components/modals/FeedbackModal";
@@ -143,7 +144,7 @@ const RolePlayAssessmentView = ({ assessmentData, selectedAssessmentId }) => {
       }
     } catch (err) {
       console.error("Failed to start role play assessment:", err);
-      showToast.error(getApiErrorMessage(err, "Failed to start the assessment. Please try again."));
+      toastService.showError(err, "Failed to start the assessment. Please try again.");
     } finally {
       setIsStarting(false);
       setShowConfirmModal(false);
@@ -414,7 +415,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
       dispatch(questionsApi.util.invalidateTags(["Question"]));
     } catch (err) {
       console.error("Failed to start role play assessment:", err);
-      showToast.error(getApiErrorMessage(err, "Failed to start assessment"));
+      toastService.showError(err, "Failed to start assessment");
     } finally {
       setIsStartingRolePlay(false);
     }
@@ -939,7 +940,7 @@ const InModuleAssessment = ({ videos = [], assessmentDetails = [], passingScore 
         }
       } catch (error) {
         console.log("Assessment submission failed:", error);
-        showToast.error(getApiErrorMessage(error, t("lectures.failedToSubmitAssessment")));
+        toastService.showError(error, t("lectures.failedToSubmitAssessment"));
       }
     };
 

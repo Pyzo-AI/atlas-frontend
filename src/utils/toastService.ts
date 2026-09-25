@@ -4,15 +4,21 @@
  */
 
 import { showToast } from './toast';
-import { getApiErrorMessage } from './errorHandler';
+import { getApiErrorMessage, isAccessDeniedError } from './errorHandler';
 
 export const toastService = {
   /**
-   * Show error toast with automatic message extraction
+   * Show error toast with automatic message extraction. A 403 shows an
+   * "Access Denied" heading with the shared access-denied message as its
+   * description, matching Pyzo Central and Compass.
    */
   showError: (error: any, fallback?: string) => {
     const message = getApiErrorMessage(error, fallback);
-    showToast.error(message);
+    if (isAccessDeniedError(error)) {
+      showToast.error('Access Denied', message);
+    } else {
+      showToast.error(message);
+    }
   },
 
   /**

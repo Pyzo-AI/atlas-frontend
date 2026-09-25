@@ -10,6 +10,7 @@ import aiOverviewIcon from "@/assets/svg/ai-overview-icon.svg";
 import aiOverviewChevron from "@/assets/svg/ai-overview-chevron.svg";
 import aiAvatarIcon from "@/assets/svg/chat-ai-avatar-icon.svg";
 import mobileBackArrow from "@/assets/svg/mobile-chat-back-arrow.svg";
+import chatListItemArrow from "@/assets/svg/chats-mobile-list-item-arrow.svg";
 import mobileAiSummaryIcon from "@/assets/svg/mobile-ai-summary-icon.svg";
 import mobileAiSummaryChevron from "@/assets/svg/mobile-ai-summary-chevron.svg";
 import noSearchResultsIcon from "@/assets/svg/chats-no-search-results-icon.svg";
@@ -503,23 +504,23 @@ export default function Chats() {
                       <button
                         key={chat.conversation_id}
                         onClick={() => handleMobileSelectChat(chat.conversation_id)}
-                        className={`flex items-center justify-between gap-2 px-4 py-3 border-b text-left cursor-pointer ${
+                        className={`flex items-center gap-1.5 px-4 py-3 border-b text-left cursor-pointer ${
                           active
                             ? "bg-[rgba(39,98,234,0.1)] border-[rgba(39,98,234,0.2)]"
                             : "bg-transparent border-[rgba(229,231,235,0.4)]"
                         }`}>
-                        <span
-                          className={`font-lato text-sm truncate ${
-                            active ? "font-semibold text-[#2762EA]" : "font-medium text-[#111827]"
-                          }`}>
-                          {chat.label}
-                        </span>
-                        <span
-                          className={`font-lato font-semibold text-[11px] leading-none px-2 py-0.5 rounded-xl shrink-0 ${
-                            active ? "bg-[#2762EA] text-white" : "bg-[#F3F4F6] text-[#6B7280]"
-                          }`}>
-                          {chat.message_count}
-                        </span>
+                        <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                          <span
+                            className={`font-lato font-medium text-sm truncate ${
+                              active ? "text-[#2762EA]" : "text-[#111827]"
+                            }`}>
+                            {chat.label}
+                          </span>
+                          <span className="font-lato text-xs text-[#858D9D]">
+                            {formatListDateTime(chat.last_message_at, t)}
+                          </span>
+                        </div>
+                        <Image src={chatListItemArrow} alt="" width={16} height={16} className="shrink-0" />
                       </button>
                     );
                   })

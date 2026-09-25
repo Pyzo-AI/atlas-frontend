@@ -35,7 +35,7 @@ import ResultModal from "../modals/ResultModal";
 import { setOverlayImage, setImageLoading, clearOverlayImage } from "@/store/features/imageSlice";
 import VideoPlaylist from "./VideoPlaylist";
 import { showToast } from "@/utils/toast";
-import { getApiErrorMessage } from "@/utils/errorHandler";
+import { toastService } from "@/utils/toastService";
 import { useTranslation } from "react-i18next";
 
 
@@ -360,7 +360,7 @@ const VideoPanel = forwardRef(
               roomName: sessionResponse.room_name,
             });
           } catch (sessionError) {
-            showToast.error(getApiErrorMessage(sessionError, "Unable to start interaction mode. Please try again."));
+            toastService.showError(sessionError, "Unable to start interaction mode. Please try again.");
             dispatch(setIsQuestionMode(false));
             dispatch(setSlideNumbers([]));
             // throw sessionError;

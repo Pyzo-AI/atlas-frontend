@@ -1,5 +1,15 @@
+export const ACCESS_DENIED_MESSAGE = "You don't have access to perform this action.";
+
 /**
- * Extract a user-facing error message from an API error.
+ * True when an API error is a 403 (Forbidden) — RTK Query's
+ * FetchBaseQueryError and apiClient's thrown object both carry `status`.
+ */
+export const isAccessDeniedError = (error: unknown): boolean =>
+  !!error && typeof error === "object" && (error as { status?: unknown }).status === 403;
+
+/**
+ * Extract a user-facing error message from an API error. A 403 always shows
+ * the same access-denied message regardless of the backend's prose.
  * Priority order:
  *  1. error.data.error.message  – standardized backend shape { success: false, error: { message } }
  *  2. error.data.message        – flat data message
@@ -10,6 +20,10 @@
  *  7. fallback
  */
 export const getApiErrorMessage = (error: any, fallback?: string): string => {
+  if (isAccessDeniedError(error)) {
+    return ACCESS_DENIED_MESSAGE;
+  }
+
   if (!error) {
     return fallback || "Something went wrong. Please try again later.";
   }

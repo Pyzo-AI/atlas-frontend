@@ -16,6 +16,8 @@ import TextArea from "@/components/ui/TextArea";
 import Lottie from "lottie-react";
 import spinnerAnimation from "@/assets/json/spinner.json";
 import { useTranslation } from "react-i18next";
+import { isAccessDeniedError } from "@/utils/errorHandler";
+import { toastService } from "@/utils/toastService";
 
 export default function FeedbackModal({ isOpen, onClose, presentationId }) {
   const [rating, setRating] = useState(0);
@@ -80,6 +82,7 @@ export default function FeedbackModal({ isOpen, onClose, presentationId }) {
       router.push("/?feedback=success");
     } catch (error) {
       console.log("Error submitting review:", error);
+      if (isAccessDeniedError(error)) toastService.showError(error);
     } finally {
       setIsSubmitting(false);
     }

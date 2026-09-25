@@ -11,6 +11,8 @@ import {
   markRead,
 } from "../store/features/notificationsSlice";
 import { useLazyGetNotificationsQuery, useMarkNotificationAsReadMutation } from "../store/api/notificationApi";
+import { isAccessDeniedError } from "@/utils/errorHandler";
+import { toastService } from "@/utils/toastService";
 
 export function useNotifications(token) {
   const dispatch = useDispatch();
@@ -114,6 +116,7 @@ export function useNotifications(token) {
       await triggerMarkRead(notificationId).unwrap();
     } catch (error) {
       console.log("Failed to mark as read:", error);
+      if (isAccessDeniedError(error)) toastService.showError(error);
     }
   };
 

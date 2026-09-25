@@ -138,7 +138,7 @@ const Header = ({ onMenuClick }) => {
 
         {/* Sidebar is hidden on the lecture player — keep branding visible here instead. */}
         {pathname.includes("/lectures/") && !orgConfig?.disable_logo && (
-          <Image src={logo} height={28} width={103} alt="Pyzo Logo" />
+          <Image src={logo} height={18} width={66} alt="Pyzo Logo" />
         )}
       </div>
 
