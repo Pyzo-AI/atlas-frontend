@@ -70,8 +70,11 @@ export const logout = (loginUrl = "/login") => {
     trackLogout(userId);
   }
   
-  // Use SDK logout to revoke session on Keycloak
-  sdkLogout({
+  // Use SDK logout to revoke session on Keycloak - returned so callers can
+  // await the redirect actually being underway before dropping their own
+  // loading state (otherwise the caller's `await logout(...)` resolves
+  // immediately, since this function itself never returned anything).
+  return sdkLogout({
     loginUrl,
     baseUrl: process.env.NEXT_PUBLIC_LOGIN_BASE_URL || "",
     refreshToken: tokens?.refresh_token,
