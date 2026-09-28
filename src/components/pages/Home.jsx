@@ -85,6 +85,7 @@ const DesktopModuleCard = ({ presentation, onClick, getBadge }) => {
   const { t } = useTranslation();
   const badge = getBadge(presentation);
   const isLocked = presentation.status === "locked";
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
     <div
@@ -94,7 +95,17 @@ const DesktopModuleCard = ({ presentation, onClick, getBadge }) => {
       onClick={isLocked ? undefined : onClick}>
       <div className="relative w-full aspect-[271/132] bg-[#F5F6FC] rounded-md overflow-hidden">
         {presentation?.image && presentation.image.trim() !== "" && (
-          <Image src={presentation.image} alt={presentation?.title} fill className="object-cover" />
+          <>
+            {!imageLoaded && <div className="absolute inset-0 animate-pulse bg-[#ECEDF5]" />}
+            <Image
+              src={presentation.image}
+              alt={presentation?.title}
+              fill
+              sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, (max-width: 1535px) 25vw, 20vw"
+              className={`object-cover transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+              onLoad={() => setImageLoaded(true)}
+            />
+          </>
         )}
         {badge.label && (
           <div className={`absolute left-0 top-1.5 flex items-center px-[5px] py-[6px] rounded-r-lg ${badge.bg}`}>
@@ -139,6 +150,7 @@ const MobileModuleCard = ({ presentation, onClick, getBadge }) => {
   const { t } = useTranslation();
   const badge = getBadge(presentation);
   const isLocked = presentation.status === "locked";
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
     <div
@@ -148,7 +160,17 @@ const MobileModuleCard = ({ presentation, onClick, getBadge }) => {
       onClick={isLocked ? undefined : onClick}>
       <div className="relative w-20 h-20 shrink-0 bg-bg-light-purple rounded-lg overflow-hidden">
         {presentation?.image && presentation.image.trim() !== "" && (
-          <Image src={presentation.image} alt={presentation?.title} fill className="object-cover" />
+          <>
+            {!imageLoaded && <div className="absolute inset-0 animate-pulse bg-[#ECEDF5]" />}
+            <Image
+              src={presentation.image}
+              alt={presentation?.title}
+              fill
+              sizes="80px"
+              className={`object-cover transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+              onLoad={() => setImageLoaded(true)}
+            />
+          </>
         )}
       </div>
       <div className="flex flex-col justify-center gap-2 min-w-0 flex-1">
@@ -238,15 +260,16 @@ const Home = () => {
     refetchOnMountOrArgChange: true,
   });
 
-  // Only the very first load (no data on screen yet at all) gets the
-  // full-screen loader; any later refetch (search/filter/sort/page change)
-  // only replaces the module list area, keeping stats/header/filters visible.
+  // Every mount (including a route switch back to Home) shows the
+  // full-screen loader again, same as the Certificates page - matches
+  // hasLoadedOnce's own name: it tracks this component instance's first
+  // load, not "does the store already have data from a previous visit".
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [minLoaderTimeElapsed, setMinLoaderTimeElapsed] = useState(false);
 
   // Keep the full-screen loader up for at least 1.5s, even if data arrives sooner.
   useEffect(() => {
-    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 1500);
+    const timer = setTimeout(() => setMinLoaderTimeElapsed(true), 500);
     return () => clearTimeout(timer);
   }, []);
 
