@@ -973,6 +973,7 @@ const VideoPanel = forwardRef(
                 initialVideoTime={initialVideoTime}
                 autoPlayEnabled={autoPlayEnabled}
                 showRemainingDuration={isMobile}
+                interactionsDisabled={!!selectedAssessmentId}
               />
               {selectedAssessmentId && <div className="absolute inset-0 z-10" />}
             </div>

@@ -385,12 +385,31 @@ const VideoPlayer = forwardRef(
       disablePictureInPicture = true,
       controlsList = "nodownload",
       showRemainingDuration = false,
+      interactionsDisabled = false,
     },
     ref
   ) => {
     const videoRef = useRef(null);
     const playerRef = useRef(null);
     const { t } = useTranslation();
+    // The init effect below only re-runs on [src, isClient] (see the
+    // dependency-array note further down) - it must NOT also depend on
+    // interactionsDisabled, or toggling it (e.g. opening/closing an
+    // assessment) would tear down and restart the player mid-playback. The
+    // click/keydown handlers it registers read this ref instead, so they
+    // always see the current value without needing a re-init.
+    const interactionsDisabledRef = useRef(interactionsDisabled);
+    useEffect(() => {
+      interactionsDisabledRef.current = interactionsDisabled;
+      // `inert` blocks pointer clicks AND keyboard focus/activation (Enter,
+      // Space) on every control inside the player - including video.js's own
+      // play/pause <button>, which otherwise stays focusable and reacts to
+      // Enter/Space via native button-activation regardless of the
+      // pointer-events-none overlay VideoPanel draws on top of it, since that
+      // overlay only blocks the mouse, not a button that already has focus.
+      const playerEl = playerRef.current?.el?.();
+      if (playerEl) playerEl.inert = interactionsDisabled;
+    }, [interactionsDisabled]);
     const [isClient, setIsClient] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [duration, setDuration] = useState(0);
@@ -664,6 +683,13 @@ const VideoPlayer = forwardRef(
       });
 
       playerRef.current.ready(() => {
+        // Apply the current interactionsDisabled value once the player's DOM
+        // exists - the src/isClient-only init effect can otherwise remount
+        // the player (e.g. a video-index change) while assessment mode is
+        // already active, and this ready callback is the first point where
+        // playerRef.current.el() is guaranteed to exist for that fresh instance.
+        playerRef.current.el().inert = interactionsDisabledRef.current;
+
         // Re-setup VHS xhr hook after player is ready as fallback
         // This ensures the hook is active for the tech instance
         try {
@@ -771,7 +797,7 @@ const VideoPlayer = forwardRef(
           videoElement.addEventListener(
             "click",
             (e) => {
-              if (!controls) return;
+              if (!controls || interactionsDisabledRef.current) return;
               e.stopPropagation();
               if (playerRef.current.paused()) {
                 playerRef.current.play();
@@ -787,7 +813,7 @@ const VideoPlayer = forwardRef(
         const handleKeyDown = (e) => {
           const isInput = ["INPUT", "TEXTAREA"].includes(e.target?.tagName) || e.target?.isContentEditable;
           if (e.code === "Space" && !isInput) {
-            if (!controls) return;
+            if (!controls || interactionsDisabledRef.current) return;
             e.preventDefault();
             if (playerRef.current.paused()) {
               playerRef.current.play();

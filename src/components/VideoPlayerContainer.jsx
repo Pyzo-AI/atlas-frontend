@@ -25,6 +25,7 @@ const VideoPlayerContainer = forwardRef(
       autoPlayEnabled = false,
       isOnlyVideoMode = false,
       showRemainingDuration = false,
+      interactionsDisabled = false,
     },
     ref
   ) => {
@@ -377,6 +378,7 @@ const VideoPlayerContainer = forwardRef(
         playbackRate={videoSettings.playbackRate}
         currentTime={initialVideoTime}
         showRemainingDuration={showRemainingDuration}
+        interactionsDisabled={interactionsDisabled}
         onTimeUpdate={handleTimeUpdate}
         onSeeking={handleSeeking}
         onSeeked={handleSeeked}
