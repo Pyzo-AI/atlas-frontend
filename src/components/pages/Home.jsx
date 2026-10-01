@@ -250,7 +250,6 @@ const Home = () => {
   const {
     data: presentations = {},
     isFetching: loading,
-    error,
   } = useGetPresentationsQuery(
     { search: searchQuery, status: filter, sortOrder, page, pageSize: PAGE_SIZE },
     { refetchOnMountOrArgChange: true }
@@ -346,16 +345,14 @@ const Home = () => {
       completed: t("home.tabs.completed"),
     })[status];
 
-  if (error) {
-    return (
-      <div className="w-full min-h-screen bg-page-background flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">{t("home.errorTitle")}</h2>
-          <p className="text-gray-600">{t("home.errorDesc")}</p>
-        </div>
-      </div>
-    );
-  }
+  // No local error UI here: getPresentations is one of ResponsiveContainer's
+  // gated primary-page endpoints, so any failure (403 or otherwise) already
+  // swaps the whole page to AccessDeniedState/ErrorState up at that level.
+  // A local error block here used to run on every render where `error` was
+  // truthy - including the brief window before the Redux-driven swap above
+  // actually landed - which flashed "Error Loading Presentations" for a
+  // moment before AccessDeniedState took over. Letting ResponsiveContainer
+  // be the only error UI for this query removes that race entirely.
 
   const items = presentations?.data || [];
   const pagination = presentations?.pagination;
