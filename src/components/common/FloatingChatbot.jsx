@@ -14,6 +14,7 @@ import { showToast } from "@/utils/toast";
 import ChatUI from "@/components/sections/ChatUI";
 import { isAccessDeniedError } from "@/utils/errorHandler";
 import { toastService } from "@/utils/toastService";
+import { requestMicrophonePermission } from "@/utils/microphone";
 
 const FloatingChatbot = ({ agentId = 1 }) => {
   const { t } = useTranslation();
@@ -52,7 +53,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
 
       setLiveMessages([]);
       setConnectionState((prev) => ({ ...prev, isLoading: true }));
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      await requestMicrophonePermission();
       if (signal.aborted) return;
 
       const userDetails = getUserDetailsFromToken();

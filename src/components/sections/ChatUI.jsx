@@ -22,6 +22,7 @@ import { showToast } from "@/utils/toast";
 import { getApiErrorMessage } from "@/utils/errorHandler";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
+import { requestMicrophonePermission } from "@/utils/microphone";
 
 const ChatUI = ({
   onClose,
@@ -366,7 +367,7 @@ const ChatUI = ({
 
   const handleAllowMicrophone = async () => {
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      await requestMicrophonePermission();
       setShowMicPopup(false);
       // Same reason as handleInteractionMode: bypass onClose() to avoid double session
       setIsJumpedOnChatFromInteractionMode(false);

@@ -7,6 +7,7 @@ import microphone from "../../assets/svg/microphone.svg";
 import Image from "next/image";
 import MicrophonePermissionPopup from "@/components/ui/MicrophonePermissionPopup";
 import { useTranslation } from "react-i18next";
+import { requestMicrophonePermission } from "@/utils/microphone";
 
 // Height thresholds (px) for progressive content hiding
 const ICON_HIDE_THRESHOLD = 180;
@@ -60,7 +61,7 @@ const AILearningAssistant = ({
 
   const handleAllowMicrophone = async () => {
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      await requestMicrophonePermission();
       setShowMicPopup(false);
       dispatch(setIsQuestionMode(true));
       onStartConversation();

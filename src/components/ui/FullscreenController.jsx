@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { GiExpand } from "react-icons/gi";
 import { useTranslation } from 'react-i18next';
+import { requestMicrophonePermission } from "@/utils/microphone";
 
 // ─── Fullscreen helpers ──────────────────────────────────────────────────────
 
@@ -208,7 +209,7 @@ const FullscreenController = ({ children, enableAutoFullscreen = true }) => {
       isRequestingPermissionRef.current = true;
 
       if (navigator.mediaDevices?.getUserMedia) {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        await requestMicrophonePermission();
       }
 
       isRequestingPermissionRef.current = false;
