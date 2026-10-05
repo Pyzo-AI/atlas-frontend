@@ -37,6 +37,7 @@ import VideoPlaylist from "./VideoPlaylist";
 import { showToast } from "@/utils/toast";
 import { toastService } from "@/utils/toastService";
 import { useTranslation } from "react-i18next";
+import { requestMicrophonePermission } from "@/utils/microphone";
 
 
 // Conversation history management for VideoPanel
@@ -340,7 +341,7 @@ const VideoPanel = forwardRef(
           // LiveKit flow
           setConversationState((prev) => ({ ...prev, isLoading: true }));
           setLiveMessages([]);
-          await navigator.mediaDevices.getUserMedia({ audio: true });
+          await requestMicrophonePermission();
 
           try {
             // Create session and connect
@@ -369,7 +370,7 @@ const VideoPanel = forwardRef(
           // ElevenLabs flow
           setContextSent(false);
           setConversationState((prev) => ({ ...prev, isLoading: true }));
-          await navigator.mediaDevices.getUserMedia({ audio: true });
+          await requestMicrophonePermission();
           await conversation.startSession({
             agentId: agentId,
             userId: getUserDetailsFromToken()?.email,
