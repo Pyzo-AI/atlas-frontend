@@ -16,6 +16,9 @@ import { isAccessDeniedError } from "@/utils/errorHandler";
 import { toastService } from "@/utils/toastService";
 import { requestMicrophonePermission } from "@/utils/microphone";
 
+const isLimitReachedError = (error) =>
+  error?.status === 429 || error?.data?.status === "limit_reached";
+
 const FloatingChatbot = ({ agentId = 1 }) => {
   const { t } = useTranslation();
 
@@ -94,6 +97,10 @@ const FloatingChatbot = ({ agentId = 1 }) => {
               if (liveKitService.isConnected()) {
                 liveKitService.disconnect();
               }
+              // Same message the module chat shows (VideoPanel)
+              if (data.reason === "limit_reached") {
+                showToast.error("Your interaction time limit has been reached. Session ended.");
+              }
               setIsOpen(false);
               setLiveKitAgentState("connecting");
               setConnectionState({ isLoading: false, isConnected: false, isAudioPlaying: false });
@@ -122,7 +129,8 @@ const FloatingChatbot = ({ agentId = 1 }) => {
         console.log("Conversation start aborted");
         return;
       }
-      if (isAccessDeniedError(error)) toastService.showError(error);
+      // 429 = org global chat interaction limit already reached
+      if (isAccessDeniedError(error) || isLimitReachedError(error)) toastService.showError(error);
       setConnectionState((prev) => ({ ...prev, isLoading: false }));
       setIsOpen(false);
     }
