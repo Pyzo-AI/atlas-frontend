@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import pyzoLoader from "@/assets/gif/pyzo-loader.gif";
+import { useMinAreaLoader } from "@/hooks/useMinLoader";
 
 /**
  * Ported verbatim from pyzo-central-frontend's PyzoLoader.tsx so loading
@@ -19,11 +20,28 @@ import pyzoLoader from "@/assets/gif/pyzo-loader.gif";
  * @param {number} height - Exact pixel height (e.g. measured from the real
  *   content via a ref before it's replaced by the loader). Takes priority
  *   over heightClassName when provided, for pixel-perfect no-shift swaps.
+ * @param {boolean} [isLoading] - Optional: the request's loading flag. When
+ *   passed, the loader stays up while loading AND for at least
+ *   `minLoaderTime` seconds from when it appeared, then renders `children`;
+ *   if loading starts again it comes back with the same minimum. When
+ *   omitted, the loader always shows (the caller decides).
+ * @param {React.ReactNode} [children] - Content shown once `isLoading` is done.
+ * @param {number} [minLoaderTime=0.5] - Minimum seconds the loader stays up
+ *   once shown; 0 turns the minimum off.
  */
-export default function PyzoLoader({ fullScreen = true, heightClassName = "", height }) {
+export default function PyzoLoader({
+  fullScreen = true,
+  heightClassName = "",
+  height,
+  isLoading,
+  children,
+  minLoaderTime = 0.5,
+}) {
+  const controlled = isLoading !== undefined;
+  const showLoader = useMinAreaLoader(isLoading ?? true, Math.max(0, minLoaderTime) * 1000);
   const containerRef = useRef(null);
   const [availableHeight, setAvailableHeight] = useState(null);
-  const useDynamicHeight = !fullScreen && !heightClassName && height == null;
+  const useDynamicHeight = !fullScreen && !heightClassName && height == null && showLoader;
 
   useLayoutEffect(() => {
     if (!useDynamicHeight) return;
@@ -43,7 +61,11 @@ export default function PyzoLoader({ fullScreen = true, heightClassName = "", he
       window.removeEventListener("resize", updateHeight);
       window.visualViewport?.removeEventListener("resize", updateHeight);
     };
+    // useDynamicHeight includes showLoader, so this re-measures when the
+    // loader comes back after showing children.
   }, [useDynamicHeight]);
+
+  if (controlled && !showLoader) return <>{children}</>;
 
   return (
     <div

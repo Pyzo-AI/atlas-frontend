@@ -8,7 +8,6 @@ import Image from "next/image";
 import hamburger from "@/assets/svg/hamburger.svg";
 import logo from "@/assets/svg/pyzo-atlas-logo.svg";
 import LogoutModal from "@/components/ui/auth/LogoutModal";
-import sidebarCollapse from "@/assets/svg/sidebar-collapse.svg";
 import logoutIcon from "@/assets/svg/logout.svg";
 import NotificationDrawer from "./NotificationDrawer";
 import notification from "@/assets/svg/notification.svg";
@@ -17,13 +16,33 @@ import { useTranslation } from "react-i18next";
 import { useGetOrganizationConfigQuery } from "@/store/api/organizationsApi";
 import { useSidebar } from "./LayoutWrapper";
 import { useOverlayTransition } from "@/hooks/useOverlayTransition";
+import { useGetMyProfileQuery } from "@/store/api/profileApi";
+import { getInitials } from "@/utils/initials";
+import { LuPanelLeftClose, LuPanelLeftOpen, LuUserRound } from "react-icons/lu";
+import ProfileDrawer from "./ProfileDrawer";
 
-/** "Ankit Kumar" -> "AK"; falls back to the first two letters for a single word. */
-function getInitials(name) {
-  const parts = (name || "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+/** Account-menu avatar: the profile photo when set, initials otherwise (as in Central's Header). */
+function HeaderAvatar({ name, src, size, fontSize }) {
+  if (src) {
+    return (
+      <Image
+        src={src}
+        alt={name}
+        width={size}
+        height={size}
+        unoptimized
+        className="rounded-full object-cover shrink-0"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  return (
+    <span className="shrink-0 flex items-center justify-center rounded-full bg-primary" style={{ width: size, height: size }}>
+      <span className="font-lato font-semibold text-white text-center" style={{ fontSize }}>
+        {getInitials(name) || "?"}
+      </span>
+    </span>
+  );
 }
 
 // Visual chrome (48px height, avatar-initials dropdown, collapse toggle)
@@ -38,6 +57,7 @@ const Header = ({ onMenuClick }) => {
   const [userInfo, setUserInfo] = useState({ name: "", email: "" });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [token, setToken] = useState(null);
   const { notifications, unreadCount, markAsRead, loadMore, hasMore, loading, error: notificationsError } =
@@ -48,6 +68,12 @@ const Header = ({ onMenuClick }) => {
   const { data: orgConfig } = useGetOrganizationConfigQuery(undefined, {
     skip: !token,
   });
+  // The token's name only refreshes on the next token, so prefer the profile
+  // (updated immediately after an edit) and fall back to the token's values.
+  const { data: profile } = useGetMyProfileQuery(undefined, { skip: !token });
+  const displayName = profile?.full_name || userInfo.name;
+  const displayEmail = profile?.email || userInfo.email;
+  const avatarUrl = profile?.avatar_url ?? null;
 
   useEffect(() => {
     if (
@@ -85,6 +111,11 @@ const Header = ({ onMenuClick }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const openProfile = () => {
+    setIsDropdownOpen(false);
+    setIsProfileOpen(true);
+  };
 
   const handleLogoutClick = () => {
     setIsDropdownOpen(false);
@@ -128,11 +159,16 @@ const Header = ({ onMenuClick }) => {
         {!hideMenuButton && (
           <button
             onClick={toggleSidebarCollapse}
-            className={`hidden md:flex -ml-[10px] p-1.5 text-[#5F6069] hover:bg-gray-100 rounded-md transition-all duration-300 cursor-pointer ${
-              isSidebarCollapsed ? "rotate-180" : ""
-            }`}
-            aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
-            <Image src={sidebarCollapse} width={16} height={16} alt="" unoptimized />
+            // Same toggle as pyzo-central-frontend: panel icon whose chevron shows which way the click goes.
+            className="hidden md:flex -ml-[10px] p-1.5 text-[#475569] hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
+            aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isSidebarCollapsed ? (
+              <LuPanelLeftOpen className="w-[18px] h-[18px]" strokeWidth={1.25} aria-hidden="true" />
+            ) : (
+              <LuPanelLeftClose className="w-[18px] h-[18px]" strokeWidth={1.25} aria-hidden="true" />
+            )}
           </button>
         )}
 
@@ -164,34 +200,44 @@ const Header = ({ onMenuClick }) => {
           <button
             type="button"
             aria-label="Account menu"
-            className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-primary cursor-pointer transition-opacity hover:opacity-90"
+            className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full cursor-pointer transition-opacity hover:opacity-90"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-            <span className="font-lato font-semibold text-[12px] leading-[14px] text-white text-center">
-              {getInitials(userInfo.name) || "?"}
-            </span>
+            <HeaderAvatar name={displayName} src={avatarUrl} size={28} fontSize={12} />
           </button>
 
           {shouldRender && (
             <div
               className={`absolute right-0 top-[calc(100%+2px)] w-[240px] origin-top-right bg-white border border-[#E7E9EE] rounded-[12px] flex flex-col z-[70] ${dropdownTransitionClassName}`}
               style={{ boxShadow: "0px 1px 4px rgba(0,0,0,0.04), 0px 4px 16px rgba(0,0,0,0.08)", ...transitionStyle }}>
-              <div className="flex items-center gap-3 px-4 py-3 w-full">
-                <span className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-primary">
-                  <span className="font-lato font-semibold text-[13px] leading-[16px] text-white text-center">
-                    {getInitials(userInfo.name) || "?"}
-                  </span>
-                </span>
+              {/* User info — opens the profile drawer */}
+              <button
+                type="button"
+                onClick={openProfile}
+                className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-t-[12px] cursor-pointer hover:bg-gray-50 transition-colors">
+                <HeaderAvatar name={displayName} src={avatarUrl} size={32} fontSize={13} />
                 <div className="flex flex-col gap-1 overflow-hidden">
                   <div className="font-lato font-bold text-[13px] leading-[16px] text-[#1E293B] truncate">
-                    {userInfo.name}
+                    {displayName}
                   </div>
-                  {userInfo.email && (
+                  {displayEmail && (
                     <div className="font-lato font-normal text-[12px] leading-[14px] text-[#64748B] truncate">
-                      {userInfo.email}
+                      {displayEmail}
                     </div>
                   )}
                 </div>
-              </div>
+              </button>
+
+              <div className="w-full h-px bg-[#F1F5F9]" />
+
+              <button
+                type="button"
+                onClick={openProfile}
+                className="flex items-center gap-1.5 px-4 py-3 w-full cursor-pointer hover:bg-gray-50 transition-colors">
+                <LuUserRound className="w-4 h-4 text-[#475569]" />
+                <span className="font-lato font-medium text-[12px] leading-[14px] text-[#1E293B]">
+                  {t("header.viewProfile")}
+                </span>
+              </button>
 
               <div className="w-full h-px bg-[#F1F5F9]" />
 
@@ -215,6 +261,8 @@ const Header = ({ onMenuClick }) => {
         onConfirm={confirmLogout}
         isLoggingOut={isLoggingOut}
       />
+
+      <ProfileDrawer isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
 
       <NotificationDrawer
         isOpen={isNotificationOpen}

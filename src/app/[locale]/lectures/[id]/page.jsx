@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import VideoPanel from "@/components/sections/VideoPanel";
 import PPTSection from "@/components/sections/PPTSection";
 import { useGetAllVideoQuery, useSubmitVideoProgressMutation } from "@/store/api/questionsApi";
@@ -13,7 +13,8 @@ import {
 } from "@/store/features/videoSlice";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import BreadCrumb from "@/components/common/BreadCrumb";
-import PageSkeleton from "@/components/common/PageSkeleton";
+import PyzoLoader from "@/components/common/PyzoLoader";
+import { useMinAreaLoader } from "@/hooks/useMinLoader";
 import { usePortraitMode } from "@/hooks/usePortraitMode";
 import { useAppHeight } from "@/hooks/useAppHeight";
 import FullscreenController from "@/components/ui/FullscreenController";
@@ -21,14 +22,7 @@ import { getUserDetailsFromToken } from "@/store/utils/token";
 import { getVideoProgress, clearVideoProgress } from "@/utils/videoProgress";
 import { clearAssessmentProgress, isAssessmentValid } from "@/utils/assessmentProgress";
 import { useTranslation } from "react-i18next";
-import PortraitLectureView, { PortraitSkeleton } from "@/components/sections/PortraitLectureView";
-
-// Isomorphic layout effect: useLayoutEffect on client, useEffect on server.
-// Defined at module level (not inside a component) — this is the standard
-// pattern used by react-use, ahooks, etc. to avoid the SSR warning while
-// still getting the synchronous pre-paint behaviour of useLayoutEffect.
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+import PortraitLectureView from "@/components/sections/PortraitLectureView";
 
 // Combined components moved outside to prevent re-creation on every render
 const CombinedBreadCrumb = React.memo(({ data }) => {
@@ -158,14 +152,8 @@ const Home = () => {
   const { data, isLoading } = useGetAllVideoQuery(presentationId, {
     refetchOnMountOrArgChange: true,
   });
+  const showLoader = useMinAreaLoader(isLoading);
 
-  // skeletonReady: false during SSR + initial hydration (matches server HTML),
-  // then flipped to true synchronously before first browser paint via
-  // useIsomorphicLayoutEffect — so the correct skeleton is shown with zero flash.
-  const [skeletonReady, setSkeletonReady] = useState(false);
-  useIsomorphicLayoutEffect(() => {
-    setSkeletonReady(true);
-  }, []);
   const videos = data?.data;
   // const videos = data?.data.map((video) => ({
   //   ...video,
@@ -532,15 +520,10 @@ const Home = () => {
     }
   }, [data, dispatch]);
 
-  if (isLoading) {
-    // skeletonReady is false during SSR + initial hydration so the server HTML
-    // (PageSkeleton) and the first client render always match — no hydration error.
-    // useLayoutEffect then sets skeletonReady=true synchronously before the first
-    // browser paint, switching to PortraitSkeleton with zero visible flash.
-    if (skeletonReady && isPortrait && isMobileDevice) {
-      return <PortraitSkeleton />;
-    }
-    return <PageSkeleton />;
+  // Pyzo loader while the lecture loads, held for at least 0.5s so a fast
+  // response doesn't just flash it (same as the other pages).
+  if (showLoader) {
+    return <PyzoLoader fullScreen />;
   }
 
   if (isPortrait && isMobileDevice) {

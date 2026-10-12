@@ -4,14 +4,21 @@ import ErrorConnectionIcon from "@/assets/svg/error-connection.svg";
 import { useTranslation } from "react-i18next";
 
 export default function ErrorState({
+  title,
   message,
-  onRetry
+  onRetry,
+  // false lets this render inside a smaller host (e.g. a drawer) that
+  // already constrains its own height, like AccessDeniedState's prop.
+  fullScreen = true,
 }) {
   const { t } = useTranslation();
   const displayMessage = message || t("common.somethingWentWrong");
 
   return (
-    <div className="flex items-center justify-center px-4 min-h-[calc(100vh-45px)] bg-[#F9FAFB]">
+    <div
+      className={`flex items-center justify-center px-4 ${
+        fullScreen ? "min-h-[calc(100vh-45px)] bg-[#F9FAFB]" : "h-full py-10"
+      }`}>
       <div className="flex flex-col items-center gap-6 w-full max-w-[396px]">
         <Image
           src={ErrorConnectionIcon}
@@ -19,7 +26,7 @@ export default function ErrorState({
           className="w-[124px] h-[102px]"
         />
         <div className="flex flex-col items-center gap-2 w-full">
-          <h3 className="font-lato font-bold text-base text-[#111827] text-center">{t("common.errorLoadingData")}</h3>
+          <h3 className="font-lato font-bold text-base text-[#111827] text-center">{title || t("common.errorLoadingData")}</h3>
           <p className="font-lato text-xs leading-[18px] text-[#4B5563] text-center">{displayMessage}</p>
         </div>
         {onRetry && (
