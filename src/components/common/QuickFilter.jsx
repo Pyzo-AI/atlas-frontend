@@ -40,6 +40,17 @@ export default function QuickFilter({
 
   const displayLabel = selectedOption ? `${placeholder.split(":")[0]}: ${selectedOption.label}` : placeholder;
 
+  // The box is as wide as the WIDEST label it can ever show, so picking a
+  // different option never makes it grow or shrink. Those labels are
+  // rendered invisibly in the same grid cell as the visible text (below).
+  const sizerLabels = useMemo(() => {
+    const prefix = placeholder.split(":")[0];
+    // Set: the placeholder (e.g. "Status: All") usually equals the "All"
+    // option's own label, and identical labels would otherwise be duplicate
+    // React keys.
+    return [...new Set([placeholder, ...options.map((o) => `${prefix}: ${o.label}`)])];
+  }, [options, placeholder]);
+
   return (
     <div ref={dropdownRef} className={`relative inline-block ${className}`} style={{ minWidth: width || "auto" }}>
       <div
@@ -50,8 +61,18 @@ export default function QuickFilter({
         onClick={() => setIsOpen((o) => !o)}
         role="combobox"
         aria-expanded={isOpen}>
-        <div className="flex items-center overflow-hidden h-full flex-1">
-          <span className="whitespace-nowrap font-lato text-[12px] leading-[16px] font-normal" style={{ color: "#667085" }}>
+        <div className="grid items-center overflow-hidden h-full flex-1">
+          {sizerLabels.map((label) => (
+            <span
+              key={label}
+              aria-hidden
+              className="invisible col-start-1 row-start-1 whitespace-nowrap font-lato text-[12px] leading-[16px] font-normal">
+              {label}
+            </span>
+          ))}
+          <span
+            className="col-start-1 row-start-1 whitespace-nowrap font-lato text-[12px] leading-[16px] font-normal"
+            style={{ color: "#667085" }}>
             {displayLabel}
           </span>
         </div>
