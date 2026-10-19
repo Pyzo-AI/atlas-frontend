@@ -220,7 +220,7 @@ const SlideVideoSection = React.forwardRef(
           {/* Slide Numbers Image Overlay */}
           {slideImage && isQuestionMode && showQueryRelatedSlides && (
             <div className="absolute inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center">
-              <Image src={slideImage} alt="Slide reference" fill className="object-fill" />
+              <Image src={slideImage} alt="Slide reference" fill className="object-fill" unoptimized priority />
             </div>
           )}
           {/* Overlay Image */}
@@ -340,7 +340,7 @@ const SlideVideoSection = React.forwardRef(
         {/* Slide Numbers Image Overlay */}
         {slideImage && isQuestionMode && showQueryRelatedSlides && (
           <div className="absolute inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center">
-            <Image src={slideImage} alt="Slide reference" fill className="object-fill" />
+            <Image src={slideImage} alt="Slide reference" fill className="object-fill" unoptimized priority />
           </div>
         )}
         {/* Overlay Image */}
