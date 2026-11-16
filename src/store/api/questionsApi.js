@@ -133,8 +133,14 @@ export const questionsApi = createApi({
 
     // Short-lived link to open a document the interactive chat cited as a source
     getChatSourceDocument: builder.query({
-      query: ({ presentationId, documentId, page }) =>
-        `presentations/${presentationId}/documents/${documentId}/open${page ? `?page=${page}` : ''}`,
+      // Without a page (e.g. a DOCX), the cited passage lets the backend find it in the PDF it shows
+      query: ({ presentationId, documentId, page, text }) => {
+        const params = new URLSearchParams();
+        if (page) params.set('page', page);
+        else if (text) params.set('text', text.slice(0, 500));
+        const qs = params.toString();
+        return `presentations/${presentationId}/documents/${documentId}/open${qs ? `?${qs}` : ''}`;
+      },
       keepUnusedDataFor: 0, // the link expires; always ask for a fresh one
     }),
 

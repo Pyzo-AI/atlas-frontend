@@ -5,13 +5,14 @@ import { showToast } from "@/utils/toast";
 
 /**
  * "Sources" row under an AI answer in the interactive chat: the slides and module documents the answer
- * came from (metadata.sources, sent by the AI engine). A document opens in a new tab (at the cited page
- * for PDFs); a slide jumps the player to that slide. Documents of older (legacy) modules have no
+ * came from (metadata.sources, sent by the AI engine). A document opens in a new tab at the cited page
+ * (for a DOCX the backend finds the page from the cited passage, and the chip shows it once found); a slide jumps the player to that slide. Documents of older (legacy) modules have no
  * document_id and are shown without a link.
  */
 const AnswerSources = ({ sources, presentationId, onOpenSlide, compact = false }) => {
   const { t } = useTranslation();
   const [openingKey, setOpeningKey] = useState(null);
+  const [foundPages, setFoundPages] = useState({});
   const [getDocument] = useLazyGetChatSourceDocumentQuery();
 
   if (!Array.isArray(sources) || sources.length === 0) return null;
@@ -25,9 +26,13 @@ const AnswerSources = ({ sources, presentationId, onOpenSlide, compact = false }
         presentationId,
         documentId: source.document_id,
         page: source.page,
+        text: source.page ? undefined : source.snippet,
       }).unwrap();
       const url = result?.data?.url;
       if (!url) throw new Error("No document URL");
+      if (!source.page && result?.data?.page) {
+        setFoundPages((pages) => ({ ...pages, [key]: result.data.page }));
+      }
       if (tab) {
         tab.opener = null;
         tab.location.href = url;
@@ -70,7 +75,8 @@ const AnswerSources = ({ sources, presentationId, onOpenSlide, compact = false }
           );
         }
 
-        const label = source.page ? `${source.name} · ${t("chatUI.page", { page: source.page })}` : source.name;
+        const page = source.page || foundPages[key];
+        const label = page ? `${source.name} · ${t("chatUI.page", { page })}` : source.name;
         const canOpen = Boolean(source.document_id && presentationId);
         return (
           <button
