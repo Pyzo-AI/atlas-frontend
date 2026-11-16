@@ -1,6 +1,12 @@
 {
   "chatUI": {
-    "interactionHistory": "Interaktionsverlauf"
+    "interactionHistory": "Interaktionsverlauf",
+    "sources": "Quellen",
+    "slide": "Folie {{number}}",
+    "page": "S. {{page}}",
+    "openSource": "{{name}} öffnen",
+    "goToSlide": "Zu Folie {{number}}",
+    "sourceOpenFailed": "Dieses Dokument konnte nicht geöffnet werden. Bitte versuchen Sie es erneut."
   },
   "auth": {
     "logOutTitle": "Abmelden?",

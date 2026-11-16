@@ -1,6 +1,12 @@
 {
   "chatUI": {
-    "interactionHistory": "Interaction History"
+    "interactionHistory": "Interaction History",
+    "sources": "Sources",
+    "slide": "Slide {{number}}",
+    "page": "p. {{page}}",
+    "openSource": "Open {{name}}",
+    "goToSlide": "Go to slide {{number}}",
+    "sourceOpenFailed": "Couldn't open this document. Please try again."
   },
   "auth": {
     "logOutTitle": "Log Out?",
