@@ -23,6 +23,7 @@ import { getApiErrorMessage } from "@/utils/errorHandler";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getUserDetailsFromToken } from "@/store/utils/token";
 import { requestMicrophonePermission } from "@/utils/microphone";
+import AnswerSources from "@/components/sections/AnswerSources";
 
 const ChatUI = ({
   onClose,
@@ -38,6 +39,7 @@ const ChatUI = ({
   presentationId,
   useChatbotHistory = false,
   hideFooter = false,
+  onOpenSlide,
   hideInteractionMode = false,
   portraitMode = false,
   liveMessages = [],
@@ -548,6 +550,12 @@ const ChatUI = ({
                                 <p className={`font-lato font-normal text-[11px] leading-4 sm:text-[13px] sm:leading-5 lg:leading-[18px] text-primary-text break-words`}>
                                   {item.content || "No text answer found"}
                                 </p>
+                                <AnswerSources
+                                  sources={item.metadata?.sources}
+                                  presentationId={presentationId}
+                                  onOpenSlide={onOpenSlide}
+                                  compact
+                                />
                                 {item.time && <p className="text-[9px] text-gray-500 mt-1">{formatTime(item.time)}</p>}
                               </div>
                             </div>
@@ -626,6 +634,12 @@ const ChatUI = ({
                           <p className={`font-lato font-normal text-[11px] leading-4 sm:text-[13px] sm:leading-5 lg:leading-[18px] text-primary-text break-words`}>
                             {item.content || "No text answer found"}
                           </p>
+                          <AnswerSources
+                            sources={item.metadata?.sources}
+                            presentationId={presentationId}
+                            onOpenSlide={onOpenSlide}
+                            compact={useChatbotHistory}
+                          />
                         </div>
                       </div>
                     ) : item.type === "error" ? (

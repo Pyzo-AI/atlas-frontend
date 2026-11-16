@@ -131,6 +131,13 @@ export const questionsApi = createApi({
       providesTags: ['Question'],
     }),
 
+    // Short-lived link to open a document the interactive chat cited as a source
+    getChatSourceDocument: builder.query({
+      query: ({ presentationId, documentId, page }) =>
+        `presentations/${presentationId}/documents/${documentId}/open${page ? `?page=${page}` : ''}`,
+      keepUnusedDataFor: 0, // the link expires; always ask for a fresh one
+    }),
+
     // Get interview link
     getInterviewLink: builder.mutation({
       query: () => ({
@@ -164,6 +171,7 @@ export const {
   useGenerateImageMutation,
   useGetConversationHistoryQuery,
   useLazyGetConversationHistoryQuery,
+  useLazyGetChatSourceDocumentQuery,
   useGetInterviewLinkMutation,
   useGetSubmissionResultsQuery,
   useLazyGetSubmissionResultsQuery,

@@ -629,6 +629,23 @@ const VideoPanel = forwardRef(
       }
     }, [selectedAssessmentId, dispatch]);
 
+    // Pause and show a slide (agent slide_redirect, or a "Slide N" source chip in the chat)
+    const goToSlide = (targetSlideNumber) => {
+      const targetIndex = videos.findIndex((video) => String(video.slide) === String(targetSlideNumber));
+      if (targetIndex === -1) {
+        console.warn(`⚠️ [VideoPanel] no video found for slide number ${targetSlideNumber}`);
+        return;
+      }
+      console.log(`🔀 [VideoPanel] Redirecting to slide ${targetSlideNumber} at index ${targetIndex}`);
+      dispatch(setAutoPlayEnabled(false));
+      dispatch(setIsVideoPlaying(false));
+      setIsPlaying(false);
+      if (videoRef.current && !videoRef.current.paused) {
+        videoRef.current.pause();
+      }
+      dispatch(setCurrentVideoIndex(targetIndex));
+    };
+
     useEffect(() => {
       liveKitService.setOnAgentStateChanged((state) => {
         setLiveKitAgentState(state);
@@ -706,22 +723,7 @@ const VideoPanel = forwardRef(
 
           // Navigate to the redirected slide
           if (metadata?.type === "slide_redirect" && Array.isArray(slideNumbers) && slideNumbers.length > 0) {
-            const targetSlideNumber = slideNumbers[0];
-            const targetIndex = videos.findIndex(
-              (video) => String(video.slide) === String(targetSlideNumber)
-            );
-            if (targetIndex !== -1) {
-              console.log(`🔀 [VideoPanel] Redirecting to slide ${targetSlideNumber} at index ${targetIndex}`);
-              dispatch(setAutoPlayEnabled(false));
-              dispatch(setIsVideoPlaying(false));
-              setIsPlaying(false);
-              if (videoRef.current && !videoRef.current.paused) {
-                videoRef.current.pause();
-              }
-              dispatch(setCurrentVideoIndex(targetIndex));
-            } else {
-              console.warn(`⚠️ [VideoPanel] slide_redirect: no video found for slide number ${targetSlideNumber}`);
-            }
+            goToSlide(slideNumbers[0]);
           }
         });
       }
@@ -1051,6 +1053,7 @@ const VideoPanel = forwardRef(
               hideFooter={isQuestionMode}
               showQueryRelatedSlides={showQueryRelatedSlides}
               currentSlideId={videos?.[currentVideoIndex]?.slide}
+              onOpenSlide={goToSlide}
             />
           </div>
         )}
