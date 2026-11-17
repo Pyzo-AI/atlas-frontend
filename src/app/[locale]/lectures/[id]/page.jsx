@@ -468,7 +468,18 @@ const Home = () => {
       // const allVideos = data.data.filter((video) => video?.trainer_video && video?.trainer_video?.trim() !== "");
       const allVideos = data.data;
 
-      const idx = allVideos.findIndex((v) => v.slide === apiCurrentSlide);
+      // ?slide=N (a slide cited by the global chat) opens that slide instead of resuming; applied once
+      const requestedSlide = new URLSearchParams(window.location.search).get("slide");
+      const requestedIdx = requestedSlide
+        ? allVideos.findIndex((v) => String(v.slide) === String(requestedSlide))
+        : -1;
+      if (requestedSlide) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("slide");
+        window.history.replaceState(window.history.state, "", url.toString());
+      }
+
+      const idx = requestedIdx !== -1 ? requestedIdx : allVideos.findIndex((v) => v.slide === apiCurrentSlide);
 
       if (idx !== -1) {
         const slideObj = allVideos[idx];

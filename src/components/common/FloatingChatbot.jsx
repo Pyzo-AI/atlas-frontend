@@ -15,12 +15,19 @@ import ChatUI from "@/components/sections/ChatUI";
 import { isAccessDeniedError } from "@/utils/errorHandler";
 import { toastService } from "@/utils/toastService";
 import { requestMicrophonePermission } from "@/utils/microphone";
+import { useRouter } from "next/navigation";
 
 const isLimitReachedError = (error) =>
   error?.status === 429 || error?.data?.status === "limit_reached";
 
-const FloatingChatbot = ({ agentId = 1 }) => {
+// presentationId: the module behind the org agent (null when the learner can't open it); its slide
+// sources open that module at the cited slide.
+const FloatingChatbot = ({ agentId = 1, presentationId = null }) => {
   const { t } = useTranslation();
+  const router = useRouter();
+  const openSlide = presentationId
+    ? (slideNumber) => router.push(`/lectures/${presentationId}?slide=${slideNumber}`)
+    : undefined;
 
   const [isOpen, setIsOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -330,6 +337,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
           onPauseSlideVideo={() => {}}
           liveKitAgentEnabled={true}
           presentationId={1}
+          onOpenSlide={openSlide}
           useChatbotHistory={true}
           hideFooter={true}
           hideInteractionMode={true}

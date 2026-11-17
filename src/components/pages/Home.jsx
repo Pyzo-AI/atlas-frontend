@@ -508,7 +508,10 @@ const Home = () => {
       <FeedbackSuccessModal isOpen={showSuccessModal} onClose={handleSuccessModalClose} />
 
       {presentations?.organization?.agent?.enabled && (
-        <FloatingChatbot agentId={presentations.organization.agent.id} />
+        <FloatingChatbot
+          agentId={presentations.organization.agent.id}
+          presentationId={presentations.organization.agent.presentation_id}
+        />
       )}
     </>
   );
