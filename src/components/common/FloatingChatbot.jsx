@@ -16,6 +16,7 @@ import { isAccessDeniedError } from "@/utils/errorHandler";
 import { toastService } from "@/utils/toastService";
 import { requestMicrophonePermission } from "@/utils/microphone";
 import { useRouter } from "next/navigation";
+import { isSourceOpening } from "@/utils/chatSourceOpening";
 
 const isLimitReachedError = (error) =>
   error?.status === 429 || error?.data?.status === "limit_reached";
@@ -217,7 +218,8 @@ const FloatingChatbot = ({ agentId = 1, presentationId = null }) => {
   // Disconnect when tab is hidden — but only if NOT typing
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden" && isOpen && !isTypingRef.current) {
+      // Not when the learner just opened an answer source in a new tab (that would cancel opening it)
+      if (document.visibilityState === "hidden" && isOpen && !isTypingRef.current && !isSourceOpening()) {
         stopConversation();
       }
     };

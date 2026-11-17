@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLazyGetChatSourceDocumentQuery } from "@/store/api/questionsApi";
 import { showToast } from "@/utils/toast";
+import { markSourceOpening } from "@/utils/chatSourceOpening";
 
 /**
  * "Sources" row under an AI answer in the interactive chat: the slides and module documents the answer
@@ -19,6 +20,7 @@ const AnswerSources = ({ sources, presentationId, onOpenSlide, compact = false }
 
   const openDocument = async (source, key) => {
     // Open the tab synchronously (inside the click) so pop-up blockers allow it, then point it at the link
+    markSourceOpening();
     const tab = window.open("", "_blank");
     setOpeningKey(key);
     try {
