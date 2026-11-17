@@ -5,7 +5,7 @@ import { showToast } from "@/utils/toast";
 
 /**
  * "Sources" row under an AI answer in the interactive chat: the slides and module documents the answer
- * came from (metadata.sources, sent by the AI engine). A document opens in a new tab at the cited page
+ * came from (metadata.sources, sent by the AI engine); also used by the org global chat, without a presentationId. A document opens in a new tab at the cited page
  * (for a DOCX the backend finds the page from the cited passage, and the chip shows it once found); a slide jumps the player to that slide. Documents of older (legacy) modules have no
  * document_id and are shown without a link.
  */
@@ -77,7 +77,8 @@ const AnswerSources = ({ sources, presentationId, onOpenSlide, compact = false }
 
         const page = source.page || foundPages[key];
         const label = page ? `${source.name} · ${t("chatUI.page", { page })}` : source.name;
-        const canOpen = Boolean(source.document_id && presentationId);
+        // Without a module (global chat) the document opens by its id alone
+        const canOpen = Boolean(source.document_id);
         return (
           <button
             key={key}

@@ -91,6 +91,7 @@ const FloatingChatbot = ({ agentId = 1 }) => {
                   content: data.text,
                   time: now.toTimeString().slice(0, 5),
                   date: now.toISOString().split("T")[0],
+                  metadata: data.metadata || {}, // sources of the answer
                 },
               ]);
             } else if (data.type === "status" && data.message === "call_ending") {

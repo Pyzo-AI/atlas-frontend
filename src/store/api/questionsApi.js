@@ -139,7 +139,11 @@ export const questionsApi = createApi({
         if (page) params.set('page', page);
         else if (text) params.set('text', text.slice(0, 500));
         const qs = params.toString();
-        return `presentations/${presentationId}/documents/${documentId}/open${qs ? `?${qs}` : ''}`;
+        // The global chat has no module: its sources open by document id alone
+        const path = presentationId
+          ? `presentations/${presentationId}/documents/${documentId}/open`
+          : `presentations/documents/${documentId}/open`;
+        return `${path}${qs ? `?${qs}` : ''}`;
       },
       keepUnusedDataFor: 0, // the link expires; always ask for a fresh one
     }),

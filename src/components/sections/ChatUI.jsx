@@ -552,7 +552,7 @@ const ChatUI = ({
                                 </p>
                                 <AnswerSources
                                   sources={item.metadata?.sources}
-                                  presentationId={presentationId}
+                                  presentationId={useChatbotHistory ? null : presentationId}
                                   onOpenSlide={onOpenSlide}
                                   compact
                                 />
@@ -636,7 +636,7 @@ const ChatUI = ({
                           </p>
                           <AnswerSources
                             sources={item.metadata?.sources}
-                            presentationId={presentationId}
+                            presentationId={useChatbotHistory ? null : presentationId}
                             onOpenSlide={onOpenSlide}
                             compact={useChatbotHistory}
                           />
