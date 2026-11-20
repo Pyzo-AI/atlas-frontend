@@ -21,6 +21,27 @@ import { getInitials } from "@/utils/initials";
 import { LuPanelLeftClose, LuPanelLeftOpen, LuUserRound } from "react-icons/lu";
 import ProfileDrawer from "./ProfileDrawer";
 
+/**
+ * Org brand logo shown beside the account avatar, like Google's org chip.
+ * Optional: only rendered when the org has a logo (central Settings → General,
+ * returned as organization.logo_url by GET users/me).
+ */
+function OrgLogo({ src, name, onError }) {
+  return (
+    <span className="hidden sm:flex h-7 items-center rounded-[8px] bg-white px-1.5 shrink-0">
+      <Image
+        src={src}
+        alt={name ? `${name} logo` : "Organization logo"}
+        width={96}
+        height={24}
+        unoptimized
+        onError={onError}
+        className="h-6 w-auto max-w-[110px] object-contain rounded-[4px]"
+      />
+    </span>
+  );
+}
+
 /** Account-menu avatar: the profile photo when set, initials otherwise (as in Central's Header). */
 function HeaderAvatar({ name, src, size, fontSize }) {
   if (src) {
@@ -74,6 +95,10 @@ const Header = ({ onMenuClick }) => {
   const displayName = profile?.full_name || userInfo.name;
   const displayEmail = profile?.email || userInfo.email;
   const avatarUrl = profile?.avatar_url ?? null;
+  const [failedLogoUrl, setFailedLogoUrl] = useState(null);
+  const profileLogoUrl = profile?.organization?.logo_url ?? null;
+  // A broken/unreachable logo is hidden so the header falls back to the plain avatar.
+  const orgLogoUrl = profileLogoUrl !== failedLogoUrl ? profileLogoUrl : null;
 
   useEffect(() => {
     if (
@@ -196,62 +221,76 @@ const Header = ({ onMenuClick }) => {
         )}
 
         {/* Avatar + dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            type="button"
-            aria-label="Account menu"
-            className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full cursor-pointer transition-opacity hover:opacity-90"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-            <HeaderAvatar name={displayName} src={avatarUrl} size={28} fontSize={12} />
-          </button>
-
-          {shouldRender && (
-            <div
-              className={`absolute right-0 top-[calc(100%+2px)] w-[240px] origin-top-right bg-white border border-[#E7E9EE] rounded-[12px] flex flex-col z-[70] ${dropdownTransitionClassName}`}
-              style={{ boxShadow: "0px 1px 4px rgba(0,0,0,0.04), 0px 4px 16px rgba(0,0,0,0.08)", ...transitionStyle }}>
-              {/* User info — opens the profile drawer */}
-              <button
-                type="button"
-                onClick={openProfile}
-                className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-t-[12px] cursor-pointer hover:bg-gray-50 transition-colors">
-                <HeaderAvatar name={displayName} src={avatarUrl} size={32} fontSize={13} />
-                <div className="flex flex-col gap-1 overflow-hidden">
-                  <div className="font-lato font-bold text-[13px] leading-[16px] text-[#1E293B] truncate">
-                    {displayName}
-                  </div>
-                  {displayEmail && (
-                    <div className="font-lato font-normal text-[12px] leading-[14px] text-[#64748B] truncate">
-                      {displayEmail}
-                    </div>
-                  )}
-                </div>
-              </button>
-
-              <div className="w-full h-px bg-[#F1F5F9]" />
-
-              <button
-                type="button"
-                onClick={openProfile}
-                className="flex items-center gap-1.5 px-4 py-3 w-full cursor-pointer hover:bg-gray-50 transition-colors">
-                <LuUserRound className="w-4 h-4 text-[#475569]" />
-                <span className="font-lato font-medium text-[12px] leading-[14px] text-[#1E293B]">
-                  {t("header.viewProfile")}
-                </span>
-              </button>
-
-              <div className="w-full h-px bg-[#F1F5F9]" />
-
-              <button
-                onClick={handleLogoutClick}
-                disabled={isLoggingOut}
-                className="flex items-center gap-1 px-4 py-3 w-full cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                <Image src={logoutIcon} alt="logout-icon" width={16} height={16} unoptimized />
-                <span className="font-lato font-medium text-[12px] leading-[14px] text-[#E05345]">
-                  {isLoggingOut ? t("header.signingOut") : t("header.logOut")}
-                </span>
-              </button>
-            </div>
+        <div
+          className={
+            orgLogoUrl
+              ? "flex items-center gap-1.5 rounded-full border border-[#CBD5E1] py-0.5 pl-1 pr-0.5 sm:pl-1.5"
+              : "flex items-center"
+          }>
+          {orgLogoUrl && (
+            <OrgLogo
+              src={orgLogoUrl}
+              name={profile?.organization?.name || ""}
+              onError={() => setFailedLogoUrl(orgLogoUrl)}
+            />
           )}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              aria-label="Account menu"
+              className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full cursor-pointer transition-opacity hover:opacity-90"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+              <HeaderAvatar name={displayName} src={avatarUrl} size={28} fontSize={12} />
+            </button>
+
+            {shouldRender && (
+              <div
+                className={`absolute right-0 top-[calc(100%+2px)] w-[240px] origin-top-right bg-white border border-[#E7E9EE] rounded-[12px] flex flex-col z-[70] ${dropdownTransitionClassName}`}
+                style={{ boxShadow: "0px 1px 4px rgba(0,0,0,0.04), 0px 4px 16px rgba(0,0,0,0.08)", ...transitionStyle }}>
+                {/* User info — opens the profile drawer */}
+                <button
+                  type="button"
+                  onClick={openProfile}
+                  className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-t-[12px] cursor-pointer hover:bg-gray-50 transition-colors">
+                  <HeaderAvatar name={displayName} src={avatarUrl} size={32} fontSize={13} />
+                  <div className="flex flex-col gap-1 overflow-hidden">
+                    <div className="font-lato font-bold text-[13px] leading-[16px] text-[#1E293B] truncate">
+                      {displayName}
+                    </div>
+                    {displayEmail && (
+                      <div className="font-lato font-normal text-[12px] leading-[14px] text-[#64748B] truncate">
+                        {displayEmail}
+                      </div>
+                    )}
+                  </div>
+                </button>
+
+                <div className="w-full h-px bg-[#F1F5F9]" />
+
+                <button
+                  type="button"
+                  onClick={openProfile}
+                  className="flex items-center gap-1.5 px-4 py-3 w-full cursor-pointer hover:bg-gray-50 transition-colors">
+                  <LuUserRound className="w-4 h-4 text-[#475569]" />
+                  <span className="font-lato font-medium text-[12px] leading-[14px] text-[#1E293B]">
+                    {t("header.viewProfile")}
+                  </span>
+                </button>
+
+                <div className="w-full h-px bg-[#F1F5F9]" />
+
+                <button
+                  onClick={handleLogoutClick}
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-1 px-4 py-3 w-full cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  <Image src={logoutIcon} alt="logout-icon" width={16} height={16} unoptimized />
+                  <span className="font-lato font-medium text-[12px] leading-[14px] text-[#E05345]">
+                    {isLoggingOut ? t("header.signingOut") : t("header.logOut")}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
