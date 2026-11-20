@@ -8,8 +8,8 @@ import { productsApi } from "./productsApi";
 // GET /users/me → { data: MyProfile }: user_id, first_name, last_name,
 // full_name, email, designation, phone_number, avatar_url (short-lived,
 // ready to render; null when unset), role ("admin" | ...), roles, status,
-// department, reports_to, tools[{ id, name, mini_icon, ... }], last_active,
-// joined_at.
+// department, reports_to, organization { name, logo_url } (logo_url null until set
+// in central Settings), tools[{ id, name, mini_icon, ... }], last_active, joined_at.
 export const profileApi = productsApi.enhanceEndpoints({ addTagTypes: ["MyProfile"] }).injectEndpoints({
   endpoints: (builder) => ({
     getMyProfile: builder.query({
