@@ -224,7 +224,7 @@ const Header = ({ onMenuClick }) => {
         <div
           className={
             orgLogoUrl
-              ? "flex items-center gap-1.5 rounded-full border border-[#CBD5E1] py-0.5 pl-1 pr-0.5 sm:pl-1.5"
+              ? "flex items-center sm:gap-1.5 sm:rounded-full sm:border sm:border-[#CBD5E1] sm:py-0.5 sm:pl-1.5 sm:pr-0.5"
               : "flex items-center"
           }>
           {orgLogoUrl && (
