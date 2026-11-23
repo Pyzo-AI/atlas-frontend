@@ -320,6 +320,28 @@ const SlideVideoSection = React.forwardRef(
     }
 
     if (!videos?.[videoIndex]?.slide_video) {
+      // No slide recording (not made yet, or it failed): show the slide itself while the trainer plays
+      const stillImage = videos?.[videoIndex]?.slide_image_url;
+      if (stillImage) {
+        return (
+          <div className="w-full h-full bg-white rounded-xl overflow-hidden relative">
+            {slideImage && isQuestionMode && showQueryRelatedSlides && (
+              <div className="absolute inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center">
+                <Image src={slideImage} alt="Slide reference" fill className="object-fill" unoptimized priority />
+              </div>
+            )}
+            <Image
+              key={`slide-image-${videoIndex}`}
+              src={stillImage}
+              alt={videos[videoIndex].title || `Slide ${videos[videoIndex].slide}`}
+              fill
+              className="object-fill"
+              unoptimized
+              priority
+            />
+          </div>
+        );
+      }
       return (
         <div className="w-full h-full bg-gray-100 rounded-xl flex items-center justify-center">
           <p className="text-gray-500">{t("lectures.noSlideVideo")}</p>
